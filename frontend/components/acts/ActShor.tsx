@@ -419,7 +419,8 @@ export default function ActShor() {
           </button>
         ) : (
           <span className="text-xs text-stage-muted">
-            Load a cached IBM batch — hardware jobs were submitted offline.
+            IBM mode loads your Marrakesh batches from{" "}
+            <code className="text-accent-teal">IBM_BATCH_IDS</code> (m3–m8).
           </span>
         )}
         <span className="text-xs text-stage-muted">

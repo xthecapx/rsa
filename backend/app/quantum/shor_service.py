@@ -165,7 +165,24 @@ def simulate_shor(
     ranked = sorted(successful, key=_hit_score, reverse=True)
     shor_hit = ranked[0] if ranked else None
 
-    circuit_text = str(circuit.draw(output="text", fold=-1))
+    # Full ASCII drawings explode for permutation circuits (N=21 depth ~70k →
+    # tens of MB JSON and browser OOM). Cap size; UI does not render this today.
+    depth = circuit.depth()
+    max_draw_depth = 400
+    max_draw_chars = 80_000
+    if depth <= max_draw_depth:
+        circuit_text = str(circuit.draw(output="text", fold=-1))
+        if len(circuit_text) > max_draw_chars:
+            circuit_text = (
+                circuit_text[:max_draw_chars]
+                + f"\n… truncated ({len(circuit_text)} chars total)"
+            )
+    else:
+        circuit_text = (
+            f"[omitted: depth={depth} qubits={circuit.num_qubits} — "
+            f"ASCII draw skipped above depth {max_draw_depth}]"
+        )
+
     out: Dict[str, Any] = {
         "precheck": pre.to_dict(),
         "plan": shor.plan_dict(),
@@ -197,7 +214,7 @@ def simulate_shor(
         },
         "expected_distribution": shor.expected_distribution(),
         "circuit_text": circuit_text,
-        "circuit_depth": circuit.depth(),
+        "circuit_depth": depth,
         "jobs_run": 1,
         "strategy_note": (
             "One Aer job runs the full QWARD Shor circuit (QPE ladder). "

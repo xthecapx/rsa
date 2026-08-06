@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import List, Optional, Tuple
+from typing import Annotated, List, Optional, Tuple
 
 from pydantic import Field, field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 def parse_batch_ids(value: str | List[Tuple[str, str]]) -> List[Tuple[str, str]]:
@@ -43,7 +43,11 @@ class Settings(BaseSettings):
     ibm_quantum_token: Optional[str] = None
     ibm_quantum_instance: Optional[str] = None
 
-    ibm_batch_ids: List[Tuple[str, str]] = Field(default_factory=list)
+    # NoDecode: env value is `m3=uuid,m4=uuid`, not JSON. Without this,
+    # pydantic-settings json.loads the list type and 500s on /api/ibm/*.
+    ibm_batch_ids: Annotated[List[Tuple[str, str]], NoDecode] = Field(
+        default_factory=list
+    )
     ibm_console_base: str = "https://quantum.cloud.ibm.com"
     ibm_workload_path_template: str = "/workloads/{id}"
 
