@@ -1,0 +1,94 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --stage-bg: #0b1f26;
+  --stage-surface: #122a33;
+  --stage-border: #1e4450;
+  --stage-muted: #7a9aa6;
+  --accent-amber: #f5a623;
+  --accent-glow: rgba(245, 166, 35, 0.35);
+  --accent-teal: #2dd4bf;
+  --actor-ale: #38bdf8;
+  --actor-hacker: #fb7185;
+  --actor-brayan: #a3e635;
+  --text-primary: #e8f4f8;
+  --text-secondary: #94b8c4;
+  --blackboard-bg: #081820;
+  --blackboard-chalk: #d4e8ef;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  background: radial-gradient(ellipse at 50% 0%, #143844 0%, var(--stage-bg) 55%);
+  color: var(--text-primary);
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+}
+
+::selection {
+  background: rgba(245, 166, 35, 0.35);
+  color: #fff;
+}
+
+@layer components {
+  .panel {
+    @apply rounded-xl border border-stage-border bg-stage-surface/80 backdrop-blur-sm shadow-stage;
+  }
+
+  .btn-primary {
+    @apply rounded-lg bg-accent-amber px-4 py-2 font-display text-sm font-semibold uppercase tracking-wide text-stage-bg transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40;
+  }
+
+  .btn-ghost {
+    @apply rounded-lg border border-stage-border px-3 py-1.5 text-sm text-stage-muted transition hover:border-accent-teal hover:text-accent-teal;
+  }
+
+  .katex-display {
+    margin: 0.75rem 0;
+    overflow-x: auto;
+  }
+
+  .blackboard-box {
+    @apply inline-block rounded border border-dashed border-stage-border bg-black/30 px-3 py-1 font-mono text-sm text-stage-muted;
+  }
+}
+
+/* KaTeX overrides for dark blackboard — keep equations large and chalk-white */
+.blackboard-eq .katex {
+  color: var(--blackboard-chalk);
+  font-size: 1.35em;
+}
+
+.blackboard-eq .katex-display {
+  margin: 0.25rem 0;
+}
+
+.katex {
+  color: var(--blackboard-chalk);
+}
+
+.katex .mord,
+.katex .mop,
+.katex .mbin,
+.katex .mrel,
+.katex .mopen,
+.katex .mclose,
+.katex .mpunct,
+.katex .minner,
+.katex .mtext {
+  color: var(--blackboard-chalk) !important;
+}
+
+.grid-cols-13 {
+  grid-template-columns: repeat(13, minmax(0, 1fr));
+}
