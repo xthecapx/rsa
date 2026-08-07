@@ -12,6 +12,8 @@ dependencies = [
   "qiskit>=2.4.1",
   "qiskit-aer>=0.17.2",
   "qiskit-ibm-runtime>=0.47.0",
+  # Shor lives in qward.algorithms.shor, published from 0.28.1 onward.
+  "qiskit-qward>=0.28.1",
   "python-multipart>=0.0.12",
 ]
 

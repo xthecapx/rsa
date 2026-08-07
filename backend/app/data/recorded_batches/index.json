@@ -1,0 +1,36 @@
+{
+ "batches": [
+  {
+   "label": "m3",
+   "batch_id": "60c8ea9c-747c-4a76-9195-5b501c561dfa",
+   "backend_name": "ibm_marrakesh",
+   "num_control": 3,
+   "N": 15,
+   "a": 7
+  },
+  {
+   "label": "m4",
+   "batch_id": "5bd40c10-94b6-47f1-a426-af7acd9dc7c9",
+   "backend_name": "ibm_marrakesh",
+   "num_control": 4,
+   "N": 15,
+   "a": 7
+  },
+  {
+   "label": "m6",
+   "batch_id": "c1bf9c39-2676-4b85-9fd1-678021792124",
+   "backend_name": "ibm_marrakesh",
+   "num_control": 6,
+   "N": 15,
+   "a": 7
+  },
+  {
+   "label": "m8",
+   "batch_id": "5610d686-4042-4f6f-93a6-89d3155a4862",
+   "backend_name": "ibm_marrakesh",
+   "num_control": 8,
+   "N": 15,
+   "a": 7
+  }
+ ]
+}

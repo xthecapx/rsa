@@ -8,14 +8,26 @@ test_core.py already covers.
 import pytest
 from fastapi.testclient import TestClient
 
+from app.config import get_settings
 from app.main import app
-from app.quantum import ibm_runner
+from app.quantum import ibm_recorded, ibm_runner
 from app.quantum.ibm_cache import UpstreamTimeout
 
 
 @pytest.fixture
 def client():
     return TestClient(app)
+
+
+@pytest.fixture
+def live_ibm(monkeypatch):
+    """Force the live IBM path.
+
+    The default is "auto", which serves the recorded batches whenever there
+    are no credentials -- as there are none in a test run -- so the tests that
+    are about live behaviour have to say so.
+    """
+    monkeypatch.setattr(get_settings(), "ibm_mode", "live")
 
 
 def test_health(client):
@@ -163,7 +175,7 @@ def test_shor_simulate_rejects_out_of_range_input(client, payload):
 # --- ibm ---
 
 
-def test_batches_lists_configured_ids(client, monkeypatch):
+def test_batches_lists_configured_ids(client, monkeypatch, live_ibm):
     monkeypatch.setattr(
         ibm_runner,
         "listed_batches",
@@ -173,7 +185,7 @@ def test_batches_lists_configured_ids(client, monkeypatch):
     assert body["batches"][0]["label"] == "m4"
 
 
-def test_batch_reports_freshness(client, monkeypatch):
+def test_batch_reports_freshness(client, monkeypatch, live_ibm):
     monkeypatch.setattr(
         ibm_runner,
         "fetch_batch_cached",
@@ -184,8 +196,12 @@ def test_batch_reports_freshness(client, monkeypatch):
     assert body["stale"] is False
 
 
-def test_batch_returns_504_when_ibm_does_not_answer(client, monkeypatch):
-    """A hung upstream must surface as a gateway timeout, not a hung request."""
+def test_batch_returns_504_when_ibm_does_not_answer(client, monkeypatch, live_ibm):
+    """A hung upstream must surface as a gateway timeout, not a hung request.
+
+    The id here is not one of the recorded batches, so there is nothing to fall
+    back to and the status code is the one the caller sees.
+    """
 
     def timeout(*args, **kwargs):
         raise UpstreamTimeout("ibm did not respond within 15s")
@@ -194,7 +210,7 @@ def test_batch_returns_504_when_ibm_does_not_answer(client, monkeypatch):
     assert client.get("/api/ibm/batch/abc").status_code == 504
 
 
-def test_batch_returns_502_when_ibm_errors(client, monkeypatch):
+def test_batch_returns_502_when_ibm_errors(client, monkeypatch, live_ibm):
     def boom(*args, **kwargs):
         raise RuntimeError("connection reset")
 
@@ -202,7 +218,9 @@ def test_batch_returns_502_when_ibm_errors(client, monkeypatch):
     assert client.get("/api/ibm/batch/abc").status_code == 502
 
 
-def test_batch_returns_503_without_the_quantum_dependencies(client, monkeypatch):
+def test_batch_returns_503_without_the_quantum_dependencies(
+    client, monkeypatch, live_ibm
+):
     def missing(*args, **kwargs):
         raise ImportError("qward is required")
 
@@ -219,5 +237,6 @@ def test_cached_run_missing_is_404_not_a_200_with_an_error(client, monkeypatch):
     def missing():
         raise FileNotFoundError("no cached run at /nowhere")
 
+    monkeypatch.setattr(ibm_recorded, "get_batch", lambda *a, **k: None)
     monkeypatch.setattr(ibm_runner, "load_cached", missing)
     assert client.get("/api/ibm/cached").status_code == 404

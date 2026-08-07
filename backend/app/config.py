@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import Annotated, List, Optional, Tuple
+from typing import Annotated, List, Literal, Optional, Tuple
 from urllib.parse import quote
 
 from pydantic import Field, field_validator
@@ -61,6 +61,11 @@ class Settings(BaseSettings):
     ibm_cache_ttl: float = 600.0
     ibm_max_concurrent: int = 2
 
+    # "live" calls IBM, "recorded" serves the runs shipped in the image, "auto"
+    # decides by whether credentials and batch ids are present. Auto is the
+    # default so a deployment with no secrets attached still works.
+    ibm_mode: Literal["auto", "live", "recorded"] = "auto"
+
     # Ceiling for one circuit build plus simulation on the quantum worker.
     quantum_timeout: float = 120.0
 
@@ -75,6 +80,24 @@ class Settings(BaseSettings):
     @classmethod
     def _parse_batches(cls, v):
         return parse_batch_ids(v)
+
+    @property
+    def can_reach_ibm(self) -> bool:
+        """Whether a live fetch could even be attempted.
+
+        A token without batch ids is useless here: this app only ever reads
+        named batches, it never discovers or submits them.
+        """
+        return bool((self.ibm_quantum_token or "").strip() and self.ibm_batch_ids)
+
+    @property
+    def use_recorded_ibm(self) -> bool:
+        """Serve the batches baked into the image instead of calling IBM."""
+        if self.ibm_mode == "recorded":
+            return True
+        if self.ibm_mode == "live":
+            return False
+        return not self.can_reach_ibm
 
     @property
     def crn_encoded(self) -> Optional[str]:

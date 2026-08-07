@@ -1,0 +1,1900 @@
+{
+ "batch_id": "5bd40c10-94b6-47f1-a426-af7acd9dc7c9",
+ "label": "m4",
+ "backend_name": "ibm_marrakesh",
+ "num_control": 4,
+ "N": 15,
+ "a": 7,
+ "jobs": [
+  {
+   "job_id": "d9qe48opdb6s73e3egug",
+   "status": "DONE",
+   "counts": {
+    "0100": 300,
+    "0000": 353,
+    "0010": 257,
+    "1001": 212,
+    "1110": 244,
+    "1101": 221,
+    "0011": 218,
+    "1000": 318,
+    "1111": 228,
+    "0001": 256,
+    "1100": 325,
+    "1011": 216,
+    "0111": 220,
+    "0101": 231,
+    "1010": 260,
+    "0110": 237
+   },
+   "analysis": {
+    "shots": 4096,
+    "num_control": 4,
+    "true_order": 4,
+    "outcomes": [
+     {
+      "bitstring": "0000",
+      "count": 353,
+      "probability": 0.086181640625,
+      "phase": 0.0,
+      "fraction": "0/1",
+      "order_guess": 1,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 1,
+       "N": 15,
+       "even_order": false,
+       "factors": null,
+       "nontrivial": false,
+       "x": null,
+       "reason": "odd_order"
+      }
+     },
+     {
+      "bitstring": "1100",
+      "count": 325,
+      "probability": 0.079345703125,
+      "phase": 0.75,
+      "fraction": "3/4",
+      "order_guess": 4,
+      "order_matches_true": true,
+      "factoring": {
+       "a": 7,
+       "r": 4,
+       "N": 15,
+       "even_order": true,
+       "factors": [
+        3,
+        5
+       ],
+       "nontrivial": true,
+       "x": 4,
+       "reason": "success"
+      }
+     },
+     {
+      "bitstring": "1000",
+      "count": 318,
+      "probability": 0.07763671875,
+      "phase": 0.5,
+      "fraction": "1/2",
+      "order_guess": 2,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 2,
+       "N": 15,
+       "even_order": true,
+       "factors": [
+        3
+       ],
+       "nontrivial": true,
+       "x": 7,
+       "reason": "success"
+      }
+     },
+     {
+      "bitstring": "0100",
+      "count": 300,
+      "probability": 0.0732421875,
+      "phase": 0.25,
+      "fraction": "1/4",
+      "order_guess": 4,
+      "order_matches_true": true,
+      "factoring": {
+       "a": 7,
+       "r": 4,
+       "N": 15,
+       "even_order": true,
+       "factors": [
+        3,
+        5
+       ],
+       "nontrivial": true,
+       "x": 4,
+       "reason": "success"
+      }
+     },
+     {
+      "bitstring": "1010",
+      "count": 260,
+      "probability": 0.0634765625,
+      "phase": 0.625,
+      "fraction": "5/8",
+      "order_guess": 8,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 8,
+       "N": 15,
+       "even_order": true,
+       "factors": null,
+       "nontrivial": false,
+       "x": 1,
+       "reason": "trivial_x_pm_1"
+      }
+     },
+     {
+      "bitstring": "0010",
+      "count": 257,
+      "probability": 0.062744140625,
+      "phase": 0.125,
+      "fraction": "1/8",
+      "order_guess": 8,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 8,
+       "N": 15,
+       "even_order": true,
+       "factors": null,
+       "nontrivial": false,
+       "x": 1,
+       "reason": "trivial_x_pm_1"
+      }
+     },
+     {
+      "bitstring": "0001",
+      "count": 256,
+      "probability": 0.0625,
+      "phase": 0.0625,
+      "fraction": "1/15",
+      "order_guess": 15,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 15,
+       "N": 15,
+       "even_order": false,
+       "factors": null,
+       "nontrivial": false,
+       "x": null,
+       "reason": "odd_order"
+      }
+     },
+     {
+      "bitstring": "1110",
+      "count": 244,
+      "probability": 0.0595703125,
+      "phase": 0.875,
+      "fraction": "7/8",
+      "order_guess": 8,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 8,
+       "N": 15,
+       "even_order": true,
+       "factors": null,
+       "nontrivial": false,
+       "x": 1,
+       "reason": "trivial_x_pm_1"
+      }
+     },
+     {
+      "bitstring": "0110",
+      "count": 237,
+      "probability": 0.057861328125,
+      "phase": 0.375,
+      "fraction": "3/8",
+      "order_guess": 8,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 8,
+       "N": 15,
+       "even_order": true,
+       "factors": null,
+       "nontrivial": false,
+       "x": 1,
+       "reason": "trivial_x_pm_1"
+      }
+     },
+     {
+      "bitstring": "0101",
+      "count": 231,
+      "probability": 0.056396484375,
+      "phase": 0.3125,
+      "fraction": "4/13",
+      "order_guess": 13,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 13,
+       "N": 15,
+       "even_order": false,
+       "factors": null,
+       "nontrivial": false,
+       "x": null,
+       "reason": "odd_order"
+      }
+     },
+     {
+      "bitstring": "1111",
+      "count": 228,
+      "probability": 0.0556640625,
+      "phase": 0.9375,
+      "fraction": "14/15",
+      "order_guess": 15,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 15,
+       "N": 15,
+       "even_order": false,
+       "factors": null,
+       "nontrivial": false,
+       "x": null,
+       "reason": "odd_order"
+      }
+     },
+     {
+      "bitstring": "1101",
+      "count": 221,
+      "probability": 0.053955078125,
+      "phase": 0.8125,
+      "fraction": "9/11",
+      "order_guess": 11,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 11,
+       "N": 15,
+       "even_order": false,
+       "factors": null,
+       "nontrivial": false,
+       "x": null,
+       "reason": "odd_order"
+      }
+     },
+     {
+      "bitstring": "0111",
+      "count": 220,
+      "probability": 0.0537109375,
+      "phase": 0.4375,
+      "fraction": "4/9",
+      "order_guess": 9,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 9,
+       "N": 15,
+       "even_order": false,
+       "factors": null,
+       "nontrivial": false,
+       "x": null,
+       "reason": "odd_order"
+      }
+     },
+     {
+      "bitstring": "0011",
+      "count": 218,
+      "probability": 0.05322265625,
+      "phase": 0.1875,
+      "fraction": "2/11",
+      "order_guess": 11,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 11,
+       "N": 15,
+       "even_order": false,
+       "factors": null,
+       "nontrivial": false,
+       "x": null,
+       "reason": "odd_order"
+      }
+     },
+     {
+      "bitstring": "1011",
+      "count": 216,
+      "probability": 0.052734375,
+      "phase": 0.6875,
+      "fraction": "9/13",
+      "order_guess": 13,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 13,
+       "N": 15,
+       "even_order": false,
+       "factors": null,
+       "nontrivial": false,
+       "x": null,
+       "reason": "odd_order"
+      }
+     },
+     {
+      "bitstring": "1001",
+      "count": 212,
+      "probability": 0.0517578125,
+      "phase": 0.5625,
+      "fraction": "5/9",
+      "order_guess": 9,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 9,
+       "N": 15,
+       "even_order": false,
+       "factors": null,
+       "nontrivial": false,
+       "x": null,
+       "reason": "odd_order"
+      }
+     }
+    ],
+    "best": {
+     "bitstring": "0000",
+     "count": 353,
+     "probability": 0.086181640625,
+     "phase": 0.0,
+     "fraction": "0/1",
+     "order_guess": 1,
+     "order_matches_true": false,
+     "factoring": {
+      "a": 7,
+      "r": 1,
+      "N": 15,
+      "even_order": false,
+      "factors": null,
+      "nontrivial": false,
+      "x": null,
+      "reason": "odd_order"
+     }
+    }
+   },
+   "error": null,
+   "num_control": 4,
+   "optimization_level": 3,
+   "shots": 4096,
+   "transpiled_depth": 4617,
+   "success_rate": 0.152587890625
+  },
+  {
+   "job_id": "d9qe491dsedc73af649g",
+   "status": "DONE",
+   "counts": {
+    "1110": 246,
+    "0000": 360,
+    "1010": 282,
+    "1000": 362,
+    "1100": 309,
+    "0101": 229,
+    "1101": 214,
+    "0111": 196,
+    "1111": 216,
+    "0001": 226,
+    "0011": 229,
+    "0100": 319,
+    "0010": 271,
+    "1001": 207,
+    "1011": 190,
+    "0110": 240
+   },
+   "analysis": {
+    "shots": 4096,
+    "num_control": 4,
+    "true_order": 4,
+    "outcomes": [
+     {
+      "bitstring": "1000",
+      "count": 362,
+      "probability": 0.08837890625,
+      "phase": 0.5,
+      "fraction": "1/2",
+      "order_guess": 2,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 2,
+       "N": 15,
+       "even_order": true,
+       "factors": [
+        3
+       ],
+       "nontrivial": true,
+       "x": 7,
+       "reason": "success"
+      }
+     },
+     {
+      "bitstring": "0000",
+      "count": 360,
+      "probability": 0.087890625,
+      "phase": 0.0,
+      "fraction": "0/1",
+      "order_guess": 1,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 1,
+       "N": 15,
+       "even_order": false,
+       "factors": null,
+       "nontrivial": false,
+       "x": null,
+       "reason": "odd_order"
+      }
+     },
+     {
+      "bitstring": "0100",
+      "count": 319,
+      "probability": 0.077880859375,
+      "phase": 0.25,
+      "fraction": "1/4",
+      "order_guess": 4,
+      "order_matches_true": true,
+      "factoring": {
+       "a": 7,
+       "r": 4,
+       "N": 15,
+       "even_order": true,
+       "factors": [
+        3,
+        5
+       ],
+       "nontrivial": true,
+       "x": 4,
+       "reason": "success"
+      }
+     },
+     {
+      "bitstring": "1100",
+      "count": 309,
+      "probability": 0.075439453125,
+      "phase": 0.75,
+      "fraction": "3/4",
+      "order_guess": 4,
+      "order_matches_true": true,
+      "factoring": {
+       "a": 7,
+       "r": 4,
+       "N": 15,
+       "even_order": true,
+       "factors": [
+        3,
+        5
+       ],
+       "nontrivial": true,
+       "x": 4,
+       "reason": "success"
+      }
+     },
+     {
+      "bitstring": "1010",
+      "count": 282,
+      "probability": 0.06884765625,
+      "phase": 0.625,
+      "fraction": "5/8",
+      "order_guess": 8,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 8,
+       "N": 15,
+       "even_order": true,
+       "factors": null,
+       "nontrivial": false,
+       "x": 1,
+       "reason": "trivial_x_pm_1"
+      }
+     },
+     {
+      "bitstring": "0010",
+      "count": 271,
+      "probability": 0.066162109375,
+      "phase": 0.125,
+      "fraction": "1/8",
+      "order_guess": 8,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 8,
+       "N": 15,
+       "even_order": true,
+       "factors": null,
+       "nontrivial": false,
+       "x": 1,
+       "reason": "trivial_x_pm_1"
+      }
+     },
+     {
+      "bitstring": "1110",
+      "count": 246,
+      "probability": 0.06005859375,
+      "phase": 0.875,
+      "fraction": "7/8",
+      "order_guess": 8,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 8,
+       "N": 15,
+       "even_order": true,
+       "factors": null,
+       "nontrivial": false,
+       "x": 1,
+       "reason": "trivial_x_pm_1"
+      }
+     },
+     {
+      "bitstring": "0110",
+      "count": 240,
+      "probability": 0.05859375,
+      "phase": 0.375,
+      "fraction": "3/8",
+      "order_guess": 8,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 8,
+       "N": 15,
+       "even_order": true,
+       "factors": null,
+       "nontrivial": false,
+       "x": 1,
+       "reason": "trivial_x_pm_1"
+      }
+     },
+     {
+      "bitstring": "0101",
+      "count": 229,
+      "probability": 0.055908203125,
+      "phase": 0.3125,
+      "fraction": "4/13",
+      "order_guess": 13,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 13,
+       "N": 15,
+       "even_order": false,
+       "factors": null,
+       "nontrivial": false,
+       "x": null,
+       "reason": "odd_order"
+      }
+     },
+     {
+      "bitstring": "0011",
+      "count": 229,
+      "probability": 0.055908203125,
+      "phase": 0.1875,
+      "fraction": "2/11",
+      "order_guess": 11,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 11,
+       "N": 15,
+       "even_order": false,
+       "factors": null,
+       "nontrivial": false,
+       "x": null,
+       "reason": "odd_order"
+      }
+     },
+     {
+      "bitstring": "0001",
+      "count": 226,
+      "probability": 0.05517578125,
+      "phase": 0.0625,
+      "fraction": "1/15",
+      "order_guess": 15,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 15,
+       "N": 15,
+       "even_order": false,
+       "factors": null,
+       "nontrivial": false,
+       "x": null,
+       "reason": "odd_order"
+      }
+     },
+     {
+      "bitstring": "1111",
+      "count": 216,
+      "probability": 0.052734375,
+      "phase": 0.9375,
+      "fraction": "14/15",
+      "order_guess": 15,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 15,
+       "N": 15,
+       "even_order": false,
+       "factors": null,
+       "nontrivial": false,
+       "x": null,
+       "reason": "odd_order"
+      }
+     },
+     {
+      "bitstring": "1101",
+      "count": 214,
+      "probability": 0.05224609375,
+      "phase": 0.8125,
+      "fraction": "9/11",
+      "order_guess": 11,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 11,
+       "N": 15,
+       "even_order": false,
+       "factors": null,
+       "nontrivial": false,
+       "x": null,
+       "reason": "odd_order"
+      }
+     },
+     {
+      "bitstring": "1001",
+      "count": 207,
+      "probability": 0.050537109375,
+      "phase": 0.5625,
+      "fraction": "5/9",
+      "order_guess": 9,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 9,
+       "N": 15,
+       "even_order": false,
+       "factors": null,
+       "nontrivial": false,
+       "x": null,
+       "reason": "odd_order"
+      }
+     },
+     {
+      "bitstring": "0111",
+      "count": 196,
+      "probability": 0.0478515625,
+      "phase": 0.4375,
+      "fraction": "4/9",
+      "order_guess": 9,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 9,
+       "N": 15,
+       "even_order": false,
+       "factors": null,
+       "nontrivial": false,
+       "x": null,
+       "reason": "odd_order"
+      }
+     },
+     {
+      "bitstring": "1011",
+      "count": 190,
+      "probability": 0.04638671875,
+      "phase": 0.6875,
+      "fraction": "9/13",
+      "order_guess": 13,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 13,
+       "N": 15,
+       "even_order": false,
+       "factors": null,
+       "nontrivial": false,
+       "x": null,
+       "reason": "odd_order"
+      }
+     }
+    ],
+    "best": {
+     "bitstring": "1000",
+     "count": 362,
+     "probability": 0.08837890625,
+     "phase": 0.5,
+     "fraction": "1/2",
+     "order_guess": 2,
+     "order_matches_true": false,
+     "factoring": {
+      "a": 7,
+      "r": 2,
+      "N": 15,
+      "even_order": true,
+      "factors": [
+       3
+      ],
+      "nontrivial": true,
+      "x": 7,
+      "reason": "success"
+     }
+    }
+   },
+   "error": null,
+   "num_control": 4,
+   "optimization_level": 3,
+   "shots": 4096,
+   "transpiled_depth": 4617,
+   "success_rate": 0.1533203125
+  },
+  {
+   "job_id": "d9qe499dsedc73af64a0",
+   "status": "DONE",
+   "counts": {
+    "1000": 348,
+    "1111": 222,
+    "1011": 215,
+    "1110": 216,
+    "1100": 311,
+    "0010": 235,
+    "0110": 252,
+    "0000": 386,
+    "1001": 224,
+    "1101": 184,
+    "0100": 294,
+    "1010": 269,
+    "0111": 245,
+    "0101": 259,
+    "0001": 228,
+    "0011": 208
+   },
+   "analysis": {
+    "shots": 4096,
+    "num_control": 4,
+    "true_order": 4,
+    "outcomes": [
+     {
+      "bitstring": "0000",
+      "count": 386,
+      "probability": 0.09423828125,
+      "phase": 0.0,
+      "fraction": "0/1",
+      "order_guess": 1,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 1,
+       "N": 15,
+       "even_order": false,
+       "factors": null,
+       "nontrivial": false,
+       "x": null,
+       "reason": "odd_order"
+      }
+     },
+     {
+      "bitstring": "1000",
+      "count": 348,
+      "probability": 0.0849609375,
+      "phase": 0.5,
+      "fraction": "1/2",
+      "order_guess": 2,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 2,
+       "N": 15,
+       "even_order": true,
+       "factors": [
+        3
+       ],
+       "nontrivial": true,
+       "x": 7,
+       "reason": "success"
+      }
+     },
+     {
+      "bitstring": "1100",
+      "count": 311,
+      "probability": 0.075927734375,
+      "phase": 0.75,
+      "fraction": "3/4",
+      "order_guess": 4,
+      "order_matches_true": true,
+      "factoring": {
+       "a": 7,
+       "r": 4,
+       "N": 15,
+       "even_order": true,
+       "factors": [
+        3,
+        5
+       ],
+       "nontrivial": true,
+       "x": 4,
+       "reason": "success"
+      }
+     },
+     {
+      "bitstring": "0100",
+      "count": 294,
+      "probability": 0.07177734375,
+      "phase": 0.25,
+      "fraction": "1/4",
+      "order_guess": 4,
+      "order_matches_true": true,
+      "factoring": {
+       "a": 7,
+       "r": 4,
+       "N": 15,
+       "even_order": true,
+       "factors": [
+        3,
+        5
+       ],
+       "nontrivial": true,
+       "x": 4,
+       "reason": "success"
+      }
+     },
+     {
+      "bitstring": "1010",
+      "count": 269,
+      "probability": 0.065673828125,
+      "phase": 0.625,
+      "fraction": "5/8",
+      "order_guess": 8,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 8,
+       "N": 15,
+       "even_order": true,
+       "factors": null,
+       "nontrivial": false,
+       "x": 1,
+       "reason": "trivial_x_pm_1"
+      }
+     },
+     {
+      "bitstring": "0101",
+      "count": 259,
+      "probability": 0.063232421875,
+      "phase": 0.3125,
+      "fraction": "4/13",
+      "order_guess": 13,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 13,
+       "N": 15,
+       "even_order": false,
+       "factors": null,
+       "nontrivial": false,
+       "x": null,
+       "reason": "odd_order"
+      }
+     },
+     {
+      "bitstring": "0110",
+      "count": 252,
+      "probability": 0.0615234375,
+      "phase": 0.375,
+      "fraction": "3/8",
+      "order_guess": 8,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 8,
+       "N": 15,
+       "even_order": true,
+       "factors": null,
+       "nontrivial": false,
+       "x": 1,
+       "reason": "trivial_x_pm_1"
+      }
+     },
+     {
+      "bitstring": "0111",
+      "count": 245,
+      "probability": 0.059814453125,
+      "phase": 0.4375,
+      "fraction": "4/9",
+      "order_guess": 9,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 9,
+       "N": 15,
+       "even_order": false,
+       "factors": null,
+       "nontrivial": false,
+       "x": null,
+       "reason": "odd_order"
+      }
+     },
+     {
+      "bitstring": "0010",
+      "count": 235,
+      "probability": 0.057373046875,
+      "phase": 0.125,
+      "fraction": "1/8",
+      "order_guess": 8,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 8,
+       "N": 15,
+       "even_order": true,
+       "factors": null,
+       "nontrivial": false,
+       "x": 1,
+       "reason": "trivial_x_pm_1"
+      }
+     },
+     {
+      "bitstring": "0001",
+      "count": 228,
+      "probability": 0.0556640625,
+      "phase": 0.0625,
+      "fraction": "1/15",
+      "order_guess": 15,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 15,
+       "N": 15,
+       "even_order": false,
+       "factors": null,
+       "nontrivial": false,
+       "x": null,
+       "reason": "odd_order"
+      }
+     },
+     {
+      "bitstring": "1001",
+      "count": 224,
+      "probability": 0.0546875,
+      "phase": 0.5625,
+      "fraction": "5/9",
+      "order_guess": 9,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 9,
+       "N": 15,
+       "even_order": false,
+       "factors": null,
+       "nontrivial": false,
+       "x": null,
+       "reason": "odd_order"
+      }
+     },
+     {
+      "bitstring": "1111",
+      "count": 222,
+      "probability": 0.05419921875,
+      "phase": 0.9375,
+      "fraction": "14/15",
+      "order_guess": 15,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 15,
+       "N": 15,
+       "even_order": false,
+       "factors": null,
+       "nontrivial": false,
+       "x": null,
+       "reason": "odd_order"
+      }
+     },
+     {
+      "bitstring": "1110",
+      "count": 216,
+      "probability": 0.052734375,
+      "phase": 0.875,
+      "fraction": "7/8",
+      "order_guess": 8,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 8,
+       "N": 15,
+       "even_order": true,
+       "factors": null,
+       "nontrivial": false,
+       "x": 1,
+       "reason": "trivial_x_pm_1"
+      }
+     },
+     {
+      "bitstring": "1011",
+      "count": 215,
+      "probability": 0.052490234375,
+      "phase": 0.6875,
+      "fraction": "9/13",
+      "order_guess": 13,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 13,
+       "N": 15,
+       "even_order": false,
+       "factors": null,
+       "nontrivial": false,
+       "x": null,
+       "reason": "odd_order"
+      }
+     },
+     {
+      "bitstring": "0011",
+      "count": 208,
+      "probability": 0.05078125,
+      "phase": 0.1875,
+      "fraction": "2/11",
+      "order_guess": 11,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 11,
+       "N": 15,
+       "even_order": false,
+       "factors": null,
+       "nontrivial": false,
+       "x": null,
+       "reason": "odd_order"
+      }
+     },
+     {
+      "bitstring": "1101",
+      "count": 184,
+      "probability": 0.044921875,
+      "phase": 0.8125,
+      "fraction": "9/11",
+      "order_guess": 11,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 11,
+       "N": 15,
+       "even_order": false,
+       "factors": null,
+       "nontrivial": false,
+       "x": null,
+       "reason": "odd_order"
+      }
+     }
+    ],
+    "best": {
+     "bitstring": "0000",
+     "count": 386,
+     "probability": 0.09423828125,
+     "phase": 0.0,
+     "fraction": "0/1",
+     "order_guess": 1,
+     "order_matches_true": false,
+     "factoring": {
+      "a": 7,
+      "r": 1,
+      "N": 15,
+      "even_order": false,
+      "factors": null,
+      "nontrivial": false,
+      "x": null,
+      "reason": "odd_order"
+     }
+    }
+   },
+   "error": null,
+   "num_control": 4,
+   "optimization_level": 3,
+   "shots": 4096,
+   "transpiled_depth": 4617,
+   "success_rate": 0.147705078125
+  },
+  {
+   "job_id": "d9qe49npemts73cr54pg",
+   "status": "DONE",
+   "counts": {
+    "0101": 206,
+    "0000": 348,
+    "1101": 222,
+    "1111": 236,
+    "0011": 205,
+    "1100": 331,
+    "1010": 262,
+    "1110": 225,
+    "1001": 219,
+    "0100": 333,
+    "1000": 349,
+    "0110": 253,
+    "1011": 207,
+    "0001": 216,
+    "0010": 246,
+    "0111": 238
+   },
+   "analysis": {
+    "shots": 4096,
+    "num_control": 4,
+    "true_order": 4,
+    "outcomes": [
+     {
+      "bitstring": "1000",
+      "count": 349,
+      "probability": 0.085205078125,
+      "phase": 0.5,
+      "fraction": "1/2",
+      "order_guess": 2,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 2,
+       "N": 15,
+       "even_order": true,
+       "factors": [
+        3
+       ],
+       "nontrivial": true,
+       "x": 7,
+       "reason": "success"
+      }
+     },
+     {
+      "bitstring": "0000",
+      "count": 348,
+      "probability": 0.0849609375,
+      "phase": 0.0,
+      "fraction": "0/1",
+      "order_guess": 1,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 1,
+       "N": 15,
+       "even_order": false,
+       "factors": null,
+       "nontrivial": false,
+       "x": null,
+       "reason": "odd_order"
+      }
+     },
+     {
+      "bitstring": "0100",
+      "count": 333,
+      "probability": 0.081298828125,
+      "phase": 0.25,
+      "fraction": "1/4",
+      "order_guess": 4,
+      "order_matches_true": true,
+      "factoring": {
+       "a": 7,
+       "r": 4,
+       "N": 15,
+       "even_order": true,
+       "factors": [
+        3,
+        5
+       ],
+       "nontrivial": true,
+       "x": 4,
+       "reason": "success"
+      }
+     },
+     {
+      "bitstring": "1100",
+      "count": 331,
+      "probability": 0.080810546875,
+      "phase": 0.75,
+      "fraction": "3/4",
+      "order_guess": 4,
+      "order_matches_true": true,
+      "factoring": {
+       "a": 7,
+       "r": 4,
+       "N": 15,
+       "even_order": true,
+       "factors": [
+        3,
+        5
+       ],
+       "nontrivial": true,
+       "x": 4,
+       "reason": "success"
+      }
+     },
+     {
+      "bitstring": "1010",
+      "count": 262,
+      "probability": 0.06396484375,
+      "phase": 0.625,
+      "fraction": "5/8",
+      "order_guess": 8,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 8,
+       "N": 15,
+       "even_order": true,
+       "factors": null,
+       "nontrivial": false,
+       "x": 1,
+       "reason": "trivial_x_pm_1"
+      }
+     },
+     {
+      "bitstring": "0110",
+      "count": 253,
+      "probability": 0.061767578125,
+      "phase": 0.375,
+      "fraction": "3/8",
+      "order_guess": 8,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 8,
+       "N": 15,
+       "even_order": true,
+       "factors": null,
+       "nontrivial": false,
+       "x": 1,
+       "reason": "trivial_x_pm_1"
+      }
+     },
+     {
+      "bitstring": "0010",
+      "count": 246,
+      "probability": 0.06005859375,
+      "phase": 0.125,
+      "fraction": "1/8",
+      "order_guess": 8,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 8,
+       "N": 15,
+       "even_order": true,
+       "factors": null,
+       "nontrivial": false,
+       "x": 1,
+       "reason": "trivial_x_pm_1"
+      }
+     },
+     {
+      "bitstring": "0111",
+      "count": 238,
+      "probability": 0.05810546875,
+      "phase": 0.4375,
+      "fraction": "4/9",
+      "order_guess": 9,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 9,
+       "N": 15,
+       "even_order": false,
+       "factors": null,
+       "nontrivial": false,
+       "x": null,
+       "reason": "odd_order"
+      }
+     },
+     {
+      "bitstring": "1111",
+      "count": 236,
+      "probability": 0.0576171875,
+      "phase": 0.9375,
+      "fraction": "14/15",
+      "order_guess": 15,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 15,
+       "N": 15,
+       "even_order": false,
+       "factors": null,
+       "nontrivial": false,
+       "x": null,
+       "reason": "odd_order"
+      }
+     },
+     {
+      "bitstring": "1110",
+      "count": 225,
+      "probability": 0.054931640625,
+      "phase": 0.875,
+      "fraction": "7/8",
+      "order_guess": 8,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 8,
+       "N": 15,
+       "even_order": true,
+       "factors": null,
+       "nontrivial": false,
+       "x": 1,
+       "reason": "trivial_x_pm_1"
+      }
+     },
+     {
+      "bitstring": "1101",
+      "count": 222,
+      "probability": 0.05419921875,
+      "phase": 0.8125,
+      "fraction": "9/11",
+      "order_guess": 11,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 11,
+       "N": 15,
+       "even_order": false,
+       "factors": null,
+       "nontrivial": false,
+       "x": null,
+       "reason": "odd_order"
+      }
+     },
+     {
+      "bitstring": "1001",
+      "count": 219,
+      "probability": 0.053466796875,
+      "phase": 0.5625,
+      "fraction": "5/9",
+      "order_guess": 9,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 9,
+       "N": 15,
+       "even_order": false,
+       "factors": null,
+       "nontrivial": false,
+       "x": null,
+       "reason": "odd_order"
+      }
+     },
+     {
+      "bitstring": "0001",
+      "count": 216,
+      "probability": 0.052734375,
+      "phase": 0.0625,
+      "fraction": "1/15",
+      "order_guess": 15,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 15,
+       "N": 15,
+       "even_order": false,
+       "factors": null,
+       "nontrivial": false,
+       "x": null,
+       "reason": "odd_order"
+      }
+     },
+     {
+      "bitstring": "1011",
+      "count": 207,
+      "probability": 0.050537109375,
+      "phase": 0.6875,
+      "fraction": "9/13",
+      "order_guess": 13,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 13,
+       "N": 15,
+       "even_order": false,
+       "factors": null,
+       "nontrivial": false,
+       "x": null,
+       "reason": "odd_order"
+      }
+     },
+     {
+      "bitstring": "0101",
+      "count": 206,
+      "probability": 0.05029296875,
+      "phase": 0.3125,
+      "fraction": "4/13",
+      "order_guess": 13,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 13,
+       "N": 15,
+       "even_order": false,
+       "factors": null,
+       "nontrivial": false,
+       "x": null,
+       "reason": "odd_order"
+      }
+     },
+     {
+      "bitstring": "0011",
+      "count": 205,
+      "probability": 0.050048828125,
+      "phase": 0.1875,
+      "fraction": "2/11",
+      "order_guess": 11,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 11,
+       "N": 15,
+       "even_order": false,
+       "factors": null,
+       "nontrivial": false,
+       "x": null,
+       "reason": "odd_order"
+      }
+     }
+    ],
+    "best": {
+     "bitstring": "1000",
+     "count": 349,
+     "probability": 0.085205078125,
+     "phase": 0.5,
+     "fraction": "1/2",
+     "order_guess": 2,
+     "order_matches_true": false,
+     "factoring": {
+      "a": 7,
+      "r": 2,
+      "N": 15,
+      "even_order": true,
+      "factors": [
+       3
+      ],
+      "nontrivial": true,
+      "x": 7,
+      "reason": "success"
+     }
+    }
+   },
+   "error": null,
+   "num_control": 4,
+   "optimization_level": 3,
+   "shots": 4096,
+   "transpiled_depth": 4617,
+   "success_rate": 0.162109375
+  },
+  {
+   "job_id": "d9qe49vpemts73cr54qg",
+   "status": "DONE",
+   "counts": {
+    "0100": 334,
+    "1010": 251,
+    "1001": 206,
+    "0101": 265,
+    "0010": 274,
+    "1111": 183,
+    "1110": 233,
+    "0110": 251,
+    "1101": 229,
+    "1000": 367,
+    "0011": 197,
+    "0001": 221,
+    "1100": 318,
+    "0000": 354,
+    "1011": 199,
+    "0111": 214
+   },
+   "analysis": {
+    "shots": 4096,
+    "num_control": 4,
+    "true_order": 4,
+    "outcomes": [
+     {
+      "bitstring": "1000",
+      "count": 367,
+      "probability": 0.089599609375,
+      "phase": 0.5,
+      "fraction": "1/2",
+      "order_guess": 2,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 2,
+       "N": 15,
+       "even_order": true,
+       "factors": [
+        3
+       ],
+       "nontrivial": true,
+       "x": 7,
+       "reason": "success"
+      }
+     },
+     {
+      "bitstring": "0000",
+      "count": 354,
+      "probability": 0.08642578125,
+      "phase": 0.0,
+      "fraction": "0/1",
+      "order_guess": 1,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 1,
+       "N": 15,
+       "even_order": false,
+       "factors": null,
+       "nontrivial": false,
+       "x": null,
+       "reason": "odd_order"
+      }
+     },
+     {
+      "bitstring": "0100",
+      "count": 334,
+      "probability": 0.08154296875,
+      "phase": 0.25,
+      "fraction": "1/4",
+      "order_guess": 4,
+      "order_matches_true": true,
+      "factoring": {
+       "a": 7,
+       "r": 4,
+       "N": 15,
+       "even_order": true,
+       "factors": [
+        3,
+        5
+       ],
+       "nontrivial": true,
+       "x": 4,
+       "reason": "success"
+      }
+     },
+     {
+      "bitstring": "1100",
+      "count": 318,
+      "probability": 0.07763671875,
+      "phase": 0.75,
+      "fraction": "3/4",
+      "order_guess": 4,
+      "order_matches_true": true,
+      "factoring": {
+       "a": 7,
+       "r": 4,
+       "N": 15,
+       "even_order": true,
+       "factors": [
+        3,
+        5
+       ],
+       "nontrivial": true,
+       "x": 4,
+       "reason": "success"
+      }
+     },
+     {
+      "bitstring": "0010",
+      "count": 274,
+      "probability": 0.06689453125,
+      "phase": 0.125,
+      "fraction": "1/8",
+      "order_guess": 8,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 8,
+       "N": 15,
+       "even_order": true,
+       "factors": null,
+       "nontrivial": false,
+       "x": 1,
+       "reason": "trivial_x_pm_1"
+      }
+     },
+     {
+      "bitstring": "0101",
+      "count": 265,
+      "probability": 0.064697265625,
+      "phase": 0.3125,
+      "fraction": "4/13",
+      "order_guess": 13,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 13,
+       "N": 15,
+       "even_order": false,
+       "factors": null,
+       "nontrivial": false,
+       "x": null,
+       "reason": "odd_order"
+      }
+     },
+     {
+      "bitstring": "1010",
+      "count": 251,
+      "probability": 0.061279296875,
+      "phase": 0.625,
+      "fraction": "5/8",
+      "order_guess": 8,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 8,
+       "N": 15,
+       "even_order": true,
+       "factors": null,
+       "nontrivial": false,
+       "x": 1,
+       "reason": "trivial_x_pm_1"
+      }
+     },
+     {
+      "bitstring": "0110",
+      "count": 251,
+      "probability": 0.061279296875,
+      "phase": 0.375,
+      "fraction": "3/8",
+      "order_guess": 8,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 8,
+       "N": 15,
+       "even_order": true,
+       "factors": null,
+       "nontrivial": false,
+       "x": 1,
+       "reason": "trivial_x_pm_1"
+      }
+     },
+     {
+      "bitstring": "1110",
+      "count": 233,
+      "probability": 0.056884765625,
+      "phase": 0.875,
+      "fraction": "7/8",
+      "order_guess": 8,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 8,
+       "N": 15,
+       "even_order": true,
+       "factors": null,
+       "nontrivial": false,
+       "x": 1,
+       "reason": "trivial_x_pm_1"
+      }
+     },
+     {
+      "bitstring": "1101",
+      "count": 229,
+      "probability": 0.055908203125,
+      "phase": 0.8125,
+      "fraction": "9/11",
+      "order_guess": 11,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 11,
+       "N": 15,
+       "even_order": false,
+       "factors": null,
+       "nontrivial": false,
+       "x": null,
+       "reason": "odd_order"
+      }
+     },
+     {
+      "bitstring": "0001",
+      "count": 221,
+      "probability": 0.053955078125,
+      "phase": 0.0625,
+      "fraction": "1/15",
+      "order_guess": 15,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 15,
+       "N": 15,
+       "even_order": false,
+       "factors": null,
+       "nontrivial": false,
+       "x": null,
+       "reason": "odd_order"
+      }
+     },
+     {
+      "bitstring": "0111",
+      "count": 214,
+      "probability": 0.05224609375,
+      "phase": 0.4375,
+      "fraction": "4/9",
+      "order_guess": 9,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 9,
+       "N": 15,
+       "even_order": false,
+       "factors": null,
+       "nontrivial": false,
+       "x": null,
+       "reason": "odd_order"
+      }
+     },
+     {
+      "bitstring": "1001",
+      "count": 206,
+      "probability": 0.05029296875,
+      "phase": 0.5625,
+      "fraction": "5/9",
+      "order_guess": 9,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 9,
+       "N": 15,
+       "even_order": false,
+       "factors": null,
+       "nontrivial": false,
+       "x": null,
+       "reason": "odd_order"
+      }
+     },
+     {
+      "bitstring": "1011",
+      "count": 199,
+      "probability": 0.048583984375,
+      "phase": 0.6875,
+      "fraction": "9/13",
+      "order_guess": 13,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 13,
+       "N": 15,
+       "even_order": false,
+       "factors": null,
+       "nontrivial": false,
+       "x": null,
+       "reason": "odd_order"
+      }
+     },
+     {
+      "bitstring": "0011",
+      "count": 197,
+      "probability": 0.048095703125,
+      "phase": 0.1875,
+      "fraction": "2/11",
+      "order_guess": 11,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 11,
+       "N": 15,
+       "even_order": false,
+       "factors": null,
+       "nontrivial": false,
+       "x": null,
+       "reason": "odd_order"
+      }
+     },
+     {
+      "bitstring": "1111",
+      "count": 183,
+      "probability": 0.044677734375,
+      "phase": 0.9375,
+      "fraction": "14/15",
+      "order_guess": 15,
+      "order_matches_true": false,
+      "factoring": {
+       "a": 7,
+       "r": 15,
+       "N": 15,
+       "even_order": false,
+       "factors": null,
+       "nontrivial": false,
+       "x": null,
+       "reason": "odd_order"
+      }
+     }
+    ],
+    "best": {
+     "bitstring": "1000",
+     "count": 367,
+     "probability": 0.089599609375,
+     "phase": 0.5,
+     "fraction": "1/2",
+     "order_guess": 2,
+     "order_matches_true": false,
+     "factoring": {
+      "a": 7,
+      "r": 2,
+      "N": 15,
+      "even_order": true,
+      "factors": [
+       3
+      ],
+      "nontrivial": true,
+      "x": 7,
+      "reason": "success"
+     }
+    }
+   },
+   "error": null,
+   "num_control": 4,
+   "optimization_level": 3,
+   "shots": 4096,
+   "transpiled_depth": 4617,
+   "success_rate": 0.1591796875
+  }
+ ],
+ "references": {
+  "ideal": {
+   "0000": 0.25,
+   "0100": 0.25,
+   "1000": 0.25,
+   "1100": 0.25
+  },
+  "aer_noiseless": {
+   "0100": 1003,
+   "1000": 992,
+   "0000": 1073,
+   "1100": 1028
+  },
+  "true_order": 4,
+  "aer_evaluation": {
+   "success_rate": 0.495849609375,
+   "success_count": 2031,
+   "factoring_success_rate": 0.738037109375,
+   "factoring_success_count": 3023,
+   "uninformative_rate": 0.261962890625,
+   "uninformative_count": 1073,
+   "random_chance": 0.125,
+   "advantage_ratio": 3.966796875,
+   "true_order": 4,
+   "notes": "",
+   "threshold_30": true,
+   "threshold_50": false,
+   "quantum_advantage": true
+  }
+ },
+ "details": {
+  "backend_name": "ibm_marrakesh",
+  "status": "completed",
+  "mode": "batch",
+  "num_runs": 5,
+  "shots_per_run": 4096,
+  "mean_success_rate": 0.15498046875,
+  "std_success_rate": 0.0056979513870473895,
+  "recorded_at": "2026-08-06T14:38:02.545580"
+ },
+ "calibration": {
+  "median_single_qubit_gate_error": 0.0002981266871522112,
+  "median_two_qubit_gate_error": 0.0033025435317287077,
+  "median_readout_error": 0.01214599609375,
+  "median_t1_us": 159.96095230283464,
+  "median_t2_us": 68.26187521660947,
+  "num_operational_qubits": 156,
+  "backend_name": "ibm_marrakesh",
+  "calibration_timestamp": "2026-08-06T19:35:53.136774+00:00",
+  "provider": "ibm"
+ },
+ "recorded": true,
+ "cached": true,
+ "source_file": "SHOR-N15-M4_IBM_ibm_marrakesh_20260806_143802.json"
+}

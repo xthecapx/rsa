@@ -17,8 +17,8 @@ def _import_shor():
         )
     except ImportError as exc:
         raise ImportError(
-            "qward is required. In Docker it is bind-mounted at /qward; "
-            "locally: pip install -e ../qiskit-qward"
+            "qward is required: pip install 'qiskit-qward>=0.28.1' "
+            "(Shor was first published in 0.28.1)"
         ) from exc
     return (
         Shor,
