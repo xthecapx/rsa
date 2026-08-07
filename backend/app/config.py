@@ -52,6 +52,18 @@ class Settings(BaseSettings):
     ibm_batch_ids: Annotated[List[Tuple[str, str]], NoDecode] = Field(
         default_factory=list
     )
+    # Reaching IBM takes about eight seconds when healthy and can hang
+    # outright. Batches are finished jobs whose results never change, so they
+    # are cached; the timeout is what stops a hang from holding a request
+    # worker, and the worker cap is what keeps IBM trouble away from the rest
+    # of the API.
+    ibm_request_timeout: float = 15.0
+    ibm_cache_ttl: float = 600.0
+    ibm_max_concurrent: int = 2
+
+    # Ceiling for one circuit build plus simulation on the quantum worker.
+    quantum_timeout: float = 120.0
+
     ibm_console_base: str = "https://quantum.cloud.ibm.com"
     # Batch / session: /instances/{crn_encoded}/sessions/{id}
     ibm_session_path_template: str = "/instances/{crn_encoded}/sessions/{id}"

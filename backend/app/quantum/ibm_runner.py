@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import json
+from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from app.config import Settings, get_settings
+from app.quantum.ibm_cache import TtlCache, annotate
+from app.quantum.worker import run_on_worker
 
 
 def listed_batches(settings: Optional[Settings] = None) -> List[Dict[str, str]]:
@@ -19,6 +22,45 @@ def listed_batches(settings: Optional[Settings] = None) -> List[Dict[str, str]]:
         }
         for label, batch_id in settings.ibm_batch_ids
     ]
+
+
+_batch_cache: Optional[TtlCache] = None
+
+
+def batch_cache(settings: Optional[Settings] = None) -> TtlCache:
+    """The process-wide cache for batch fetches, built on first use."""
+    global _batch_cache
+    if _batch_cache is None:
+        settings = settings or get_settings()
+        _batch_cache = TtlCache(
+            ttl_seconds=settings.ibm_cache_ttl,
+            timeout_seconds=settings.ibm_request_timeout,
+            max_workers=settings.ibm_max_concurrent,
+            name="ibm",
+        )
+    return _batch_cache
+
+
+def fetch_batch_cached(
+    batch_id: str,
+    *,
+    settings: Optional[Settings] = None,
+    label: Optional[str] = None,
+    N: int = 15,
+    a: int = 7,
+) -> Dict[str, Any]:
+    """`fetch_batch` behind the cache, annotated with how fresh the answer is.
+
+    Raises UpstreamTimeout when IBM is unreachable and nothing has been cached
+    for this batch yet.
+    """
+    settings = settings or get_settings()
+    cache = batch_cache(settings)
+    value, info = cache.get_or_fetch(
+        (batch_id, N, a),
+        lambda: fetch_batch(batch_id, settings=settings, label=label, N=N, a=a),
+    )
+    return annotate(value, info)
 
 
 def _service(settings: Settings):
@@ -79,7 +121,6 @@ def fetch_batch(
     from qiskit_ibm_runtime import Batch
 
     from qward.algorithms.shor import (  # type: ignore
-        Shor,
         analyze_counts,
         classical_order,
     )
@@ -160,7 +201,18 @@ def _label_to_m(label: Optional[str]) -> Optional[int]:
     return None
 
 
+@lru_cache(maxsize=32)
 def _reference_rows(N: int, a: int, num_control: int) -> Dict[str, Any]:
+    """Noiseless comparison for a hardware run.
+
+    Depends only on the circuit parameters, so it is computed once per
+    combination rather than on every request. Callers must treat the result as
+    read-only.
+    """
+    return run_on_worker(lambda: _build_reference_rows(N, a, num_control))
+
+
+def _build_reference_rows(N: int, a: int, num_control: int) -> Dict[str, Any]:
     from qward.algorithms.shor import Shor  # type: ignore
     from qiskit_aer import AerSimulator
 
@@ -179,8 +231,22 @@ def _reference_rows(N: int, a: int, num_control: int) -> Dict[str, Any]:
     }
 
 
+def cached_run_path() -> Path:
+    return (
+        Path(__file__).resolve().parent.parent
+        / "data"
+        / "cached_ibm_runs"
+        / "demo_batch.json"
+    )
+
+
 def load_cached() -> Dict[str, Any]:
-    path = Path(__file__).resolve().parent.parent / "data" / "cached_ibm_runs" / "demo_batch.json"
+    """The on-disk demo batch, for running without IBM credentials.
+
+    Raises FileNotFoundError when it is absent, so the caller can answer with
+    a status code rather than a 200 carrying an error message.
+    """
+    path = cached_run_path()
     if not path.exists():
-        return {"error": "no cached run", "path": str(path)}
+        raise FileNotFoundError(f"no cached run at {path}")
     return json.loads(path.read_text())

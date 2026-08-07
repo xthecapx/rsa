@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -46,18 +46,26 @@ class RsaCrackRequest(BaseModel):
     bits: int = 2048
 
 
+# The simulated circuit grows as 2^(num_control + 2*log2(N)), so these bounds
+# are what stops a stray request from building something that exhausts memory
+# and takes the process with it. They are far above anything the game asks for.
+MAX_NUM_CONTROL = 12
+MAX_SHOTS = 8192
+MAX_MODULUS = 255
+
+
 class ShorPlanRequest(BaseModel):
-    N: int = 15
-    a: int = 7
-    num_control: Optional[int] = None
+    N: int = Field(15, ge=3, le=MAX_MODULUS)
+    a: int = Field(7, ge=2, le=MAX_MODULUS)
+    num_control: Optional[int] = Field(None, ge=1, le=MAX_NUM_CONTROL)
 
 
 class ShorSimulateRequest(BaseModel):
-    N: int = 15
-    a: int = 7
-    num_control: Optional[int] = None
-    strategy: str = "permutation"
-    shots: int = 1024
+    N: int = Field(15, ge=3, le=MAX_MODULUS)
+    a: int = Field(7, ge=2, le=MAX_MODULUS)
+    num_control: Optional[int] = Field(None, ge=1, le=MAX_NUM_CONTROL)
+    strategy: Literal["permutation", "swap_network"] = "permutation"
+    shots: int = Field(1024, ge=1, le=MAX_SHOTS)
     include_statevector: bool = False
 
 

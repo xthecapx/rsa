@@ -250,7 +250,13 @@ export interface IbmBatchDetail {
     aer_noiseless?: Record<string, number>;
     true_order?: number;
   };
+  /** True when this is the on-disk demo batch, used without IBM credentials. */
   cached?: boolean;
+  /** True when the backend answered from its own cache rather than calling IBM. */
+  from_cache?: boolean;
+  /** True when IBM was unreachable and the backend served an older copy. */
+  stale?: boolean;
+  age_seconds?: number;
   note?: string;
 }
 
