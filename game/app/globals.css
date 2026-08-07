@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --stage-bg: #0b1f26;
+  --stage-surface: #122a33;
+  --stage-border: #1e4450;
+  --stage-muted: #7a9aa6;
+  --accent-amber: #f5a623;
+  --accent-teal: #2dd4bf;
+  --actor-ale: #38bdf8;
+  --actor-hacker: #fb7185;
+  --actor-brayan: #a3e635;
+  --text-primary: #e8f4f8;
+  --text-secondary: #94b8c4;
+}
+
+html,
+body {
+  height: 100%;
+  background: var(--stage-bg);
+  color: var(--text-primary);
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-press-start), ui-monospace, monospace;
+  overflow: hidden;
+}
+
+/* The Excalibur canvas must never be smoothed or we lose the pixel art. */
+canvas {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  display: block;
+}
+
+@layer components {
+  .panel {
+    @apply rounded-md border-2 border-stage-border bg-stage-surface/95 shadow-stage;
+  }
+
+  .btn-primary {
+    @apply rounded border-2 border-accent-amber bg-accent-amber/20 px-3 py-2 text-accent-amber transition-colors hover:bg-accent-amber/35 disabled:cursor-not-allowed disabled:opacity-40;
+  }
+
+  .btn-ghost {
+    @apply rounded border-2 border-stage-border px-3 py-2 text-stage-muted transition-colors hover:border-accent-teal hover:text-accent-teal disabled:cursor-not-allowed disabled:opacity-40;
+  }
+
+  /* Pokemon-style textbox: thick double border, flat fill. */
+  .textbox {
+    @apply border-4 border-white bg-[#0d2630] shadow-[0_0_0_4px_#0d2630,0_10px_30px_rgba(0,0,0,0.6)];
+  }
+}
+
+.scanline {
+  background-image: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.18) 0px,
+    rgba(0, 0, 0, 0.18) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+}

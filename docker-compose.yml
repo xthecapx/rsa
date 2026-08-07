@@ -33,3 +33,19 @@ services:
       - /app/.next
     depends_on:
       - backend
+
+  game:
+    build:
+      context: ./game
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - BACKEND_URL=http://backend:8000
+      - WATCHPACK_POLLING=true
+    volumes:
+      - ./game:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - backend
