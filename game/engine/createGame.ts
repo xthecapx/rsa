@@ -6,12 +6,17 @@ import { createLoader } from "./resources";
 
 /**
  * React runs effects twice on mount in development, so a boot and a teardown
- * can overlap on the same canvas. Every create/dispose goes through one queue
- * and only the newest engine is kept, otherwise two engines end up sharing the
- * canvas and each frame is drawn twice.
+ * can overlap. Every create/dispose goes through one queue and only the newest
+ * engine is kept, otherwise two engines end up sharing the canvas and each
+ * frame is drawn twice.
  */
 let queue: Promise<unknown> = Promise.resolve();
-let current: Engine | null = null;
+let current: LiveGame | null = null;
+
+interface LiveGame {
+  engine: Engine;
+  canvas: HTMLCanvasElement;
+}
 
 function serial<T>(work: () => Promise<T>): Promise<T> {
   const next = queue.then(work, work);
@@ -22,21 +27,36 @@ function serial<T>(work: () => Promise<T>): Promise<T> {
   return next;
 }
 
-async function teardown(engine: Engine): Promise<void> {
+async function teardown(live: LiveGame): Promise<void> {
   bus.setCommandHandler(null);
   bus.drain();
-  engine.stop();
-  engine.dispose();
-  if (current === engine) current = null;
+  live.engine.stop();
+  live.engine.input?.pointers?.detach();
+  live.engine.input?.toggleEnabled(false);
+  live.engine.dispose();
+
+  // Excalibur attaches pointer listeners to the canvas more than once and
+  // detaches only the most recent set, and dispose() nulls the screen's canvas
+  // reference. Any surviving listener would then throw on the next mouse move,
+  // so throw the element away too: a detached node receives no events.
+  live.canvas.remove();
+
+  if (current === live) current = null;
 }
 
 /**
  * Excalibur touches `window` and `document`, so this module must only ever be
  * imported from a client component loaded with `ssr: false`.
+ *
+ * The canvas is created here rather than rendered by React because each engine
+ * needs an element of its own to leave its listeners on.
  */
-export function createGame(canvas: HTMLCanvasElement): Promise<Engine> {
+export function createGame(container: HTMLElement): Promise<Engine> {
   return serial(async () => {
     if (current) await teardown(current);
+
+    const canvas = document.createElement("canvas");
+    container.appendChild(canvas);
 
     const engine = new Engine({
       canvasElement: canvas,
@@ -51,7 +71,7 @@ export function createGame(canvas: HTMLCanvasElement): Promise<Engine> {
     });
 
     await engine.start("city", { loader: createLoader() });
-    current = engine;
+    current = { engine, canvas };
     return engine;
   });
 }
@@ -59,7 +79,7 @@ export function createGame(canvas: HTMLCanvasElement): Promise<Engine> {
 export function disposeGame(engine: Engine | null): Promise<void> {
   return serial(async () => {
     // A stale generation losing the race must not tear down the live engine.
-    if (!engine || engine !== current) return;
-    await teardown(engine);
+    if (!engine || current?.engine !== engine) return;
+    await teardown(current);
   });
 }

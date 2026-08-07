@@ -9,7 +9,7 @@ export const act1 = defineAct({
   title: "Plaintext",
   subtitle: "No secrets on the wire",
   brief:
-    "Ale and Brayan share one cable and no encryption. Clip on quietly and read whatever crosses it.",
+    "Ale sends Brayan a letter over an unencrypted cable. Tap the line and see what an eavesdropper can read.",
 
   entry: "van",
   caught: "caught",
@@ -43,7 +43,7 @@ export const act1 = defineAct({
       lines: [
         {
           speaker: "system",
-          text: "A grey junction cabinet. Behind the door, one pair of copper wires carrying everything Ale says to Brayan.",
+          text: "A grey junction cabinet. Behind the door, a pair of copper wires carries everything Ale sends to Brayan.",
         },
         { speaker: "hacker", text: "So. How do I get in the middle of this?" },
       ],
@@ -74,11 +74,11 @@ export const act1 = defineAct({
       lines: [
         {
           speaker: "hacker",
-          text: "Tap is live. I am not changing anything, I am not slowing anything down. I am simply also listening.",
+          text: "The tap is live. I am not changing or delaying the message. I am simply listening to a copy.",
         },
         {
           speaker: "system",
-          text: "This is the passive eavesdropper: no interference, no trace, complete access.",
+          text: "This is passive eavesdropping: the message still reaches Brayan normally, but someone else can read it on the way.",
         },
       ],
       next: "chatter",
@@ -111,7 +111,7 @@ export const act1 = defineAct({
         },
         {
           speaker: "hacker",
-          text: 'It says "{letter}". No key, no cipher, no work. The letter was the payload.',
+          text: 'It says "{letter}". No key to find and no cipher to break. The message is already readable.',
         },
         { speaker: "brayan", text: "Got it. {letter}. Perfect." },
       ],
@@ -122,13 +122,13 @@ export const act1 = defineAct({
       lines: [
         {
           speaker: "system",
-          text: "Every letter is a number: A is 1, Z is 26. Ale sent m = {value} with nothing wrapped around it.",
+          text: 'Ale sent the letter "{letter}". The demo labels it m = {value} because cryptographic formulas work with numbers—here A = 1 through Z = 26. That number is an encoding of the letter, not a different message.',
         },
-        { speaker: "hacker", text: "So what exactly was protecting that message?" },
+        { speaker: "hacker", text: "Whether I display it as a letter or a number, it is still exposed. What was protecting it?" },
       ],
       choices: [
         {
-          label: "Nothing. The message and the payload were the same thing.",
+          label: "Nothing. Anyone who could read the wire could read the letter.",
           outcome: "advance",
           next: "win",
         },
@@ -136,7 +136,7 @@ export const act1 = defineAct({
           label: "The fact that only 26 letters are possible.",
           outcome: "retry",
           feedback:
-            "A small message space is not secrecy. You did not have to guess between 26 options, you read the answer directly off the wire.",
+            "A small set of possible letters is not protection. You did not have to guess: the wire revealed the letter directly.",
         },
         {
           label: "Rewrite the payload before it reaches Brayan and see what he does.",
@@ -156,7 +156,7 @@ export const act1 = defineAct({
       lines: [
         {
           speaker: "hacker",
-          text: "Confidentiality on this line is exactly zero. Whatever they send, I read.",
+          text: "This line provides no confidentiality. If I can access the wire, I can read whatever they send.",
         },
         {
           speaker: "system",

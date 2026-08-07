@@ -10,7 +10,7 @@ export const act3 = defineAct({
   title: "RSA",
   subtitle: "The key is public, the factors are not",
   brief:
-    "Brayan publishes a public key and Ale encrypts with it. Everything you need is on the wire except the one number that matters.",
+    "Brayan shares a public key that anyone may copy, while keeping a separate private key secret. Find out why seeing the public key is not enough to decrypt Ale's message.",
 
   entry: "van",
   caught: "caught",
@@ -22,7 +22,7 @@ export const act3 = defineAct({
       lines: [
         {
           speaker: "hacker",
-          text: "New scheme. Brayan is handing out a key in public and claiming that is fine.",
+          text: "New scheme. Brayan is sharing an encryption key in public and claiming that it is safe for anyone to see.",
         },
         {
           speaker: "hacker",
@@ -49,11 +49,11 @@ export const act3 = defineAct({
       lines: [
         {
           speaker: "brayan",
-          text: "Ale, here is my public key: e = {e}, N = {modulus}. Anyone can have it. Encrypt with that.",
+          text: "Ale, here is my public key: e = {e}, N = {modulus}. Use it to encrypt your message before you send it.",
         },
         {
           speaker: "system",
-          text: "The pair (e, N) crosses the tap in the clear. The private exponent d never leaves Brayan's machine.",
+          text: "The pair (e, N) crosses the wire openly. Brayan keeps a different value, the private exponent d, on his own machine.",
         },
         { speaker: "hacker", text: "He is right that I can have it. The question is what I do with it." },
       ],
@@ -68,14 +68,14 @@ export const act3 = defineAct({
           label: "Wait for the private key to cross so I can grab that instead.",
           outcome: "retry",
           feedback:
-            "It never crosses. That is the entire point of a public key scheme: the private half is generated on Brayan's side and stays there. Nothing you can do to this wire will make it travel.",
+            "It never crosses. Brayan generated both keys, shared only the public one, and kept the private one locally. Listening to this wire cannot reveal a value that was never sent.",
         },
         {
           label: "Swap in my own public key so Ale encrypts to me instead.",
           outcome: "suspicion",
           suspicion: 55,
           feedback:
-            'This is the textbook man in the middle, and it is also the loudest thing in this act. Brayan reads his key fingerprint aloud over the phone, Ale reads back a different one. The attack works only if nobody ever compares.',
+            'Replacing the key is a real man-in-the-middle attack, but authenticated keys are designed to stop it. Brayan reads his key fingerprint over the phone, Ale reads back a different one, and they detect the substitution.',
         },
       ],
     },
@@ -84,11 +84,15 @@ export const act3 = defineAct({
       lines: [
         {
           speaker: "hacker",
-          text: "So I hold (e = {e}, N = {modulus}). I can encrypt anything I like. I still cannot read anything.",
+          text: "Now I have (e = {e}, N = {modulus}). That lets me encrypt a message for Brayan, but it does not let me decrypt messages sent to him.",
         },
         {
           speaker: "system",
-          text: "Encryption is c = m^e mod N. Decryption is m = c^d mod N. Only d turns the operation around.",
+          text: "In this toy example, encryption is c = m^e mod N and decryption is m = c^d mod N. Because there are only a few possible letters, you could also encrypt every candidate and compare the results. Real RSA uses randomized padding, such as OAEP, specifically to prevent that kind of lookup.",
+        },
+        {
+          speaker: "system",
+          text: "This act therefore isolates the attack that matters for RSA at realistic message sizes: recovering the private key by factoring N.",
         },
       ],
       next: "cipher",
@@ -106,16 +110,16 @@ export const act3 = defineAct({
         },
       ],
       lines: [
-        { speaker: "ale", text: "Sent. It is a number now, not a letter." },
+        { speaker: "ale", text: 'Sent. My letter "{letter}" is encoded and encrypted now.' },
         {
           speaker: "system",
-          text: "The tap logs c = {cipherNumber}. You have c, e and N. You are missing d.",
+          text: 'For the demo, "{letter}" is represented by m = {value}. RSA transforms it into the ciphertext c = {cipherNumber}. The tap reveals c, e, and N—but not d.',
         },
-        { speaker: "hacker", text: "One number between me and the message. How do I get it?" },
+        { speaker: "hacker", text: "I have the ciphertext and the public key. How could I reconstruct the missing private key?" },
       ],
       choices: [
         {
-          label: "Factor N. The two primes give me phi(N), and phi(N) gives me d.",
+          label: "Factor N. Its two primes let me compute phi(N), then recover d from e.",
           outcome: "advance",
           next: "factored",
           effects: [{ kind: "api", call: "rsaCrack" }],
@@ -124,7 +128,7 @@ export const act3 = defineAct({
           label: "Try every value of d from 1 upward until the message reads correctly.",
           outcome: "retry",
           feedback:
-            "That works for a toy modulus and collapses immediately for a real one. You are searching a space the size of N. Factoring is the shortcut, and it is the only structural weakness RSA has.",
+            "Brute-forcing d works only for tiny classroom values. RSA chooses d from an enormous range. For this lesson, factoring N is the useful route because the factors reveal the information needed to derive d.",
         },
         {
           label: 'Tell Brayan the line is noisy and ask Ale to resend in plaintext.',
@@ -141,11 +145,11 @@ export const act3 = defineAct({
       lines: [
         {
           speaker: "system",
-          text: "N = {modulus} came apart into {factors} by trial division, essentially instantly.",
+          text: "This classroom modulus is tiny: trial division splits N = {modulus} into {factors} almost instantly.",
         },
         {
           speaker: "hacker",
-          text: 'With p and q I rebuilt phi(N), inverted e, and got d = {d}. The message was "{recovered}".',
+          text: 'With p and q, I computed phi(N). Then I found the modular inverse of e, giving d = {d}, and decrypted the letter "{recovered}".',
         },
         { speaker: "brayan", text: "This is the strongest thing we have used all week." },
         { speaker: "hacker", text: "It is. That is what worries me about the next part." },
@@ -157,11 +161,11 @@ export const act3 = defineAct({
       lines: [
         {
           speaker: "system",
-          text: "This modulus was two digits. A real one is 2048 bits, and the same attack with the best known classical algorithm would take roughly {projectedYears} years.",
+          text: "This modulus has only two digits. A typical RSA modulus has 2048 bits. The game's classical estimate for factoring one with current methods is about {projectedYears} years.",
         },
         {
           speaker: "hacker",
-          text: "So RSA is not safe because factoring is impossible. It is safe because factoring is slow.",
+          text: "So factoring is not impossible. RSA depends on it being impractically slow at real key sizes.",
         },
         { speaker: "hacker", text: "Which means the question is what could make it fast." },
       ],
@@ -175,7 +179,7 @@ export const act3 = defineAct({
           label: "More machines. Rent a few thousand and split the work.",
           outcome: "retry",
           feedback:
-            "You are trying to divide {projectedYears} years by a number you can afford. Throwing hardware at an exponential problem moves the finish line by almost nothing.",
+            "More classical machines can help, but not enough to make a properly generated RSA-2048 key practical to factor. The best known classical factoring methods still scale too poorly.",
         },
         {
           label: "Forget the maths and take Brayan's laptop while he is at lunch.",
@@ -195,11 +199,11 @@ export const act3 = defineAct({
       lines: [
         {
           speaker: "hacker",
-          text: "Their whole scheme rests on one assumption: that nobody can factor quickly. I need a machine that breaks that assumption.",
+          text: "The mathematical security of this RSA example rests on large-number factoring remaining slow. I need an algorithm that changes that scaling.",
         },
         {
           speaker: "system",
-          text: "Act 3 clear. There is exactly one known way to do this, and it does not run on the laptop in your van.",
+          text: "Act 3 clear. Shor's quantum algorithm offers that change in scaling, but the hardware it needs is not in the laptop in your van.",
         },
       ],
       ending: "win",

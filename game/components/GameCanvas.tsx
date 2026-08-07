@@ -15,7 +15,7 @@ import { useGame } from "@/game/state";
  * context at import time, so the page must load this with `ssr: false`.
  */
 export function GameCanvas({ act }: { act: ActNumber }) {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const hostRef = useRef<HTMLDivElement | null>(null);
   const engineRef = useRef<Engine | null>(null);
   const [failed, setFailed] = useState<string | null>(null);
 
@@ -25,10 +25,10 @@ export function GameCanvas({ act }: { act: ActNumber }) {
     // Keep the booted engine on the promise itself: teardown has to wait for
     // the boot it belongs to, or it disposes nothing and leaks a live engine.
     const booted = (async (): Promise<Engine | null> => {
-      const canvas = canvasRef.current;
-      if (!canvas) return null;
+      const host = hostRef.current;
+      if (!host) return null;
       try {
-        const engine = await createGame(canvas);
+        const engine = await createGame(host);
         if (cancelled) return engine;
         engineRef.current = engine;
         await startAct(act);
@@ -70,9 +70,9 @@ export function GameCanvas({ act }: { act: ActNumber }) {
 
   return (
     <div className="absolute inset-0">
-      {/* Excalibur owns the canvas dimensions in FitContainer mode; sizing it
-          with CSS too makes the two fight over the element every resize. */}
-      <canvas ref={canvasRef} />
+      {/* The canvas is created and removed by the engine, so React must not
+          own this subtree. Excalibur measures this host for FitContainer. */}
+      <div ref={hostRef} className="absolute inset-0" />
       {failed && (
         <div className="absolute inset-0 grid place-items-center bg-stage-bg/90 p-8 text-center text-[12px] text-actor-hacker">
           The street could not be drawn: {failed}

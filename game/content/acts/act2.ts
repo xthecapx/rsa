@@ -9,7 +9,7 @@ export const act2 = defineAct({
   title: "Caesar",
   subtitle: "Twenty five keys is not a key space",
   brief:
-    "Ale shifts every letter by a secret k before sending it. Find k without ever asking either of them for it.",
+    "Ale now shifts every letter by a secret amount. Capture the encrypted letter and test how much protection 25 possible keys really provide.",
 
   entry: "van",
   caught: "caught",
@@ -21,9 +21,9 @@ export const act2 = defineAct({
       lines: [
         {
           speaker: "hacker",
-          text: "They noticed. Ale spent the morning reading about ciphers and now the wire is full of nonsense.",
+          text: "They noticed the problem. Ale spent the morning reading about ciphers, and now the letters on the wire no longer match what she types.",
         },
-        { speaker: "hacker", text: "Nonsense is not the same as unreadable. Let us find out which one this is." },
+        { speaker: "hacker", text: "Scrambled is not necessarily secure. Let us see how many possibilities her cipher leaves me." },
       ],
       next: "approach",
     },
@@ -35,9 +35,9 @@ export const act2 = defineAct({
         { kind: "panel", open: "terminal" },
       ],
       lines: [
-        { speaker: "ale", text: "I am shifting every letter by our number before I send it. Same number as always." },
-        { speaker: "brayan", text: "Understood. I will shift it back on my side." },
-        { speaker: "hacker", text: "They agreed on the number somewhere I could not hear. Fine." },
+        { speaker: "ale", text: "I am moving every letter forward by our secret shift before I send it. Same shift as always." },
+        { speaker: "brayan", text: "Understood. I will move each letter back by the same amount." },
+        { speaker: "hacker", text: "They agreed on the shift somewhere else, so it never crossed this wire. I will have to recover it." },
       ],
       choices: [
         {
@@ -75,13 +75,17 @@ export const act2 = defineAct({
       lines: [
         {
           speaker: "system",
-          text: 'The tap logs a single character: "{cipherChar}". Brayan receives the same thing and reads it happily.',
+          text: 'Ale types "{letter}", and the tap records the encrypted letter "{cipherChar}". Brayan reverses the shift and reads it normally.',
         },
         {
           speaker: "hacker",
-          text: "One letter of ciphertext and no key. Formally, c = (m + k) mod 26 and I know neither m nor k.",
+          text: "The cipher turns each letter into a position from 0 to 25, adds the secret shift k, and wraps around the alphabet: c = (m + k) mod 26.",
         },
-        { speaker: "hacker", text: "But I do know something about k." },
+        {
+          speaker: "system",
+          text: 'For this training example, the original letter "{letter}" is shown so you can verify each attempt. From one encrypted letter alone, every shifted letter would still be possible.',
+        },
+        { speaker: "hacker", text: "Even so, there are only 25 nontrivial shifts to test." },
       ],
       next: "attack",
     },
@@ -92,11 +96,11 @@ export const act2 = defineAct({
           speaker: "system",
           text: "k has to be a whole number between 1 and 25. Shifting by 0 or by 26 would leave the message unchanged.",
         },
-        { speaker: "hacker", text: "So how do I get m?" },
+        { speaker: "hacker", text: "What is the reliable way to search such a small key space?" },
       ],
       choices: [
         {
-          label: "Try all 25 shifts and look at which one produces sense.",
+          label: "Try all 25 shifts and compare every candidate with the expected message or its context.",
           outcome: "advance",
           next: "cracked",
           effects: [{ kind: "api", call: "caesarCrack" }],
@@ -105,7 +109,7 @@ export const act2 = defineAct({
           label: "Assume it is 13. Everyone uses ROT13.",
           outcome: "retry",
           feedback:
-            "You might get lucky, and luck is not an attack. If 13 is wrong you have learned nothing, and you have no way to tell whether you were right.",
+            "You might get lucky, but guessing one popular shift is not a reliable attack. Testing the whole key space guarantees that the correct shift is among the candidates.",
         },
         {
           label: "Send Brayan my own ciphertext and see what he answers.",
@@ -121,11 +125,11 @@ export const act2 = defineAct({
       lines: [
         {
           speaker: "system",
-          text: "All 25 candidates computed in {crackMs} milliseconds. Exactly one of them was a real message.",
+          text: 'All 25 candidates were computed in {crackMs} milliseconds. In this demo, the known original letter "{letter}" identifies the matching shift.',
         },
         {
           speaker: "hacker",
-          text: 'k = {shift}, and the letter was "{letter}". Their secret number is now my secret number, and I never had to ask.',
+          text: 'The matching key is k = {shift}, which turns "{cipherChar}" back into "{letter}". With a longer message, readable words and context usually reveal the right candidate.',
         },
         { speaker: "brayan", text: "Works perfectly. This is much safer than before." },
         { speaker: "hacker", text: "It is not." },
@@ -137,7 +141,7 @@ export const act2 = defineAct({
       lines: [
         {
           speaker: "system",
-          text: "The cost of breaking Caesar is the size of its key space. Twenty five decryptions is not a defence, it is a formality.",
+          text: "Caesar has only 25 useful keys. Trying every one is so cheap that the secret shift offers almost no protection.",
         },
         { speaker: "hacker", text: "So what would actually stop me here?" },
       ],
@@ -151,7 +155,7 @@ export const act2 = defineAct({
           label: "A longer alphabet, so there are more shifts to try.",
           outcome: "retry",
           feedback:
-            "Doubling the alphabet doubles the work. You need the search to grow beyond any machine, not to get twice as annoying.",
+            "A larger alphabet adds only a few more shifts. A secure key space must be so large that checking every key is computationally infeasible.",
         },
         {
           label: "Keeping the algorithm secret so nobody knows it is a Caesar shift.",
@@ -171,7 +175,7 @@ export const act2 = defineAct({
       lines: [
         {
           speaker: "hacker",
-          text: "They need a key space I cannot walk through. That means real mathematics, not an agreed-upon number.",
+          text: "They need a key space far too large to search one key at a time. That requires a modern cipher, not a single alphabet shift.",
         },
         {
           speaker: "system",

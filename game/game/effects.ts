@@ -76,7 +76,7 @@ async function runApi(call: string): Promise<void> {
       for (const step of res.trace) say({ tone: "info", text: step.detail });
       say({
         tone: "bad",
-        text: `Payload on the wire: "${res.packet.payload}" (m = ${res.value}). Readable: ${res.packet.readable_by_hacker}`,
+        text: `Readable payload on the wire: "${res.packet.payload}". Demo encoding: m = ${res.value}.`,
       });
       return;
     }
@@ -87,7 +87,7 @@ async function runApi(call: string): Promise<void> {
       say({ tone: "info", text: res.equation });
       say({
         tone: "note",
-        text: `Ale sent "${res.ciphertext}". Without k that is just a letter.`,
+        text: `Ciphertext on the wire: "${res.ciphertext}". The original letter is hidden by the unknown shift k.`,
       });
       return;
     }
@@ -129,7 +129,7 @@ async function runApi(call: string): Promise<void> {
       for (const step of res.trace) say({ tone: "info", text: step.detail });
       say({
         tone: "note",
-        text: `Public key (e=${res.e}, N=${res.N}) is out in the open. d=${res.d} never leaves Brayan.`,
+        text: `Public key (e=${res.e}, N=${res.N}) is visible. The private exponent d stays with Brayan.`,
       });
       return;
     }

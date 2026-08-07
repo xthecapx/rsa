@@ -10,7 +10,7 @@ export const act4 = defineAct({
   title: "Shor",
   subtitle: "You do not own the machine you need",
   brief:
-    "Factoring is what stands between you and Brayan's private key. Open an uplink to a real quantum processor and let period finding do the work.",
+    "Factoring protects Brayan's toy RSA private key. Connect to a hosted quantum processor and learn how Shor turns period finding into factors.",
 
   entry: "van",
   caught: "caught",
@@ -34,7 +34,7 @@ export const act4 = defineAct({
       lines: [
         {
           speaker: "hacker",
-          text: "There is no quantum computer in this bag. There is no quantum computer in anyone's bag.",
+          text: "There is no useful quantum computer in this bag. Machines like that live in laboratories, not parked vans.",
         },
         {
           speaker: "system",
@@ -42,7 +42,7 @@ export const act4 = defineAct({
         },
         {
           speaker: "hacker",
-          text: "So I do what everyone else does with hardware they cannot own. I rent it, over the network.",
+          text: "So I will use it the way researchers use most quantum hardware today: submit a job to a hosted system over the network.",
         },
       ],
       next: "uplink",
@@ -52,7 +52,7 @@ export const act4 = defineAct({
       lines: [
         {
           speaker: "system",
-          text: "The laptop still has the tap running on one interface. The other one is looking for a route out.",
+          text: "The laptop still has the captured public key and ciphertext. It now needs a network route to a quantum service.",
         },
         { speaker: "hacker", text: "How am I getting to a QPU from a parked van?" },
       ],
@@ -67,7 +67,7 @@ export const act4 = defineAct({
           label: "Buy one and have it delivered here.",
           outcome: "retry",
           feedback:
-            "You cannot. These machines are not products on a shelf; they are shared instruments with queues. Remote access is not a shortcut in this story, it is how essentially everyone uses quantum hardware.",
+            "A useful quantum processor is specialized laboratory equipment, not a consumer device. Hosted systems accept remote jobs and usually place them in a queue.",
         },
         {
           label: "Log in with the university account I found in a paper's supplementary material.",
@@ -85,11 +85,11 @@ export const act4 = defineAct({
       lines: [
         {
           speaker: "hacker",
-          text: "Uplink is open. Now I pick the modulus I am attacking and a base to raise to powers of it.",
+          text: "The uplink is open. I will give Shor's algorithm the modulus N and choose a base a that shares no factor with it.",
         },
         {
           speaker: "system",
-          text: "Shor finds the period r of a^x mod N. Once you have r, gcd(a^(r/2) +/- 1, N) hands you the factors. The quantum part is only the period.",
+          text: "The quantum subroutine looks for the period r in the repeating sequence a^x mod N. When r satisfies the needed conditions, classical gcd calculations using a^(r/2) - 1 and a^(r/2) + 1 can reveal factors of N.",
         },
         {
           speaker: "system",
@@ -103,16 +103,16 @@ export const act4 = defineAct({
       lines: [
         {
           speaker: "system",
-          text: "{qpuName} returned a period of r = {order}, and N = {modulus} split into {factors}.",
+          text: "{qpuName} returned the useful period r = {order}. The classical follow-up then split N = {modulus} into {factors}.",
         },
         {
           speaker: "hacker",
-          text: 'From there it is the same arithmetic as before. phi(N), invert e, d = {d}, and Ale\'s message was "{recovered}".',
+          text: 'From there, the RSA steps are the same as before: compute phi(N), find the modular inverse of e, recover d = {d}, and decrypt Ale\'s letter as "{recovered}".',
         },
         { speaker: "brayan", text: "Nothing on this line has changed. Everything still looks normal." },
         {
           speaker: "hacker",
-          text: "Nothing did change. That is what makes this the most dangerous version of the attack.",
+          text: "Nothing on their line changed. I attacked the mathematics behind the captured ciphertext, so passive monitoring would not reveal it.",
         },
       ],
       next: "reflect",
@@ -122,13 +122,13 @@ export const act4 = defineAct({
       lines: [
         {
           speaker: "system",
-          text: "The classical attack on this modulus would take about {projectedYears} years at 2048 bits. Shor's cost grows like a polynomial in the number of digits instead of exponentially.",
+          text: "For RSA-2048, the game's classical estimate is about {projectedYears} years. The best known classical factoring algorithms are sub-exponential but still impractical at that size; Shor's idealized running time grows polynomially with the key length.",
         },
         { speaker: "hacker", text: "So what actually saves Ale and Brayan?" },
       ],
       choices: [
         {
-          label: "Cryptography whose hardness does not reduce to factoring or discrete logs.",
+          label: "Migrate to post-quantum cryptography that does not rely on factoring or discrete logarithms.",
           outcome: "advance",
           next: "win",
         },
@@ -136,13 +136,13 @@ export const act4 = defineAct({
           label: "A longer RSA key. Go to 4096 bits, or 8192.",
           outcome: "retry",
           feedback:
-            "Doubling the key roughly doubles the qubits and the depth Shor needs. It is a linear cost to the attacker against a problem they have already solved in principle. It buys time, not safety.",
+            "A larger RSA key raises the quantum resources required, but it does not remove Shor's polynomial-time attack. It may buy time; it is not a post-quantum solution.",
         },
         {
           label: "Nothing. Every message ever recorded is already lost.",
           outcome: "retry",
           feedback:
-            "Recorded ciphertext really is at risk, which is why harvest-now-decrypt-later is taken seriously. But hardware this size cannot factor a 2048-bit modulus today, and post-quantum schemes are already being deployed.",
+            "Recorded ciphertext is a real concern—often called harvest now, decrypt later. But today's quantum computers cannot factor a properly generated RSA-2048 modulus, and systems can migrate to post-quantum cryptography.",
         },
       ],
     },
@@ -156,11 +156,11 @@ export const act4 = defineAct({
       lines: [
         {
           speaker: "hacker",
-          text: "Four acts. Plaintext, a shift, a public key, and finally the assumption underneath all of it.",
+          text: "Four acts: readable plaintext, a tiny shift cipher, public-key encryption, and finally the factoring assumption behind RSA.",
         },
         {
           speaker: "system",
-          text: "You never broke into a building and you never guessed a password. You sat between two people and waited for the mathematics to run out.",
+          text: "The lesson is not that encryption always fails. Plaintext offered no protection, Caesar offered too little, RSA resists classical factoring at real key sizes, and sufficiently capable quantum hardware would change that calculation. Post-quantum cryptography is designed for that future threat.",
         },
       ],
       ending: "win",

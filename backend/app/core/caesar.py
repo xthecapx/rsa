@@ -18,18 +18,23 @@ def _shift_char(char: str, k: int) -> str:
 def caesar_encrypt(char: str, k: int = 1) -> Dict[str, Any]:
     """Encrypt a single character by shifting k positions."""
     c = char.strip().upper()
+    plaintext_value = char_to_message(c)
     ciphertext = _shift_char(c, k)
+    ciphertext_value = char_to_message(ciphertext)
+    equation = (
+        f"(({plaintext_value} - 1 + {k}) mod 26) + 1 = {ciphertext_value}"
+    )
     return {
         "plaintext": c,
-        "plaintext_value": char_to_message(c),
+        "plaintext_value": plaintext_value,
         "shift": k,
         "ciphertext": ciphertext,
-        "ciphertext_value": char_to_message(ciphertext),
-        "equation": f"({char_to_message(c)} + {k}) mod 26 = {char_to_message(ciphertext)}",
+        "ciphertext_value": ciphertext_value,
+        "equation": equation,
         "trace": [
-            {"step": "map", "detail": f"{c} → {char_to_message(c)}"},
-            {"step": "shift", "detail": f"({char_to_message(c)} + {k}) mod 26"},
-            {"step": "result", "detail": f"{char_to_message(ciphertext)} → {ciphertext}"},
+            {"step": "map", "detail": f"{c} → {plaintext_value}"},
+            {"step": "shift", "detail": equation},
+            {"step": "result", "detail": f"{ciphertext_value} → {ciphertext}"},
         ],
     }
 
@@ -37,14 +42,19 @@ def caesar_encrypt(char: str, k: int = 1) -> Dict[str, Any]:
 def caesar_decrypt(char: str, k: int = 1) -> Dict[str, Any]:
     """Decrypt by shifting -k."""
     c = char.strip().upper()
+    ciphertext_value = char_to_message(c)
     plaintext = _shift_char(c, -k)
+    plaintext_value = char_to_message(plaintext)
+    equation = (
+        f"(({ciphertext_value} - 1 - {k}) mod 26) + 1 = {plaintext_value}"
+    )
     return {
         "ciphertext": c,
         "shift": k,
         "plaintext": plaintext,
-        "equation": f"({char_to_message(c)} - {k}) mod 26 = {char_to_message(plaintext)}",
+        "equation": equation,
         "trace": [
-            {"step": "unshift", "detail": f"({char_to_message(c)} - {k}) mod 26 → {plaintext}"},
+            {"step": "unshift", "detail": f"{equation} → {plaintext}"},
         ],
     }
 
