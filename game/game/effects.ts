@@ -1,6 +1,8 @@
 import { api } from "@/lib/api";
-import type { Effect } from "@/content/types";
+import type { ApiCallName, Effect } from "@/content/types";
 import { bus } from "@/engine/bus";
+import { fill } from "./interpolate";
+import { charOf, lettersOf } from "./secret";
 import { useGame } from "./state";
 import type { TerminalLine } from "./state";
 
@@ -66,28 +68,58 @@ export function modInverse(a: number, m: number): number | null {
   return ((old_s % m) + m) % m;
 }
 
+/**
+ * Run one of the scripted backend calls on demand, with the same busy label
+ * and log output the story gets. The workbench uses this so a button the
+ * player presses behaves exactly like the same step in a cutscene.
+ */
+export async function runApiCall(call: ApiCallName): Promise<void> {
+  const store = useGame.getState();
+  store.setBusy(LABELS[call] ?? "Working");
+  try {
+    await runApi(call);
+  } finally {
+    useGame.getState().setBusy(null);
+  }
+}
+
 async function runApi(call: string): Promise<void> {
   const { vars, setVars } = useGame.getState();
 
   switch (call) {
+    // Ale types a whole word, so every character goes down the wire through
+    // the same endpoint. The wire only ever carries the numbers.
     case "plaintext": {
-      const res = await api.plaintext(vars.letter);
-      setVars({ value: res.value });
-      for (const step of res.trace) say({ tone: "info", text: step.detail });
-      say({
-        tone: "bad",
-        text: `Readable payload on the wire: "${res.packet.payload}". Demo encoding: m = ${res.value}.`,
-      });
+      const numbers: number[] = [];
+      for (const char of lettersOf(vars.message)) {
+        const res = await api.plaintext(char);
+        numbers.push(res.value);
+      }
+      const values = numbers.join(" ");
+      setVars({ value: numbers[0], values, cipherText: values });
+      say({ tone: "info", text: `${vars.message.length} characters, mapped A=1 .. Z=26.` });
+      say({ tone: "bad", text: `Payload on the wire: ${values}` });
       return;
     }
 
     case "caesarEncrypt": {
-      const res = await api.caesar.encrypt(vars.letter, vars.shift);
-      setVars({ cipherChar: res.ciphertext, value: res.plaintext_value });
-      say({ tone: "info", text: res.equation });
+      const cipher: string[] = [];
+      const numbers: number[] = [];
+      for (const char of lettersOf(vars.message)) {
+        const res = await api.caesar.encrypt(char, vars.shift);
+        cipher.push(res.ciphertext);
+        numbers.push(res.ciphertext_value);
+      }
+      const cipherText = cipher.join("");
+      setVars({
+        cipherChar: cipher[0],
+        cipherText,
+        values: numbers.join(" "),
+      });
+      say({ tone: "info", text: `Every character shifted by the same secret k.` });
       say({
         tone: "note",
-        text: `Ciphertext on the wire: "${res.ciphertext}". The original letter is hidden by the unknown shift k.`,
+        text: `Ciphertext on the wire: "${cipherText}". Without k it is just noise.`,
       });
       return;
     }
@@ -124,7 +156,8 @@ async function runApi(call: string): Promise<void> {
         p: res.p,
         q: res.q,
         value,
-        letter: String.fromCharCode(64 + value),
+        letter: charOf(value),
+        message: charOf(value),
       });
       for (const step of res.trace) say({ tone: "info", text: step.detail });
       say({
@@ -139,7 +172,7 @@ async function runApi(call: string): Promise<void> {
         throw new Error("No plaintext or public key yet.");
       }
       const res = await api.rsa.encrypt(vars.value, vars.e, vars.modulus);
-      setVars({ cipherNumber: res.c });
+      setVars({ cipherNumber: res.c, cipherText: String(res.c) });
       say({ tone: "info", text: res.equation });
       say({ tone: "bad", text: `Ciphertext on the wire: c = ${res.c}` });
       return;
@@ -230,7 +263,7 @@ async function runApi(call: string): Promise<void> {
       });
       if (fresh.cipherNumber !== null) {
         const res = await api.rsa.decrypt(fresh.cipherNumber, d, fresh.modulus);
-        const letter = String.fromCharCode(64 + res.m);
+        const letter = charOf(res.m);
         setVars({ recovered: letter });
         say({ tone: "info", text: res.equation });
         say({ tone: "good", text: `m = ${res.m}, which is the letter "${letter}".` });
@@ -317,11 +350,22 @@ export async function runEffect(effect: Effect): Promise<void> {
       store.setPanel(effect.open);
       return;
     case "terminal":
-      say({ tone: "note", text: effect.text });
+      say({ tone: "note", text: fill(effect.text, store.vars) });
       return;
     case "wait":
       await new Promise((resolve) => setTimeout(resolve, effect.ms));
       return;
+    case "task":
+      store.setTaskStatus(effect.id, effect.status);
+      return;
+    case "capture": {
+      const { vars } = useGame.getState();
+      store.setCapture({
+        payload: fill(effect.payload, vars),
+        scheme: fill(effect.scheme, vars),
+      });
+      return;
+    }
   }
 }
 

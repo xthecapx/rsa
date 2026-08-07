@@ -23,6 +23,7 @@ const config: Config = {
           ale: "#38bdf8",
           hacker: "#fb7185",
           brayan: "#a3e635",
+          boss: "#c084fc",
         },
         suspicion: {
           calm: "#a3e635",

@@ -13,12 +13,14 @@ const CAST: Record<Exclude<Speaker, "system">, { col: number; row: number }> = {
   ale: { col: 0, row: 5 },
   brayan: { col: 1, row: 6 },
   hacker: { col: 0, row: 10 },
+  boss: { col: 1, row: 9 },
 };
 
 const BORDER: Record<Speaker, string> = {
   ale: "border-actor-ale",
   brayan: "border-actor-brayan",
   hacker: "border-actor-hacker",
+  boss: "border-actor-boss",
   system: "border-stage-border",
 };
 
@@ -26,13 +28,15 @@ export const SPEAKER_NAME: Record<Speaker, string> = {
   ale: "Ale",
   brayan: "Brayan",
   hacker: "You",
-  system: "",
+  boss: "The client",
+  system: "Notes",
 };
 
 export const SPEAKER_COLOR: Record<Speaker, string> = {
   ale: "text-actor-ale",
   brayan: "text-actor-brayan",
   hacker: "text-actor-hacker",
+  boss: "text-actor-boss",
   system: "text-accent-teal",
 };
 

@@ -5,7 +5,7 @@ export interface TileEntry {
   solid: boolean;
 }
 
-export type Landmark = "ale" | "brayan" | "tap" | "van";
+export type Landmark = "ale" | "brayan" | "tap" | "car";
 
 export interface GridPos {
   x: number;
@@ -51,11 +51,11 @@ export const LANDMARKS: Record<Landmark, LandmarkSpec> = {
     stand: { x: 19, y: 6 },
     label: "Junction box",
   },
-  van: {
+  car: {
     at: { x: 17, y: 13 },
     size: { w: 2, h: 2 },
     stand: { x: 19, y: 13 },
-    label: "Your van",
+    label: "Your client's car",
   },
 };
 
@@ -92,8 +92,8 @@ export function buildSolidGrid(): boolean[][] {
     }
     grid.push(row);
   }
-  // The van and the cast are actors rather than tiles, so block them by hand.
-  for (const key of ["van", "ale", "brayan"] as const) {
+  // The car and the cast are actors rather than tiles, so block them by hand.
+  for (const key of ["car", "ale", "brayan"] as const) {
     const { at, size } = LANDMARKS[key];
     for (let dy = 0; dy < size.h; dy++) {
       for (let dx = 0; dx < size.w; dx++) {

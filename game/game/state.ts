@@ -1,6 +1,12 @@
 import { create } from "zustand";
 
-import type { ActNumber, PanelKind, Speaker } from "@/content/types";
+import type {
+  ActNumber,
+  PanelKind,
+  Speaker,
+  TaskSpec,
+  TaskStatus,
+} from "@/content/types";
 import type { Landmark } from "@/engine/maps/street";
 
 export type Phase =
@@ -15,8 +21,32 @@ export interface TerminalLine {
   text: string;
 }
 
+export interface Task extends TaskSpec {
+  status: TaskStatus;
+}
+
+/** What the listener pulled off the wire, waiting to be decoded. */
+export interface Capture {
+  payload: string;
+  scheme: string;
+}
+
+/** Where the player has been told to walk next, and what happens there. */
+export interface PendingTravel {
+  at: Landmark;
+  objective: string;
+  next: string;
+}
+
 /** Values the story can interpolate into lines with `{name}`. */
 export interface RunVars {
+  /** The plaintext Ale actually sent. This is what the player has to report. */
+  message: string;
+  /** The numbers that crossed the wire, joined for display. */
+  values: string;
+  /** The encoded form on the wire, joined for display. */
+  cipherText: string;
+  /** First character of the message; acts 3 and 4 only ever send this much. */
   letter: string;
   value: number | null;
   shift: number;
@@ -40,6 +70,9 @@ export interface RunVars {
 }
 
 export const DEFAULT_VARS: RunVars = {
+  message: "",
+  values: "",
+  cipherText: "",
   letter: "H",
   value: null,
   shift: 3,
@@ -83,6 +116,11 @@ interface GameState {
   near: Landmark | null;
   error: string | null;
   completedActs: ActNumber[];
+  tasks: Task[];
+  pendingTravel: PendingTravel | null;
+  capture: Capture | null;
+  /** Why the last report to the client was rejected. */
+  reportError: string | null;
 
   setAct: (act: ActNumber) => void;
   setPhase: (phase: Phase) => void;
@@ -101,6 +139,11 @@ interface GameState {
   addSuspicion: (amount: number) => number;
   markComplete: (act: ActNumber) => void;
   resetRun: (act: ActNumber) => void;
+  setTasks: (tasks: Task[]) => void;
+  setTaskStatus: (id: string, status: TaskStatus) => void;
+  setPendingTravel: (travel: PendingTravel | null) => void;
+  setCapture: (capture: Capture | null) => void;
+  setReportError: (message: string | null) => void;
 }
 
 export const useGame = create<GameState>((set, get) => ({
@@ -121,6 +164,10 @@ export const useGame = create<GameState>((set, get) => ({
   near: null,
   error: null,
   completedActs: [],
+  tasks: [],
+  pendingTravel: null,
+  capture: null,
+  reportError: null,
 
   setAct: (act) => set({ act }),
   setPhase: (phase) => set({ phase }),
@@ -144,6 +191,14 @@ export const useGame = create<GameState>((set, get) => ({
   setVars: (patch) => set((s) => ({ vars: { ...s.vars, ...patch } })),
   setNear: (near) => set({ near }),
   setError: (error) => set({ error }),
+  setTasks: (tasks) => set({ tasks }),
+  setTaskStatus: (id, status) =>
+    set((s) => ({
+      tasks: s.tasks.map((task) => (task.id === id ? { ...task, status } : task)),
+    })),
+  setPendingTravel: (pendingTravel) => set({ pendingTravel }),
+  setCapture: (capture) => set({ capture }),
+  setReportError: (reportError) => set({ reportError }),
 
   addSuspicion: (amount) => {
     const next = Math.min(100, Math.max(0, get().suspicion + amount));
@@ -175,5 +230,15 @@ export const useGame = create<GameState>((set, get) => ({
       flags: {},
       vars: { ...DEFAULT_VARS },
       error: null,
+      tasks: [],
+      pendingTravel: null,
+      capture: null,
+      reportError: null,
     }),
 }));
+
+// Handy from the browser console, and the only way an end-to-end test can see
+// where the story actually is.
+if (typeof window !== "undefined" && process.env.NODE_ENV !== "production") {
+  (window as unknown as { useGame: typeof useGame }).useGame = useGame;
+}

@@ -1,209 +1,225 @@
 import { defineAct } from "../defineAct";
 
 /**
- * Act 3 - RSA. Two beats: the public key crosses the wire in the open (and
- * copying it is correct, swapping it is what gets you caught), then the
- * ciphertext arrives and the only way in is through the factors of N.
+ * Act 3 - RSA. The key crosses the wire in the open and it does not help.
+ * The only way in is the factors of N, which the toy modulus gives up
+ * instantly -- and that is the whole argument for using a real one.
  */
 export const act3 = defineAct({
   act: 3,
   title: "RSA",
   subtitle: "The key is public, the factors are not",
   brief:
-    "Brayan shares a public key that anyone may copy, while keeping a separate private key secret. Find out why seeing the public key is not enough to decrypt Ale's message.",
+    "Brayan publishes a key anyone may copy and keeps a second one secret. Capture both and find out why watching the key is not the same as holding it.",
 
-  entry: "van",
+  entry: "prologue",
   caught: "caught",
-  opensAt: "tap",
-  objective: "Brayan is about to publish a key. Be on the tap when he does.",
+  secret: "letter",
+
+  tasks: [
+    { id: "brief", label: "Hear the client out" },
+    { id: "install", label: "Be on the line before the key is published" },
+    { id: "decode", label: "Factor N and rebuild the private key" },
+    { id: "report", label: "Report the message to the client" },
+  ],
 
   nodes: {
-    van: {
+    prologue: {
+      onEnter: [{ kind: "task", id: "brief", status: "active" }],
       lines: [
         {
-          speaker: "hacker",
-          text: "New scheme. Brayan is sharing an encryption key in public and claiming that it is safe for anyone to see.",
+          speaker: "brayan",
+          text: "Shifting letters was never going to hold. I have generated a key pair. I am going to send you half of it, over the line.",
+        },
+        { speaker: "ale", text: "Over the line? Anyone watching gets it." },
+        {
+          speaker: "brayan",
+          text: "Let them. That half only locks. The half that opens it never leaves this machine.",
         },
         {
-          speaker: "hacker",
-          text: "A key you are allowed to see. That either means he is careless, or the interesting part is somewhere else.",
+          speaker: "ale",
+          text: "One warning. It is arithmetic on numbers smaller than the key, so I can only send you one letter at a time.",
         },
       ],
-      next: "publish",
+      travelTo: {
+        at: "car",
+        objective: "Report to the car before Brayan publishes.",
+        next: "briefing",
+      },
     },
 
-    publish: {
-      onEnter: [
-        { kind: "walkTo", target: "tap" },
-        { kind: "tapGlow", on: true },
-        { kind: "panel", open: "terminal" },
-        { kind: "api", call: "rsaKeygen" },
+    briefing: {
+      onEnter: [{ kind: "face", target: "car" }],
+      lines: [
+        { speaker: "boss", text: "You are going to tell me they changed it again." },
         {
-          kind: "packet",
-          style: "key",
-          from: "brayan",
-          to: "ale",
-          intercept: true,
+          speaker: "hacker",
+          text: "They did. And this time he is sending the key down the same wire I am listening to.",
         },
+        { speaker: "boss", text: "Then this is over. Take the key, open the message." },
+        {
+          speaker: "hacker",
+          text: "It does not work like that. There are two keys. He is sending the one that locks.",
+        },
+        { speaker: "boss", text: "Then get me the other one. I am not paying for a shrug." },
+      ],
+      travelTo: {
+        at: "tap",
+        objective: "Be on the junction box before Brayan publishes his key.",
+        next: "box",
+      },
+    },
+
+    box: {
+      onEnter: [
+        { kind: "task", id: "brief", status: "done" },
+        { kind: "task", id: "install", status: "active" },
+      ],
+      lines: [
+        { speaker: "system", text: "Brayan's machine is about to push a key onto the line." },
+        { speaker: "hacker", text: "A key I am allowed to see. So what do I do with it?" },
+      ],
+      choices: [
+        {
+          label: "Copy it and pass it through untouched.",
+          outcome: "advance",
+          next: "installed",
+        },
+        {
+          label: "Hold the key back until Ale gives up and sends in the clear.",
+          outcome: "retry",
+          feedback:
+            "Withholding traffic is tampering, and it teaches them the line is broken. You want them relaxed and talking.",
+        },
+        {
+          label: "Swap it for my own public key so Ale encrypts to me instead.",
+          outcome: "suspicion",
+          suspicion: 45,
+          feedback:
+            "Brayan's machine cannot decrypt what Ale sends and says so, immediately. Substituting a public key is a real attack, and it is the noisiest one available to you. Copy it. Do not touch it.",
+        },
+      ],
+    },
+
+    installed: {
+      onEnter: [
+        { kind: "tapGlow", on: true },
+        { kind: "api", call: "rsaKeygen" },
+        { kind: "packet", style: "key", from: "brayan", to: "ale", intercept: true },
+        { kind: "task", id: "install", status: "done" },
       ],
       lines: [
         {
           speaker: "brayan",
-          text: "Ale, here is my public key: e = {e}, N = {modulus}. Use it to encrypt your message before you send it.",
+          text: "Ale, here is my public key: e = {e}, N = {modulus}. Encrypt with that before you send anything.",
         },
         {
           speaker: "system",
-          text: "The pair (e, N) crosses the wire openly. Brayan keeps a different value, the private exponent d, on his own machine.",
+          text: "The pair (e, N) crosses the wire in the open. The private exponent d never leaves Brayan's machine.",
         },
-        { speaker: "hacker", text: "He is right that I can have it. The question is what I do with it." },
-      ],
-      choices: [
-        {
-          label: "Copy the public key and let the real one reach Ale untouched.",
-          outcome: "advance",
-          next: "copied",
-          effects: [{ kind: "flag", set: "pkCopied" }],
-        },
-        {
-          label: "Wait for the private key to cross so I can grab that instead.",
-          outcome: "retry",
-          feedback:
-            "It never crosses. Brayan generated both keys, shared only the public one, and kept the private one locally. Listening to this wire cannot reveal a value that was never sent.",
-        },
-        {
-          label: "Swap in my own public key so Ale encrypts to me instead.",
-          outcome: "suspicion",
-          suspicion: 55,
-          feedback:
-            'Replacing the key is a real man-in-the-middle attack, but authenticated keys are designed to stop it. Brayan reads his key fingerprint over the phone, Ale reads back a different one, and they detect the substitution.',
-        },
-      ],
-    },
-
-    copied: {
-      lines: [
         {
           speaker: "hacker",
-          text: "Now I have (e = {e}, N = {modulus}). That lets me encrypt a message for Brayan, but it does not let me decrypt messages sent to him.",
-        },
-        {
-          speaker: "system",
-          text: "In this toy example, encryption is c = m^e mod N and decryption is m = c^d mod N. Because there are only a few possible letters, you could also encrypt every candidate and compare the results. Real RSA uses randomized padding, such as OAEP, specifically to prevent that kind of lookup.",
-        },
-        {
-          speaker: "system",
-          text: "This act therefore isolates the attack that matters for RSA at realistic message sizes: recovering the private key by factoring N.",
+          text: "I have the public key and it does not open anything. It is a padlock, not a key.",
         },
       ],
-      next: "cipher",
+      next: "chatter",
     },
 
-    cipher: {
+    chatter: {
       onEnter: [
         { kind: "api", call: "rsaEncrypt" },
-        {
-          kind: "packet",
-          style: "rsa",
-          from: "ale",
-          to: "brayan",
-          intercept: true,
-        },
+        { kind: "packet", style: "rsa", from: "ale", to: "brayan", intercept: true },
+        { kind: "capture", payload: "c = {cipherNumber}", scheme: "RSA, e={e} N={modulus}" },
+        { kind: "task", id: "decode", status: "active" },
       ],
       lines: [
-        { speaker: "ale", text: 'Sent. My letter "{letter}" is encoded and encrypted now.' },
+        {
+          speaker: "ale",
+          text: "One letter, like you said. It comes out as c = {cipherNumber}.",
+        },
         {
           speaker: "system",
-          text: 'For the demo, "{letter}" is represented by m = {value}. RSA transforms it into the ciphertext c = {cipherNumber}. The tap reveals c, e, and N—but not d.',
-        },
-        { speaker: "hacker", text: "I have the ciphertext and the public key. How could I reconstruct the missing private key?" },
-      ],
-      choices: [
-        {
-          label: "Factor N. Its two primes let me compute phi(N), then recover d from e.",
-          outcome: "advance",
-          next: "factored",
-          effects: [{ kind: "api", call: "rsaCrack" }],
-        },
-        {
-          label: "Try every value of d from 1 upward until the message reads correctly.",
-          outcome: "retry",
-          feedback:
-            "Brute-forcing d works only for tiny classroom values. RSA chooses d from an enormous range. For this lesson, factoring N is the useful route because the factors reveal the information needed to derive d.",
-        },
-        {
-          label: 'Tell Brayan the line is noisy and ask Ale to resend in plaintext.',
-          outcome: "suspicion",
-          suspicion: 45,
-          feedback:
-            'Ale answers: "Resend it how? Unencrypted? Who is this?" Downgrade attacks are real, but this one is a request from a stranger on a private line.',
-        },
-      ],
-    },
-
-    factored: {
-      onEnter: [{ kind: "api", call: "deriveKey" }],
-      lines: [
-        {
-          speaker: "system",
-          text: "This classroom modulus is tiny: trial division splits N = {modulus} into {factors} almost instantly.",
+          text: "c = m^e mod N. Brayan raises it to his private exponent d to get m back. Nobody else can, because nobody else has d.",
         },
         {
           speaker: "hacker",
-          text: 'With p and q, I computed phi(N). Then I found the modular inverse of e, giving d = {d}, and decrypted the letter "{recovered}".',
+          text: "So d is the whole game. And d comes from the factors of N.",
         },
-        { speaker: "brayan", text: "This is the strongest thing we have used all week." },
-        { speaker: "hacker", text: "It is. That is what worries me about the next part." },
       ],
-      next: "scale",
+      next: "decode",
     },
 
-    scale: {
+    decode: {
+      onEnter: [{ kind: "panel", open: "workbench" }],
       lines: [
         {
-          speaker: "system",
-          text: "This modulus has only two digits. A typical RSA modulus has 2048 bits. The game's classical estimate for factoring one with current methods is about {projectedYears} years.",
+          speaker: "hacker",
+          text: "N = {modulus}. Two primes multiplied together. Find them and I can rebuild d exactly the way he built it.",
         },
+        {
+          speaker: "system",
+          text: "Factor N in the workbench, then derive d and decrypt. This modulus falls in microseconds -- which is precisely why real ones are hundreds of digits long.",
+        },
+      ],
+      waitsFor: "workbench",
+      next: "toCar",
+    },
+
+    toCar: {
+      onEnter: [
+        { kind: "panel", open: null },
+        { kind: "tapGlow", on: false },
+        { kind: "task", id: "decode", status: "done" },
+        { kind: "task", id: "report", status: "active" },
+      ],
+      lines: [
         {
           speaker: "hacker",
-          text: "So factoring is not impossible. RSA depends on it being impractically slow at real key sizes.",
-        },
-        { speaker: "hacker", text: "Which means the question is what could make it fast." },
-      ],
-      choices: [
-        {
-          label: "Something that factors large numbers in a fundamentally different way.",
-          outcome: "advance",
-          next: "win",
+          text: "N = {factors}, so d = {d}. His private key, rebuilt from something he published on purpose.",
         },
         {
-          label: "More machines. Rent a few thousand and split the work.",
-          outcome: "retry",
-          feedback:
-            "More classical machines can help, but not enough to make a properly generated RSA-2048 key practical to factor. The best known classical factoring methods still scale too poorly.",
-        },
-        {
-          label: "Forget the maths and take Brayan's laptop while he is at lunch.",
-          outcome: "suspicion",
-          suspicion: 50,
-          feedback:
-            "Stealing the endpoint does beat the cryptography, and it also ends your career as a man in the middle. Building security escorts you out before you reach the lift.",
+          speaker: "system",
+          text: "Nothing here was a flaw in RSA. The modulus was simply small enough to factor. Scale N up and this same route runs out of time before it runs out of numbers.",
         },
       ],
+      travelTo: {
+        at: "car",
+        objective: "Walk back to the car and press Space to report.",
+        next: "report",
+      },
+    },
+
+    report: {
+      onEnter: [
+        { kind: "face", target: "car" },
+        { kind: "panel", open: "report" },
+      ],
+      lines: [
+        { speaker: "boss", text: "You got the other key. So say the letter." },
+      ],
+      waitsFor: "report",
+      report: {
+        wrong:
+          "Wrong letter. Check what the decryption actually returned before you put a number back through the alphabet.",
+      },
+      next: "win",
     },
 
     win: {
       onEnter: [
-        { kind: "tapGlow", on: false },
+        { kind: "panel", open: null },
+        { kind: "task", id: "report", status: "done" },
         { kind: "bubble", actor: "hacker", face: "success" },
       ],
       lines: [
+        { speaker: "boss", text: "\"{message}\". One letter. That is what I paid for?" },
         {
           speaker: "hacker",
-          text: "The mathematical security of this RSA example rests on large-number factoring remaining slow. I need an algorithm that changes that scaling.",
+          text: "One letter is all their modulus can carry. And I only got it because that modulus was {modulus}.",
         },
         {
           speaker: "system",
-          text: "Act 3 clear. Shor's quantum algorithm offers that change in scaling, but the hardware it needs is not in the laptop in your van.",
+          text: "Act 3 clear. Run the same attack against a 2048-bit modulus and it needs about {projectedYears} years. RSA is not broken by cleverness -- it is broken by a faster way to factor.",
         },
       ],
       ending: "win",
@@ -211,16 +227,17 @@ export const act3 = defineAct({
 
     caught: {
       onEnter: [
+        { kind: "panel", open: null },
         { kind: "tapGlow", on: false },
-        { kind: "bubble", actor: "ale", face: "alert" },
         { kind: "bubble", actor: "brayan", face: "alert" },
+        { kind: "bubble", actor: "ale", face: "alert" },
       ],
       lines: [
-        { speaker: "brayan", text: "Ale, read me the fingerprint of the key you are using. Digit by digit." },
-        { speaker: "ale", text: "It does not match yours." },
+        { speaker: "brayan", text: "Ale, that is not my key. Someone put their own in front of mine." },
+        { speaker: "ale", text: "Then everything I sent went to them." },
         {
           speaker: "system",
-          text: "Two people who verify a key out of band will always catch a substituted one. Your session ends here.",
+          text: "Substituting a public key is the loudest attack in the book. The maths never failed. You did.",
         },
       ],
       ending: "caught",

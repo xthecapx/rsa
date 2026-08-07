@@ -1,21 +1,18 @@
 import type { ActNumber, ActScript, Choice, DialogNode } from "@/content/types";
 import { getAct } from "@/content";
 import { bus } from "@/engine/bus";
+import type { Landmark } from "@/engine/maps/street";
 import { runEffects } from "./effects";
+import { fill } from "./interpolate";
 import { DEFAULT_SUSPICION_HIT, clearSuspicionBubbles, raiseSuspicion } from "./suspicion";
+import { pickSecret } from "./secret";
 import { useGame } from "./state";
 import type { DisplayLine } from "./state";
 
-/**
- * Replaces `{name}` in a line with the run variable of the same name. Unknown
- * names are left alone so a typo in the script is visible rather than silent.
- */
-export function fill(text: string, vars: Record<string, unknown>): string {
-  return text.replace(/\{(\w+)\}/g, (match, name: string) => {
-    const value = vars[name];
-    return value === undefined || value === null ? match : String(value);
-  });
-}
+/** Suspicion added when the client is handed the wrong plaintext. */
+const WRONG_REPORT_HIT = 20;
+
+export { fill } from "./interpolate";
 
 function script(act: ActNumber): ActScript {
   return getAct(act);
@@ -48,6 +45,7 @@ async function enter(act: ActNumber, id: string): Promise<void> {
 
   const after = useGame.getState();
   after.setNode(id, render(node), Boolean(node.waitsFor));
+  after.setPendingTravel(null);
 
   if (node.ending === "win") {
     after.setPhase("won");
@@ -62,43 +60,32 @@ async function enter(act: ActNumber, id: string): Promise<void> {
   after.setPhase("dialog");
 }
 
-function gcd(a: number, b: number): number {
-  return b === 0 ? a : gcd(b, a % b);
-}
-
 /**
- * Pick the letter Ale sends this run. Acts 3 and 4 do modular arithmetic on
- * it, so the value has to be smaller than the modulus and coprime to it;
- * everywhere else any letter of the alphabet will do.
+ * Begin an act: reset the run, roll this run's secret, put the checklist up,
+ * and play the opening scene. Nothing has to be walked to first -- the act
+ * explains itself before it asks the player for anything.
  */
-function pickLetter(act: ActNumber, modulus: number): { letter: string; value: number } {
-  const all = Array.from({ length: 26 }, (_, i) => i + 1);
-  const usable =
-    act >= 3 ? all.filter((v) => v < modulus && gcd(v, modulus) === 1) : all;
-  const value = usable[Math.floor(Math.random() * usable.length)];
-  return { letter: String.fromCharCode(64 + value), value };
-}
-
-/** Begin an act from its entry node. */
 export async function startAct(act: ActNumber): Promise<void> {
+  const current = script(act);
   const store = useGame.getState();
   store.resetRun(act);
+
   const { modulus } = useGame.getState().vars;
-  const { letter, value } = pickLetter(act, modulus);
+  const secret = pickSecret(current.secret, modulus);
   useGame.getState().setVars({
-    letter,
-    value,
+    message: secret.message,
+    letter: secret.letter,
+    value: secret.value,
     shift: 1 + Math.floor(Math.random() * 25),
   });
+  useGame.getState().setTasks(
+    current.tasks.map((task) => ({ ...task, status: "pending" as const })),
+  );
+
   await bus.send({ type: "reset" });
   await clearSuspicionBubbles();
-  useGame.getState().setPhase("exploring");
-}
-
-/** Kick off the act's opening dialog (called once the world is ready). */
-export async function openScene(act: ActNumber): Promise<void> {
   await bus.send({ type: "lockInput", locked: true });
-  await enter(act, script(act).entry);
+  await enter(act, current.entry);
 }
 
 /** Space / click: reveal the next line, then the choices. */
@@ -122,7 +109,43 @@ export async function advance(): Promise<void> {
     state.setChoicesVisible(true);
     return;
   }
+  if (node.travelTo) {
+    await handOverToPlayer(node.travelTo);
+    return;
+  }
+  // A panel node also has a `next`, but only the panel is allowed to take it.
+  if (node.waitsFor) return;
   if (node.next) await enter(state.act, node.next);
+}
+
+/** Give the street back so the player can walk to the next landmark. */
+async function handOverToPlayer(travelTo: {
+  at: Landmark;
+  objective: string;
+  next: string;
+}): Promise<void> {
+  const store = useGame.getState();
+  store.setPendingTravel({
+    ...travelTo,
+    objective: fill(travelTo.objective, store.vars),
+  });
+  store.setPhase("exploring");
+  await bus.send({ type: "lockInput", locked: false });
+}
+
+/**
+ * The player pressed Space next to a landmark. Only the one the story is
+ * waiting on does anything, so the rest of the street stays quiet.
+ */
+export async function interactAt(target: Landmark): Promise<void> {
+  const state = useGame.getState();
+  if (state.phase !== "exploring") return;
+  const travel = state.pendingTravel;
+  if (!travel || travel.at !== target) return;
+
+  state.setPendingTravel(null);
+  await bus.send({ type: "lockInput", locked: true });
+  await enter(state.act, travel.next);
 }
 
 /** Choices the player can currently see, after `requires` filtering. */
@@ -174,6 +197,56 @@ export async function choose(index: number): Promise<void> {
 /** Used by the uplink panel, which drives its own node transition. */
 export async function goTo(id: string): Promise<void> {
   await enter(useGame.getState().act, id);
+}
+
+/**
+ * A `waitsFor` panel reporting that the player is finished with it. The node
+ * says where that leads, so panels never hard-code a node id.
+ */
+export async function resolvePanel(): Promise<void> {
+  const { act, nodeId } = useGame.getState();
+  if (!nodeId) return;
+  const node = nodeOf(act, nodeId);
+  if (!node.waitsFor || !node.next) return;
+  await enter(act, node.next);
+}
+
+/**
+ * Hand a plaintext to the client. A wrong answer costs suspicion and leaves
+ * the player on the same node, so they go back to the workbench rather than
+ * losing the act outright.
+ */
+export async function submitReport(answer: string): Promise<void> {
+  const state = useGame.getState();
+  const { act, nodeId } = state;
+  if (!nodeId) return;
+
+  const node = nodeOf(act, nodeId);
+  if (node.waitsFor !== "report") return;
+
+  const given = answer.trim().toUpperCase().replace(/\s+/g, "");
+  if (!given) return;
+
+  if (given === String(state.vars.message).toUpperCase()) {
+    state.setReportError(null);
+    if (node.next) await enter(act, node.next);
+    return;
+  }
+
+  const blown = await raiseSuspicion(node.report?.suspicion ?? WRONG_REPORT_HIT);
+  if (blown) {
+    await enter(act, script(act).caught);
+    return;
+  }
+
+  const after = useGame.getState();
+  after.setReportError(
+    fill(
+      node.report?.wrong ??
+        "That is not what crossed the wire. Read it again before you say it out loud.",
+      after.vars,
+    ),
+  );
 }
 
 function errorText(error: unknown): string {

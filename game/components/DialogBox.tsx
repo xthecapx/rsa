@@ -9,6 +9,11 @@ import { useGame } from "@/game/state";
 
 const TYPE_SPEED_MS = 18;
 
+function isTyping(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  return target.tagName === "INPUT" || target.tagName === "TEXTAREA";
+}
+
 /** Pokemon-style textbox: portrait on the left, typewriter text, then choices. */
 export function DialogBox() {
   const phase = useGame((s) => s.phase);
@@ -52,6 +57,8 @@ export function DialogBox() {
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
       if (event.repeat) return;
+      // The report field wants its own spaces and digits.
+      if (isTyping(event.target)) return;
 
       if (choices.length) {
         const digit = Number(event.key);
@@ -90,7 +97,7 @@ export function DialogBox() {
               SPEAKER_COLOR[speaker],
             )}
           >
-            {feedback ? "Think again" : SPEAKER_NAME[speaker] || "Line"}
+            {feedback ? "Think again" : SPEAKER_NAME[speaker]}
           </div>
 
           <p className="min-h-[3.5rem] text-[13px] leading-relaxed text-[#e8f4f8]">
@@ -117,7 +124,7 @@ export function DialogBox() {
             settled &&
             (awaitingPanel && lineIndex >= lines.length - 1 ? (
               <div className="mt-3 text-right text-[10px] text-accent-amber">
-                Use the uplink panel on the right
+                Use the panel on the right
               </div>
             ) : (
               <div className="mt-3 text-right text-[10px] text-stage-muted">

@@ -8,8 +8,10 @@ import { getAct } from "@/content";
 import { DialogBox } from "./DialogBox";
 import { GameOver } from "./GameOver";
 import { HackerTerminal } from "./HackerTerminal";
-import { QuantumUplink } from "./QuantumUplink";
+import { ObjectiveList } from "./ObjectiveList";
+import { ReportForm } from "./ReportForm";
 import { SuspicionMeter } from "./SuspicionMeter";
+import { Workbench } from "./Workbench";
 import { useGame } from "@/game/state";
 
 // Excalibur is browser-only, so the canvas host never renders on the server.
@@ -29,10 +31,11 @@ export function PlayScreen({ act }: { act: ActNumber }) {
   const phase = useGame((s) => s.phase);
   const panel = useGame((s) => s.panel);
   const near = useGame((s) => s.near);
+  const pendingTravel = useGame((s) => s.pendingTravel);
   const script = getAct(act);
 
   const exploring = phase === "exploring";
-  const canInteract = exploring && near === script.opensAt;
+  const canInteract = exploring && pendingTravel !== null && near === pendingTravel.at;
 
   return (
     <main className="flex h-screen w-screen flex-col overflow-hidden bg-stage-bg">
@@ -61,9 +64,11 @@ export function PlayScreen({ act }: { act: ActNumber }) {
             </div>
 
             <div className="flex flex-col items-center gap-3">
-              {exploring && (
+              {exploring && pendingTravel && (
                 <div className="textbox px-4 py-3 text-center">
-                  <p className="text-[11px] text-[#e8f4f8]">{script.objective}</p>
+                  <p className="text-[11px] text-[#e8f4f8]">
+                    {pendingTravel.objective}
+                  </p>
                   {canInteract && (
                     <p className="mt-2 animate-pulse text-[10px] text-accent-amber">
                       Press Space
@@ -78,8 +83,14 @@ export function PlayScreen({ act }: { act: ActNumber }) {
           <GameOver act={act} />
         </section>
 
-        <aside className="hidden w-80 shrink-0 border-l-2 border-stage-border p-3 lg:block">
-          {panel === "uplink" ? <QuantumUplink /> : <HackerTerminal />}
+        {/* Job sheet on top, whatever the story needs in the middle, the raw
+            backend log underneath. All three stay up the whole act. */}
+        <aside className="hidden w-80 shrink-0 flex-col gap-3 border-l-2 border-stage-border p-3 lg:flex">
+          <ObjectiveList />
+          {panel === "report" ? <ReportForm /> : <Workbench act={act} />}
+          <div className="h-48 shrink-0">
+            <HackerTerminal />
+          </div>
         </aside>
       </div>
     </main>

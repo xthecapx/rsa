@@ -117,16 +117,16 @@ export class Bubble extends Actor {
   }
 }
 
-/** The hacker's rig, a 2x2 top-down van from the Kenney city sheet. */
-export function createVan(topLeft: GridPos): Actor {
+/** The client's car, a 2x2 top-down vehicle from the Kenney city sheet. */
+export function createCar(topLeft: GridPos): Actor {
   const center = tileCenter(topLeft);
-  const van = new Actor({
-    name: "van",
+  const car = new Actor({
+    name: "car",
     pos: vec(center.x + TILE_SIZE / 2, center.y + TILE_SIZE / 2),
     z: 5,
   });
-  const base = PropTiles.VAN_TOP_LEFT;
-  van.graphics.use(
+  const base = PropTiles.CAR_TOP_LEFT;
+  car.graphics.use(
     new GraphicsGroup({
       members: [
         { graphic: citySprite(base), offset: vec(0, 0) },
@@ -136,7 +136,7 @@ export function createVan(topLeft: GridPos): Actor {
       ],
     }),
   );
-  return van;
+  return car;
 }
 
 /** Amber halo that pulses on the junction box while a tap is live. */

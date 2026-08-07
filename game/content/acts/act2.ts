@@ -2,184 +2,217 @@ import { defineAct } from "../defineAct";
 
 /**
  * Act 2 - Caesar. Ale finally encrypts, with a shift cipher. The lesson is
- * that a key space of 25 is not a key space at all.
+ * that twenty-five possible keys is not a key space at all: the player breaks
+ * it by trying every one of them and reading the answer.
  */
 export const act2 = defineAct({
   act: 2,
   title: "Caesar",
   subtitle: "Twenty five keys is not a key space",
   brief:
-    "Ale now shifts every letter by a secret amount. Capture the encrypted letter and test how much protection 25 possible keys really provide.",
+    "Ale now shifts every letter by a secret amount. Capture the ciphertext and find out how long twenty-five keys hold up.",
 
-  entry: "van",
+  entry: "prologue",
   caught: "caught",
-  opensAt: "tap",
-  objective: "Get back to the junction box before Ale finishes typing.",
+  secret: "word",
+
+  tasks: [
+    { id: "brief", label: "Hear the client out" },
+    { id: "install", label: "Put the listener back on the line" },
+    { id: "decode", label: "Recover the shift and read the message" },
+    { id: "report", label: "Report the message to the client" },
+  ],
 
   nodes: {
-    van: {
+    prologue: {
+      onEnter: [{ kind: "task", id: "brief", status: "active" }],
       lines: [
         {
-          speaker: "hacker",
-          text: "They noticed the problem. Ale spent the morning reading about ciphers, and now the letters on the wire no longer match what she types.",
+          speaker: "brayan",
+          text: "Ale, the numbers were a mistake. Anyone who saw them could count on their fingers.",
         },
-        { speaker: "hacker", text: "Scrambled is not necessarily secure. Let us see how many possibilities her cipher leaves me." },
+        {
+          speaker: "ale",
+          text: "So we shift them. Every letter moves forward by the same amount before I send it, and you move it back.",
+        },
+        { speaker: "brayan", text: "How much?" },
+        {
+          speaker: "ale",
+          text: "I will tell you tonight, in person. It never goes near the line. That is the whole point.",
+        },
       ],
-      next: "approach",
+      travelTo: {
+        at: "car",
+        objective: "The car is back. Walk over and press Space.",
+        next: "briefing",
+      },
     },
 
-    approach: {
+    briefing: {
+      onEnter: [{ kind: "face", target: "car" }],
+      lines: [
+        {
+          speaker: "boss",
+          text: "They changed something. My man on the exchange says the traffic is letters now, and it is nonsense.",
+        },
+        { speaker: "hacker", text: "A cipher. They shift each letter by a number they agreed offline." },
+        { speaker: "boss", text: "So you cannot read it." },
+        {
+          speaker: "hacker",
+          text: "I said they agreed on a number. There are twenty-five it could be. That is not a lot of numbers.",
+        },
+        { speaker: "boss", text: "Then go and try all twenty-five. Quietly." },
+      ],
+      travelTo: {
+        at: "tap",
+        objective: "Get back to the junction box before Ale starts typing.",
+        next: "box",
+      },
+    },
+
+    box: {
       onEnter: [
-        { kind: "walkTo", target: "tap" },
-        { kind: "tapGlow", on: true },
-        { kind: "panel", open: "terminal" },
+        { kind: "task", id: "brief", status: "done" },
+        { kind: "task", id: "install", status: "active" },
       ],
       lines: [
-        { speaker: "ale", text: "I am moving every letter forward by our secret shift before I send it. Same shift as always." },
-        { speaker: "brayan", text: "Understood. I will move each letter back by the same amount." },
-        { speaker: "hacker", text: "They agreed on the shift somewhere else, so it never crossed this wire. I will have to recover it." },
+        { speaker: "system", text: "The cabinet is exactly as you left it. Nobody has touched the door." },
+        { speaker: "hacker", text: "The shift never crosses this wire, so there is no key to steal. What do I take?" },
       ],
       choices: [
         {
-          label: "Let the traffic through untouched and keep a copy of the ciphertext.",
+          label: "Just the ciphertext. Let everything through untouched.",
           outcome: "advance",
-          next: "capture",
+          next: "installed",
         },
         {
-          label: "Jam the line until they give up and go back to plaintext.",
+          label: "Jam the line until they give up and go back to numbers.",
           outcome: "retry",
           feedback:
-            "You would be teaching them that the line is unreliable, and a careful person responds to an unreliable line by watching it. Also, you would learn nothing about the cipher.",
+            "You would teach them the line is unreliable, and careful people watch an unreliable line. You would also learn nothing about the cipher.",
         },
         {
-          label: "Message Ale pretending to be Brayan and ask her to confirm the number.",
+          label: "Write to Ale as Brayan and ask her to confirm the shift.",
           outcome: "suspicion",
           suspicion: 35,
           feedback:
-            'Ale replies: "Why are you asking? We set it in person." Then she calls Brayan to check. Asking for the key is the loudest thing you can possibly do.',
+            "\"Why are you asking? We set it in person.\" Then she calls him to check. Asking for the key is the loudest thing you can do.",
         },
       ],
     },
 
-    capture: {
+    installed: {
+      onEnter: [
+        { kind: "tapGlow", on: true },
+        { kind: "task", id: "install", status: "done" },
+        { kind: "task", id: "decode", status: "active" },
+        { kind: "terminal", text: "Listener live. Recording ciphertext only." },
+      ],
+      lines: [
+        {
+          speaker: "hacker",
+          text: "Listener is on and I am not touching their traffic. Whatever she sends, I get a copy of the scrambled version.",
+        },
+      ],
+      next: "chatter",
+    },
+
+    chatter: {
+      lines: [
+        { speaker: "ale", text: "Shifted, like we said. Move each one back and it will read straight." },
+        { speaker: "brayan", text: "Sending it now is fine. Nobody can do anything with it." },
+      ],
+      next: "intercept",
+    },
+
+    intercept: {
       onEnter: [
         { kind: "api", call: "caesarEncrypt" },
-        {
-          kind: "packet",
-          style: "caesar",
-          from: "ale",
-          to: "brayan",
-          intercept: true,
-        },
+        { kind: "packet", style: "caesar", from: "ale", to: "brayan", intercept: true },
+        { kind: "capture", payload: "{cipherText}", scheme: "Caesar, shift unknown" },
       ],
       lines: [
         {
           speaker: "system",
-          text: 'Ale types "{letter}", and the tap records the encrypted letter "{cipherChar}". Brayan reverses the shift and reads it normally.',
+          text: "The tap records \"{cipherText}\". Brayan shifts every letter back by the agreed amount and reads it normally.",
         },
         {
           speaker: "hacker",
-          text: "The cipher turns each letter into a position from 0 to 25, adds the secret shift k, and wraps around the alphabet: c = (m + k) mod 26.",
+          text: "Each letter became a number from 0 to 25, gained the secret shift k, and wrapped round the alphabet. c = (m + k) mod 26.",
         },
-        {
-          speaker: "system",
-          text: 'For this training example, the original letter "{letter}" is shown so you can verify each attempt. From one encrypted letter alone, every shifted letter would still be possible.',
-        },
-        { speaker: "hacker", text: "Even so, there are only 25 nontrivial shifts to test." },
       ],
-      next: "attack",
+      next: "decode",
     },
 
-    attack: {
+    decode: {
+      onEnter: [{ kind: "panel", open: "workbench" }],
       lines: [
-        {
-          speaker: "system",
-          text: "k has to be a whole number between 1 and 25. Shifting by 0 or by 26 would leave the message unchanged.",
-        },
-        { speaker: "hacker", text: "What is the reliable way to search such a small key space?" },
-      ],
-      choices: [
-        {
-          label: "Try all 25 shifts and compare every candidate with the expected message or its context.",
-          outcome: "advance",
-          next: "cracked",
-          effects: [{ kind: "api", call: "caesarCrack" }],
-        },
-        {
-          label: "Assume it is 13. Everyone uses ROT13.",
-          outcome: "retry",
-          feedback:
-            "You might get lucky, but guessing one popular shift is not a reliable attack. Testing the whole key space guarantees that the correct shift is among the candidates.",
-        },
-        {
-          label: "Send Brayan my own ciphertext and see what he answers.",
-          outcome: "suspicion",
-          suspicion: 35,
-          feedback:
-            'Brayan decrypts your letter, gets gibberish, and writes back: "Ale, your shift is off, resend." Now two people are staring at the line.',
-        },
-      ],
-    },
-
-    cracked: {
-      lines: [
-        {
-          speaker: "system",
-          text: 'All 25 candidates were computed in {crackMs} milliseconds. In this demo, the known original letter "{letter}" identifies the matching shift.',
-        },
         {
           speaker: "hacker",
-          text: 'The matching key is k = {shift}, which turns "{cipherChar}" back into "{letter}". With a longer message, readable words and context usually reveal the right candidate.',
+          text: "k is a whole number between 1 and 25. Zero and twenty-six leave the message alone, so that is the entire key space.",
         },
-        { speaker: "brayan", text: "Works perfectly. This is much safer than before." },
-        { speaker: "hacker", text: "It is not." },
-      ],
-      next: "scale",
-    },
-
-    scale: {
-      lines: [
         {
           speaker: "system",
-          text: "Caesar has only 25 useful keys. Trying every one is so cheap that the secret shift offers almost no protection.",
-        },
-        { speaker: "hacker", text: "So what would actually stop me here?" },
-      ],
-      choices: [
-        {
-          label: "A key space so large that trying every key is out of reach.",
-          outcome: "advance",
-          next: "win",
-        },
-        {
-          label: "A longer alphabet, so there are more shifts to try.",
-          outcome: "retry",
-          feedback:
-            "A larger alphabet adds only a few more shifts. A secure key space must be so large that checking every key is computationally infeasible.",
-        },
-        {
-          label: "Keeping the algorithm secret so nobody knows it is a Caesar shift.",
-          outcome: "suspicion",
-          suspicion: 20,
-          feedback:
-            "That is security through obscurity, and it fails the moment anyone looks at the traffic. You worked out the scheme in one glance. Assume your opponent always knows the algorithm and only lacks the key.",
+          text: "Ask the backend for every shift at once. Twenty-five candidates come back and exactly one of them is a word.",
         },
       ],
+      waitsFor: "workbench",
+      next: "toCar",
+    },
+
+    toCar: {
+      onEnter: [
+        { kind: "panel", open: null },
+        { kind: "tapGlow", on: false },
+        { kind: "task", id: "decode", status: "done" },
+        { kind: "task", id: "report", status: "active" },
+        {
+          kind: "terminal",
+          text: "Secret shift was k = {shift}. Recovered without ever seeing the key.",
+        },
+      ],
+      lines: [
+        {
+          speaker: "hacker",
+          text: "k = {shift}. They kept that number off the wire for nothing: I never needed it, I only needed to try all of them.",
+        },
+      ],
+      travelTo: {
+        at: "car",
+        objective: "Walk back to the car and press Space to report.",
+        next: "report",
+      },
+    },
+
+    report: {
+      onEnter: [
+        { kind: "face", target: "car" },
+        { kind: "panel", open: "report" },
+      ],
+      lines: [{ speaker: "boss", text: "Twenty-five tries. Well? What does it say?" }],
+      waitsFor: "report",
+      report: {
+        wrong:
+          "\"That is not a word.\" He is right. Go back and pick the candidate that reads like English, not the one next to it.",
+      },
+      next: "win",
     },
 
     win: {
       onEnter: [
-        { kind: "tapGlow", on: false },
+        { kind: "panel", open: null },
+        { kind: "task", id: "report", status: "done" },
         { kind: "bubble", actor: "hacker", face: "success" },
       ],
       lines: [
+        { speaker: "boss", text: "\"{message}\". They think that cost them something." },
         {
           speaker: "hacker",
-          text: "They need a key space far too large to search one key at a time. That requires a modern cipher, not a single alphabet shift.",
+          text: "A secret key only helps if guessing it is expensive. Twenty-five guesses is not expensive.",
         },
         {
           speaker: "system",
-          text: "Act 2 clear. Brayan is about to suggest something with two keys instead of one.",
+          text: "Act 2 clear. What they need is a key space too large to walk through one key at a time. Brayan is about to suggest something with two keys instead of one.",
         },
       ],
       ending: "win",
@@ -187,6 +220,7 @@ export const act2 = defineAct({
 
     caught: {
       onEnter: [
+        { kind: "panel", open: null },
         { kind: "tapGlow", on: false },
         { kind: "bubble", actor: "ale", face: "alert" },
         { kind: "bubble", actor: "brayan", face: "alert" },
@@ -196,7 +230,7 @@ export const act2 = defineAct({
         { speaker: "brayan", text: "Then we stop using it. Today." },
         {
           speaker: "system",
-          text: "You were rumbled. Breaking the cipher was never the hard part; staying invisible while you did it was.",
+          text: "Breaking the cipher was never the hard part. Staying invisible while you did it was.",
         },
       ],
       ending: "caught",

@@ -11,10 +11,14 @@ import { act4 } from "./acts/act4";
  *
  * Placeholders you can use inside any line, written as `{name}`:
  *
- *   {letter}          the plaintext letter Ale is sending this run
+ *   {message}         the plaintext Ale sent this run, and the answer the
+ *                     player has to type at the car
+ *   {cipherText}      what actually crossed the wire, ready to display
+ *   {values}          the numbers behind it, space separated
+ *   {letter}          first character of the message
  *   {value}           that letter as a number, A=1 .. Z=26
  *   {shift}           the Caesar key k, once it is known
- *   {cipherChar}      the Caesar ciphertext letter
+ *   {cipherChar}      the first Caesar ciphertext letter
  *   {crackMs}         milliseconds the 25-shift brute force took
  *   {modulus}         the RSA modulus N (15 or 21)
  *   {e} {d} {p} {q}   RSA exponents and prime factors

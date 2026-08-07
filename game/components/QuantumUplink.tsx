@@ -5,8 +5,13 @@ import clsx from "clsx";
 
 import { api } from "@/lib/api";
 import type { IbmBatchSummary, ShorSimulateResponse } from "@/lib/api";
-import { applyShorResult, gcd, modPow, pickRsaPlaintext } from "@/game/effects";
-import { goTo } from "@/game/dialog";
+import {
+  applyShorResult,
+  gcd,
+  modPow,
+  pickRsaPlaintext,
+  runApiCall,
+} from "@/game/effects";
 import { useGame } from "@/game/state";
 
 type Source = "aer" | "qpu";
@@ -169,18 +174,18 @@ export function QuantumUplink() {
   const maxCount = bars.length ? Math.max(...bars.map(([, n]) => n)) : 1;
 
   return (
-    <div className="panel flex h-full flex-col overflow-hidden">
-      <div className="border-b-2 border-stage-border px-3 py-2">
+    <div className="space-y-3">
+      <div className="border-2 border-stage-border px-2.5 py-2">
         <span className="text-[10px] uppercase tracking-widest text-[#c084fc]">
           Quantum uplink
         </span>
         <p className="mt-1 text-[10px] leading-relaxed text-stage-muted">
-          Nothing here runs in the van. Every button is a request over the
+          Nothing here runs on your laptop. Every button is a request over the
           network to a machine somewhere else.
         </p>
       </div>
 
-      <div className="flex-1 space-y-3 overflow-y-auto px-3 py-3 text-[11px]">
+      <div className="space-y-3 text-[11px]">
         <Field label={`Modulus N = ${vars.modulus}`}>
           <div className="flex gap-2">
             {([15, 21] as const).map((n) => (
@@ -311,7 +316,7 @@ export function QuantumUplink() {
         {found && (
           <button
             type="button"
-            onClick={() => void goTo("recovered")}
+            onClick={() => void runApiCall("deriveKey")}
             className="btn-primary w-full border-actor-brayan text-[11px] text-actor-brayan hover:bg-actor-brayan/15"
           >
             3. Take the period and rebuild Brayan&apos;s key

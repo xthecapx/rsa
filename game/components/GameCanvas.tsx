@@ -4,10 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import type { Engine } from "excalibur";
 
 import type { ActNumber } from "@/content/types";
-import { getAct } from "@/content";
 import { bus } from "@/engine/bus";
 import { createGame, disposeGame } from "@/engine/createGame";
-import { openScene, startAct } from "@/game/dialog";
+import { interactAt, startAct } from "@/game/dialog";
 import { useGame } from "@/game/state";
 
 /**
@@ -50,23 +49,19 @@ export function GameCanvas({ act }: { act: ActNumber }) {
     };
   }, [act]);
 
-  useEffect(() => {
-    const script = getAct(act);
-    return bus.on((event) => {
-      const state = useGame.getState();
-      if (event.type === "moved") {
-        state.setNear(event.near);
-        return;
-      }
-      if (
-        event.type === "interact" &&
-        state.phase === "exploring" &&
-        event.target === script.opensAt
-      ) {
-        void openScene(act);
-      }
-    });
-  }, [act]);
+  useEffect(
+    () =>
+      bus.on((event) => {
+        if (event.type === "moved") {
+          useGame.getState().setNear(event.near);
+          return;
+        }
+        // Which landmark matters depends on where the story is, so the runner
+        // decides whether this press does anything.
+        if (event.type === "interact") void interactAt(event.target);
+      }),
+    [],
+  );
 
   return (
     <div className="absolute inset-0">

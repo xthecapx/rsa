@@ -41,6 +41,15 @@ export interface PlaintextResponse {
   trace: TraceStep[];
 }
 
+export interface KeyboardResponse {
+  keys: {
+    char: string;
+    value: number;
+    enabled: boolean;
+    disabled_reason?: string | null;
+  }[];
+}
+
 export interface CaesarEncryptResponse {
   plaintext: string;
   plaintext_value: number;
@@ -229,6 +238,9 @@ export const api = {
 
   plaintext: (char: string) =>
     post<PlaintextResponse>("/api/plaintext", { char }),
+
+  /** The whole A=1 .. Z=26 table, as the backend defines it. */
+  keyboard: () => post<KeyboardResponse>("/api/keyboard", {}),
 
   caesar: {
     encrypt: (char: string, shift = 1) =>

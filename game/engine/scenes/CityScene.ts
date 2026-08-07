@@ -9,7 +9,7 @@ import {
   vec,
 } from "excalibur";
 
-import { Bubble, Packet, TapGlow, createVan } from "../actors/Props";
+import { Bubble, Packet, TapGlow, createCar } from "../actors/Props";
 import { Character } from "../actors/Character";
 import type { CastMember } from "../actors/Character";
 import { bus } from "../bus";
@@ -45,6 +45,12 @@ export class CityScene extends Scene {
   private tapGlow!: TapGlow;
   private inputLocked = false;
   private lastNear: Landmark | null = null;
+  /**
+   * The same Space press that finishes a line would otherwise arrive here the
+   * instant input is unlocked, interacting with whatever the player happens to
+   * be standing next to. Wait for the key to come up first.
+   */
+  private needsSpaceRelease = false;
 
   override onInitialize(engine: Engine): void {
     engine.backgroundColor = Color.fromHex("#0b1f26");
@@ -52,7 +58,7 @@ export class CityScene extends Scene {
     this.add(this.buildLayer("rows", "legend", 0));
     this.add(this.buildLayer("overlay", "overlayLegend", 1));
 
-    this.add(createVan(LANDMARKS.van.at));
+    this.add(createCar(LANDMARKS.car.at));
 
     this.tapGlow = new TapGlow(landmarkCenter("tap"));
     this.add(this.tapGlow);
@@ -141,6 +147,11 @@ export class CityScene extends Scene {
       bus.emit({ type: "moved", near });
     }
 
+    if (this.needsSpaceRelease) {
+      if (!engine.input.keyboard.isHeld(Keys.Space)) this.needsSpaceRelease = false;
+      return;
+    }
+
     if (near && engine.input.keyboard.wasPressed(Keys.Space)) {
       bus.emit({ type: "interact", target: near });
     }
@@ -151,6 +162,7 @@ export class CityScene extends Scene {
       case "lockInput":
         this.inputLocked = command.locked;
         if (command.locked) this.player.stop();
+        else this.needsSpaceRelease = true;
         return;
 
       case "reset":
@@ -162,6 +174,7 @@ export class CityScene extends Scene {
         );
         this.packet.hide();
         this.tapGlow.setActive(false);
+        this.needsSpaceRelease = false;
         for (const bubble of Object.values(this.bubbles)) bubble.hide();
         return;
 
