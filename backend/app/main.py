@@ -17,13 +17,14 @@ logging.basicConfig(
 app = FastAPI(title="RSA Quantum Teaching Game", version="0.1.0")
 
 # Secondary fallback for local non-Docker runs; Docker uses Next.js rewrite
-# proxy. 3000 is the frontend, 3001 the game, 3002 the game run outside Docker.
+# proxy. 7013 is the frontend, 7019 the game. The ports are four-digit primes
+# so they stay clear of whatever else is squatting on 3000/8000.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         f"http://{host}:{port}"
         for host in ("localhost", "127.0.0.1")
-        for port in (3000, 3001, 3002)
+        for port in (7013, 7019)
     ],
     allow_credentials=True,
     allow_methods=["*"],

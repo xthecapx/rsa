@@ -30,20 +30,23 @@ log, all three visible for the whole act.
 
 ## Running it
 
-The game is a standalone Next.js app on port 3001 and reaches the backend
+The game is a standalone Next.js app on port 7019 and reaches the backend
 through a `/api/*` rewrite.
 
 ```bash
 # With the rest of the stack
 docker compose up game
 
-# Or on its own, with the backend already running on :8000
+# Or on its own, with the backend already running on :7001
 cd game
 npm install
-BACKEND_URL=http://localhost:8000 npm run dev
+BACKEND_URL=http://localhost:7001 npm run dev
 ```
 
-Then open http://localhost:3001.
+Then open http://localhost:7019.
+
+The port is the same in and out of Docker, so only one of the two can run at a
+time.
 
 Controls: arrow keys or WASD to walk, Space to talk and to advance a line,
 number keys to pick an answer.

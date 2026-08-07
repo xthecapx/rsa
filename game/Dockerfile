@@ -8,6 +8,6 @@ RUN npm ci --registry=https://registry.npmjs.org/
 
 COPY . .
 
-EXPOSE 3001
+EXPOSE 7019
 
 CMD ["npm", "run", "dev"]

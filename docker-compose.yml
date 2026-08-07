@@ -4,7 +4,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     ports:
-      - "8000:8000"
+      - "7001:7001"
     env_file:
       - .env
     volumes:
@@ -16,16 +16,16 @@ services:
       - QWARD_EDITABLE=/qward
     command: >
       sh -c "pip install -e /qward -q &&
-             uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+             uvicorn app.main:app --host 0.0.0.0 --port 7001 --reload"
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "7013:7013"
     environment:
-      - BACKEND_URL=http://backend:8000
+      - BACKEND_URL=http://backend:7001
       - WATCHPACK_POLLING=true
     volumes:
       - ./frontend:/app
@@ -39,9 +39,9 @@ services:
       context: ./game
       dockerfile: Dockerfile
     ports:
-      - "3001:3001"
+      - "7019:7019"
     environment:
-      - BACKEND_URL=http://backend:8000
+      - BACKEND_URL=http://backend:7001
       - WATCHPACK_POLLING=true
     volumes:
       - ./game:/app

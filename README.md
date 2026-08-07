@@ -9,8 +9,12 @@ cp .env.example .env
 docker compose up --build
 ```
 
-- Frontend: http://localhost:3000  
-- Backend: http://localhost:8000/api/health  
+- Frontend: http://localhost:7013  
+- Game: http://localhost:7019  
+- Backend: http://localhost:7001/api/health  
+
+The ports are four-digit primes so the stack never collides with the 3000/8000
+crowd that every other dev server defaults to.
 
 `../qiskit-qward` is bind-mounted into the backend for editable Shor.
 
@@ -21,7 +25,7 @@ docker compose up --build
 cd backend && python3 -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 pip install -e ../../qiskit-qward
-uvicorn app.main:app --reload --port 8000
+uvicorn app.main:app --reload --port 7001
 
 # Frontend
 cd frontend && npm install && npm run dev
