@@ -85,7 +85,7 @@ export function PlayScreen({ act }: { act: ActNumber }) {
 
         {/* Job sheet on top, whatever the story needs in the middle, the raw
             backend log underneath. All three stay up the whole act. */}
-        <aside className="hidden w-80 shrink-0 flex-col gap-3 border-l-2 border-stage-border p-3 lg:flex">
+        <aside className="hidden w-80 shrink-0 flex-col gap-3 border-l-2 border-stage-border p-3 lg:flex xl:w-96">
           <ObjectiveList />
           {panel === "report" ? <ReportForm /> : <Workbench act={act} />}
           <div className="h-48 shrink-0">

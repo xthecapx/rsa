@@ -134,15 +134,27 @@ export const act4 = defineAct({
       lines: [
         {
           speaker: "hacker",
-          text: "Uplink is open. Shor's algorithm gets the modulus N and a base a that shares no factor with it.",
+          text: "Uplink is open. Three things to set before anything runs, and they are not interchangeable.",
         },
         {
           speaker: "system",
-          text: "The quantum part looks for the period r in the repeating sequence a^x mod N. Given a useful r, ordinary gcd on a^(r/2) - 1 and a^(r/2) + 1 splits N.",
+          text: "N is the number to factor -- Brayan's modulus, {modulus}, straight off the wire. That one is not a choice.",
         },
         {
           speaker: "system",
-          text: "Run the precheck in the uplink, then the simulator or a real QPU batch, then rebuild the key.",
+          text: "a is a base to test. Keep multiplying by a modulo N and the answer eventually comes back round to 1; how many steps that takes is the period r. Pick an a that shares a factor with N and ordinary gcd already wins, so the precheck will stop you.",
+        },
+        {
+          speaker: "system",
+          text: "m is how many counting qubits the circuit gets. It reports a fraction over 2^m, so a period only lands exactly when it divides 2^m. Fewer qubits, coarser answer.",
+        },
+        {
+          speaker: "hacker",
+          text: "Then the classical half is free: given an even r, the gcd of a^(r/2) plus or minus one with N hands over the factors.",
+        },
+        {
+          speaker: "system",
+          text: "Two places to run it. The simulator builds whatever circuit you configure. A hardware batch already ran, so choosing one fixes N, a and m to whatever they were on the day -- you are reading its results, not commissioning them.",
         },
       ],
       waitsFor: "workbench",
@@ -164,6 +176,10 @@ export const act4 = defineAct({
         {
           speaker: "hacker",
           text: "Same private key as last time, reached a different way. What changed is not the answer, it is how the cost grows with the size of N.",
+        },
+        {
+          speaker: "system",
+          text: "Read the outcome table again. Shor is probabilistic: most measurements are useless, and on real hardware noise flattens the distribution until the most frequent result is often the wrong one. That is survivable only because checking a candidate is free -- multiply the factors back together.",
         },
         {
           speaker: "system",

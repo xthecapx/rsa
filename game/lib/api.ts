@@ -150,11 +150,34 @@ export interface ShorPlanResponse {
 export interface ShorSuccessfulOutcome {
   bitstring: string;
   count: number;
+  probability?: number;
   phase?: number;
   fraction?: string;
   order_guess?: number;
   order_matches_true?: boolean;
-  factoring?: { factors?: number[] | null; nontrivial?: boolean };
+  factoring?: {
+    a?: number;
+    N?: number;
+    r?: number;
+    factors?: number[] | null;
+    nontrivial?: boolean;
+    even_order?: boolean;
+    /** "success", "odd_order", and so on. */
+    reason?: string;
+  };
+}
+
+/**
+ * The per-measurement interpretation. Both /api/shor/simulate and every IBM
+ * job carry this under `analysis`, in the same shape, which is why the results
+ * table can render either without caring where the counts came from.
+ */
+export interface ShorAnalysis {
+  shots?: number;
+  num_control?: number;
+  true_order?: number | null;
+  outcomes?: ShorSuccessfulOutcome[];
+  best?: ShorSuccessfulOutcome | null;
 }
 
 export interface ShorSimulateResponse {
@@ -170,7 +193,7 @@ export interface ShorSimulateResponse {
   true_order?: number;
   shots?: number;
   counts?: Record<string, number>;
-  analysis?: Record<string, unknown>;
+  analysis?: ShorAnalysis;
   successful_outcomes?: ShorSuccessfulOutcome[];
   success_shots?: number;
   success_rate?: number;
@@ -206,7 +229,7 @@ export interface IbmJob {
   job_id: string;
   status: string;
   counts: Record<string, number>;
-  analysis?: Record<string, unknown>;
+  analysis?: ShorAnalysis;
   error?: string | null;
   console_url?: string;
   num_control?: number;
