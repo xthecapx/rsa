@@ -15,7 +15,7 @@ def listed_batches(settings: Optional[Settings] = None) -> List[Dict[str, str]]:
         {
             "label": label,
             "batch_id": batch_id,
-            "console_url": settings.workload_url(batch_id),
+            "console_url": settings.session_url(batch_id),
         }
         for label, batch_id in settings.ibm_batch_ids
     ]
@@ -125,7 +125,7 @@ def fetch_batch(
                 "counts": counts,
                 "analysis": analysis,
                 "error": error,
-                "console_url": settings.workload_url(job_id),
+                "console_url": settings.job_url(job_id),
                 "num_control": m,
             }
         )
@@ -136,7 +136,7 @@ def fetch_batch(
     return {
         "batch_id": batch_id,
         "label": label,
-        "console_url": settings.workload_url(batch_id),
+        "console_url": settings.session_url(batch_id),
         "details": details,
         "backend_name": (details or {}).get("backend_name")
         or (details or {}).get("backend"),
