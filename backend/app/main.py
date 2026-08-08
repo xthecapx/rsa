@@ -1,6 +1,7 @@
 """FastAPI entrypoint for the RSA teaching game."""
 
 import logging
+import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -16,16 +17,19 @@ logging.basicConfig(
 
 app = FastAPI(title="RSA Quantum Teaching Game", version="0.1.0")
 
-# Secondary fallback for local non-Docker runs; Docker uses Next.js rewrite
-# proxy. 7013 is the frontend, 7019 the game. The ports are four-digit primes
-# so they stay clear of whatever else is squatting on 3000/8000.
+# Local ports plus any Cloud Run / custom origins. The game normally proxies
+# /api through Next rewrites (no browser CORS), but allow direct calls too.
+_local = [
+    f"http://{host}:{port}"
+    for host in ("localhost", "127.0.0.1")
+    for port in (7013, 7019)
+]
+_extra = [o.strip() for o in os.environ.get("CORS_ORIGINS", "").split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        f"http://{host}:{port}"
-        for host in ("localhost", "127.0.0.1")
-        for port in (7013, 7019)
-    ],
+    allow_origins=_local + _extra,
+    allow_origin_regex=r"https://.*\.run\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -2,6 +2,36 @@
 
 Interactive talk tool: Ale → Hacker → Brayan across plaintext, Caesar, RSA, and Shor, with depth tiers and live IBM batch readout.
 
+## Live (Cloud Run)
+
+Project `hacking-rsa`, region `us-east1`:
+
+| Service | URL |
+| --- | --- |
+| **Game** (open this) | https://rsa-game-pzqjescbgq-ue.a.run.app |
+| Backend | https://rsa-backend-pzqjescbgq-ue.a.run.app |
+| Backend health | https://rsa-backend-pzqjescbgq-ue.a.run.app/api/health |
+
+Redeploy after code changes:
+
+```bash
+./deploy-cloudrun.sh
+```
+
+The script builds `linux/amd64` images, deploys both services, and deletes older
+Artifact Registry digests (keeps the latest push only) so storage stays under
+the free-tier 0.5 GB cap.
+
+Both services use `min-instances=0` (scale to zero) so idle time stays inside Cloud Run’s Always Free allowance. Before a talk, warm them; afterward, cool them:
+
+```bash
+gcloud run services update rsa-backend --region=us-east1 --min-instances=1
+gcloud run services update rsa-game --region=us-east1 --min-instances=1
+# after the talk:
+gcloud run services update rsa-backend --region=us-east1 --min-instances=0
+gcloud run services update rsa-game --region=us-east1 --min-instances=0
+```
+
 ## Quick start (Docker)
 
 ```bash
