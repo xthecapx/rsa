@@ -10,8 +10,22 @@
 #   gcloud auth configure-docker us-east1-docker.pkg.dev
 #
 # After that, this script alone builds, pushes, and deploys backend + game.
+#
+# Usage:
+#   ./deploy-cloudrun.sh            # backend + game (default)
+#   ./deploy-cloudrun.sh backend    # backend only
+#   ./deploy-cloudrun.sh game       # game only (reuses the deployed backend URL)
 
 set -euo pipefail
+
+TARGET="${1:-all}"
+case "${TARGET}" in
+  all|backend|game) ;;
+  *)
+    echo "Usage: $0 [all|backend|game]"
+    exit 1
+    ;;
+esac
 
 PROJECT_ID="${PROJECT_ID:-$(gcloud config get-value project 2>/dev/null)}"
 REGION="${REGION:-$(gcloud config get-value run/region 2>/dev/null)}"
@@ -50,64 +64,74 @@ prune_old_digests() {
   done <<< "${digests}"
 }
 
-echo "==> Project ${PROJECT_ID}  region ${REGION}"
+echo "==> Project ${PROJECT_ID}  region ${REGION}  target ${TARGET}"
 # Cloud Run only runs linux/amd64. On Apple Silicon, the default build is
 # arm64 and the deploy fails with "must support amd64/linux".
 PLATFORM="${PLATFORM:-linux/amd64}"
 
-echo "==> Building and pushing backend (${PLATFORM})"
-docker build --platform="${PLATFORM}" -t "${BACKEND_IMAGE}" "${ROOT}/backend"
-docker push "${BACKEND_IMAGE}"
+if [[ "${TARGET}" == "all" || "${TARGET}" == "backend" ]]; then
+  echo "==> Building and pushing backend (${PLATFORM})"
+  docker build --platform="${PLATFORM}" -t "${BACKEND_IMAGE}" "${ROOT}/backend"
+  docker push "${BACKEND_IMAGE}"
 
-echo "==> Deploying rsa-backend"
-gcloud run deploy rsa-backend \
-  --image="${BACKEND_IMAGE}" \
-  --region="${REGION}" \
-  --platform=managed \
-  --allow-unauthenticated \
-  --memory=512Mi \
-  --cpu=1 \
-  --min-instances=0 \
-  --max-instances=2 \
-  --timeout=300 \
-  --set-env-vars="PYTHONPATH=/app,IBM_MODE=auto"
+  echo "==> Deploying rsa-backend"
+  gcloud run deploy rsa-backend \
+    --image="${BACKEND_IMAGE}" \
+    --region="${REGION}" \
+    --platform=managed \
+    --allow-unauthenticated \
+    --memory=512Mi \
+    --cpu=1 \
+    --min-instances=0 \
+    --max-instances=2 \
+    --timeout=300 \
+    --set-env-vars="PYTHONPATH=/app,IBM_MODE=auto"
 
-prune_old_digests "${REGISTRY}/backend"
+  prune_old_digests "${REGISTRY}/backend"
+fi
 
-BACKEND_URL="$(gcloud run services describe rsa-backend --region="${REGION}" --format='value(status.url)')"
+BACKEND_URL="$(gcloud run services describe rsa-backend --region="${REGION}" --format='value(status.url)' 2>/dev/null || true)"
+if [[ -z "${BACKEND_URL}" ]]; then
+  echo "rsa-backend is not deployed in ${REGION}; run: $0 backend"
+  exit 1
+fi
 echo "==> Backend URL: ${BACKEND_URL}"
 
-echo "==> Building and pushing game (${PLATFORM})"
-# BACKEND_URL must be present at `next build` — rewrites are not runtime-configurable.
-docker build --platform="${PLATFORM}" \
-  --build-arg "BACKEND_URL=${BACKEND_URL}" \
-  -t "${GAME_IMAGE}" "${ROOT}/game"
-docker push "${GAME_IMAGE}"
+if [[ "${TARGET}" == "all" || "${TARGET}" == "game" ]]; then
+  echo "==> Building and pushing game (${PLATFORM})"
+  # BACKEND_URL must be present at `next build` — rewrites are not runtime-configurable.
+  docker build --platform="${PLATFORM}" \
+    --build-arg "BACKEND_URL=${BACKEND_URL}" \
+    -t "${GAME_IMAGE}" "${ROOT}/game"
+  docker push "${GAME_IMAGE}"
 
-echo "==> Deploying rsa-game (BACKEND_URL=${BACKEND_URL})"
-gcloud run deploy rsa-game \
-  --image="${GAME_IMAGE}" \
-  --region="${REGION}" \
-  --platform=managed \
-  --allow-unauthenticated \
-  --memory=512Mi \
-  --cpu=1 \
-  --min-instances=0 \
-  --max-instances=2 \
-  --timeout=300 \
-  --set-env-vars="BACKEND_URL=${BACKEND_URL}"
+  echo "==> Deploying rsa-game (BACKEND_URL=${BACKEND_URL})"
+  gcloud run deploy rsa-game \
+    --image="${GAME_IMAGE}" \
+    --region="${REGION}" \
+    --platform=managed \
+    --allow-unauthenticated \
+    --memory=512Mi \
+    --cpu=1 \
+    --min-instances=0 \
+    --max-instances=2 \
+    --timeout=300 \
+    --set-env-vars="BACKEND_URL=${BACKEND_URL}"
 
-prune_old_digests "${REGISTRY}/game"
+  prune_old_digests "${REGISTRY}/game"
+fi
 
-GAME_URL="$(gcloud run services describe rsa-game --region="${REGION}" --format='value(status.url)')"
+GAME_URL="$(gcloud run services describe rsa-game --region="${REGION}" --format='value(status.url)' 2>/dev/null || true)"
 
 echo
 echo "Done."
 echo "  Backend: ${BACKEND_URL}"
-echo "  Game:    ${GAME_URL}   ← open this in the browser"
+echo "  Game:    ${GAME_URL:-<not deployed>}   ← open this in the browser"
 echo
 echo "Smoke tests:"
 echo "  curl -s ${BACKEND_URL}/api/health"
 echo "  curl -s ${BACKEND_URL}/api/ibm/mode"
-echo "  curl -s -o /dev/null -w '%{http_code}\\n' ${GAME_URL}/"
-echo "  curl -s ${GAME_URL}/api/health"
+if [[ -n "${GAME_URL}" ]]; then
+  echo "  curl -s -o /dev/null -w '%{http_code}\\n' ${GAME_URL}/"
+  echo "  curl -s ${GAME_URL}/api/health"
+fi
