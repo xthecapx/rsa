@@ -534,7 +534,8 @@ function Outcomes({ readout, numControl }: { readout: Readout; numControl: numbe
           ` Showing the top ${readout.outcomes.length} of ${readout.totalOutcomes} measured.`}
       </p>
 
-      <div className="grid grid-cols-[auto_auto_auto_1fr_auto] items-center gap-x-2 gap-y-0.5 font-mono text-[10px]">
+      <div className="-mx-1 overflow-x-auto px-1">
+      <div className="grid min-w-[18rem] grid-cols-[auto_auto_auto_1fr_auto] items-center gap-x-2 gap-y-0.5 font-mono text-[10px]">
         <span className="text-stage-muted">bits</span>
         <span className="text-right text-stage-muted">y</span>
         <span className="text-stage-muted">phase</span>
@@ -577,6 +578,7 @@ function Outcomes({ readout, numControl }: { readout: Readout; numControl: numbe
             </div>
           );
         })}
+      </div>
       </div>
 
       {misleading && (

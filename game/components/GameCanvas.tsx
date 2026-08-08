@@ -56,6 +56,10 @@ export function GameCanvas({ act }: { act: ActNumber }) {
           useGame.getState().setNear(event.near);
           return;
         }
+        if (event.type === "walking") {
+          useGame.getState().setWalking(event.walking);
+          return;
+        }
         // Which landmark matters depends on where the story is, so the runner
         // decides whether this press does anything.
         if (event.type === "interact") void interactAt(event.target);

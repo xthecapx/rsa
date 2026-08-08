@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import clsx from "clsx";
 
 import { submitReport } from "@/game/dialog";
 import { useGame } from "@/game/state";
@@ -9,7 +10,7 @@ import { useGame } from "@/game/state";
  * Handing the plaintext to the client. Typing it out is the point: the player
  * has to have actually read the message, not just watched a tool run.
  */
-export function ReportForm() {
+export function ReportForm({ flow = false }: { flow?: boolean }) {
   const capture = useGame((s) => s.capture);
   const recovered = useGame((s) => s.vars.recovered);
   const reportError = useGame((s) => s.reportError);
@@ -18,8 +19,11 @@ export function ReportForm() {
   const field = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
+    // On a phone this would throw up the keyboard over the sheet before the
+    // player has read what the client is asking for.
+    if (flow) return;
     field.current?.focus();
-  }, []);
+  }, [flow]);
 
   async function send(event: React.FormEvent) {
     event.preventDefault();
@@ -35,13 +39,21 @@ export function ReportForm() {
   return (
     <form
       onSubmit={(event) => void send(event)}
-      className="panel flex min-h-0 flex-1 flex-col overflow-hidden"
+      className={clsx(
+        "panel flex flex-col overflow-hidden",
+        !flow && "min-h-[14rem] flex-1",
+      )}
     >
       <div className="shrink-0 border-b-2 border-stage-border px-3 py-2 text-[10px] uppercase tracking-widest text-actor-boss">
         Report to the client
       </div>
 
-      <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-3 py-3">
+      <div
+        className={clsx(
+          "space-y-3 px-3 py-3",
+          !flow && "min-h-0 flex-1 overflow-y-auto",
+        )}
+      >
         <p className="text-[11px] leading-relaxed text-stage-muted">
           He wants the words, not the numbers. Type exactly what Ale sent.
         </p>

@@ -12,19 +12,31 @@ const TONE: Record<string, string> = {
   note: "text-accent-amber",
 };
 
-/** The laptop in the van: whatever the backend actually returned, verbatim. */
-export function HackerTerminal() {
+/**
+ * The laptop in the van: whatever the backend actually returned, verbatim.
+ *
+ * `flow` gives up the fixed height and inner scrollbar so the log can sit in a
+ * page that scrolls as one piece, which is how the phone sheet reads it.
+ */
+export function HackerTerminal({ flow = false }: { flow?: boolean }) {
   const terminal = useGame((s) => s.terminal);
   const busyLabel = useGame((s) => s.busyLabel);
   const error = useGame((s) => s.error);
   const bottom = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
+    // Following the tail would drag the whole sheet around under the reader.
+    if (flow) return;
     bottom.current?.scrollIntoView({ block: "end" });
-  }, [terminal.length, busyLabel]);
+  }, [terminal.length, busyLabel, flow]);
 
   return (
-    <div className="panel scanline flex h-full flex-col overflow-hidden">
+    <div
+      className={clsx(
+        "panel scanline flex flex-col overflow-hidden",
+        !flow && "h-full",
+      )}
+    >
       <div className="flex items-center justify-between border-b-2 border-stage-border px-3 py-2">
         <span className="text-[10px] uppercase tracking-widest text-accent-teal">
           tap0 &middot; live
@@ -36,7 +48,12 @@ export function HackerTerminal() {
         )}
       </div>
 
-      <div className="flex-1 space-y-1 overflow-y-auto px-3 py-2 font-mono text-[11px] leading-relaxed">
+      <div
+        className={clsx(
+          "space-y-1 px-3 py-2 font-mono text-[11px] leading-relaxed",
+          !flow && "flex-1 overflow-y-auto",
+        )}
+      >
         {terminal.length === 0 && !busyLabel && (
           <p className="text-stage-muted">Waiting for traffic.</p>
         )}

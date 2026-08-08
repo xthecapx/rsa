@@ -45,6 +45,20 @@ async function teardown(live: LiveGame): Promise<void> {
 }
 
 /**
+ * Phones get a fraction of the width a desktop sidebar layout leaves for the
+ * street, so letterboxing it to fit would leave the sprites too small to read.
+ * Zooming instead keeps the tiles legible and lets the camera pan, at the cost
+ * of some map being off screen. Pointer type is fixed for the life of the tab,
+ * so this never has to change mid-session.
+ */
+function displayModeForDevice(): DisplayMode {
+  const coarse =
+    typeof window !== "undefined" &&
+    window.matchMedia?.("(pointer: coarse)").matches;
+  return coarse ? DisplayMode.FitContainerAndZoom : DisplayMode.FitContainer;
+}
+
+/**
  * Excalibur touches `window` and `document`, so this module must only ever be
  * imported from a client component loaded with `ssr: false`.
  *
@@ -63,7 +77,7 @@ export function createGame(container: HTMLElement): Promise<Engine> {
       // 30 x 16 tiles of 16px, matching the street map exactly so the camera
       // bounds are never smaller than the viewport.
       resolution: { width: 480, height: 256 },
-      displayMode: DisplayMode.FitContainer,
+      displayMode: displayModeForDevice(),
       pixelArt: true,
       suppressPlayButton: true,
       backgroundColor: Color.fromHex("#0b1f26"),

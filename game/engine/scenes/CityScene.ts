@@ -8,6 +8,7 @@ import {
   TileMap,
   vec,
 } from "excalibur";
+import type { PointerEvent, Subscription } from "excalibur";
 
 import { Bubble, Packet, TapGlow, createCar } from "../actors/Props";
 import { Character } from "../actors/Character";
@@ -28,12 +29,23 @@ import {
 import type { GridPos } from "../maps/street";
 import { citySprite } from "../resources";
 import { TILE_SIZE } from "../tiles";
+import { clearTouchInput, consumeTouchInteract } from "../touchInput";
 
 const MOVE_KEYS: { keys: Keys[]; delta: GridPos }[] = [
   { keys: [Keys.ArrowUp, Keys.W], delta: { x: 0, y: -1 } },
   { keys: [Keys.ArrowDown, Keys.S], delta: { x: 0, y: 1 } },
   { keys: [Keys.ArrowLeft, Keys.A], delta: { x: -1, y: 0 } },
   { keys: [Keys.ArrowRight, Keys.D], delta: { x: 1, y: 0 } },
+];
+
+/** How long the player has to stand still before they count as stopped. */
+const WALK_SETTLE_MS = 220;
+
+const NEIGHBOURS: GridPos[] = [
+  { x: 0, y: 1 },
+  { x: 0, y: -1 },
+  { x: 1, y: 0 },
+  { x: -1, y: 0 },
 ];
 
 export class CityScene extends Scene {
@@ -45,12 +57,15 @@ export class CityScene extends Scene {
   private tapGlow!: TapGlow;
   private inputLocked = false;
   private lastNear: Landmark | null = null;
+  private lastWalking = false;
+  private walkIdleMs = 0;
   /**
    * The same Space press that finishes a line would otherwise arrive here the
    * instant input is unlocked, interacting with whatever the player happens to
    * be standing next to. Wait for the key to come up first.
    */
   private needsSpaceRelease = false;
+  private pointerSub: Subscription | null = null;
 
   override onInitialize(engine: Engine): void {
     engine.backgroundColor = Color.fromHex("#0b1f26");
@@ -87,11 +102,18 @@ export class CityScene extends Scene {
     );
     this.camera.y = worldHeight / 2;
 
+    this.pointerSub = engine.input.pointers.on("down", (event) =>
+      this.onPointerDown(event),
+    );
+
     bus.setCommandHandler((command) => this.handle(command));
     bus.emit({ type: "ready" });
   }
 
   override onDeactivate(): void {
+    this.pointerSub?.close();
+    this.pointerSub = null;
+    clearTouchInput();
     bus.setCommandHandler(null);
     bus.drain();
   }
@@ -127,8 +149,32 @@ export class CityScene extends Scene {
     return tileMap;
   }
 
-  override onPreUpdate(engine: Engine): void {
-    if (this.inputLocked || this.player.isMoving) return;
+  override onPreUpdate(engine: Engine, elapsed: number): void {
+    this.reportWalking(elapsed);
+
+    if (this.inputLocked) return;
+
+    const near = landmarkAt(this.player.grid);
+    if (near !== this.lastNear) {
+      this.lastNear = near;
+      bus.emit({ type: "moved", near });
+    }
+
+    if (this.needsSpaceRelease) {
+      if (!engine.input.keyboard.isHeld(Keys.Space)) this.needsSpaceRelease = false;
+    }
+
+    const talked =
+      (!this.needsSpaceRelease && engine.input.keyboard.wasPressed(Keys.Space)) ||
+      consumeTouchInteract();
+
+    if (near && talked) {
+      this.player.stop();
+      bus.emit({ type: "interact", target: near });
+      return;
+    }
+
+    if (this.player.isMoving) return;
 
     for (const { keys, delta } of MOVE_KEYS) {
       if (!keys.some((key) => engine.input.keyboard.isHeld(key))) continue;
@@ -140,21 +186,80 @@ export class CityScene extends Scene {
       }
       break;
     }
+  }
 
-    const near = landmarkAt(this.player.grid);
-    if (near !== this.lastNear) {
-      this.lastNear = near;
-      bus.emit({ type: "moved", near });
-    }
-
-    if (this.needsSpaceRelease) {
-      if (!engine.input.keyboard.isHeld(Keys.Space)) this.needsSpaceRelease = false;
+  /**
+   * Tells React when the player is on the move so the HUD can step aside.
+   * Reported during scripted walks too, and held briefly past the end of a
+   * step: a route walked one tile at a time is idle for a frame between tiles,
+   * which would otherwise flicker whatever is listening.
+   */
+  private reportWalking(elapsed: number): void {
+    if (this.player.isMoving) {
+      this.walkIdleMs = 0;
+      if (this.lastWalking) return;
+      this.lastWalking = true;
+      bus.emit({ type: "walking", walking: true });
       return;
     }
 
-    if (near && engine.input.keyboard.wasPressed(Keys.Space)) {
-      bus.emit({ type: "interact", target: near });
+    if (!this.lastWalking) return;
+    this.walkIdleMs += elapsed;
+    if (this.walkIdleMs < WALK_SETTLE_MS) return;
+    this.lastWalking = false;
+    bus.emit({ type: "walking", walking: false });
+  }
+
+  /** Tap anywhere on the street to walk there; the only way to move on touch. */
+  private onPointerDown(event: PointerEvent): void {
+    if (this.inputLocked) return;
+    // Pinch and other multi-finger gestures are not movement.
+    if ("touches" in event.nativeEvent) {
+      const touches = (event.nativeEvent as TouchEvent).touches;
+      if (touches.length > 1) return;
     }
+
+    const { x: wx, y: wy } = event.coordinates.worldPos;
+    const goal = this.reachableTile({
+      x: Math.floor(wx / TILE_SIZE),
+      y: Math.floor(wy / TILE_SIZE),
+    });
+    if (!goal) return;
+
+    const route = findPath(this.solid, this.player.grid, goal);
+    if (!route?.length) return;
+    void this.player.follow(route);
+  }
+
+  /**
+   * Tapping a building, a person or the car should still walk the player over
+   * rather than doing nothing, so solid tiles resolve to the closest free tile
+   * beside them.
+   */
+  private reachableTile(tapped: GridPos): GridPos | null {
+    if (isWalkable(this.solid, tapped)) return tapped;
+
+    for (const key of Object.keys(LANDMARKS) as Landmark[]) {
+      const { at, size } = LANDMARKS[key];
+      const inside =
+        tapped.x >= at.x &&
+        tapped.x < at.x + size.w &&
+        tapped.y >= at.y &&
+        tapped.y < at.y + size.h;
+      if (inside) return LANDMARKS[key].stand;
+    }
+
+    const options = NEIGHBOURS.map((delta) => ({
+      x: tapped.x + delta.x,
+      y: tapped.y + delta.y,
+    })).filter((pos) => isWalkable(this.solid, pos));
+    if (!options.length) return null;
+
+    const distance = (pos: GridPos) =>
+      Math.abs(pos.x - this.player.grid.x) + Math.abs(pos.y - this.player.grid.y);
+    return options.reduce((best, pos) =>
+      distance(pos) < distance(best) ? pos : best,
+    );
   }
 
   private async handle(command: EngineCommand): Promise<void> {
@@ -163,6 +268,7 @@ export class CityScene extends Scene {
         this.inputLocked = command.locked;
         if (command.locked) this.player.stop();
         else this.needsSpaceRelease = true;
+        clearTouchInput();
         return;
 
       case "reset":
@@ -175,6 +281,9 @@ export class CityScene extends Scene {
         this.packet.hide();
         this.tapGlow.setActive(false);
         this.needsSpaceRelease = false;
+        this.lastWalking = false;
+        this.walkIdleMs = 0;
+        clearTouchInput();
         for (const bubble of Object.values(this.bubbles)) bubble.hide();
         return;
 

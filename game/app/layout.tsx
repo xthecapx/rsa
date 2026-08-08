@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Press_Start_2P, DM_Sans } from "next/font/google";
 import "./globals.css";
 
@@ -19,6 +19,15 @@ export const metadata: Metadata = {
   title: "Man in the Middle",
   description:
     "A pixel-art hacking game about breaking Ale and Brayan's messages, from plaintext to Shor's algorithm.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+  themeColor: "#0b1f26",
 };
 
 export default function RootLayout({

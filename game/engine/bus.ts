@@ -24,7 +24,8 @@ export type BubbleKind = "none" | "question" | "alert" | "success";
 export type EngineEvent =
   | { type: "ready" }
   | { type: "interact"; target: Landmark }
-  | { type: "moved"; near: Landmark | null };
+  | { type: "moved"; near: Landmark | null }
+  | { type: "walking"; walking: boolean };
 
 type CommandEnvelope = { id: number; command: EngineCommand };
 type CommandHandler = (command: EngineCommand) => void | Promise<void>;

@@ -1,17 +1,18 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import clsx from "clsx";
 
 import type { ActNumber } from "@/content/types";
 import { getAct } from "@/content";
 import { DialogBox } from "./DialogBox";
 import { GameOver } from "./GameOver";
-import { HackerTerminal } from "./HackerTerminal";
-import { ObjectiveList } from "./ObjectiveList";
-import { ReportForm } from "./ReportForm";
+import { OrientationNotice } from "./OrientationNotice";
+import { SidePanel } from "./SidePanel";
 import { SuspicionMeter } from "./SuspicionMeter";
-import { Workbench } from "./Workbench";
+import { TouchControls } from "./TouchControls";
 import { useGame } from "@/game/state";
 
 // Excalibur is browser-only, so the canvas host never renders on the server.
@@ -31,47 +32,73 @@ export function PlayScreen({ act }: { act: ActNumber }) {
   const phase = useGame((s) => s.phase);
   const panel = useGame((s) => s.panel);
   const near = useGame((s) => s.near);
+  const walking = useGame((s) => s.walking);
   const pendingTravel = useGame((s) => s.pendingTravel);
+  const awaitingPanel = useGame((s) => s.awaitingPanel);
   const script = getAct(act);
+
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   const exploring = phase === "exploring";
   const canInteract = exploring && pendingTravel !== null && near === pendingTravel.at;
+  const needsPanel = awaitingPanel || panel === "report";
+
+  // Crypto / report steps need the laptop; open the sheet when the story asks.
+  useEffect(() => {
+    if (needsPanel) setSheetOpen(true);
+  }, [needsPanel]);
 
   return (
-    <main className="flex h-screen w-screen flex-col overflow-hidden bg-stage-bg">
-      <header className="flex shrink-0 items-center justify-between border-b-2 border-stage-border px-4 py-2">
-        <div className="flex items-baseline gap-3">
-          <Link href="/" className="text-[10px] text-stage-muted hover:text-accent-teal">
+    <main className="flex h-dvh max-h-dvh w-screen flex-col overflow-hidden bg-stage-bg">
+      <header className="flex shrink-0 items-center justify-between gap-2 border-b-2 border-stage-border px-3 py-2 sm:px-4">
+        <div className="flex min-w-0 items-baseline gap-2 sm:gap-3">
+          <Link href="/" className="shrink-0 text-[10px] text-stage-muted hover:text-accent-teal">
             &lt; acts
           </Link>
-          <h1 className="text-[11px] text-accent-amber">
+          <h1 className="truncate text-[11px] text-accent-amber">
             Act {act}: {script.title}
           </h1>
-          <span className="text-[10px] text-stage-muted">{script.subtitle}</span>
+          <span className="hidden truncate text-[10px] text-stage-muted sm:inline">
+            {script.subtitle}
+          </span>
         </div>
-        <span className="text-[10px] text-stage-muted">
+        <span className="hidden shrink-0 text-[10px] text-stage-muted lg:inline">
           Move: arrows / WASD &middot; Talk: Space &middot; Choose: 1-3
+        </span>
+        <span className="shrink-0 text-[10px] text-stage-muted lg:hidden">
+          Tap to walk
         </span>
       </header>
 
-      <div className="flex min-h-0 flex-1">
-        <section className="relative min-w-0 flex-1">
+      <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+        <section className="relative min-h-0 min-w-0 flex-1">
           <GameCanvas act={act} />
 
-          <div className="pointer-events-none absolute inset-0 flex flex-col justify-between p-4">
+          <div className="pointer-events-none absolute inset-0 flex flex-col justify-between p-3 sm:p-4">
             <div className="flex justify-end">
               <SuspicionMeter />
             </div>
 
-            <div className="flex flex-col items-center gap-3">
+            <div className="flex flex-col items-center gap-3 pb-20 lg:pb-0">
               {exploring && pendingTravel && (
-                <div className="textbox px-4 py-3 text-center">
-                  <p className="text-[11px] text-[#e8f4f8]">
+                <div
+                  className={clsx(
+                    "textbox max-w-md px-3 py-2 text-center transition-opacity duration-200 sm:px-4 sm:py-3",
+                    // The street matters more than the reminder once moving.
+                    walking && "opacity-20",
+                  )}
+                >
+                  <p className="text-[10px] leading-relaxed text-[#e8f4f8] sm:text-[11px]">
                     {pendingTravel.objective}
                   </p>
-                  {canInteract && (
+                  {canInteract ? (
                     <p className="mt-2 animate-pulse text-[10px] text-accent-amber">
-                      Press Space
+                      <span className="lg:hidden">Tap Talk</span>
+                      <span className="hidden lg:inline">Press Space</span>
+                    </p>
+                  ) : (
+                    <p className="mt-2 text-[10px] text-stage-muted lg:hidden">
+                      Tap the street to walk
                     </p>
                   )}
                 </div>
@@ -80,19 +107,63 @@ export function PlayScreen({ act }: { act: ActNumber }) {
             </div>
           </div>
 
+          <TouchControls canInteract={canInteract} visible={exploring} />
+
+          {/* Mobile laptop toggle — desktop uses the persistent sidebar. */}
+          <div className="pointer-events-none absolute left-3 top-3 z-10 lg:hidden">
+            <button
+              type="button"
+              onClick={() => setSheetOpen(true)}
+              className={clsx(
+                "pointer-events-auto border-2 px-3 py-2 text-[10px] uppercase tracking-widest",
+                needsPanel
+                  ? "animate-pulse border-accent-amber bg-accent-amber/20 text-accent-amber"
+                  : "border-stage-border bg-stage-surface/90 text-accent-teal",
+              )}
+            >
+              Laptop
+            </button>
+          </div>
+
           <GameOver act={act} />
         </section>
 
-        {/* Job sheet on top, whatever the story needs in the middle, the raw
-            backend log underneath. All three stay up the whole act. */}
         <aside className="hidden w-80 shrink-0 flex-col gap-3 border-l-2 border-stage-border p-3 lg:flex xl:w-96">
-          <ObjectiveList />
-          {panel === "report" ? <ReportForm /> : <Workbench act={act} />}
-          <div className="h-48 shrink-0">
-            <HackerTerminal />
-          </div>
+          <SidePanel act={act} />
         </aside>
       </div>
+
+      <OrientationNotice />
+
+      {sheetOpen && (
+        <div className="fixed inset-0 z-30 flex flex-col lg:hidden">
+          <button
+            type="button"
+            aria-label="Close laptop"
+            className="min-h-0 flex-1 bg-black/55"
+            onClick={() => setSheetOpen(false)}
+          />
+          <div className="flex max-h-[min(85dvh,720px)] flex-col gap-3 overflow-hidden border-t-2 border-stage-border bg-stage-bg p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-stage">
+            <div className="flex shrink-0 items-center justify-between">
+              <span className="text-[10px] uppercase tracking-widest text-accent-teal">
+                Laptop
+              </span>
+              <button
+                type="button"
+                onClick={() => setSheetOpen(false)}
+                className="border-2 border-stage-border px-3 py-1.5 text-[10px] text-stage-muted"
+              >
+                Close
+              </button>
+            </div>
+            {/* Block, not flex: flex children would shrink to fit the sheet
+                instead of running past it and scrolling. */}
+            <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain">
+              <SidePanel act={act} flow />
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

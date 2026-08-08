@@ -54,6 +54,15 @@ export function DialogBox() {
   void flags;
   void nodeId;
 
+  function continueLine() {
+    if (!settled) {
+      if (timer.current) clearInterval(timer.current);
+      setTyped(fullText);
+      return;
+    }
+    void advance();
+  }
+
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
       if (event.repeat) return;
@@ -85,10 +94,26 @@ export function DialogBox() {
 
   if (phase !== "dialog" || !fullText) return null;
 
+  const waitingOnPanel = awaitingPanel && lineIndex >= lines.length - 1;
+  const canTapContinue = !choices.length && !waitingOnPanel;
+
   return (
     <div className="pointer-events-auto w-full max-w-4xl">
-      <div className="textbox flex gap-4 p-4">
-        <Portrait speaker={speaker} size={72} />
+      <div
+        className="textbox flex gap-3 p-3 sm:gap-4 sm:p-4"
+        role={canTapContinue ? "button" : undefined}
+        tabIndex={canTapContinue ? 0 : undefined}
+        onClick={() => {
+          if (!canTapContinue) return;
+          continueLine();
+        }}
+      >
+        <div className="hidden sm:block">
+          <Portrait speaker={speaker} size={72} />
+        </div>
+        <div className="sm:hidden">
+          <Portrait speaker={speaker} size={48} />
+        </div>
 
         <div className="min-w-0 flex-1">
           <div
@@ -100,7 +125,7 @@ export function DialogBox() {
             {feedback ? "Think again" : SPEAKER_NAME[speaker]}
           </div>
 
-          <p className="min-h-[3.5rem] text-[13px] leading-relaxed text-[#e8f4f8]">
+          <p className="min-h-[3rem] text-[12px] leading-relaxed text-[#e8f4f8] sm:min-h-[3.5rem] sm:text-[13px]">
             {typed}
             {!settled && <span className="animate-pulse">|</span>}
           </p>
@@ -111,7 +136,10 @@ export function DialogBox() {
                 <li key={choice.label}>
                   <button
                     type="button"
-                    onClick={() => void choose(index)}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      void choose(index);
+                    }}
                     className="group flex w-full items-start gap-3 border-2 border-transparent px-2 py-1.5 text-left text-[12px] leading-relaxed text-[#cfe6ee] transition-colors hover:border-accent-amber hover:bg-accent-amber/10 hover:text-white"
                   >
                     <span className="text-accent-amber">{index + 1}.</span>
@@ -122,13 +150,15 @@ export function DialogBox() {
             </ul>
           ) : (
             settled &&
-            (awaitingPanel && lineIndex >= lines.length - 1 ? (
+            (waitingOnPanel ? (
               <div className="mt-3 text-right text-[10px] text-accent-amber">
-                Use the panel on the right
+                <span className="lg:hidden">Open Laptop</span>
+                <span className="hidden lg:inline">Use the panel on the right</span>
               </div>
             ) : (
               <div className="mt-3 text-right text-[10px] text-stage-muted">
-                Space to continue
+                <span className="lg:hidden">Tap to continue</span>
+                <span className="hidden lg:inline">Space to continue</span>
               </div>
             ))
           )}

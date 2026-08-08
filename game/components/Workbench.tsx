@@ -16,17 +16,27 @@ import { api } from "@/lib/api";
  * buttons below it are the only way to turn it back into words. Every one of
  * them is a real request to the backend.
  */
-export function Workbench({ act }: { act: ActNumber }) {
+export function Workbench({ act, flow = false }: { act: ActNumber; flow?: boolean }) {
   const capture = useGame((s) => s.capture);
   const recovered = useGame((s) => s.vars.recovered);
 
   return (
-    <div className="panel flex min-h-0 flex-1 flex-col overflow-hidden">
+    <div
+      className={clsx(
+        "panel flex flex-col overflow-hidden",
+        !flow && "min-h-[14rem] flex-1",
+      )}
+    >
       <div className="shrink-0 border-b-2 border-stage-border px-3 py-2 text-[10px] uppercase tracking-widest text-accent-teal">
         Workbench
       </div>
 
-      <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-3 py-3">
+      <div
+        className={clsx(
+          "space-y-3 px-3 py-3",
+          !flow && "min-h-0 flex-1 overflow-y-auto",
+        )}
+      >
         {capture ? (
           <div className="border-2 border-stage-border bg-stage-bg/60 px-2.5 py-2">
             <p className="text-[9px] uppercase tracking-widest text-stage-muted">
@@ -216,8 +226,9 @@ function CaesarTool() {
     <div className="space-y-2">
       <ToolButton label="Try all 25 shifts" busy={busy} onClick={() => void bruteForce()} />
 
+      {/* Uncapped on phones, where the sheet around it is the only scroller. */}
       {candidates.length > 0 && (
-        <ul className="max-h-56 space-y-0.5 overflow-y-auto border-2 border-stage-border px-2 py-1.5 font-mono text-[11px]">
+        <ul className="space-y-0.5 border-2 border-stage-border px-2 py-1.5 font-mono text-[11px] lg:max-h-56 lg:overflow-y-auto">
           {candidates.map((row) => (
             <li key={row.shift}>
               <button

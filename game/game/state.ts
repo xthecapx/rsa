@@ -114,6 +114,8 @@ interface GameState {
   flags: Record<string, boolean>;
   vars: RunVars;
   near: Landmark | null;
+  /** True while the player sprite is between tiles. */
+  walking: boolean;
   error: string | null;
   completedActs: ActNumber[];
   tasks: Task[];
@@ -135,6 +137,7 @@ interface GameState {
   setFlag: (name: string) => void;
   setVars: (patch: Partial<RunVars>) => void;
   setNear: (near: Landmark | null) => void;
+  setWalking: (walking: boolean) => void;
   setError: (error: string | null) => void;
   addSuspicion: (amount: number) => number;
   markComplete: (act: ActNumber) => void;
@@ -162,6 +165,7 @@ export const useGame = create<GameState>((set, get) => ({
   flags: {},
   vars: { ...DEFAULT_VARS },
   near: null,
+  walking: false,
   error: null,
   completedActs: [],
   tasks: [],
@@ -190,6 +194,7 @@ export const useGame = create<GameState>((set, get) => ({
   setFlag: (name) => set((s) => ({ flags: { ...s.flags, [name]: true } })),
   setVars: (patch) => set((s) => ({ vars: { ...s.vars, ...patch } })),
   setNear: (near) => set({ near }),
+  setWalking: (walking) => set({ walking }),
   setError: (error) => set({ error }),
   setTasks: (tasks) => set({ tasks }),
   setTaskStatus: (id, status) =>
@@ -229,6 +234,7 @@ export const useGame = create<GameState>((set, get) => ({
       terminal: [],
       flags: {},
       vars: { ...DEFAULT_VARS },
+      walking: false,
       error: null,
       tasks: [],
       pendingTravel: null,
