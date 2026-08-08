@@ -105,8 +105,11 @@ interface GameState {
   lineIndex: number;
   lines: DisplayLine[];
   choicesVisible: boolean;
-  /** True while the current node is handing control to a side panel. */
-  awaitingPanel: boolean;
+  /**
+   * What the current node is blocked on, if anything. `workbench` means use
+   * the laptop; `report` means answer the boss in the dialog.
+   */
+  waitingFor: PanelKind | null;
   feedback: string | null;
   busyLabel: string | null;
   panel: PanelKind | null;
@@ -126,7 +129,7 @@ interface GameState {
 
   setAct: (act: ActNumber) => void;
   setPhase: (phase: Phase) => void;
-  setNode: (nodeId: string, lines: DisplayLine[], awaitingPanel: boolean) => void;
+  setNode: (nodeId: string, lines: DisplayLine[], waitingFor: PanelKind | null) => void;
   setLineIndex: (index: number) => void;
   setChoicesVisible: (visible: boolean) => void;
   setFeedback: (feedback: string | null) => void;
@@ -157,7 +160,7 @@ export const useGame = create<GameState>((set, get) => ({
   lineIndex: 0,
   lines: [],
   choicesVisible: false,
-  awaitingPanel: false,
+  waitingFor: null,
   feedback: null,
   busyLabel: null,
   panel: null,
@@ -175,14 +178,15 @@ export const useGame = create<GameState>((set, get) => ({
 
   setAct: (act) => set({ act }),
   setPhase: (phase) => set({ phase }),
-  setNode: (nodeId, lines, awaitingPanel) =>
+  setNode: (nodeId, lines, waitingFor) =>
     set({
       nodeId,
       lines,
       lineIndex: 0,
       choicesVisible: false,
       feedback: null,
-      awaitingPanel,
+      reportError: null,
+      waitingFor,
     }),
   setLineIndex: (lineIndex) => set({ lineIndex }),
   setChoicesVisible: (choicesVisible) => set({ choicesVisible }),
@@ -227,7 +231,7 @@ export const useGame = create<GameState>((set, get) => ({
       lineIndex: 0,
       lines: [],
       choicesVisible: false,
-      awaitingPanel: false,
+      waitingFor: null,
       feedback: null,
       busyLabel: null,
       panel: null,

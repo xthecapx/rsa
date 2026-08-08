@@ -185,10 +185,7 @@ export const act2 = defineAct({
     },
 
     report: {
-      onEnter: [
-        { kind: "face", target: "car" },
-        { kind: "panel", open: "report" },
-      ],
+      onEnter: [{ kind: "face", target: "car" }],
       lines: [{ speaker: "boss", text: "Twenty-five tries. Well? What does it say?" }],
       waitsFor: "report",
       report: {

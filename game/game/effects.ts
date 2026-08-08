@@ -5,6 +5,7 @@ import { fill } from "./interpolate";
 import { charOf, lettersOf } from "./secret";
 import { useGame } from "./state";
 import type { TerminalLine } from "./state";
+import { yieldToPaint } from "./yieldToPaint";
 
 const LABELS: Record<string, string> = {
   plaintext: "Reading the wire",
@@ -76,6 +77,7 @@ export function modInverse(a: number, m: number): number | null {
 export async function runApiCall(call: ApiCallName): Promise<void> {
   const store = useGame.getState();
   store.setBusy(LABELS[call] ?? "Working");
+  await yieldToPaint();
   try {
     await runApi(call);
   } finally {
@@ -90,11 +92,9 @@ async function runApi(call: string): Promise<void> {
     // Ale types a whole word, so every character goes down the wire through
     // the same endpoint. The wire only ever carries the numbers.
     case "plaintext": {
-      const numbers: number[] = [];
-      for (const char of lettersOf(vars.message)) {
-        const res = await api.plaintext(char);
-        numbers.push(res.value);
-      }
+      const letters = lettersOf(vars.message);
+      const results = await Promise.all(letters.map((char) => api.plaintext(char)));
+      const numbers = results.map((res) => res.value);
       const values = numbers.join(" ");
       setVars({ value: numbers[0], values, cipherText: values });
       say({ tone: "info", text: `${vars.message.length} characters, mapped A=1 .. Z=26.` });
@@ -103,13 +103,12 @@ async function runApi(call: string): Promise<void> {
     }
 
     case "caesarEncrypt": {
-      const cipher: string[] = [];
-      const numbers: number[] = [];
-      for (const char of lettersOf(vars.message)) {
-        const res = await api.caesar.encrypt(char, vars.shift);
-        cipher.push(res.ciphertext);
-        numbers.push(res.ciphertext_value);
-      }
+      const letters = lettersOf(vars.message);
+      const results = await Promise.all(
+        letters.map((char) => api.caesar.encrypt(char, vars.shift)),
+      );
+      const cipher = results.map((res) => res.ciphertext);
+      const numbers = results.map((res) => res.ciphertext_value);
       const cipherText = cipher.join("");
       setVars({
         cipherChar: cipher[0],
@@ -315,6 +314,7 @@ export async function runEffect(effect: Effect): Promise<void> {
   switch (effect.kind) {
     case "api": {
       store.setBusy(effect.label ?? LABELS[effect.call] ?? "Working");
+      await yieldToPaint();
       try {
         await runApi(effect.call);
       } finally {
@@ -329,13 +329,19 @@ export async function runEffect(effect: Effect): Promise<void> {
       await bus.send({ type: "face", target: effect.target });
       return;
     case "packet":
-      await bus.send({
-        type: "packet",
-        style: effect.style,
-        from: effect.from,
-        to: effect.to,
-        intercept: effect.intercept ?? false,
-      });
+      store.setBusy(effect.intercept ? "Intercepting the wire" : "Watching the wire");
+      await yieldToPaint();
+      try {
+        await bus.send({
+          type: "packet",
+          style: effect.style,
+          from: effect.from,
+          to: effect.to,
+          intercept: effect.intercept ?? false,
+        });
+      } finally {
+        useGame.getState().setBusy(null);
+      }
       return;
     case "bubble":
       await bus.send({ type: "bubble", actor: effect.actor, face: effect.face });

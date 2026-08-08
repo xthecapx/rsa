@@ -66,20 +66,20 @@ export function PlayScreen({ act }: { act: ActNumber }) {
   const near = useGame((s) => s.near);
   const walking = useGame((s) => s.walking);
   const pendingTravel = useGame((s) => s.pendingTravel);
-  const awaitingPanel = useGame((s) => s.awaitingPanel);
+  const waitingFor = useGame((s) => s.waitingFor);
   const script = getAct(act);
 
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const exploring = phase === "exploring";
   const canInteract = exploring && pendingTravel !== null && near === pendingTravel.at;
-  const needsPanel = awaitingPanel || panel === "report";
+  const needsPanel = waitingFor === "workbench" || panel === "workbench";
 
   useEffect(() => {
     void gameAudio.playMusic("play");
   }, []);
 
-  // Crypto / report steps need the laptop; open the sheet when the story asks.
+  // Workbench steps need the laptop; open the sheet when the story asks.
   useEffect(() => {
     if (needsPanel) setSheetOpen(true);
   }, [needsPanel]);

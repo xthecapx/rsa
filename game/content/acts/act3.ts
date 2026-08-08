@@ -190,10 +190,7 @@ export const act3 = defineAct({
     },
 
     report: {
-      onEnter: [
-        { kind: "face", target: "car" },
-        { kind: "panel", open: "report" },
-      ],
+      onEnter: [{ kind: "face", target: "car" }],
       lines: [
         { speaker: "boss", text: "You got the other key. So say the letter." },
       ],

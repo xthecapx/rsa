@@ -22,9 +22,9 @@ import { api } from "@/lib/api";
 export function Workbench({ act, flow = false }: { act: ActNumber; flow?: boolean }) {
   const capture = useGame((s) => s.capture);
   const recovered = useGame((s) => s.vars.recovered);
-  const awaitingPanel = useGame((s) => s.awaitingPanel);
+  const waitingFor = useGame((s) => s.waitingFor);
   const panel = useGame((s) => s.panel);
-  const armed = awaitingPanel && panel === "workbench";
+  const armed = waitingFor === "workbench" && panel === "workbench";
 
   return (
     <div

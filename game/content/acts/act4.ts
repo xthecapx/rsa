@@ -194,10 +194,7 @@ export const act4 = defineAct({
     },
 
     report: {
-      onEnter: [
-        { kind: "face", target: "car" },
-        { kind: "panel", open: "report" },
-      ],
+      onEnter: [{ kind: "face", target: "car" }],
       lines: [{ speaker: "boss", text: "You borrowed a machine in another country. Say the letter." }],
       waitsFor: "report",
       report: {

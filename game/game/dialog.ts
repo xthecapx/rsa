@@ -8,6 +8,7 @@ import { DEFAULT_SUSPICION_HIT, clearSuspicionBubbles, raiseSuspicion } from "./
 import { pickSecret } from "./secret";
 import { useGame } from "./state";
 import type { DisplayLine } from "./state";
+import { yieldToPaint } from "./yieldToPaint";
 
 /** Suspicion added when the client is handed the wrong plaintext. */
 const WRONG_REPORT_HIT = 20;
@@ -37,6 +38,7 @@ async function enter(act: ActNumber, id: string): Promise<void> {
   const node = nodeOf(act, id);
 
   store.setPhase("busy");
+  await yieldToPaint();
   try {
     await runEffects(node.onEnter);
   } catch (error) {
@@ -44,7 +46,7 @@ async function enter(act: ActNumber, id: string): Promise<void> {
   }
 
   const after = useGame.getState();
-  after.setNode(id, render(node), Boolean(node.waitsFor));
+  after.setNode(id, render(node), node.waitsFor ?? null);
   after.setPendingTravel(null);
 
   if (node.ending === "win") {
@@ -167,6 +169,7 @@ export async function choose(index: number): Promise<void> {
 
   state.setChoicesVisible(false);
   state.setPhase("busy");
+  await yieldToPaint();
 
   try {
     await runEffects(choice.effects);
@@ -204,22 +207,21 @@ export async function goTo(id: string): Promise<void> {
  * says where that leads, so panels never hard-code a node id.
  */
 export async function resolvePanel(): Promise<void> {
-  const { act, nodeId, awaitingPanel, panel } = useGame.getState();
-  if (!nodeId || !awaitingPanel || panel !== "workbench") return;
+  const { act, nodeId, waitingFor, panel } = useGame.getState();
+  if (!nodeId || waitingFor !== "workbench" || panel !== "workbench") return;
   const node = nodeOf(act, nodeId);
   if (node.waitsFor !== "workbench" || !node.next) return;
   await enter(act, node.next);
 }
 
 /**
- * Hand a plaintext to the client. A wrong answer costs suspicion and leaves
- * the player on the same node, so they go back to the workbench rather than
- * losing the act outright.
+ * Hand a plaintext to the client in person. A wrong answer costs suspicion and
+ * leaves the player on the same dialog so they can try again.
  */
 export async function submitReport(answer: string): Promise<void> {
   const state = useGame.getState();
-  const { act, nodeId } = state;
-  if (!nodeId) return;
+  const { act, nodeId, waitingFor } = state;
+  if (!nodeId || waitingFor !== "report") return;
 
   const node = nodeOf(act, nodeId);
   if (node.waitsFor !== "report") return;
@@ -229,7 +231,14 @@ export async function submitReport(answer: string): Promise<void> {
 
   if (given === String(state.vars.message).toUpperCase()) {
     state.setReportError(null);
-    if (node.next) await enter(act, node.next);
+    state.setBusy("Reporting to the client");
+    state.setPhase("busy");
+    await yieldToPaint();
+    try {
+      if (node.next) await enter(act, node.next);
+    } finally {
+      useGame.getState().setBusy(null);
+    }
     return;
   }
 

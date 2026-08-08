@@ -107,15 +107,17 @@ export interface DialogNode<Id extends string> {
    */
   travelTo?: { at: Landmark; objective: string; next: Id };
   /**
-   * Hand control to the sidebar. The node stays on screen until the panel
-   * calls back, which enters `next`.
+   * Hand control to something outside the line-advance loop. The node stays
+   * on screen until that thing finishes, which enters `next`.
+   * - `workbench` — decode tools in the laptop panel
+   * - `report` — type the plaintext to the boss in the dialog
    */
   waitsFor?: PanelKind;
   /** Tuning for a `waitsFor: "report"` node. */
   report?: {
     /** Suspicion added per wrong answer. Defaults to 20 of 100. */
     suspicion?: number;
-    /** Shown under the field when the answer is wrong. */
+    /** Shown under the dialog field when the answer is wrong. */
     wrong?: string;
   };
   /** Marks the node as the end of the act. */

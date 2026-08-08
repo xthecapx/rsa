@@ -4,6 +4,7 @@ import {
   Color,
   Engine,
   Keys,
+  PointerType,
   Scene,
   TileMap,
   vec,
@@ -111,9 +112,13 @@ export class CityScene extends Scene {
     );
     this.camera.y = worldHeight / 2;
 
-    this.pointerSub = engine.input.pointers.on("down", (event) =>
-      this.onPointerDown(event),
-    );
+    // Tap-to-walk is for phones. On a mouse/trackpad it races the keyboard and
+    // makes every click start a pathfind, which feels laggy.
+    if (isCoarsePointer()) {
+      this.pointerSub = engine.input.pointers.on("down", (event) =>
+        this.onPointerDown(event),
+      );
+    }
 
     bus.setCommandHandler((command) => this.handle(command));
     bus.emit({ type: "ready" });
@@ -236,6 +241,8 @@ export class CityScene extends Scene {
   /** Tap anywhere on the street to walk there; the only way to move on touch. */
   private onPointerDown(event: PointerEvent): void {
     if (this.inputLocked) return;
+    // Desktop mouse events can still arrive on hybrid devices; ignore them.
+    if (event.pointerType === PointerType.Mouse) return;
     // Pinch and other multi-finger gestures are not movement.
     if ("touches" in event.nativeEvent) {
       const touches = (event.nativeEvent as TouchEvent).touches;
@@ -371,4 +378,12 @@ export class CityScene extends Scene {
 
 function wait(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/** Same coarse-pointer check createGame uses for phone display mode. */
+function isCoarsePointer(): boolean {
+  return (
+    typeof window !== "undefined" &&
+    Boolean(window.matchMedia?.("(pointer: coarse)").matches)
+  );
 }
