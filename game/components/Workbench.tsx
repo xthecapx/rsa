@@ -15,10 +15,16 @@ import { api } from "@/lib/api";
  * The laptop. Whatever the listener pulled off the wire lands here, and the
  * buttons below it are the only way to turn it back into words. Every one of
  * them is a real request to the backend.
+ *
+ * Tools stay inert until the story opens the workbench (`waitsFor`), so a
+ * capture that arrives mid-dialog cannot be cracked early.
  */
 export function Workbench({ act, flow = false }: { act: ActNumber; flow?: boolean }) {
   const capture = useGame((s) => s.capture);
   const recovered = useGame((s) => s.vars.recovered);
+  const awaitingPanel = useGame((s) => s.awaitingPanel);
+  const panel = useGame((s) => s.panel);
+  const armed = awaitingPanel && panel === "workbench";
 
   return (
     <div
@@ -53,7 +59,13 @@ export function Workbench({ act, flow = false }: { act: ActNumber; flow?: boolea
           </p>
         )}
 
-        {capture && <Tools act={act} />}
+        {capture && !armed && (
+          <p className="text-[11px] leading-relaxed text-stage-muted">
+            Tools stay locked until the story sends you to the workbench.
+          </p>
+        )}
+
+        {capture && <Tools act={act} disabled={!armed} />}
 
         {recovered && (
           <div className="border-2 border-actor-brayan/60 bg-actor-brayan/10 px-2.5 py-2">
@@ -70,27 +82,31 @@ export function Workbench({ act, flow = false }: { act: ActNumber; flow?: boolea
       <div className="shrink-0 border-t-2 border-stage-border p-2">
         <button
           type="button"
-          disabled={!recovered}
+          disabled={!armed || !recovered}
           onClick={() => void resolvePanel()}
           className={clsx(
             "w-full border-2 px-3 py-2 text-[11px] transition-colors",
-            recovered
+            armed && recovered
               ? "border-accent-amber text-accent-amber hover:bg-accent-amber/15"
               : "cursor-not-allowed border-stage-border text-stage-muted",
           )}
         >
-          {recovered ? "I have it. Go tell the client." : "Decode it first"}
+          {!armed
+            ? "Waiting for the story…"
+            : recovered
+              ? "I have it. Go tell the client."
+              : "Decode it first"}
         </button>
       </div>
     </div>
   );
 }
 
-function Tools({ act }: { act: ActNumber }) {
-  if (act === 1) return <MappingTool />;
-  if (act === 2) return <CaesarTool />;
-  if (act === 3) return <RsaTool />;
-  return <QuantumUplink />;
+function Tools({ act, disabled }: { act: ActNumber; disabled: boolean }) {
+  if (act === 1) return <MappingTool disabled={disabled} />;
+  if (act === 2) return <CaesarTool disabled={disabled} />;
+  if (act === 3) return <RsaTool disabled={disabled} />;
+  return <QuantumUplink disabled={disabled} />;
 }
 
 function ToolButton({
@@ -122,7 +138,7 @@ function ToolButton({
 }
 
 /** Act 1: the numbers on the wire are the alphabet, in order. */
-function MappingTool() {
+function MappingTool({ disabled }: { disabled: boolean }) {
   const values = useGame((s) => s.vars.values);
   const setVars = useGame((s) => s.setVars);
   const pushTerminal = useGame((s) => s.pushTerminal);
@@ -130,6 +146,7 @@ function MappingTool() {
   const [busy, setBusy] = useState(false);
 
   async function loadTable() {
+    if (disabled) return;
     setBusy(true);
     try {
       const res = await api.keyboard();
@@ -144,6 +161,7 @@ function MappingTool() {
   }
 
   function applyMapping() {
+    if (disabled) return;
     const numbers = String(values).trim().split(/\s+/).filter(Boolean);
     const lookup = new Map(table.map((row) => [row.value, row.char]));
     const word = numbers
@@ -161,7 +179,12 @@ function MappingTool() {
 
   return (
     <div className="space-y-2">
-      <ToolButton label="Fetch the alphabet table" busy={busy} onClick={() => void loadTable()} />
+      <ToolButton
+        label="Fetch the alphabet table"
+        busy={busy}
+        disabled={disabled}
+        onClick={() => void loadTable()}
+      />
 
       {table.length > 0 && (
         <>
@@ -172,7 +195,11 @@ function MappingTool() {
               </span>
             ))}
           </div>
-          <ToolButton label="Apply the mapping" onClick={applyMapping} />
+          <ToolButton
+            label="Apply the mapping"
+            disabled={disabled}
+            onClick={applyMapping}
+          />
         </>
       )}
     </div>
@@ -183,7 +210,7 @@ function MappingTool() {
  * Act 2: the shift is secret but there are only 25 of them, so ask the backend
  * for every candidate and read the one that is a word.
  */
-function CaesarTool() {
+function CaesarTool({ disabled }: { disabled: boolean }) {
   const cipherText = useGame((s) => s.vars.cipherText);
   const setVars = useGame((s) => s.setVars);
   const pushTerminal = useGame((s) => s.pushTerminal);
@@ -191,6 +218,7 @@ function CaesarTool() {
   const [busy, setBusy] = useState(false);
 
   async function bruteForce() {
+    if (disabled) return;
     setBusy(true);
     try {
       // One request per character; each returns that character under all 25
@@ -218,13 +246,19 @@ function CaesarTool() {
   }
 
   function pick(row: { shift: number; word: string }) {
+    if (disabled) return;
     setVars({ recovered: row.word, shift: row.shift });
     pushTerminal({ tone: "good", text: `k=${row.shift} gives "${row.word}".` });
   }
 
   return (
     <div className="space-y-2">
-      <ToolButton label="Try all 25 shifts" busy={busy} onClick={() => void bruteForce()} />
+      <ToolButton
+        label="Try all 25 shifts"
+        busy={busy}
+        disabled={disabled}
+        onClick={() => void bruteForce()}
+      />
 
       {/* Uncapped on phones, where the sheet around it is the only scroller. */}
       {candidates.length > 0 && (
@@ -233,8 +267,14 @@ function CaesarTool() {
             <li key={row.shift}>
               <button
                 type="button"
+                disabled={disabled}
                 onClick={() => pick(row)}
-                className="flex w-full gap-3 px-1 text-left text-[#cfe6ee] hover:bg-accent-amber/15 hover:text-white"
+                className={clsx(
+                  "flex w-full gap-3 px-1 text-left",
+                  disabled
+                    ? "cursor-not-allowed text-stage-muted"
+                    : "text-[#cfe6ee] hover:bg-accent-amber/15 hover:text-white",
+                )}
               >
                 <span className="text-stage-muted">
                   k={String(row.shift).padStart(2, " ")}
@@ -250,12 +290,13 @@ function CaesarTool() {
 }
 
 /** Act 3: the public key is public, so the only secret left is the factoring. */
-function RsaTool() {
+function RsaTool({ disabled }: { disabled: boolean }) {
   const vars = useGame((s) => s.vars);
   const setVars = useGame((s) => s.setVars);
   const [busy, setBusy] = useState<string | null>(null);
 
   async function run(call: "rsaCrack" | "deriveKey", key: string) {
+    if (disabled) return;
     setBusy(key);
     try {
       await runApiCall(call);
@@ -286,12 +327,13 @@ function RsaTool() {
       <ToolButton
         label={`Factor N = ${vars.modulus}`}
         busy={busy === "factor"}
+        disabled={disabled}
         onClick={() => void run("rsaCrack", "factor")}
       />
       <ToolButton
         label="Derive d and decrypt"
         busy={busy === "derive"}
-        disabled={!vars.factors}
+        disabled={disabled || !vars.factors}
         onClick={() => void run("deriveKey", "derive")}
       />
 

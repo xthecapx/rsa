@@ -10,14 +10,16 @@ import {
 } from "excalibur";
 import type { PointerEvent, Subscription } from "excalibur";
 
-import { Bubble, Packet, TapGlow, createCar } from "../actors/Props";
+import { Bubble, Packet, ParkedCar, TapGlow, createParkedCar } from "../actors/Props";
 import { Character } from "../actors/Character";
 import type { CastMember } from "../actors/Character";
 import { bus } from "../bus";
 import type { EngineCommand, Landmark } from "../bus";
 import {
   LANDMARKS,
+  PARKING_BAYS,
   PLAYER_SPAWN,
+  assignClientCar,
   buildSolidGrid,
   findPath,
   isWalkable,
@@ -55,6 +57,9 @@ export class CityScene extends Scene {
   private packet!: Packet;
   private bubbles = {} as Record<CastMember, Bubble>;
   private tapGlow!: TapGlow;
+  private parkedCars: ParkedCar[] = [];
+  private clientCar!: ParkedCar;
+  private clientCarFound = false;
   private inputLocked = false;
   private lastNear: Landmark | null = null;
   private lastWalking = false;
@@ -73,7 +78,11 @@ export class CityScene extends Scene {
     this.add(this.buildLayer("rows", "legend", 0));
     this.add(this.buildLayer("overlay", "overlayLegend", 1));
 
-    this.add(createCar(LANDMARKS.car.at));
+    this.parkedCars = PARKING_BAYS.map((bay) =>
+      createParkedCar({ ...bay, paint: "slate" }),
+    );
+    for (const car of this.parkedCars) this.add(car);
+    this.reshuffleClientCar();
 
     this.tapGlow = new TapGlow(landmarkCenter("tap"));
     this.add(this.tapGlow);
@@ -118,6 +127,16 @@ export class CityScene extends Scene {
     bus.drain();
   }
 
+  /** New bay + paint layout for the client's car; used on act start and reload. */
+  private reshuffleClientCar(): void {
+    this.clientCar?.setHighlighted(false);
+    this.clientCarFound = false;
+    this.lastNear = null;
+    const { clientIndex, paints } = assignClientCar();
+    this.parkedCars.forEach((car, i) => car.setPaint(paints[i]));
+    this.clientCar = this.parkedCars[clientIndex];
+  }
+
   private buildLayer(
     rowsKey: "rows" | "overlay",
     legendKey: "legend" | "overlayLegend",
@@ -157,6 +176,10 @@ export class CityScene extends Scene {
     const near = landmarkAt(this.player.grid);
     if (near !== this.lastNear) {
       this.lastNear = near;
+      if (near === "car" && !this.clientCarFound) {
+        this.clientCarFound = true;
+        this.clientCar.setHighlighted(true);
+      }
       bus.emit({ type: "moved", near });
     }
 
@@ -280,6 +303,7 @@ export class CityScene extends Scene {
         );
         this.packet.hide();
         this.tapGlow.setActive(false);
+        this.reshuffleClientCar();
         this.needsSpaceRelease = false;
         this.lastWalking = false;
         this.walkIdleMs = 0;

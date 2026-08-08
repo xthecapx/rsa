@@ -48,6 +48,8 @@ export const Props = {
   JUNCTION_BOX_BOTTOM: 555,
   STREET_LAMP_TOP: 593,
   STREET_LAMP_BOTTOM: 630,
-  /** Top-left tile of the 2x2 top-down vehicle used for the client's car. */
-  CAR_TOP_LEFT: 847,
+  /** Top-left tile of the 2x2 top-down slate vehicle (client's car). */
+  CAR_SLATE: 847,
+  /** Top-left tile of the 2x2 top-down copper/orange vehicle. */
+  CAR_COPPER: 995,
 } as const;

@@ -14,6 +14,9 @@ export function ReportForm({ flow = false }: { flow?: boolean }) {
   const capture = useGame((s) => s.capture);
   const recovered = useGame((s) => s.vars.recovered);
   const reportError = useGame((s) => s.reportError);
+  const awaitingPanel = useGame((s) => s.awaitingPanel);
+  const panel = useGame((s) => s.panel);
+  const armed = awaitingPanel && panel === "report";
   const [answer, setAnswer] = useState("");
   const [sending, setSending] = useState(false);
   const field = useRef<HTMLInputElement | null>(null);
@@ -21,13 +24,13 @@ export function ReportForm({ flow = false }: { flow?: boolean }) {
   useEffect(() => {
     // On a phone this would throw up the keyboard over the sheet before the
     // player has read what the client is asking for.
-    if (flow) return;
+    if (flow || !armed) return;
     field.current?.focus();
-  }, [flow]);
+  }, [flow, armed]);
 
   async function send(event: React.FormEvent) {
     event.preventDefault();
-    if (!answer.trim() || sending) return;
+    if (!armed || !answer.trim() || sending) return;
     setSending(true);
     try {
       await submitReport(answer);
@@ -83,7 +86,8 @@ export function ReportForm({ flow = false }: { flow?: boolean }) {
           placeholder="The message"
           autoComplete="off"
           spellCheck={false}
-          className="w-full border-2 border-stage-border bg-stage-bg px-2.5 py-2 font-mono text-[14px] uppercase tracking-widest text-[#e8f4f8] outline-none focus:border-accent-amber"
+          disabled={!armed}
+          className="w-full border-2 border-stage-border bg-stage-bg px-2.5 py-2 font-mono text-[14px] uppercase tracking-widest text-[#e8f4f8] outline-none focus:border-accent-amber disabled:cursor-not-allowed disabled:opacity-50"
         />
 
         {reportError && (
@@ -96,10 +100,14 @@ export function ReportForm({ flow = false }: { flow?: boolean }) {
       <div className="shrink-0 border-t-2 border-stage-border p-2">
         <button
           type="submit"
-          disabled={!answer.trim() || sending}
+          disabled={!armed || !answer.trim() || sending}
           className="w-full border-2 border-accent-amber px-3 py-2 text-[11px] text-accent-amber transition-colors hover:bg-accent-amber/15 disabled:cursor-not-allowed disabled:border-stage-border disabled:text-stage-muted"
         >
-          {sending ? "Saying it out loud..." : "Tell him"}
+          {!armed
+            ? "Waiting for the story…"
+            : sending
+              ? "Saying it out loud..."
+              : "Tell him"}
         </button>
       </div>
     </form>

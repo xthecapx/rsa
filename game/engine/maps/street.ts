@@ -36,6 +36,81 @@ interface LandmarkSpec {
   label: string;
 }
 
+/** Paint / facing for the parked traffic lining the kerbs. */
+export type CarPaint = "slate" | "copper" | "navy" | "rose" | "moss" | "smoke";
+export type CarFacing = "east" | "west";
+
+export interface ParkingBay {
+  at: GridPos;
+  facing: CarFacing;
+}
+
+export interface ParkedCarSpec extends ParkingBay {
+  paint: CarPaint;
+  /** The client's car — also wired as LANDMARKS.car. */
+  client?: boolean;
+}
+
+/**
+ * Fixed kerb bays. Which bay holds the client (and which paint each car
+ * wears) is rolled per act / reload so the street has to be searched again.
+ * South kerb = y:9. North kerb = y:6.
+ */
+export const PARKING_BAYS: ParkingBay[] = [
+  { at: { x: 4, y: 9 }, facing: "east" },
+  { at: { x: 14, y: 9 }, facing: "west" },
+  { at: { x: 24, y: 9 }, facing: "east" },
+  { at: { x: 31, y: 9 }, facing: "west" },
+  { at: { x: 2, y: 6 }, facing: "east" },
+  { at: { x: 10, y: 6 }, facing: "west" },
+  { at: { x: 26, y: 6 }, facing: "east" },
+  { at: { x: 33, y: 6 }, facing: "west" },
+];
+
+/** Enough paints for every bay; a couple of colours repeat across eight cars. */
+const CAR_PAINTS: CarPaint[] = [
+  "slate",
+  "copper",
+  "navy",
+  "rose",
+  "moss",
+  "smoke",
+  "copper",
+  "navy",
+];
+
+function standBeside(at: GridPos): GridPos {
+  // North kerb cars sit on y:6-7; stand on the roadway just south of them.
+  // South kerb cars sit on y:9-10; stand on the roadway just north.
+  return at.y <= 7 ? { x: at.x, y: at.y + 2 } : { x: at.x, y: at.y - 1 };
+}
+
+function shuffleInPlace<T>(items: T[]): T[] {
+  for (let i = items.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [items[i], items[j]] = [items[j], items[i]];
+  }
+  return items;
+}
+
+export interface ClientCarAssignment {
+  clientIndex: number;
+  paints: CarPaint[];
+}
+
+/**
+ * Pick a random bay as the client's car and reshuffle paints so colour is not
+ * a tell. Updates LANDMARKS.car so walk/interact targets follow the new bay.
+ */
+export function assignClientCar(): ClientCarAssignment {
+  const paints = shuffleInPlace([...CAR_PAINTS]);
+  const clientIndex = Math.floor(Math.random() * PARKING_BAYS.length);
+  const bay = PARKING_BAYS[clientIndex];
+  LANDMARKS.car.at = { ...bay.at };
+  LANDMARKS.car.stand = standBeside(bay.at);
+  return { clientIndex, paints };
+}
+
 /** Where the cast and the props live, in tile coordinates. */
 export const LANDMARKS: Record<Landmark, LandmarkSpec> = {
   ale: { at: { x: 6, y: 5 }, size: { w: 1, h: 1 }, stand: { x: 6, y: 6 }, label: "Ale" },
@@ -52,14 +127,16 @@ export const LANDMARKS: Record<Landmark, LandmarkSpec> = {
     label: "Junction box",
   },
   car: {
-    at: { x: 17, y: 13 },
+    // Placeholder; assignClientCar() overwrites this before play begins.
+    at: { ...PARKING_BAYS[0].at },
     size: { w: 2, h: 2 },
-    stand: { x: 19, y: 13 },
+    stand: standBeside(PARKING_BAYS[0].at),
     label: "Your client's car",
   },
 };
 
-export const PLAYER_SPAWN: GridPos = { x: 19, y: 12 };
+/** Middle of the road — centred in the camera, easy to spot on a phone. */
+export const PLAYER_SPAWN: GridPos = { x: 19, y: 8 };
 
 /** Screen-space centre of a tile, in world pixels. */
 export function tileCenter(pos: GridPos): { x: number; y: number } {
@@ -92,8 +169,17 @@ export function buildSolidGrid(): boolean[][] {
     }
     grid.push(row);
   }
-  // The car and the cast are actors rather than tiles, so block them by hand.
-  for (const key of ["car", "ale", "brayan"] as const) {
+  // Parked cars and the cast are actors rather than tiles, so block them by hand.
+  for (const bay of PARKING_BAYS) {
+    for (let dy = 0; dy < 2; dy++) {
+      for (let dx = 0; dx < 2; dx++) {
+        if (grid[bay.at.y + dy]?.[bay.at.x + dx] !== undefined) {
+          grid[bay.at.y + dy][bay.at.x + dx] = true;
+        }
+      }
+    }
+  }
+  for (const key of ["ale", "brayan"] as const) {
     const { at, size } = LANDMARKS[key];
     for (let dy = 0; dy < size.h; dy++) {
       for (let dx = 0; dx < size.w; dx++) {

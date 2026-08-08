@@ -15,7 +15,7 @@ import {
 import { citySprite } from "../resources";
 import { Props as PropTiles, TILE_SIZE } from "../tiles";
 import type { BubbleKind, PacketStyle } from "../bus";
-import type { GridPos } from "../maps/street";
+import type { CarFacing, CarPaint, ParkedCarSpec } from "../maps/street";
 import { tileCenter } from "../maps/street";
 
 const PACKET_COLORS: Record<PacketStyle, Color> = {
@@ -117,26 +117,92 @@ export class Bubble extends Actor {
   }
 }
 
-/** The client's car, a 2x2 top-down vehicle from the Kenney city sheet. */
-export function createCar(topLeft: GridPos): Actor {
-  const center = tileCenter(topLeft);
-  const car = new Actor({
-    name: "car",
-    pos: vec(center.x + TILE_SIZE / 2, center.y + TILE_SIZE / 2),
-    z: 5,
+/**
+ * Sheet cars face north; we rotate them onto the east-west roadway.
+ * Two native body tiles plus multiply tints give a street full of different
+ * parked cars without needing extra art.
+ */
+const CAR_PAINT: Record<CarPaint, { tile: number; tint?: Color }> = {
+  slate: { tile: PropTiles.CAR_SLATE },
+  copper: { tile: PropTiles.CAR_COPPER },
+  navy: { tile: PropTiles.CAR_SLATE, tint: Color.fromHex("#6a7fc4") },
+  rose: { tile: PropTiles.CAR_COPPER, tint: Color.fromHex("#e8a0a0") },
+  moss: { tile: PropTiles.CAR_SLATE, tint: Color.fromHex("#7aaa6a") },
+  smoke: { tile: PropTiles.CAR_SLATE, tint: Color.fromHex("#c0c0c0") },
+};
+
+const FACING_ROTATION: Record<CarFacing, number> = {
+  east: Math.PI / 2,
+  west: -Math.PI / 2,
+};
+
+function carBody(paint: CarPaint): GraphicsGroup {
+  const { tile, tint } = CAR_PAINT[paint];
+  const sprite = (index: number) => {
+    // getSprite returns a shared instance; clone before tinting or every car
+    // that reuses the tile picks up the last paint.
+    const graphic = citySprite(index).clone();
+    if (tint) graphic.tint = tint;
+    return graphic;
+  };
+  return new GraphicsGroup({
+    members: [
+      { graphic: sprite(tile), offset: vec(0, 0) },
+      { graphic: sprite(tile + 1), offset: vec(TILE_SIZE, 0) },
+      { graphic: sprite(tile + 37), offset: vec(0, TILE_SIZE) },
+      { graphic: sprite(tile + 38), offset: vec(TILE_SIZE, TILE_SIZE) },
+    ],
   });
-  const base = PropTiles.CAR_TOP_LEFT;
-  car.graphics.use(
-    new GraphicsGroup({
-      members: [
-        { graphic: citySprite(base), offset: vec(0, 0) },
-        { graphic: citySprite(base + 1), offset: vec(TILE_SIZE, 0) },
-        { graphic: citySprite(base + 37), offset: vec(0, TILE_SIZE) },
-        { graphic: citySprite(base + 38), offset: vec(TILE_SIZE, TILE_SIZE) },
-      ],
-    }),
-  );
-  return car;
+}
+
+/** A kerbside vehicle. The client's car can pulse an amber halo when found. */
+export class ParkedCar extends Actor {
+  private readonly glow: Actor;
+
+  constructor(spec: ParkedCarSpec) {
+    const center = tileCenter(spec.at);
+    super({
+      name: `parked-${spec.at.x}-${spec.at.y}`,
+      pos: vec(center.x + TILE_SIZE / 2, center.y + TILE_SIZE / 2),
+      z: 5,
+      rotation: FACING_ROTATION[spec.facing],
+    });
+    this.graphics.use(carBody(spec.paint));
+
+    // Child keeps world rotation cancelled so the halo stays a circle.
+    this.glow = new Actor({ name: `${this.name}-glow`, pos: vec(0, 0), z: -1 });
+    const halo = Color.fromHex("#f5a623");
+    halo.a = 0.35;
+    this.glow.graphics.use(new Circle({ radius: 18, color: halo }));
+    this.glow.graphics.visible = false;
+    this.addChild(this.glow);
+  }
+
+  override onPreUpdate(): void {
+    // Undo the parent's east/west rotation so the find-halo stays round.
+    this.glow.rotation = -this.rotation;
+  }
+
+  setPaint(paint: CarPaint): void {
+    this.graphics.use(carBody(paint));
+  }
+
+  setHighlighted(on: boolean): void {
+    this.glow.graphics.visible = on;
+    this.glow.actions.clearActions();
+    if (on) {
+      this.glow.actions.repeatForever((ctx) => {
+        ctx.scaleTo(vec(1.2, 1.2), vec(1.5, 1.5));
+        ctx.scaleTo(vec(0.9, 0.9), vec(1.5, 1.5));
+      });
+    } else {
+      this.glow.scale = vec(1, 1);
+    }
+  }
+}
+
+export function createParkedCar(spec: ParkedCarSpec): ParkedCar {
+  return new ParkedCar(spec);
 }
 
 /** Amber halo that pulses on the junction box while a tap is live. */

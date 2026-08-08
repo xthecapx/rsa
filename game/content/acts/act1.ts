@@ -43,7 +43,7 @@ export const act1 = defineAct({
       ],
       travelTo: {
         at: "car",
-        objective: "Your client is waiting in the car behind you. Walk over and press Space.",
+        objective: "Your client is waiting in a car on this street. Find it and press Space.",
         next: "briefing",
       },
     },

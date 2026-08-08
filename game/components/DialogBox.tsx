@@ -64,6 +64,8 @@ export function DialogBox() {
   }
 
   useEffect(() => {
+    if (phase !== "dialog") return;
+
     function onKey(event: KeyboardEvent) {
       if (event.repeat) return;
       // The report field wants its own spaces and digits.
@@ -90,7 +92,7 @@ export function DialogBox() {
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [choices.length, settled, fullText]);
+  }, [phase, choices.length, settled, fullText]);
 
   if (phase !== "dialog" || !fullText) return null;
 

@@ -204,10 +204,10 @@ export async function goTo(id: string): Promise<void> {
  * says where that leads, so panels never hard-code a node id.
  */
 export async function resolvePanel(): Promise<void> {
-  const { act, nodeId } = useGame.getState();
-  if (!nodeId) return;
+  const { act, nodeId, awaitingPanel, panel } = useGame.getState();
+  if (!nodeId || !awaitingPanel || panel !== "workbench") return;
   const node = nodeOf(act, nodeId);
-  if (!node.waitsFor || !node.next) return;
+  if (node.waitsFor !== "workbench" || !node.next) return;
   await enter(act, node.next);
 }
 

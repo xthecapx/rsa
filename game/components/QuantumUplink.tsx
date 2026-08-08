@@ -37,7 +37,7 @@ const CONTROL_QUBITS = [3, 4, 6, 8];
  * ago with its parameters already baked in, so selecting one *sets* N, a and m
  * rather than pretending they are still yours to choose.
  */
-export function QuantumUplink() {
+export function QuantumUplink({ disabled = false }: { disabled?: boolean }) {
   const vars = useGame((s) => s.vars);
   const setVars = useGame((s) => s.setVars);
   const pushTerminal = useGame((s) => s.pushTerminal);
@@ -269,7 +269,10 @@ export function QuantumUplink() {
   const badBase = gcd(vars.base, vars.modulus) > 1;
 
   return (
-    <div className="space-y-3">
+    <div
+      className={clsx("space-y-3", disabled && "pointer-events-none opacity-50")}
+      aria-disabled={disabled || undefined}
+    >
       <div className="border-2 border-stage-border px-2.5 py-2">
         <span className="text-[10px] uppercase tracking-widest text-[#c084fc]">
           Quantum uplink
