@@ -53,7 +53,7 @@ export default function TitlePage() {
         </ul>
 
         <p className="mt-10 text-[10px] leading-relaxed text-stage-muted">
-          City tiles and character busts by{" "}
+          City tiles, character busts and the app icon by{" "}
           <a
             href="https://kenney.nl"
             className="text-accent-teal hover:underline"

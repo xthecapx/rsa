@@ -48,6 +48,58 @@ Then open http://localhost:7019.
 The port is the same in and out of Docker, so only one of the two can run at a
 time.
 
+### PWA (installable, landscape)
+
+The game ships as a Progressive Web App so phones can add it to the home
+screen and run it fullscreen in landscape.
+
+```bash
+# Prefer a production build for install testing — Next's HMR and the
+# service worker fight each other in `next dev`.
+npm run build
+BACKEND_URL=http://localhost:7001 npm start
+```
+
+Local checks:
+
+1. Open http://localhost:7019 in Chrome.
+2. DevTools → Application → Manifest: name, icons, `orientation: landscape`,
+   `display: standalone` should all be present.
+3. Application → Service Workers: `/sw.js?v=...` should be activated.
+4. Install the app (install icon in the address bar, or Application →
+   Manifest → "Install").
+5. Open the installed window and rotate to portrait — play should stay
+   blocked until you return to landscape.
+
+On a physical phone, install only works over HTTPS (or `localhost`). For a
+quick LAN smoke-test, tunnel the production server (`npx localtunnel --port
+7019`, Cloudflare Tunnel, etc.) and open the HTTPS URL.
+
+#### Cache invalidation
+
+Every `npm run build` bakes a unique `NEXT_PUBLIC_PWA_BUILD_ID` (package
+version + optional git short hash + a per-build stamp). The client registers
+`/sw.js?v=<id>`, so a new deploy:
+
+1. Installs a new service worker.
+2. Deletes every previous `mitm-shell-*` Cache Storage entry on activate.
+3. Reloads open clients once the new worker takes control.
+
+Override the id when you need a stable or explicit bust:
+
+```bash
+PWA_BUILD_ID=0.1.0+manual.1 npm run build
+```
+
+`next dev` does not register a worker and unregisters leftovers so HMR stays
+clean.
+
+PWA icons are Kenney's lock glyph on the stage background. Regenerate with:
+
+```bash
+python3 tools/gen_pwa_icons.py   # needs Pillow
+```
+
 Controls: arrow keys or WASD to walk, Space to talk and to advance a line,
 number keys to pick an answer.
 
@@ -126,16 +178,19 @@ components/         HUD: dialog box, job sheet, workbench, report form, log
 City tiles and character busts are Kenney's
 [Roguelike Modern City](https://kenney.nl/assets/roguelike-modern-city) and
 [Roguelike Characters](https://kenney.nl/assets/roguelike-characters), both
-CC0. See `public/assets/kenney/LICENSE.txt`.
+CC0. The home-screen / PWA glyph is from Kenney
+[Game Icons](https://kenney.nl/assets/game-icons) (`locked.png`). See
+`public/assets/kenney/LICENSE.txt`.
 
 Kenney's character pack ships front-facing busts rather than four-direction
 walk cycles, so the busts are used for dialog portraits and the overworld
 sprites are generated in the same style by `tools/gen_characters.py`.
 
-Two scripts help when changing the scene:
+Scripts that help when changing art:
 
 ```bash
 python3 tools/gen_characters.py   # redraw the cast (needs Pillow)
+python3 tools/gen_pwa_icons.py    # rebuild public/icons from Kenney locked.png
 python3 tools/preview_map.py      # render engine/maps/street.json to a PNG
 ```
 

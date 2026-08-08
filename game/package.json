@@ -6,7 +6,8 @@
     "dev": "next dev -p 7019",
     "build": "next build",
     "start": "next start -p 7019",
-    "lint": "next lint"
+    "lint": "next lint",
+    "icons": "python3 tools/gen_pwa_icons.py"
   },
   "dependencies": {
     "autoprefixer": "^10.4.20",

@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Press_Start_2P, DM_Sans } from "next/font/google";
+
+import { PwaBootstrap } from "@/components/PwaBootstrap";
 import "./globals.css";
 
 const pressStart = Press_Start_2P({
@@ -19,6 +21,25 @@ export const metadata: Metadata = {
   title: "Man in the Middle",
   description:
     "A pixel-art hacking game about breaking Ale and Brayan's messages, from plaintext to Shor's algorithm.",
+  applicationName: "Man in the Middle",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "MITM",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  icons: {
+    icon: [
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+  },
+  other: {
+    "mobile-web-app-capable": "yes",
+  },
 };
 
 export const viewport: Viewport = {
@@ -37,7 +58,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${pressStart.variable} ${dmSans.variable}`}>
-      <body suppressHydrationWarning>{children}</body>
+      <body suppressHydrationWarning>
+        <PwaBootstrap />
+        {children}
+      </body>
     </html>
   );
 }
