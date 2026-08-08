@@ -85,14 +85,19 @@ version + optional git short hash + a per-build stamp). The client registers
 2. Deletes every previous `mitm-shell-*` Cache Storage entry on activate.
 3. Reloads open clients once the new worker takes control.
 
+The worker is **network-only** (no page/asset caching) so local `next dev`
+and frequent deploys cannot freeze the client on a stale shell. It still
+satisfies installability.
+
 Override the id when you need a stable or explicit bust:
 
 ```bash
 PWA_BUILD_ID=0.1.0+manual.1 npm run build
 ```
 
-`next dev` does not register a worker and unregisters leftovers so HMR stays
-clean.
+`next dev` does not register a worker; if a leftover worker from a prior
+`next start` is still controlling the tab, it unregisters it and reloads
+once so `/_next` chunks load again.
 
 PWA icons are Kenney's lock glyph on the stage background. Regenerate with:
 

@@ -4,6 +4,7 @@ import { useEffect } from "react";
 
 const BUILD_ID = process.env.NEXT_PUBLIC_PWA_BUILD_ID ?? "dev";
 const RELOAD_FLAG = "mitm-pwa-reloaded";
+const DEV_SW_CLEARED = "mitm-pwa-dev-sw-cleared";
 
 function isStandaloneDisplay(): boolean {
   if (typeof window === "undefined") return false;
@@ -28,6 +29,7 @@ async function lockLandscape(): Promise<void> {
 }
 
 async function clearDevServiceWorkers(): Promise<void> {
+  const hadController = Boolean(navigator.serviceWorker.controller);
   const regs = await navigator.serviceWorker.getRegistrations();
   await Promise.all(regs.map((reg) => reg.unregister()));
   if ("caches" in window) {
@@ -37,6 +39,12 @@ async function clearDevServiceWorkers(): Promise<void> {
         .filter((key) => key.startsWith("mitm-shell-"))
         .map((key) => caches.delete(key)),
     );
+  }
+  // A controlling worker from a prior `next start` / install test keeps
+  // intercepting `/_next` until the page reloads without it.
+  if (hadController && sessionStorage.getItem(DEV_SW_CLEARED) !== "1") {
+    sessionStorage.setItem(DEV_SW_CLEARED, "1");
+    window.location.reload();
   }
 }
 
