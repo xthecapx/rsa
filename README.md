@@ -18,9 +18,9 @@ Redeploy after code changes:
 ./deploy-cloudrun.sh
 ```
 
-The script builds `linux/amd64` images, deploys both services, and deletes older
-Artifact Registry digests (keeps the latest push only) so storage stays under
-the free-tier 0.5 GB cap.
+The script builds `linux/amd64` images, deploys both services, and prunes older
+Artifact Registry digests (keeps the last two complete pushes) so storage stays
+under the free-tier 0.5 GB cap.
 
 Both services use `min-instances=0` (scale to zero) so idle time stays inside Cloud Run’s Always Free allowance. Before a talk, warm them; afterward, cool them:
 

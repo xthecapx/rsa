@@ -41,27 +41,51 @@ ROOT="$(cd "$(dirname "$0")" && pwd)"
 REGISTRY="${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPO}"
 BACKEND_IMAGE="${REGISTRY}/backend:latest"
 GAME_IMAGE="${REGISTRY}/game:latest"
-# Each buildx push leaves a few digests (index + amd64 + attestation). Keep 2
-# so the live image stays intact; drop everything older to stay under the
-# Artifact Registry free-tier storage cap (0.5 GB).
-KEEP_DIGESTS="${KEEP_DIGESTS:-2}"
+# Each push can leave several digests (image index, platform manifest,
+# attestation). KEEP_IMAGES is how many complete pushes to retain; we multiply
+# by MANIFESTS_PER_PUSH so we never try to delete a child of a kept parent.
+KEEP_IMAGES="${KEEP_IMAGES:-2}"
+MANIFESTS_PER_PUSH="${MANIFESTS_PER_PUSH:-4}"
 
 prune_old_digests() {
   local package="$1"
-  echo "==> Pruning old digests for ${package} (keeping ${KEEP_DIGESTS})"
-  local digests i=0
-  digests="$(gcloud artifacts docker images list "${package}" \
-    --sort-by=~CREATE_TIME \
-    --format='value(version)' 2>/dev/null || true)"
+  local keep=$((KEEP_IMAGES * MANIFESTS_PER_PUSH))
+  echo "==> Pruning old digests for ${package} (keeping ${KEEP_IMAGES} images ≈ ${keep} digests)"
+
+  local -a newest_first=()
   while IFS= read -r digest; do
-    [[ -z "${digest}" ]] && continue
-    i=$((i + 1))
-    if (( i > KEEP_DIGESTS )); then
-      echo "    delete ${digest}"
-      gcloud artifacts docker images delete "${package}@${digest}" \
-        --quiet --delete-tags >/dev/null || true
+    [[ -n "${digest}" ]] && newest_first+=("${digest}")
+  done < <(gcloud artifacts docker images list "${package}" \
+    --sort-by=~CREATE_TIME \
+    --format='value(version)' 2>/dev/null || true)
+
+  local total=${#newest_first[@]}
+  if (( total <= keep )); then
+    echo "    nothing to prune (${total} digests)"
+    return 0
+  fi
+
+  # Delete oldest first so an old index goes before its children.
+  local -a oldest_first=()
+  local i
+  for ((i = total - 1; i >= keep; i--)); do
+    oldest_first+=("${newest_first[i]}")
+  done
+
+  local digest err
+  for digest in "${oldest_first[@]}"; do
+    echo "    delete ${digest}"
+    if err="$(gcloud artifacts docker images delete "${package}@${digest}" \
+      --quiet --delete-tags 2>&1)"; then
+      continue
     fi
-  done <<< "${digests}"
+    # Child digests of a kept parent fail until that parent is gone; skip them.
+    if [[ "${err}" == *"referenced by parent"* || "${err}" == *"referenced parents"* ]]; then
+      echo "    skip (still referenced by a kept parent)"
+    else
+      echo "    warning: ${err}" >&2
+    fi
+  done
 }
 
 echo "==> Project ${PROJECT_ID}  region ${REGION}  target ${TARGET}"
