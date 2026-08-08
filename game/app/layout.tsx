@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Press_Start_2P, DM_Sans } from "next/font/google";
 
 import { PwaBootstrap } from "@/components/PwaBootstrap";
+import { SplashScreen } from "@/components/SplashScreen";
 import "./globals.css";
 
 const pressStart = Press_Start_2P({
@@ -57,9 +58,25 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${pressStart.variable} ${dmSans.variable}`}>
+    <html lang="en" className={`${pressStart.variable} ${dmSans.variable}`} data-boot="1">
       <body suppressHydrationWarning>
+        {/*
+          Opaque cover in the first HTML paint so the title cannot flash
+          before SplashScreen hydrates. Hidden via html[data-boot=done] —
+          do not remove this node from the DOM; React owns it.
+        */}
+        <div
+          id="mitm-boot"
+          aria-hidden
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 99,
+            background: "#0b1f26",
+          }}
+        />
         <PwaBootstrap />
+        <SplashScreen />
         {children}
       </body>
     </html>

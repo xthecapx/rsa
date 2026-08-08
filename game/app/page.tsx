@@ -1,17 +1,35 @@
+"use client";
+
+import { useEffect } from "react";
 import Link from "next/link";
 
 import { ACT_NUMBERS, getAct } from "@/content";
+import { MuteButton } from "@/components/MuteButton";
+import { gameAudio } from "@/game/audio";
 
 export default function TitlePage() {
+  useEffect(() => {
+    void gameAudio.playMusic("title");
+  }, []);
+
   return (
     <main className="h-screen w-screen overflow-y-auto bg-stage-bg">
       <div className="mx-auto max-w-3xl px-6 py-14">
-        <p className="text-[10px] uppercase tracking-[0.35em] text-accent-teal">
-          One street, one cable, one eavesdropper
-        </p>
+        <div className="flex items-start justify-between gap-4">
+          <p className="text-[10px] uppercase tracking-[0.35em] text-accent-teal">
+            One street, one cable, one eavesdropper
+          </p>
+          <MuteButton className="shrink-0" />
+        </div>
         <h1 className="mt-4 text-2xl leading-relaxed text-accent-amber">
           Man in the Middle
         </h1>
+        <img
+          src="/assets/kenney/ui/divider_edges.png"
+          alt=""
+          className="mt-4 h-3 w-40 pixelated opacity-70"
+          draggable={false}
+        />
         <p className="mt-5 max-w-xl text-[12px] leading-relaxed text-stage-muted">
           Ale works in the building on the left. Brayan works in the building on
           the right. You are parked between them with a laptop and a junction
@@ -30,6 +48,8 @@ export default function TitlePage() {
               <li key={act}>
                 <Link
                   href={`/play/${act}`}
+                  onClick={() => gameAudio.playSfx("select")}
+                  onMouseEnter={() => gameAudio.playSfx("rollover")}
                   className="panel group flex items-start gap-4 p-4 transition-colors hover:border-accent-amber"
                 >
                   <span className="mt-0.5 shrink-0 border-2 border-stage-border px-2.5 py-1 text-[11px] text-accent-amber group-hover:border-accent-amber">
@@ -53,7 +73,7 @@ export default function TitlePage() {
         </ul>
 
         <p className="mt-10 text-[10px] leading-relaxed text-stage-muted">
-          City tiles, character busts and the app icon by{" "}
+          City tiles, character busts, UI, music and the app icon by{" "}
           <a
             href="https://kenney.nl"
             className="text-accent-teal hover:underline"

@@ -1,15 +1,26 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 
 import type { ActNumber } from "@/content/types";
 import { getAct } from "@/content";
+import { gameAudio } from "@/game/audio";
 import { useGame } from "@/game/state";
 
 /** Shown when the act ends, either because you won it or because they saw you. */
 export function GameOver({ act }: { act: ActNumber }) {
   const phase = useGame((s) => s.phase);
   const suspicion = useGame((s) => s.suspicion);
+  const played = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (phase !== "won" && phase !== "caught") return;
+    if (played.current === phase) return;
+    played.current = phase;
+    void gameAudio.playJingle(phase === "caught" ? "lose" : "win");
+  }, [phase]);
+
   if (phase !== "won" && phase !== "caught") return null;
 
   const caught = phase === "caught";
@@ -35,14 +46,21 @@ export function GameOver({ act }: { act: ActNumber }) {
         <div className="mt-6 flex flex-col gap-2">
           <button
             type="button"
-            onClick={() => window.location.reload()}
+            onClick={() => {
+              gameAudio.playSfx("click");
+              window.location.reload();
+            }}
             className="btn-ghost text-[11px]"
           >
             {caught ? "Try this act again" : "Replay this act"}
           </button>
 
           {!caught && hasNext && (
-            <Link href={`/play/${next}`} className="btn-primary text-[11px]">
+            <Link
+              href={`/play/${next}`}
+              onClick={() => gameAudio.playSfx("confirm")}
+              className="btn-primary text-[11px]"
+            >
               Continue to Act {next}
             </Link>
           )}
@@ -53,7 +71,11 @@ export function GameOver({ act }: { act: ActNumber }) {
             </p>
           )}
 
-          <Link href="/" className="btn-ghost text-[11px]">
+          <Link
+            href="/"
+            onClick={() => gameAudio.playSfx("click")}
+            className="btn-ghost text-[11px]"
+          >
             Back to the acts
           </Link>
         </div>

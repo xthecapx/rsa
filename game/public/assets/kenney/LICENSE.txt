@@ -33,3 +33,35 @@ Kenney "Game Icons", file PNG/White/2x/locked.png
 https://kenney.nl/assets/game-icons
 Used as the source glyph for the PWA / home-screen icons under public/icons/
 (regenerate with tools/gen_pwa_icons.py). CC0 — see icons/LICENSE.txt.
+
+
+ui/
+---
+Kenney "UI Pack" (2.0) — selected PNG buttons, dividers, inputs and slides.
+https://kenney.nl/assets/ui-pack
+Used for the boot splash, mute control and loading chrome. CC0.
+
+
+audio/
+------
+Kenney audio packs (CC0), trimmed to the clips the game actually plays:
+
+  music/mission-plausible.ogg, infinite-descent.ogg
+    Kenney "Music Loops" — Mission Plausible, Infinite Descent
+    (legacy Music Loops pack; same Kenney CC0 terms)
+
+  jingles/intro.ogg, win.ogg, lose.ogg
+    Kenney "Music Jingles" — 8-Bit NES00 / NES07 / NES03
+    https://kenney.nl/assets/music-jingles
+
+  sfx/click.ogg, switch.ogg, rollover.ogg
+    Kenney "UI Audio"
+    https://kenney.nl/assets/ui-audio
+
+  sfx/confirm.ogg, error.ogg, select.ogg
+    Kenney "Interface Sounds"
+    https://kenney.nl/assets/interface-sounds
+
+  sfx/computer.ogg
+    Kenney "Sci-Fi Sounds" — computerNoise_000
+    https://kenney.nl/assets/sci-fi-sounds

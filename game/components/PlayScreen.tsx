@@ -9,10 +9,12 @@ import type { ActNumber } from "@/content/types";
 import { getAct } from "@/content";
 import { DialogBox } from "./DialogBox";
 import { GameOver } from "./GameOver";
+import { MuteButton } from "./MuteButton";
 import { OrientationNotice } from "./OrientationNotice";
 import { SidePanel } from "./SidePanel";
 import { SuspicionMeter } from "./SuspicionMeter";
 import { TouchControls } from "./TouchControls";
+import { gameAudio } from "@/game/audio";
 import { useGame } from "@/game/state";
 
 // Excalibur is browser-only, so the canvas host never renders on the server.
@@ -21,8 +23,38 @@ const GameCanvas = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="absolute inset-0 grid place-items-center text-[11px] text-stage-muted">
-        Loading the street...
+      <div className="absolute inset-0 grid place-items-center bg-stage-bg">
+        <div className="flex flex-col items-center px-6 text-center">
+          <img
+            src="/icons/icon-192.png"
+            alt=""
+            width={64}
+            height={64}
+            className="h-16 w-16 pixelated opacity-90"
+            draggable={false}
+          />
+          <img
+            src="/assets/kenney/ui/divider.png"
+            alt=""
+            className="mt-4 h-2 w-32 pixelated opacity-70"
+            draggable={false}
+          />
+          <p className="mt-4 text-[11px] tracking-widest text-accent-teal">
+            Loading the street…
+          </p>
+          <div
+            className="mt-4 w-48 px-3 py-2"
+            style={{
+              backgroundImage: "url(/assets/kenney/ui/input_outline.png)",
+              backgroundSize: "100% 100%",
+              imageRendering: "pixelated",
+            }}
+          >
+            <div className="h-2 overflow-hidden bg-black/40">
+              <div className="h-full w-2/3 animate-pulse bg-accent-amber/80" />
+            </div>
+          </div>
+        </div>
       </div>
     ),
   },
@@ -43,6 +75,10 @@ export function PlayScreen({ act }: { act: ActNumber }) {
   const canInteract = exploring && pendingTravel !== null && near === pendingTravel.at;
   const needsPanel = awaitingPanel || panel === "report";
 
+  useEffect(() => {
+    void gameAudio.playMusic("play");
+  }, []);
+
   // Crypto / report steps need the laptop; open the sheet when the story asks.
   useEffect(() => {
     if (needsPanel) setSheetOpen(true);
@@ -52,7 +88,11 @@ export function PlayScreen({ act }: { act: ActNumber }) {
     <main className="flex h-dvh max-h-dvh w-screen flex-col overflow-hidden bg-stage-bg">
       <header className="flex shrink-0 items-center justify-between gap-2 border-b-2 border-stage-border px-3 py-2 sm:px-4">
         <div className="flex min-w-0 items-baseline gap-2 sm:gap-3">
-          <Link href="/" className="shrink-0 text-[10px] text-stage-muted hover:text-accent-teal">
+          <Link
+            href="/"
+            onClick={() => gameAudio.playSfx("click")}
+            className="shrink-0 text-[10px] text-stage-muted hover:text-accent-teal"
+          >
             &lt; acts
           </Link>
           <h1 className="truncate text-[11px] text-accent-amber">
@@ -62,12 +102,13 @@ export function PlayScreen({ act }: { act: ActNumber }) {
             {script.subtitle}
           </span>
         </div>
-        <span className="hidden shrink-0 text-[10px] text-stage-muted lg:inline">
-          Move: arrows / WASD &middot; Talk: Space &middot; Choose: 1-3
-        </span>
-        <span className="shrink-0 text-[10px] text-stage-muted lg:hidden">
-          Tap to walk
-        </span>
+        <div className="flex shrink-0 items-center gap-2">
+          <span className="hidden text-[10px] text-stage-muted lg:inline">
+            Move: arrows / WASD &middot; Talk: Space &middot; Choose: 1-3
+          </span>
+          <span className="text-[10px] text-stage-muted lg:hidden">Tap to walk</span>
+          <MuteButton />
+        </div>
       </header>
 
       <div className="flex min-h-0 flex-1 flex-col lg:flex-row">

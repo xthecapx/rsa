@@ -184,8 +184,19 @@ City tiles and character busts are Kenney's
 [Roguelike Modern City](https://kenney.nl/assets/roguelike-modern-city) and
 [Roguelike Characters](https://kenney.nl/assets/roguelike-characters), both
 CC0. The home-screen / PWA glyph is from Kenney
-[Game Icons](https://kenney.nl/assets/game-icons) (`locked.png`). See
+[Game Icons](https://kenney.nl/assets/game-icons) (`locked.png`). Splash UI
+chrome comes from the [UI Pack](https://kenney.nl/assets/ui-pack). Music and
+SFX are from Kenney's [Music Loops](https://kenney.nl/assets),
+[Music Jingles](https://kenney.nl/assets/music-jingles),
+[UI Audio](https://kenney.nl/assets/ui-audio),
+[Interface Sounds](https://kenney.nl/assets/interface-sounds) and
+[Sci-Fi Sounds](https://kenney.nl/assets/sci-fi-sounds). See
 `public/assets/kenney/LICENSE.txt`.
+
+The boot splash (lock icon, Kenney panels, load bar, “Tap to enter”) unlocks
+audio on the first gesture — browsers block autoplay — then loops *Mission
+Plausible* on the title screen and *Infinite Descent* during play. Mute is
+available on the title and play headers.
 
 Kenney's character pack ships front-facing busts rather than four-direction
 walk cycles, so the busts are used for dialog portraits and the overworld

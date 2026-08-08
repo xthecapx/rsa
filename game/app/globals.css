@@ -68,3 +68,42 @@ canvas {
     transparent 3px
   );
 }
+
+.pixelated {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* Keep page content inert while the boot splash owns the viewport. */
+html[data-boot="1"] body > main {
+  visibility: hidden;
+}
+
+/* Static cover under SplashScreen — never remove from the DOM (React owns it). */
+html[data-boot="done"] #mitm-boot {
+  display: none;
+}
+
+/* Kenney UI Pack buttons — stretch the 192×64 glyphs as 9-slice-ish skins. */
+.kenney-btn {
+  border: none;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  font-family: inherit;
+}
+
+.kenney-btn-amber {
+  background-image: url(/assets/kenney/ui/button_amber.png);
+}
+
+.kenney-btn-blue {
+  background-image: url(/assets/kenney/ui/button_blue.png);
+}
+
+.kenney-btn-grey {
+  background-image: url(/assets/kenney/ui/button_grey.png);
+}
