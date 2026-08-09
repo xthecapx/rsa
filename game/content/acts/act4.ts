@@ -91,7 +91,7 @@ export const act4 = defineAct({
         },
         {
           speaker: "hacker",
-          text: "There is no useful quantum computer in this bag. A superconducting processor lives in a refrigerator at fifteen millikelvin.",
+          text: "Nothing in this bag can factor that in useful time. The different machine I need is a superconducting processor in a refrigerator at fifteen millikelvin, and it is not mine.",
         },
       ],
       next: "uplink",
@@ -134,27 +134,27 @@ export const act4 = defineAct({
       lines: [
         {
           speaker: "hacker",
-          text: "Uplink is open. Three things to set before anything runs, and they are not interchangeable.",
+          text: "Uplink is open. Their machine has one strange job: find a repeating pattern. It never sees the message.",
         },
         {
           speaker: "system",
-          text: "N is the number to factor -- Brayan's modulus, {modulus}, straight off the wire. That one is not a choice.",
-        },
-        {
-          speaker: "system",
-          text: "a is a base to test. Keep multiplying by a modulo N and the answer eventually comes back round to 1; how many steps that takes is the period r. Pick an a that shares a factor with N and ordinary gcd already wins, so the precheck will stop you.",
-        },
-        {
-          speaker: "system",
-          text: "m is how many counting qubits the circuit gets. It reports a fraction over 2^m, so a period only lands exactly when it divides 2^m. Fewer qubits, coarser answer.",
+          text: "Pick a number a and multiply by it repeatedly, keeping only the remainder after division by N. Like a hand circling a clock, the remainders return to 1. The number of steps is the period r.",
         },
         {
           speaker: "hacker",
-          text: "Then the classical half is free: given an even r, the gcd of a^(r/2) plus or minus one with N hands over the factors.",
+          text: "The QPU finds r. My laptop turns r into the factors, the private key and the plaintext. That is the entire division of labour.",
         },
         {
           speaker: "system",
-          text: "Two places to run it. The simulator builds whatever circuit you configure. A hardware batch already ran, so choosing one fixes N, a and m to whatever they were on the day -- you are reading its results, not commissioning them.",
+          text: "Three settings: N is Brayan's modulus, {modulus}, so it is fixed. You choose a; if it already shares a factor with N, the precheck catches that easy win without using the QPU.",
+        },
+        {
+          speaker: "system",
+          text: "m is the counting qubits. Think of marks on a ruler: more marks give a finer reading of the period; too few can round to the wrong one.",
+        },
+        {
+          speaker: "system",
+          text: "The simulator runs your settings. A hardware batch is a saved real run, so its N, a and m are fixed.",
         },
       ],
       waitsFor: "workbench",
@@ -171,19 +171,19 @@ export const act4 = defineAct({
       lines: [
         {
           speaker: "system",
-          text: "{qpuName} returned the period r = {order}, and the classical follow-up split N = {modulus} into {factors}.",
+          text: "{qpuName} returned several measurements, not one answer. The candidate that passed the check gives period r = {order}; the laptop used it to split N = {modulus} into {factors}.",
         },
         {
           speaker: "hacker",
-          text: "Same private key as last time, reached a different way. What changed is not the answer, it is how the cost grows with the size of N.",
+          text: "Here is the trick. Halfway around the loop, the result squares back to 1. The numbers just below and above it share N's two hidden primes; a gcd pulls them out.",
         },
         {
           speaker: "system",
-          text: "Read the outcome table again. Shor is probabilistic: most measurements are useless, and on real hardware noise flattens the distribution until the most frequent result is often the wrong one. That is survivable only because checking a candidate is free -- multiply the factors back together.",
+          text: "It does not work every time. An odd period or a bad halfway point means choosing another a and trying again.",
         },
         {
           speaker: "system",
-          text: "Today's hardware factors numbers this small and no larger. Noise and qubit counts, not the algorithm, are what stand between this demonstration and a real key.",
+          text: "Each quantum shot is a sample, not a promise, and hardware noise can make the tallest result wrong. Checking is easy: the factors must multiply back to {modulus}.",
         },
       ],
       travelTo: {
@@ -199,7 +199,7 @@ export const act4 = defineAct({
       waitsFor: "report",
       report: {
         wrong:
-          "Wrong letter. The period was right; check what came back from the decryption before you convert it.",
+          "Wrong letter. The factors checked out, so look at what the decryption returned before you convert it back into a letter.",
       },
       next: "win",
     },
@@ -214,11 +214,15 @@ export const act4 = defineAct({
         { speaker: "boss", text: "\"{message}\". We are finished here." },
         {
           speaker: "hacker",
-          text: "For now. Their key is safe because the machine that would break it does not exist yet at that size.",
+          text: "For now. The machine that could run this attack at real size does not exist yet.",
         },
         {
           speaker: "system",
-          text: "Act 4 clear. That is the whole reason post-quantum cryptography is being standardised now: messages recorded today can be opened by hardware that arrives later.",
+          text: "At tiny {modulus}, this route is slower than ordinary factoring. Shor's advantage appears as numbers grow, but nothing near a 617-digit RSA-2048 modulus has been factored this way.",
+        },
+        {
+          speaker: "system",
+          text: "Act 4 clear. Breaking that gap needs millions of noisy qubits working as thousands of reliable ones. Post-quantum cryptography is being adopted now because recorded traffic may outlive today's machines.",
         },
       ],
       ending: "win",
