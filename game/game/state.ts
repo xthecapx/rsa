@@ -126,6 +126,8 @@ interface GameState {
   capture: Capture | null;
   /** Why the last report to the client was rejected. */
   reportError: string | null;
+  /** Full-screen laptop overlay; independent of street dialog phase. */
+  laptopOpen: boolean;
 
   setAct: (act: ActNumber) => void;
   setPhase: (phase: Phase) => void;
@@ -150,6 +152,7 @@ interface GameState {
   setPendingTravel: (travel: PendingTravel | null) => void;
   setCapture: (capture: Capture | null) => void;
   setReportError: (message: string | null) => void;
+  setLaptopOpen: (open: boolean) => void;
 }
 
 export const useGame = create<GameState>((set, get) => ({
@@ -175,6 +178,7 @@ export const useGame = create<GameState>((set, get) => ({
   pendingTravel: null,
   capture: null,
   reportError: null,
+  laptopOpen: false,
 
   setAct: (act) => set({ act }),
   setPhase: (phase) => set({ phase }),
@@ -208,6 +212,7 @@ export const useGame = create<GameState>((set, get) => ({
   setPendingTravel: (pendingTravel) => set({ pendingTravel }),
   setCapture: (capture) => set({ capture }),
   setReportError: (reportError) => set({ reportError }),
+  setLaptopOpen: (laptopOpen) => set({ laptopOpen }),
 
   addSuspicion: (amount) => {
     const next = Math.min(100, Math.max(0, get().suspicion + amount));
@@ -244,6 +249,7 @@ export const useGame = create<GameState>((set, get) => ({
       pendingTravel: null,
       capture: null,
       reportError: null,
+      laptopOpen: false,
     }),
 }));
 

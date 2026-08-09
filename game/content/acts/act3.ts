@@ -158,7 +158,7 @@ export const act3 = defineAct({
         },
         {
           speaker: "system",
-          text: "Factor N in the workbench, then derive d and decrypt. This modulus falls in microseconds -- which is precisely why real ones are hundreds of digits long.",
+          text: "Factor N on the laptop, then derive d and decrypt. This modulus falls in microseconds -- which is precisely why real ones are hundreds of digits long.",
         },
       ],
       waitsFor: "workbench",

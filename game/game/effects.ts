@@ -354,6 +354,9 @@ export async function runEffect(effect: Effect): Promise<void> {
       return;
     case "panel":
       store.setPanel(effect.open);
+      // Closing the panel (after decode) puts the lid down. Opening only arms
+      // the workbench; the laptop auto-opens once the dialog lines finish.
+      if (effect.open === null) store.setLaptopOpen(false);
       return;
     case "terminal":
       say({ tone: "note", text: fill(effect.text, store.vars) });

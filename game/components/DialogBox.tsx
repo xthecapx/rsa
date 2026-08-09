@@ -5,6 +5,7 @@ import clsx from "clsx";
 
 import { Portrait, SPEAKER_COLOR, SPEAKER_NAME } from "./Portrait";
 import { advance, choose, submitReport, visibleChoices } from "@/game/dialog";
+import { gameAudio } from "@/game/audio";
 import { useGame } from "@/game/state";
 
 const TYPE_MS = 12;
@@ -26,6 +27,7 @@ export function DialogBox() {
   const waitingFor = useGame((s) => s.waitingFor);
   const reportError = useGame((s) => s.reportError);
   const recovered = useGame((s) => s.vars.recovered);
+  const setLaptopOpen = useGame((s) => s.setLaptopOpen);
   const flags = useGame((s) => s.flags);
   const nodeId = useGame((s) => s.nodeId);
 
@@ -61,6 +63,13 @@ export function DialogBox() {
   const waitingOnReport = waitingFor === "report" && onLastLine && settled;
   // Only block advancing once the last line is fully shown; skip must still work.
   const blocked = Boolean(waitingFor) && onLastLine && settled;
+
+  // After the briefing lines, lift the lid so decode is its own scene.
+  useEffect(() => {
+    if (!waitingOnWorkbench) return;
+    gameAudio.playSfx("switch");
+    setLaptopOpen(true);
+  }, [waitingOnWorkbench, setLaptopOpen]);
 
   useEffect(() => {
     if (!waitingOnReport) return;
@@ -155,14 +164,18 @@ export function DialogBox() {
 
   if (phase !== "dialog" || !fullText) return null;
 
-  // Clicks can always skip the typewriter; only the report field owns the box
-  // once that form is up.
+  // Clicks can always skip the typewriter; only the report field / choices
+  // own the box once those are up.
   const canTapContinue = !choices.length && !waitingOnReport;
+  const showChoices = choices.length > 0 && settled;
 
   return (
     <div className="pointer-events-auto w-full max-w-4xl">
       <div
-        className="textbox flex gap-3 p-3 sm:gap-4 sm:p-4"
+        className={clsx(
+          "textbox flex max-h-[min(70dvh,36rem)] flex-col gap-3 overflow-hidden p-3 sm:max-h-[min(75dvh,40rem)] sm:gap-4 sm:p-4",
+          showChoices ? "w-full" : "",
+        )}
         role={canTapContinue ? "button" : undefined}
         tabIndex={canTapContinue ? 0 : undefined}
         onClick={() => {
@@ -170,108 +183,110 @@ export function DialogBox() {
           continueLine();
         }}
       >
-        <div className="hidden sm:block">
-          <Portrait speaker={speaker} size={72} />
-        </div>
-        <div className="sm:hidden">
-          <Portrait speaker={speaker} size={48} />
-        </div>
-
-        <div className="min-w-0 flex-1">
-          <div
-            className={clsx(
-              "mb-2 text-[10px] uppercase tracking-widest",
-              SPEAKER_COLOR[speaker],
-            )}
-          >
-            {feedback ? "Think again" : SPEAKER_NAME[speaker]}
+        <div className="flex min-h-0 shrink-0 gap-3 sm:gap-4">
+          <div className="hidden sm:block">
+            <Portrait speaker={speaker} size={72} />
+          </div>
+          <div className="sm:hidden">
+            <Portrait speaker={speaker} size={40} />
           </div>
 
-          <p className="min-h-[3rem] text-[12px] leading-relaxed text-[#e8f4f8] sm:min-h-[3.5rem] sm:text-[13px]">
-            {typed}
-            {!settled && <span className="animate-pulse">|</span>}
-          </p>
-
-          {choices.length > 0 && settled ? (
-            <ul className="mt-3 space-y-1.5">
-              {choices.map((choice, index) => (
-                <li key={choice.label}>
-                  <button
-                    type="button"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      void choose(index);
-                    }}
-                    className="group flex w-full items-start gap-3 border-2 border-transparent px-2 py-1.5 text-left text-[12px] leading-relaxed text-[#cfe6ee] transition-colors hover:border-accent-amber hover:bg-accent-amber/10 hover:text-white"
-                  >
-                    <span className="text-accent-amber">{index + 1}.</span>
-                    <span>{choice.label}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          ) : waitingOnReport ? (
-            <form
-              onSubmit={(event) => void tellBoss(event)}
-              onClick={(event) => event.stopPropagation()}
-              className="mt-3 space-y-2"
-            >
-              {recovered && (
-                <p className="text-[10px] text-stage-muted">
-                  Your notes read{" "}
-                  <span className="font-mono text-actor-brayan">{recovered}</span>.
-                </p>
-              )}
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch">
-                <input
-                  ref={reportField}
-                  value={answer}
-                  onChange={(event) => setAnswer(event.target.value)}
-                  placeholder="Say what crossed the wire"
-                  autoComplete="off"
-                  spellCheck={false}
-                  className="min-w-0 flex-1 border-2 border-stage-border bg-stage-bg px-2.5 py-2 font-mono text-[13px] uppercase tracking-widest text-[#e8f4f8] outline-none focus:border-accent-amber"
-                />
-                <button
-                  type="submit"
-                  disabled={!answer.trim() || sending}
-                  className="shrink-0 border-2 border-accent-amber px-3 py-2 text-[11px] text-accent-amber transition-colors hover:bg-accent-amber/15 disabled:cursor-not-allowed disabled:border-stage-border disabled:text-stage-muted"
-                >
-                  {sending ? "Saying it…" : "Tell him"}
-                </button>
-              </div>
-              {reportError && (
-                <p className="text-[11px] leading-relaxed text-actor-hacker">
-                  {reportError}
-                </p>
-              )}
-            </form>
-          ) : (
+          <div className="min-w-0 flex-1">
             <div
               className={clsx(
-                "mt-3 text-right text-[10px]",
-                waitingOnWorkbench ? "text-accent-amber" : "text-stage-muted",
+                "mb-1.5 text-[10px] uppercase tracking-widest sm:mb-2",
+                SPEAKER_COLOR[speaker],
               )}
             >
-              {!settled ? (
-                <>
-                  <span className="lg:hidden">Tap to skip</span>
-                  <span className="hidden lg:inline">Space to skip</span>
-                </>
-              ) : waitingOnWorkbench ? (
-                <>
-                  <span className="lg:hidden">Open Laptop</span>
-                  <span className="hidden lg:inline">Use the panel on the right</span>
-                </>
-              ) : (
-                <>
-                  <span className="lg:hidden">Tap to continue</span>
-                  <span className="hidden lg:inline">Space to continue</span>
-                </>
-              )}
+              {feedback ? "Think again" : SPEAKER_NAME[speaker]}
             </div>
-          )}
+
+            <p className="text-[11px] leading-relaxed text-[#e8f4f8] sm:text-[13px]">
+              {typed}
+              {!settled && <span className="animate-pulse">|</span>}
+            </p>
+          </div>
         </div>
+
+        {showChoices ? (
+          <ul className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain pb-1">
+            {choices.map((choice, index) => (
+              <li key={choice.label} className="shrink-0">
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    gameAudio.playSfx("select");
+                    void choose(index);
+                  }}
+                  className="flex min-h-12 w-full items-start gap-3 border-2 border-stage-border bg-black/20 px-3 py-3 text-left text-[11px] leading-snug text-[#cfe6ee] transition-colors active:border-accent-amber active:bg-accent-amber/15 sm:min-h-0 sm:py-2.5 sm:text-[12px] sm:hover:border-accent-amber sm:hover:bg-accent-amber/10 sm:hover:text-white"
+                >
+                  <span className="shrink-0 pt-0.5 font-mono text-accent-amber">
+                    {index + 1}.
+                  </span>
+                  <span className="min-w-0 flex-1">{choice.label}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : waitingOnReport ? (
+          <form
+            onSubmit={(event) => void tellBoss(event)}
+            onClick={(event) => event.stopPropagation()}
+            className="shrink-0 space-y-2"
+          >
+            {recovered && (
+              <p className="text-[10px] text-stage-muted">
+                Your notes read{" "}
+                <span className="font-mono text-actor-brayan">{recovered}</span>.
+              </p>
+            )}
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch">
+              <input
+                ref={reportField}
+                value={answer}
+                onChange={(event) => setAnswer(event.target.value)}
+                placeholder="Say what crossed the wire"
+                autoComplete="off"
+                spellCheck={false}
+                className="min-w-0 flex-1 border-2 border-stage-border bg-stage-bg px-2.5 py-2 font-mono text-[13px] uppercase tracking-widest text-[#e8f4f8] outline-none focus:border-accent-amber"
+              />
+              <button
+                type="submit"
+                disabled={!answer.trim() || sending}
+                className="min-h-11 shrink-0 border-2 border-accent-amber px-3 py-2 text-[11px] text-accent-amber transition-colors hover:bg-accent-amber/15 disabled:cursor-not-allowed disabled:border-stage-border disabled:text-stage-muted"
+              >
+                {sending ? "Saying it…" : "Tell him"}
+              </button>
+            </div>
+            {reportError && (
+              <p className="text-[11px] leading-relaxed text-actor-hacker">
+                {reportError}
+              </p>
+            )}
+          </form>
+        ) : (
+          <div
+            className={clsx(
+              "shrink-0 text-right text-[10px]",
+              waitingOnWorkbench ? "text-accent-amber" : "text-stage-muted",
+            )}
+          >
+            {!settled ? (
+              <>
+                <span className="lg:hidden">Tap to skip</span>
+                <span className="hidden lg:inline">Space to skip</span>
+              </>
+            ) : waitingOnWorkbench ? (
+              <span>Laptop unlocked — work the steps on screen</span>
+            ) : (
+              <>
+                <span className="lg:hidden">Tap to continue</span>
+                <span className="hidden lg:inline">Space to continue</span>
+              </>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

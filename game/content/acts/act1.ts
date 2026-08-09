@@ -167,7 +167,7 @@ export const act1 = defineAct({
         },
         {
           speaker: "system",
-          text: "Use the workbench: pull the alphabet table off the backend, then run the payload back through it.",
+          text: "Open the laptop: pull the alphabet table off the backend, then run the payload back through it.",
         },
       ],
       waitsFor: "workbench",

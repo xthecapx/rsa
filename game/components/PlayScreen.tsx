@@ -9,7 +9,9 @@ import type { ActNumber } from "@/content/types";
 import { getAct } from "@/content";
 import { DialogBox } from "./DialogBox";
 import { GameOver } from "./GameOver";
+import { LaptopScene } from "./LaptopScene";
 import { MuteButton } from "./MuteButton";
+import { ObjectiveList } from "./ObjectiveList";
 import { OrientationNotice } from "./OrientationNotice";
 import { SidePanel } from "./SidePanel";
 import { SuspicionMeter } from "./SuspicionMeter";
@@ -67,22 +69,20 @@ export function PlayScreen({ act }: { act: ActNumber }) {
   const walking = useGame((s) => s.walking);
   const pendingTravel = useGame((s) => s.pendingTravel);
   const waitingFor = useGame((s) => s.waitingFor);
+  const laptopOpen = useGame((s) => s.laptopOpen);
+  const setLaptopOpen = useGame((s) => s.setLaptopOpen);
+  const tasks = useGame((s) => s.tasks);
+  const [jobSheetOpen, setJobSheetOpen] = useState(false);
   const script = getAct(act);
-
-  const [sheetOpen, setSheetOpen] = useState(false);
 
   const exploring = phase === "exploring";
   const canInteract = exploring && pendingTravel !== null && near === pendingTravel.at;
-  const needsPanel = waitingFor === "workbench" || panel === "workbench";
+  const workbenchArmed = waitingFor === "workbench" || panel === "workbench";
+  const hasJobs = tasks.length > 0;
 
   useEffect(() => {
     void gameAudio.playMusic("play");
   }, []);
-
-  // Workbench steps need the laptop; open the sheet when the story asks.
-  useEffect(() => {
-    if (needsPanel) setSheetOpen(true);
-  }, [needsPanel]);
 
   return (
     <main className="flex h-dvh max-h-dvh w-screen flex-col overflow-hidden bg-stage-bg">
@@ -116,16 +116,36 @@ export function PlayScreen({ act }: { act: ActNumber }) {
           <GameCanvas act={act} />
 
           <div className="pointer-events-none absolute inset-0 flex flex-col justify-between p-3 sm:p-4">
-            <div className="flex justify-end">
-              <SuspicionMeter />
+            <div className="flex flex-col items-end gap-2">
+              {!laptopOpen && <SuspicionMeter />}
+              {/* Mobile-only job sheet opener, sits under the meter. */}
+              {!laptopOpen && hasJobs && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    gameAudio.playSfx("click");
+                    setJobSheetOpen(true);
+                  }}
+                  className="pointer-events-auto border-2 border-stage-border bg-stage-surface/90 px-3 py-2 text-[10px] uppercase tracking-widest text-accent-teal lg:hidden"
+                >
+                  Job sheet
+                </button>
+              )}
             </div>
 
-            <div className="flex flex-col items-center gap-3 pb-20 lg:pb-0">
+            <div
+              className={clsx(
+                "flex w-full flex-col items-center gap-3",
+                // Talk FAB only needs clearance while exploring on phones.
+                exploring
+                  ? "pb-20 lg:pb-0"
+                  : "pb-[max(0.5rem,env(safe-area-inset-bottom))]",
+              )}
+            >
               {exploring && pendingTravel && (
                 <div
                   className={clsx(
                     "textbox max-w-md px-3 py-2 text-center transition-opacity duration-200 sm:px-4 sm:py-3",
-                    // The street matters more than the reminder once moving.
                     walking && "opacity-20",
                   )}
                 >
@@ -144,67 +164,75 @@ export function PlayScreen({ act }: { act: ActNumber }) {
                   )}
                 </div>
               )}
-              <DialogBox />
+              {!laptopOpen && <DialogBox />}
             </div>
           </div>
 
-          <TouchControls canInteract={canInteract} visible={exploring} />
+          <TouchControls canInteract={canInteract} visible={exploring && !laptopOpen} />
 
-          {/* Mobile laptop toggle — desktop uses the persistent sidebar. */}
-          <div className="pointer-events-none absolute left-3 top-3 z-10 lg:hidden">
-            <button
-              type="button"
-              onClick={() => setSheetOpen(true)}
-              className={clsx(
-                "pointer-events-auto border-2 px-3 py-2 text-[10px] uppercase tracking-widest",
-                needsPanel
-                  ? "animate-pulse border-accent-amber bg-accent-amber/20 text-accent-amber"
-                  : "border-stage-border bg-stage-surface/90 text-accent-teal",
-              )}
-            >
-              Laptop
-            </button>
-          </div>
+          {/* Re-open if they closed the lid early. */}
+          {!laptopOpen && (
+            <div className="pointer-events-none absolute left-3 top-3 z-10">
+              <button
+                type="button"
+                onClick={() => {
+                  gameAudio.playSfx("switch");
+                  setLaptopOpen(true);
+                }}
+                className={clsx(
+                  "pointer-events-auto border-2 px-3 py-2 text-[10px] uppercase tracking-widest",
+                  workbenchArmed
+                    ? "animate-pulse border-accent-amber bg-accent-amber/20 text-accent-amber"
+                    : "border-stage-border bg-stage-surface/90 text-accent-teal",
+                )}
+              >
+                Laptop
+              </button>
+            </div>
+          )}
+
+          {/* Anchored to the street column so desktop centering skips the sidebar. */}
+          <LaptopScene act={act} />
 
           <GameOver act={act} />
         </section>
 
-        <aside className="hidden w-80 shrink-0 flex-col gap-3 border-l-2 border-stage-border p-3 lg:flex xl:w-96">
-          <SidePanel act={act} />
+        <aside className="hidden w-72 shrink-0 flex-col gap-3 border-l-2 border-stage-border p-3 lg:flex xl:w-80">
+          <SidePanel />
         </aside>
       </div>
 
-      <OrientationNotice />
-
-      {sheetOpen && (
-        <div className="fixed inset-0 z-30 flex flex-col lg:hidden">
+      {/* Mobile job sheet overlay */}
+      {jobSheetOpen && (
+        <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/55 lg:hidden">
           <button
             type="button"
-            aria-label="Close laptop"
-            className="min-h-0 flex-1 bg-black/55"
-            onClick={() => setSheetOpen(false)}
+            aria-label="Close job sheet"
+            className="min-h-0 flex-1"
+            onClick={() => {
+              gameAudio.playSfx("click");
+              setJobSheetOpen(false);
+            }}
           />
-          <div className="flex max-h-[min(85dvh,720px)] flex-col gap-3 overflow-hidden border-t-2 border-stage-border bg-stage-bg p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-stage">
-            <div className="flex shrink-0 items-center justify-between">
-              <span className="text-[10px] uppercase tracking-widest text-accent-teal">
-                Laptop
-              </span>
+          <div className="max-h-[70dvh] overflow-y-auto border-t-2 border-stage-border bg-stage-bg p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+            <div className="relative">
+              <ObjectiveList />
               <button
                 type="button"
-                onClick={() => setSheetOpen(false)}
-                className="border-2 border-stage-border px-3 py-1.5 text-[10px] text-stage-muted"
+                onClick={() => {
+                  gameAudio.playSfx("click");
+                  setJobSheetOpen(false);
+                }}
+                className="absolute right-2 top-1.5 border border-stage-border bg-stage-surface px-2 py-1 text-[10px] uppercase tracking-widest text-stage-muted"
               >
                 Close
               </button>
             </div>
-            {/* Block, not flex: flex children would shrink to fit the sheet
-                instead of running past it and scrolling. */}
-            <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain">
-              <SidePanel act={act} flow />
-            </div>
           </div>
         </div>
       )}
+
+      <OrientationNotice />
     </main>
   );
 }

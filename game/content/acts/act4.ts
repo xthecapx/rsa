@@ -18,9 +18,9 @@ export const act4 = defineAct({
 
   tasks: [
     { id: "brief", label: "Hear the client out" },
-    { id: "install", label: "Get back on the line for the key and the message" },
+    { id: "install", label: "Tap the line for the key and message" },
     { id: "uplink", label: "Open a route to a quantum backend" },
-    { id: "decode", label: "Find the period and rebuild the private key" },
+    { id: "decode", label: "Find the period and rebuild the key" },
     { id: "report", label: "Report the message to the client" },
   ],
 

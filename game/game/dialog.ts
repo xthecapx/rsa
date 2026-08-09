@@ -211,6 +211,7 @@ export async function resolvePanel(): Promise<void> {
   if (!nodeId || waitingFor !== "workbench" || panel !== "workbench") return;
   const node = nodeOf(act, nodeId);
   if (node.waitsFor !== "workbench" || !node.next) return;
+  useGame.getState().setLaptopOpen(false);
   await enter(act, node.next);
 }
 

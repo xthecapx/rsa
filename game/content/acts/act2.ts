@@ -153,7 +153,7 @@ export const act2 = defineAct({
         },
         {
           speaker: "system",
-          text: "Ask the backend for every shift at once. Twenty-five candidates come back and exactly one of them is a word.",
+          text: "On the laptop: ask for every shift, then tap the one English word in the list. That is your plaintext.",
         },
       ],
       waitsFor: "workbench",

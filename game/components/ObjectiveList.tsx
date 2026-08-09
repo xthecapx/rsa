@@ -29,11 +29,16 @@ export function ObjectiveList() {
         Job sheet
       </div>
 
-      <ul className="space-y-1 px-3 py-2 font-mono text-[11px] leading-relaxed">
+      <ul className="space-y-1.5 px-3 py-2 font-mono text-[11px] leading-relaxed">
         {tasks.map((task) => (
-          <li key={task.id} className={clsx("flex gap-2", STYLE[task.status])}>
-            <span aria-hidden>{MARK[task.status]}</span>
-            <span className="min-w-0">{task.label}</span>
+          <li
+            key={task.id}
+            className={clsx("flex items-start gap-2", STYLE[task.status])}
+          >
+            <span aria-hidden className="shrink-0 whitespace-nowrap">
+              {MARK[task.status]}
+            </span>
+            <span className="min-w-0 break-words">{task.label}</span>
           </li>
         ))}
       </ul>
