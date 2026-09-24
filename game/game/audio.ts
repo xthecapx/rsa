@@ -18,7 +18,7 @@ export const AUDIO = {
     confirm: "/assets/kenney/audio/sfx/confirm.ogg",
     error: "/assets/kenney/audio/sfx/error.ogg",
     select: "/assets/kenney/audio/sfx/select.ogg",
-    computer: "/assets/kenney/audio/sfx/computer.ogg",
+    computer: "/assets/kenney/audio/sfx/computer-cue.mp3",
   },
 } as const;
 
@@ -73,6 +73,7 @@ function writeMutedPreference(muted: boolean): void {
 class GameAudioController {
   private bgm: HTMLAudioElement | null = null;
   private jingle: HTMLAudioElement | null = null;
+  private activeComputer: HTMLAudioElement | null = null;
   private sfxCache = new Map<string, HTMLAudioElement>();
   private preloadPromise: Promise<void> | null = null;
   private desiredTrack: MusicTrack | null = null;
@@ -134,6 +135,10 @@ class GameAudioController {
   setMuted(muted: boolean): void {
     writeMutedPreference(muted);
     useAudio.getState().setMuted(muted);
+    if (muted) {
+      this.activeComputer?.pause();
+      this.activeComputer = null;
+    }
     if (this.bgm) this.bgm.muted = muted;
     if (this.jingle) this.jingle.muted = muted;
     if (!muted && useAudio.getState().unlocked && this.desiredTrack) {
@@ -221,6 +226,14 @@ class GameAudioController {
     const cached = this.sfxCache.get(url);
     const audio = (cached?.cloneNode(true) as HTMLAudioElement | undefined) ?? new Audio(url);
     audio.volume = SFX_VOLUME;
+    if (id === "computer") {
+      // A new computation supersedes its cue instead of layering two copies.
+      this.activeComputer?.pause();
+      this.activeComputer = audio;
+      audio.addEventListener("ended", () => {
+        if (this.activeComputer === audio) this.activeComputer = null;
+      }, { once: true });
+    }
     void audio.play().catch(() => {
       // Ignore gesture / decode races.
     });

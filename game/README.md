@@ -8,17 +8,29 @@ through `/play/4` links still work; new RSA links use
 
 ## Who Goes First?
 
-A beginner story set inside Ale’s house on game night. Walk with the arrow keys or WASD, tap the floor to walk around furniture, on touch screens. The same character and four-direction
+A beginner story set inside Ale’s house on game night. Walk with the arrow keys or WASD, or tap the floor to walk around furniture on touch screens. The same character and four-direction
 walk animations appear in RSA. Approach the highlighted table, laptop desk, or
-whiteboard, then press Space or tap Talk. Conversations unlock each experiment:
+whiteboard, then press Space or tap Talk. Short conversations lead into playable challenges:
 
-1. Run Python `random.Random(42)` for five coin tosses.
-2. Let Brayan replay the seed and lock his prediction for toss six.
-3. Reveal the sixth toss and compare it with the prediction.
-4. Simulate measuring a freshly prepared zero without a gate.
-5. Add H and run the one-qubit coin circuit.
-6. Compare 10, 100, and 1,000 shots and answer a probability question.
+1. Assemble a seeded Python function from code blocks, then run five coin tosses.
+2. Predict whether Brayan's copy repeats those five results before revealing his run.
+3. Keep both five-call sequences on screen, run six calls on Brayan's copy,
+   inspect his highlighted sixth value, then predict and reveal your own.
+4. Predict the result of measuring a freshly prepared zero and run ten shots.
+5. Place both H and measurement on a Qiskit-style single-qubit wire, in that
+   order, then run the circuit. Measurement alone gets an all-zero hint.
+6. Predict whether 100 shots must split exactly in half, compare 100 with 1,000 shots, and explain the observed counts.
 7. Agree that 0 means Ale and 1 means Brayan, then use one simulated shot.
+
+Code and gate blocks support drag-and-drop, tap/click selection followed by a
+slot, and keyboard activation. Hints, undo/reset, and feedback are available
+without penalties. The three achievement badges reward building the program,
+explaining the seed replay, and building the circuit. Block trays and answer choices
+are shuffled once per lesson and saved with progress. The code scaffold has a
+setup slot and one function-body slot. Its distractor is the valid Python call
+`coin.seed(42)`, which would reset the generator if called for every toss; a
+comment is never treated as executable behavior. The scaffold uses known
+instruction IDs; it never executes arbitrary player-written Python.
 
 `POST /api/coin/classical` creates a private Python PRNG per request and
 replays the requested number of calls. `POST /api/coin/simulate` runs an
@@ -29,10 +41,12 @@ does not read or submit IBM jobs. Dialogue distinguishes classical
 simulation from physical quantum randomness; statistical balance is not
 presented as proof of a quantum source.
 
-The full coin session, including the final decision, is saved in this
+The full coin session, including puzzle placements, locked answers, achievements,
+and the final decision, is saved in this
 browser. Refresh resumes it without another toss. “Replay the whole lesson”
 starts a new session. Scenario completion is saved separately for the hub.
-No account or database is needed.
+Older saves keep their completed results and gain the new challenges at the
+current unfinished step. No account or database is needed.
 
 ## Shared game experience
 

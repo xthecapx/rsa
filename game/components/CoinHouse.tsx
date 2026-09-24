@@ -12,8 +12,8 @@ const DIRECTIONS: Record<string, [number, number]> = {
   ArrowLeft: [-1, 0], a: [-1, 0], ArrowRight: [1, 0], d: [1, 0],
 };
 /** Same walking vocabulary as the street: arrows/WASD, tap to walk, Space to talk. */
-export function CoinHouse({ initialPlace, target, onNear, onInteract, onWalking, disabled, movementLocked }: {
-  initialPlace: RoomPlace | null; target: RoomPlace; disabled: boolean; movementLocked: boolean;
+export function CoinHouse({ initialPlace, target, winner, onNear, onInteract, onWalking, disabled, movementLocked }: {
+  initialPlace: RoomPlace | null; target: RoomPlace; winner: number | null; disabled: boolean; movementLocked: boolean;
   onWalking: (walking: boolean) => void;
   onNear: (place: RoomPlace | null) => void; onInteract: (place: RoomPlace) => void;
 }) {
@@ -151,8 +151,10 @@ export function CoinHouse({ initialPlace, target, onNear, onInteract, onWalking,
         <path d="M39 178H96M67 164V199" stroke="#67858b" strokeWidth="3" />
         <rect x="337" y="187" width="20" height="26" fill="#bb7955" />
         <path d="M346 190V153M346 178L330 166M346 170L360 156" stroke="#7cb887" strokeWidth="8" />
-        <svg x="132" y="130" width="24" height="24" viewBox="16 16 16 16"><image href="/assets/kenney/characters.png" width="192" height="48" /></svg>
-        <svg x="248" y="130" width="24" height="24" viewBox="16 32 16 16"><image href="/assets/kenney/characters.png" width="192" height="48" /></svg>
+        <svg className={winner === 0 ? "coin-winner" : ""} x="132" y="130" width="24" height="24" viewBox="16 16 16 16"><image href="/assets/kenney/characters.png" width="192" height="48" /></svg>
+        <svg className={winner === 1 ? "coin-winner" : ""} x="248" y="130" width="24" height="24" viewBox="16 32 16 16"><image href="/assets/kenney/characters.png" width="192" height="48" /></svg>
+        {winner !== null && <g className="coin-winner-banner"><rect x="138" y="98" width="124" height="23" rx="4" fill="#173e3b" stroke="#efbe67" />
+          <text x="200" y="113" textAnchor="middle" fontSize="9" fill="#ffe9a5">{t(winner === 0 ? "Ale goes first!" : "Brayan goes first!")}</text></g>}
         <g aria-hidden="true">
           <ellipse cx={ROOM_STATIONS[target].x} cy={ROOM_STATIONS[target].y} rx="19" ry="8" fill="#f2c98322" stroke="#f2c983" strokeDasharray="3 3" />
           <text x={ROOM_STATIONS[target].x} y={ROOM_STATIONS[target].y - 29} textAnchor="middle" fontSize="9" fill="#ffe4a2">{localize(LABELS[target])}</text>

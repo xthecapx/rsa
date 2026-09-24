@@ -1,4 +1,4 @@
-FROM node:20-alpine
+FROM node:20-alpine AS dependencies
 
 WORKDIR /app
 
@@ -6,17 +6,30 @@ WORKDIR /app
 COPY .npmrc package.json package-lock.json ./
 RUN npm ci --registry=https://registry.npmjs.org/
 
+# Compose bind-mounts source and runs Next in development mode. Stop here so
+# local rebuilds do not run an unused production build.
+FROM dependencies AS development
+ENV PORT=7019
+EXPOSE 7019
+CMD ["npm", "run", "dev"]
+
+FROM dependencies AS builder
 COPY . .
 
-# Next.js rewrites are baked at build time, so the backend URL must be known
-# when `npm run build` runs. deploy-cloudrun.sh passes this after the backend
-# is live; local defaults to the compose backend.
+# Next.js rewrites are baked at build time. Cloud Run passes the deployed API
+# URL; the local development stage reads BACKEND_URL at runtime instead.
 ARG BACKEND_URL=http://localhost:7001
 ENV BACKEND_URL=$BACKEND_URL
-
 RUN npm run build
 
+FROM node:20-alpine AS production
+WORKDIR /app
+ENV NODE_ENV=production
+ENV HOSTNAME=0.0.0.0
 ENV PORT=8080
-EXPOSE 8080
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/public ./public
 
-CMD ["sh", "-c", "npx next start -H 0.0.0.0 -p ${PORT}"]
+EXPOSE 8080
+CMD ["node", "server.js"]

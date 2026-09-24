@@ -43,6 +43,13 @@ cp .env.example .env
 docker compose up --build
 ```
 
+Compose builds the game’s development stage and bind-mounts its source, so it
+does not run a production Next build on every local image rebuild. The game
+Docker context excludes local `node_modules` and `.next` output. For a release,
+`deploy-cloudrun.sh` builds a separate standalone production image. If only
+the game changed, use `./deploy-cloudrun.sh game` to reuse the deployed backend
+instead of rebuilding its Qiskit dependencies.
+
 - Frontend: http://localhost:7013  
 - Game: http://localhost:7019  
 - Backend: http://localhost:7001/api/health  

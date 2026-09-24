@@ -34,13 +34,14 @@ services:
     build:
       context: ./game
       dockerfile: Dockerfile
+      target: development
     ports:
       - "7019:7019"
     environment:
       - BACKEND_URL=http://backend:7001
       - PORT=7019
       - WATCHPACK_POLLING=true
-    # Local: hot reload. Cloud Run uses the image CMD (next start) instead.
+    # Local: hot reload. Cloud Run uses the production stage's standalone server.
     command: npm run dev
     volumes:
       - ./game:/app

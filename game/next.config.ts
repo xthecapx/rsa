@@ -32,6 +32,7 @@ function resolvePwaBuildId(): string {
 const pwaBuildId = resolvePwaBuildId();
 
 const nextConfig: NextConfig = {
+  output: "standalone",
   // frontend/ and game/ each have their own lockfile, so pin the root that
   // Next traces files from instead of letting it guess.
   outputFileTracingRoot: path.join(__dirname),

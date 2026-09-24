@@ -148,15 +148,19 @@ html[data-boot="done"] #mitm-boot {
 .coin-token { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0; width: 46px; height: 46px; border-radius: 50%; border: 3px solid #c69441; background: #f1c46b; color: #3b2b17; font-weight: 800; line-height: 1; box-shadow: 0 3px 0 #76562c; }
 .coin-token small { font-size: 10px; margin-top: 3px; }
 .coin-token.tails { background: #93cfc3; border-color: #4c998b; box-shadow: 0 3px 0 #2c6a60; color: #183e36; }
+.coin-sequence { display: flex; flex-wrap: wrap; gap: 8px; }
+.coin-sequence-item { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 7px; border: 1px solid #45616a; border-radius: 7px; }
+.coin-sequence-item > small { color: #b7c9c6; font-size: 11px; }
+.coin-sequence-item.sixth { border-color: #efbe67; background: #765b283d; }
+.coin-sequence-item.sixth > small { color: #f6d28d; font-weight: 700; }
+.coin-compare { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.coin-compare > div { border: 1px solid #385864; border-radius: 7px; padding: 12px; }
+.coin-compare p { margin-bottom: 10px; font-weight: 700; }
+@media (max-width: 700px) { .coin-compare { grid-template-columns: 1fr; } }
 .coin-callout { padding: 16px; background: #284048; border-left: 3px solid #e4b165; border-radius: 4px; }
 .coin-results { padding: 16px; border: 1px solid #315661; border-radius: 6px; font-size: 13px; }
 .coin-bar { height: 20px; background: #79baac; margin: 14px 0 8px; overflow: hidden; border-radius: 3px; }
 .coin-bar > div { height: 100%; background: #efbe67; transition: width .3s; }
-.coin-circuit { display: flex; align-items: center; gap: 9px; margin: 20px 0; font-family: monospace; font-size: 17px; }
-.coin-circuit .wire { height: 2px; flex: 1; background: #709ba0; }
-.coin-circuit .gate, .coin-circuit .empty-gate { width: 40px; height: 40px; display: grid; place-items: center; border: 2px solid #70c6b2; background: #24564f; font-size: 22px; }
-.coin-circuit .empty-gate { border-style: dashed; border-color: #59747d; background: transparent; color: #819ba3; }
-.coin-circuit .measure { background: #494063; border-color: #a293c9; }
 .coin-achievement { display: flex; flex-direction: column; gap: 20px; align-items: center; text-align: center; padding: 26px 12px; border: 1px solid #ac8c50; background: #423a222e; }
 .coin-achievement > span { color: #f5c56d; font-size: 12px; letter-spacing: .2em; }
 .coin-achievement h2 { font-size: 26px; letter-spacing: 0; }
@@ -220,6 +224,52 @@ html[data-boot="done"] #mitm-boot {
 .coin-world .coin-room { width: 100%; height: 100%; max-width: none; border: 0; border-radius: 0; background: transparent; }
 .coin-world .coin-room > svg { width: 100%; height: 100%; image-rendering: pixelated; }
 .coin-workbench th, .coin-workbench td { padding: 7px; border-bottom: 1px solid #284751; }
+.coin-challenge { padding: 16px; border: 1px solid #456a70; border-radius: 8px; background: #18343c; }
+.coin-choices, .coin-block-tray { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.coin-choice, .coin-block, .coin-drop-slot { border: 1px solid #688c91; border-radius: 6px; background: #102630; color: #d8ede5; padding: 10px 12px; text-align: left; cursor: pointer; }
+.coin-choice { flex: 1 1 170px; }
+.coin-block { font-family: monospace; font-size: 12px; touch-action: manipulation; }
+.coin-choice.selected, .coin-block.selected { border-color: #efbe67; background: #405039; color: #ffe5aa; }
+.coin-choice:disabled { cursor: default; opacity: .65; }
+.coin-choice.selected:disabled { opacity: 1; }
+.coin-code-scaffold { display: grid; gap: 10px; padding: 14px; border: 1px solid #385864; border-radius: 6px; background: #081b24; }
+.coin-code-scaffold > code, .coin-slot-row > code { color: #a6d9c9; }
+.coin-slot-row { display: grid; gap: 6px; }
+.coin-slot-row > span { font-size: 12px; color: #a7bbc0; }
+.coin-drop-slot { min-height: 42px; border-style: dashed; border-color: #70c6b2; overflow-wrap: anywhere; }
+.coin-slot-row.body .coin-drop-slot { margin-left: 16px; }
+.coin-operation-tool { display: inline-flex; align-items: center; gap: 10px; min-height: 58px; font-family: var(--font-dm-sans), sans-serif; font-size: 13px; }
+.qiskit-gate { display: grid; place-items: center; width: 46px; height: 46px; border: 2px solid; border-radius: 3px; font: 700 24px/1 monospace; flex: none; }
+.qiskit-gate.hadamard { border-color: #326ba8; background: #70aaf0; color: #0a2942; }
+.qiskit-gate.measure { border-color: #829094; background: #c7d1d2; color: #284047; }
+.qiskit-circuit { display: flex; align-items: stretch; gap: 8px; padding: 16px; overflow-x: auto; border: 1px solid #718e97; border-radius: 7px; background: #e7eeee; color: #20333a; font-family: monospace; }
+.qiskit-register-labels { display: grid; grid-template-rows: 76px 36px; align-items: center; min-width: 76px; font-size: 16px; font-weight: 700; }
+.qiskit-register-labels small { font-size: 11px; font-weight: 400; }
+.qiskit-tracks { position: relative; flex: 1; min-width: 185px; }
+.qiskit-quantum-wire { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); position: relative; align-items: center; height: 76px; }
+.qiskit-quantum-wire.single { grid-template-columns: 1fr; }
+.qiskit-quantum-wire::before { content: ""; position: absolute; top: 37px; left: 0; right: 0; height: 2px; background: #607b83; }
+.qiskit-quantum-wire > .qiskit-gate { justify-self: center; z-index: 2; }
+.qiskit-wire-slot { display: grid; place-items: center; justify-self: center; width: 58px; height: 58px; padding: 0; border: 0; border-radius: 4px; background: transparent; cursor: pointer; z-index: 2; }
+.qiskit-wire-slot:focus-visible, .coin-operation-tool:focus-visible { outline: 3px solid #e3a33d; outline-offset: 3px; }
+.qiskit-empty { display: grid; place-items: center; width: 46px; height: 46px; border: 2px dashed #78959a; border-radius: 4px; background: #f7fbfa; color: #607b83; }
+.qiskit-classical-wire { position: relative; height: 36px; }
+.qiskit-classical-wire::before, .qiskit-classical-wire::after { content: ""; position: absolute; left: 0; right: 0; height: 1px; background: #607b83; }
+.qiskit-classical-wire::before { top: 14px; }
+.qiskit-classical-wire::after { top: 18px; }
+.qiskit-measure-link { position: absolute; top: 61px; height: 28px; width: 2px; background: #607b83; z-index: 1; }
+.qiskit-measure-link.first { left: 25%; }
+.qiskit-measure-link.second { left: 75%; }
+.qiskit-measure-link.middle { left: 50%; }
+.qiskit-measure-link::after { content: ""; position: absolute; bottom: -1px; left: -4px; width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 7px solid #607b83; }
+.coin-rewards { display: flex; flex-wrap: wrap; gap: 6px; }
+.coin-rewards span { border: 1px solid #45616a; border-radius: 12px; padding: 3px 7px; color: #78949a; }
+.coin-rewards span.earned { border-color: #c7a65f; color: #f2cc7e; background: #55442955; }
+.coin-winner { animation: coin-winner-hop .8s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: center bottom; }
+.coin-winner-banner { animation: coin-winner-show .4s ease-out both; }
+@keyframes coin-winner-hop { to { transform: translateY(-8px); } }
+@keyframes coin-winner-show { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .coin-winner, .coin-winner-banner { animation: none; } }
 @media (max-height: 550px) and (orientation: landscape) {
   .game-shell > header { min-height: 44px; padding-top: 4px; padding-bottom: 4px; }
   .coin-world { padding: 12px 64px 48px; }

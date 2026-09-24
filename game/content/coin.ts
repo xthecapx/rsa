@@ -21,48 +21,43 @@ export const COIN_SCENES: Record<CoinStep, Scene> = {
     ],
   },
   classical: {
-    title: "Write a familiar function", place: "desk", objective: "Walk to the desk and run five practice tosses.",
+    title: "Write a familiar function", place: "desk", objective: "Walk to the desk, build the function, and run five tosses.",
     lines: [
-      { speaker: "hacker", text: "I’ll start the random generator with seed 42. A seed is the starting point of a repeatable sequence." },
-      { speaker: "ale", text: "One setup, then one call to flip_coin() each time. Let’s try five flips." },
+      { speaker: "ale", text: "Can you make the laptop flip our missing coin?" },
+      { speaker: "hacker", text: "I have three code lines. Build the function, then we’ll try five calls." },
     ],
   },
   predict: {
-    title: "Brayan is one flip ahead", place: "desk", objective: "Let Brayan replay your seed and predict toss six.",
+    title: "Brayan is one flip ahead", place: "desk", objective: "Predict what Brayan’s copy will do before he runs it.",
     lines: [
-      { speaker: "brayan", text: "I saw your seed. I’ll start my own generator at 42 and make the same five calls." },
-      { speaker: "ale", text: "Your five results match! Now write down the sixth before we flip ours." },
+      { speaker: "brayan", text: "I saw seed 42 in your program. I’ll start my own copy and make five calls. Predict what happens." },
     ],
   },
   reveal: {
-    title: "Prediction locked", place: "desk", objective: "Reveal your sixth toss and compare it with Brayan’s prediction.",
+    title: "Find the sixth value", place: "desk", objective: "Run six calls on Brayan’s copy, then predict your sixth toss.",
     lines: [
-      { speaker: "brayan", text: "My prediction is locked. Your next result will be heads: zero." },
-      { speaker: "hacker", text: "You know the starting point and how many calls I’ve made. Let’s check." },
+      { speaker: "brayan", text: "My five calls matched yours. Run six on my copy, then use what you see to predict your next value." },
     ],
   },
   qubit: {
     title: "Start with one qubit", place: "desk", objective: "Prepare zero and measure it. Does that make a coin?",
     lines: [
-      { speaker: "ale", text: "Could we use a physical experiment where knowing the program doesn’t tell us the next outcome?" },
-      { speaker: "hacker", text: "A quantum coin can do that. Today we’ll build and test it in a simulator on an ordinary computer. We won’t connect to hardware." },
-      { speaker: "brayan", text: "So this is a rehearsal of quantum behavior. Start with a qubit in zero and see what measuring it does." },
+      { speaker: "ale", text: "Can we build a coin where seeing the circuit does not reveal the next bit?" },
+      { speaker: "hacker", text: "Let’s experiment with one qubit in a simulator. First, prepare zero and measure it." },
     ],
   },
   hadamard: {
-    title: "Give the coin two possibilities", place: "desk", objective: "Add the H gate, then run ten simulated tosses.",
+    title: "Give the coin two possibilities", place: "desk", objective: "Build the circuit with H and measurement, then run ten simulated tosses.",
     lines: [
-      { speaker: "ale", text: "All zeros! Measurement alone didn’t make it a fair coin." },
-      { speaker: "hacker", text: "The Hadamard gate, H, prepares a superposition. Measuring this state gives zero or one with equal probability in the ideal experiment." },
-      { speaker: "brayan", text: "Each shot starts over: prepare zero, apply H, measure. Let’s build that." },
+      { speaker: "ale", text: "Only zeros. Can you change the circuit before we measure?" },
+      { speaker: "hacker", text: "Build a new circuit on one qubit. You need both H and measurement; their order matters." },
     ],
   },
   experiment: {
     title: "Fair doesn’t mean alternating", place: "board", objective: "Compare larger batches at the whiteboard, then explain the results.",
     lines: [
-      { speaker: "ale", text: "The two counts don’t have to be exactly equal, even when both outcomes have a fifty percent chance." },
-      { speaker: "brayan", text: "Let’s try more shots. A shot is one fresh run of our circuit. Bigger batches usually bring the proportions closer to half." },
-      { speaker: "hacker", text: "The simulator samples these probabilities with software randomness. A fifty-fifty chart by itself can’t prove that the source is quantum." },
+      { speaker: "brayan", text: "One batch is small. What do you expect after 100 shots? Let’s compare with 1,000." },
+      { speaker: "hacker", text: "The simulator uses software randomness to sample the circuit’s probabilities. We are not running quantum hardware." },
     ],
   },
   table: {
