@@ -1,3 +1,5 @@
+"use client";
+import { t, useLocale } from "@/i18n";
 import clsx from "clsx";
 
 import type { Speaker } from "@/content/types";
@@ -41,6 +43,7 @@ export const SPEAKER_COLOR: Record<Speaker, string> = {
 };
 
 export function Portrait({ speaker, size = 64 }: { speaker: Speaker; size?: number }) {
+  useLocale((state) => state.locale);
   const scale = size / SHEET.tile;
 
   if (speaker === "system") {
@@ -72,7 +75,7 @@ export function Portrait({ speaker, size = 64 }: { speaker: Speaker; size?: numb
         imageRendering: "pixelated",
       }}
       role="img"
-      aria-label={SPEAKER_NAME[speaker]}
+      aria-label={t(SPEAKER_NAME[speaker])}
     />
   );
 }

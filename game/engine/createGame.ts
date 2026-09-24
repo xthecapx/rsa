@@ -84,9 +84,15 @@ export function createGame(container: HTMLElement): Promise<Engine> {
       scenes: { city: CityScene },
     });
 
-    await engine.start("city", { loader: createLoader() });
-    current = { engine, canvas };
-    return engine;
+    const live = { engine, canvas };
+    current = live;
+    try {
+      await engine.start("city", { loader: createLoader() });
+      return engine;
+    } catch (error) {
+      await teardown(live);
+      throw error;
+    }
   });
 }
 

@@ -1,18 +1,21 @@
 "use client";
+import { tOptional, localize, useLocale } from "@/i18n";
 
 import clsx from "clsx";
+import { LanguageSwitch } from "./LanguageSwitch";
 
 import { gameAudio, useAudio } from "@/game/audio";
 
 export function MuteButton({ className }: { className?: string }) {
+  useLocale((state) => state.locale);
   const muted = useAudio((s) => s.muted);
   const unlocked = useAudio((s) => s.unlocked);
 
   return (
-    <button
+    <div className="flex items-center gap-2"><LanguageSwitch /><button
       type="button"
-      aria-label={muted ? "Unmute sound" : "Mute sound"}
-      title={muted ? "Unmute" : "Mute"}
+      aria-label={tOptional(muted ? "Unmute sound" : "Mute sound")}
+      title={tOptional(muted ? "Unmute" : "Mute")}
       onClick={() => {
         if (!unlocked) {
           void gameAudio.unlock().then(() => gameAudio.setMuted(false));
@@ -25,7 +28,7 @@ export function MuteButton({ className }: { className?: string }) {
         className,
       )}
     >
-      {muted ? "Sound off" : "Sound on"}
-    </button>
+      {localize(muted ? "Sound off" : "Sound on")}
+    </button></div>
   );
 }

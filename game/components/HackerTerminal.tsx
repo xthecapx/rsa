@@ -1,4 +1,5 @@
 "use client";
+import { t, localize, useLocale } from "@/i18n";
 
 import { useEffect, useRef } from "react";
 import clsx from "clsx";
@@ -19,6 +20,7 @@ const TONE: Record<string, string> = {
  * page that scrolls as one piece, which is how the phone sheet reads it.
  */
 export function HackerTerminal({ flow = false }: { flow?: boolean }) {
+  useLocale((state) => state.locale);
   const terminal = useGame((s) => s.terminal);
   const busyLabel = useGame((s) => s.busyLabel);
   const error = useGame((s) => s.error);
@@ -38,14 +40,12 @@ export function HackerTerminal({ flow = false }: { flow?: boolean }) {
       )}
     >
       <div className="flex items-center justify-between border-b-2 border-stage-border px-3 py-2">
-        <span className="text-[10px] uppercase tracking-widest text-accent-teal">
-          tap0 &middot; live
-        </span>
-        {busyLabel && (
+        <span className="text-[10px] uppercase tracking-widest text-accent-teal">{t("tap0 · live")}</span>
+        {localize(busyLabel && (
           <span className="animate-pulse text-[10px] text-accent-amber">
-            {busyLabel}...
+            {localize(busyLabel)}...
           </span>
-        )}
+        ))}
       </div>
 
       <div
@@ -55,14 +55,14 @@ export function HackerTerminal({ flow = false }: { flow?: boolean }) {
         )}
       >
         {terminal.length === 0 && !busyLabel && (
-          <p className="text-stage-muted">Waiting for traffic.</p>
+          <p className="text-stage-muted">{t("Waiting for traffic.")}</p>
         )}
         {terminal.map((line, index) => (
           <p key={index} className={clsx("whitespace-pre-wrap", TONE[line.tone])}>
-            {line.text}
+            {localize(line.text)}
           </p>
         ))}
-        {error && <p className="text-actor-hacker">! {error}</p>}
+        {localize(error && <p className="text-actor-hacker">! {localize(error)}</p>)}
         <div ref={bottom} />
       </div>
     </div>

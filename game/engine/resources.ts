@@ -54,5 +54,9 @@ export function createLoader(): Loader {
   const loader = new Loader(Object.values(images));
   loader.suppressPlayButton = true;
   loader.backgroundColor = "#0b1f26";
+  // React owns the visible loader. Keep any canvas fallback on-brand too.
+  loader.logo = "/icons/icon-192.png";
+  loader.logoWidth = 96;
+  loader.logoHeight = 96;
   return loader;
 }

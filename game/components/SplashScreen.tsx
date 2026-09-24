@@ -1,7 +1,9 @@
 "use client";
+import { t, localize, useLocale } from "@/i18n";
 
 import { useEffect, useLayoutEffect, useState } from "react";
 import clsx from "clsx";
+import { LanguageSwitch } from "./LanguageSwitch";
 
 import { gameAudio, useAudio } from "@/game/audio";
 
@@ -15,6 +17,7 @@ type Phase = "loading" | "ready" | "leaving" | "gone";
  * underneath. Soft SPA remounts skip it once audio is already unlocked.
  */
 export function SplashScreen() {
+  useLocale((state) => state.locale);
   const ready = useAudio((s) => s.ready);
   const unlocked = useAudio((s) => s.unlocked);
   const [phase, setPhase] = useState<Phase>(() => (unlocked ? "gone" : "loading"));
@@ -74,7 +77,7 @@ export function SplashScreen() {
       )}
       role="dialog"
       aria-modal="true"
-      aria-label="Loading Man in the Middle"
+      aria-label={t("Loading Quantum Playground")}
     >
       <div
         aria-hidden
@@ -86,36 +89,30 @@ export function SplashScreen() {
       />
       <div aria-hidden className="scanline pointer-events-none absolute inset-0 opacity-40" />
 
+      <div className="absolute right-5 top-5 z-20"><LanguageSwitch /></div>
       <div className="relative z-10 flex w-full max-w-lg flex-col items-center px-6 text-center">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/icons/icon-192.png"
-          alt=""
+          alt={t("")}
           width={96}
           height={96}
           className="h-24 w-24 pixelated drop-shadow-[0_8px_24px_rgba(0,0,0,0.55)]"
           draggable={false}
         />
 
-        <p className="mt-6 text-[9px] uppercase tracking-[0.4em] text-accent-teal">
-          Progressive wiretap
-        </p>
-        <h1 className="mt-3 text-base leading-relaxed text-accent-amber sm:text-xl">
-          Man in the Middle
-        </h1>
+        <p className="mt-6 text-[9px] uppercase tracking-[0.4em] text-accent-teal">{t("Learn by playing")}</p>
+        <h1 className="mt-3 text-base leading-relaxed text-accent-amber sm:text-xl">{t("Quantum Playground")}</h1>
 
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/kenney/ui/divider_edges.png"
-          alt=""
+          alt={t("")}
           className="mt-5 h-3 w-48 pixelated opacity-80 sm:w-64"
           draggable={false}
         />
 
-        <p className="mt-5 max-w-sm text-[10px] leading-relaxed text-stage-muted sm:text-[11px]">
-          One street. One cable. Four schemes between Ale and Brayan —
-          and you in the junction box.
-        </p>
+        <p className="mt-5 max-w-sm text-[10px] leading-relaxed text-stage-muted sm:text-[11px]">{t("From a coin toss at home to secrets on the wire. Build circuits. Run experiments. Solve the problem.")}</p>
 
         <div
           className="relative mt-8 w-full max-w-xs px-4 py-3"
@@ -138,7 +135,7 @@ export function SplashScreen() {
             />
           </div>
           <p className="mt-2 text-[9px] tracking-widest text-stage-muted">
-            {phase === "ready" ? "READY" : `LOADING ${pct}%`}
+            {localize(phase === "ready" ? "READY" : `LOADING ${pct}%`)}
           </p>
         </div>
 
@@ -158,27 +155,22 @@ export function SplashScreen() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/assets/kenney/ui/icon_play.png"
-              alt=""
+              alt={t("")}
               className="h-4 w-4 pixelated"
               draggable={false}
             />
-            {phase === "ready" ? "Tap to enter" : "Warming up…"}
+            {localize(phase === "ready" ? "Tap to enter" : "Warming up…")}
           </span>
         </button>
 
-        <p className="mt-8 text-[8px] leading-relaxed text-stage-muted/80">
-          UI &amp; audio by{" "}
+        <p className="mt-8 text-[8px] leading-relaxed text-stage-muted/80">{t("UI & audio by")}{localize(" ")}
           <a
             href="https://kenney.nl"
             className="text-accent-teal hover:underline"
             target="_blank"
             rel="noreferrer"
             onClick={(e) => e.stopPropagation()}
-          >
-            Kenney
-          </a>{" "}
-          (CC0)
-        </p>
+          >{t("Kenney")}</a>{localize(" ")}{t("(CC0)")}</p>
       </div>
     </div>
   );

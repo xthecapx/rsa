@@ -1,4 +1,5 @@
 "use client";
+import { t, useLocale } from "@/i18n";
 
 import { useEffect, useState } from "react";
 
@@ -19,6 +20,7 @@ function isStandaloneDisplay(): boolean {
  * the regular browser tab, not in the installed app.
  */
 export function OrientationNotice() {
+  useLocale((state) => state.locale);
   const [portrait, setPortrait] = useState(false);
   const [standalone, setStandalone] = useState(false);
   const [dismissed, setDismissed] = useState(false);
@@ -54,11 +56,8 @@ export function OrientationNotice() {
       </div>
 
       <div className="space-y-3">
-        <h2 className="text-[13px] text-accent-amber">Turn your phone sideways</h2>
-        <p className="text-[11px] leading-relaxed text-stage-muted">
-          The street is wider than it is tall. Landscape is required so you can
-          see Ale, Brayan and the junction box at once.
-        </p>
+        <h2 className="text-[13px] text-accent-amber">{t("Turn your phone sideways")}</h2>
+        <p className="text-[11px] leading-relaxed text-stage-muted">{t("Landscape gives you more room to walk, talk, and see the whole scene.")}</p>
       </div>
 
       {!standalone && (
@@ -66,9 +65,7 @@ export function OrientationNotice() {
           type="button"
           onClick={() => setDismissed(true)}
           className="border-2 border-stage-border px-4 py-2 text-[10px] uppercase tracking-widest text-stage-muted"
-        >
-          Play in portrait anyway
-        </button>
+        >{t("Play in portrait anyway")}</button>
       )}
     </div>
   );

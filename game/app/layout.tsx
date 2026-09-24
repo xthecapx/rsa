@@ -4,6 +4,7 @@ import { Press_Start_2P, DM_Sans } from "next/font/google";
 import { PwaBootstrap } from "@/components/PwaBootstrap";
 import { SplashScreen } from "@/components/SplashScreen";
 import "./globals.css";
+import { LanguageProvider } from "@/components/LanguageProvider";
 
 const pressStart = Press_Start_2P({
   subsets: ["latin"],
@@ -19,14 +20,14 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Man in the Middle",
+  title: "Quantum Playground",
   description:
-    "A pixel-art hacking game about breaking Ale and Brayan's messages, from plaintext to Shor's algorithm.",
-  applicationName: "Man in the Middle",
+    "Learn quantum computing through playable stories, from your first quantum coin to breaking toy RSA.",
+  applicationName: "Quantum Playground",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "MITM",
+    title: "Quantum Playground",
   },
   formatDetection: {
     telephone: false,
@@ -75,9 +76,9 @@ export default function RootLayout({
             background: "#0b1f26",
           }}
         />
-        <PwaBootstrap />
+        <LanguageProvider><PwaBootstrap />
         <SplashScreen />
-        {children}
+        {children}</LanguageProvider>
       </body>
     </html>
   );

@@ -1,4 +1,94 @@
-# Man in the Middle
+# Quantum Playground
+
+The home screen is a scenario catalog. Players can start with **Who Goes
+First?** (`/scenarios/coin`), then continue to **Breaking RSA**
+(`/scenarios/rsa`). Both are available immediately. The original `/play/1`
+through `/play/4` links still work; new RSA links use
+`/scenarios/rsa/play/[act]`.
+
+## Who Goes First?
+
+A beginner story set inside Ale’s house on game night. Walk with the arrow keys or WASD, tap the floor to walk around furniture, on touch screens. The same character and four-direction
+walk animations appear in RSA. Approach the highlighted table, laptop desk, or
+whiteboard, then press Space or tap Talk. Conversations unlock each experiment:
+
+1. Run Python `random.Random(42)` for five coin tosses.
+2. Let Brayan replay the seed and lock his prediction for toss six.
+3. Reveal the sixth toss and compare it with the prediction.
+4. Simulate measuring a freshly prepared zero without a gate.
+5. Add H and run the one-qubit coin circuit.
+6. Compare 10, 100, and 1,000 shots and answer a probability question.
+7. Agree that 0 means Ale and 1 means Brayan, then use one simulated shot.
+
+`POST /api/coin/classical` creates a private Python PRNG per request and
+replays the requested number of calls. `POST /api/coin/simulate` runs an
+actual `QuantumCircuit(1, 1)` through Qiskit Aer on the existing quantum
+worker. The circuit resets to its initial state for every shot. Requests are
+bounded to 1,024 shots. **The entire coin scenario is simulator-only:** it
+does not read or submit IBM jobs. Dialogue distinguishes classical
+simulation from physical quantum randomness; statistical balance is not
+presented as proof of a quantum source.
+
+The full coin session, including the final decision, is saved in this
+browser. Refresh resumes it without another toss. “Replay the whole lesson”
+starts a new session. Scenario completion is saved separately for the hub.
+No account or database is needed.
+
+## Shared game experience
+
+Both worlds use `GameShell`: a full-height play area, a compact header, the same
+laptop button, and a collapsible Objectives panel. The panel starts closed to give
+the world the available width. On smaller screens it opens as a sheet.
+`DialoguePresentation` shares the portrait layout and readable dialogue styling;
+coin dialogue now reveals progressively, with Space or a tap to reveal/continue.
+Movement pauses during conversations, and finishing the conversation opens the
+laptop when an experiment is ready. Touch players tap the world to walk and use
+the same Talk control as RSA.
+
+Scene loading also belongs to the shared shell: `SceneLoading` shows Quantum
+Playground branding until RSA finishes engine/story initialization or the coin
+scene has hydrated its save and decoded its artwork. Gameplay controls stay
+inactive while loading. Failed loads show a bilingual retry action; the coin
+artwork request also has a timeout. Excalibur's canvas remains hidden during boot,
+and its fallback logo uses the game's icon.
+
+## Shared laptop and languages
+
+Both scenarios use `components/LaptopShell.tsx`: the same screen, memory strip,
+experiment area, close button, language switch, and Escape/Tab controls. Closing
+the laptop preserves its contents. Scenario-specific tools stay inside the shell.
+
+Choose **EN / ES** on any page or inside the laptop. English and Spanish cover
+scenario cards, dialogue, choices, objectives, tool instructions, and result labels.
+The preference persists independently of game progress. Switching language keeps
+the current step, seeded sequence, circuit, and results. Code, formulas, API values,
+and RSA puzzle words retain their original spelling; Spanish instructions explain
+that the RSA plaintext is in English.
+
+`i18n/es.json` maps source messages to Spanish. Templates preserve dynamic values
+such as ciphertext and measurement counts. Translate display text only, never
+state IDs, answers, or request data. Add translations when adding scenario prose.
+Unknown diagnostic messages from the backend fall back to their original text.
+
+Run `npm test` for translation coverage and placeholder checks, and `npm run build`
+for the production check. For a manual smoke test, run the seeded coin in Spanish,
+close/reopen the laptop, switch to English, and confirm the same results remain.
+Check the same controls in an RSA mission, including keyboard focus and Escape.
+
+## Adding scenarios
+
+- `content/scenarios.ts`: catalog order, routes, learning goals, and mission IDs.
+- `content/coin.ts`: the coin story, dialogue, and destination for each step.
+- `components/CoinScenario.tsx`: the lesson workbench and progression.
+- `components/CoinHouse.tsx`: the walkable house, input, animation, and proximity interaction.
+- `game/coinRoom.ts`: floor collision bounds, movement, and tap-to-walk routing.
+- `game/progress.ts`: scenario-scoped completion, shared with RSA.
+
+Add a catalog entry and its `/scenarios/<id>` route for a new scenario.
+Each scenario owns its mechanics and world; the existing RSA runner retains
+its four act IDs instead of forcing unrelated games into those IDs.
+
+## Breaking RSA: Man in the Middle
 
 A top-down pixel game about eavesdropping. Ale works in the building on the
 left, Brayan works in the building on the right, and they are seeing each
@@ -25,8 +115,9 @@ All four acts run the same route, and only the crypto changes:
    raises suspicion and sends you back to the workbench rather than ending the
    act.
 
-The right-hand column is the job sheet, the workbench, and the raw backend
-log, all three visible for the whole act.
+Open Objectives to show the job sheet and backend log beside the world.
+Decoding tools open in the shared laptop. The objectives panel starts closed
+to leave more room for gameplay.
 
 ## Running it
 

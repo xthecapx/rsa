@@ -1,4 +1,5 @@
 "use client";
+import { t, useLocale } from "@/i18n";
 
 import { useEffect } from "react";
 
@@ -77,6 +78,7 @@ function watchForUpdates(registration: ServiceWorkerRegistration): void {
  * drops every previous mitm-shell-* cache on activate.
  */
 export function PwaBootstrap() {
+  useLocale((state) => state.locale);
   useEffect(() => {
     if (!("serviceWorker" in navigator)) return;
 

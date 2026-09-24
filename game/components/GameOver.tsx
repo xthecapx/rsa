@@ -1,4 +1,5 @@
 "use client";
+import { t, localize, useLocale } from "@/i18n";
 
 import { useEffect, useRef } from "react";
 import Link from "next/link";
@@ -7,12 +8,20 @@ import type { ActNumber } from "@/content/types";
 import { getAct } from "@/content";
 import { gameAudio } from "@/game/audio";
 import { useGame } from "@/game/state";
+import { useProgress } from "@/game/progress";
+import { ACT_NUMBERS } from "@/content";
 
 /** Shown when the act ends, either because you won it or because they saw you. */
 export function GameOver({ act }: { act: ActNumber }) {
+  useLocale((state) => state.locale);
   const phase = useGame((s) => s.phase);
   const suspicion = useGame((s) => s.suspicion);
   const played = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (phase !== "won") return;
+    void Promise.resolve(useProgress.persist.rehydrate()).then(() => useProgress.getState().complete("rsa", String(act)));
+  }, [phase, act]);
 
   useEffect(() => {
     if (phase !== "won" && phase !== "caught") return;
@@ -24,8 +33,8 @@ export function GameOver({ act }: { act: ActNumber }) {
   if (phase !== "won" && phase !== "caught") return null;
 
   const caught = phase === "caught";
-  const next = (act + 1) as ActNumber;
-  const hasNext = next <= 4;
+  const next = ACT_NUMBERS[ACT_NUMBERS.indexOf(act) + 1];
+  const hasNext = next !== undefined;
   const script = getAct(act);
 
   return (
@@ -34,13 +43,13 @@ export function GameOver({ act }: { act: ActNumber }) {
         <h2
           className={`text-sm ${caught ? "text-actor-hacker" : "text-actor-brayan"}`}
         >
-          {caught ? "They found you" : `Act ${act} clear`}
+          {localize(caught ? "They found you" : `Act ${act} clear`)}
         </h2>
 
         <p className="mt-3 text-[11px] leading-relaxed text-stage-muted">
-          {caught
+          {localize(caught
             ? "The suspicion meter filled. Everything you learned this act was correct; the way you went about it was not."
-            : `${script.title} - ${script.subtitle}. You finished on ${suspicion}% suspicion.`}
+            : `${t(script.title)} - ${t(script.subtitle)}. You finished on ${suspicion}% suspicion.`)}
         </p>
 
         <div className="mt-6 flex flex-col gap-2">
@@ -52,32 +61,28 @@ export function GameOver({ act }: { act: ActNumber }) {
             }}
             className="btn-ghost text-[11px]"
           >
-            {caught ? "Try this act again" : "Replay this act"}
+            {localize(caught ? "Try this act again" : "Replay this act")}
           </button>
 
           {!caught && hasNext && (
             <Link
-              href={`/play/${next}`}
+              href={`/scenarios/rsa/play/${next}`}
               onClick={() => gameAudio.playSfx("confirm")}
               className="btn-primary text-[11px]"
-            >
-              Continue to Act {next}
+            >{t("Continue to Act ")}{next}
             </Link>
           )}
 
           {!caught && !hasNext && (
-            <p className="text-[11px] text-accent-amber">
-              That was the last act. You broke every scheme on the wire.
-            </p>
+            <p className="text-[11px] text-accent-amber">{t("Breaking RSA complete. You finished all four missions.")}</p>
           )}
 
           <Link
-            href="/"
+            href="/scenarios/rsa"
             onClick={() => gameAudio.playSfx("click")}
             className="btn-ghost text-[11px]"
-          >
-            Back to the acts
-          </Link>
+          >{t("Back to RSA missions")}</Link>
+          <Link href="/" className="btn-ghost text-[11px]">{t("All scenarios")}</Link>
         </div>
       </div>
     </div>

@@ -1,99 +1,47 @@
 "use client";
+import { t, localize, useLocale } from "@/i18n";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-
-import { ACT_NUMBERS, getAct } from "@/content";
+import { SCENARIOS } from "@/content/scenarios";
+import { useProgress } from "@/game/progress";
 import { MuteButton } from "@/components/MuteButton";
 import { gameAudio } from "@/game/audio";
 
-export default function TitlePage() {
+export default function ScenarioPage() {
+  useLocale((state) => state.locale);
+  const completed = useProgress((s) => s.completed);
+  const [ready, setReady] = useState(false);
   useEffect(() => {
     void gameAudio.playMusic("title");
+    void Promise.resolve(useProgress.persist.rehydrate()).then(() => setReady(true));
   }, []);
-
-  return (
-    <main className="h-screen w-screen overflow-y-auto bg-stage-bg">
-      <div className="mx-auto max-w-3xl px-6 py-14">
-        <div className="flex items-start justify-between gap-4">
-          <p className="text-[10px] uppercase tracking-[0.35em] text-accent-teal">
-            One street, one cable, one eavesdropper
-          </p>
-          <MuteButton className="shrink-0" />
-        </div>
-        <h1 className="mt-4 text-2xl leading-relaxed text-accent-amber">
-          Man in the Middle
-        </h1>
-        <img
-          src="/assets/kenney/ui/divider_edges.png"
-          alt=""
-          className="mt-4 h-3 w-40 pixelated opacity-70"
-          draggable={false}
-        />
-        <p className="mt-5 max-w-xl text-[12px] leading-relaxed text-stage-muted">
-          Ale works in the building on the left. Brayan works in the building on
-          the right. You are parked between them with a laptop and a junction
-          box, and over four acts they try harder and harder to keep you out.
-        </p>
-        <p className="mt-3 max-w-xl text-[12px] leading-relaxed text-stage-muted">
-          Every attack you run here calls the real backend: real Caesar brute
-          force, real RSA arithmetic, and a real Shor circuit on a simulator or
-          on IBM hardware. Choose badly and Ale and Brayan start to notice.
-        </p>
-
-        <ul className="mt-10 space-y-3">
-          {ACT_NUMBERS.map((act) => {
-            const script = getAct(act);
-            return (
-              <li key={act}>
-                <Link
-                  href={`/play/${act}`}
-                  onClick={() => gameAudio.playSfx("select")}
-                  onMouseEnter={() => gameAudio.playSfx("rollover")}
-                  className="panel group flex items-start gap-4 p-4 transition-colors hover:border-accent-amber"
-                >
-                  <span className="mt-0.5 shrink-0 border-2 border-stage-border px-2.5 py-1 text-[11px] text-accent-amber group-hover:border-accent-amber">
-                    {act}
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block text-[12px] text-[#e8f4f8]">
-                      {script.title}
-                      <span className="ml-2 text-[10px] text-stage-muted">
-                        {script.subtitle}
-                      </span>
-                    </span>
-                    <span className="mt-1.5 block text-[11px] leading-relaxed text-stage-muted">
-                      {script.brief}
-                    </span>
-                  </span>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-
-        <p className="mt-10 text-[10px] leading-relaxed text-stage-muted">
-          City tiles, character busts, UI, music and the app icon by{" "}
-          <a
-            href="https://kenney.nl"
-            className="text-accent-teal hover:underline"
-            target="_blank"
-            rel="noreferrer"
-          >
-            Kenney
-          </a>{" "}
-          (CC0). Rendered with{" "}
-          <a
-            href="https://excaliburjs.com/"
-            className="text-accent-teal hover:underline"
-            target="_blank"
-            rel="noreferrer"
-          >
-            Excalibur.js
-          </a>
-          .
-        </p>
+  return <main className="scenario-page">
+    <div className="mx-auto max-w-5xl px-6 py-12 sm:py-20">
+      <div className="flex items-center justify-between"><p className="coin-eyebrow">{t("LEARN BY PLAYING")}</p><MuteButton /></div>
+      <h1 className="mt-5">{t("Quantum Playground")}</h1>
+      <p className="mt-5 max-w-2xl text-xl text-stage-muted">{t("Small experiments. Real questions. Your first steps into quantum computing.")}</p>
+      <div className="mt-8 flex flex-wrap gap-3">
+        <Link className="btn-primary" href={ready && completed.coin?.includes("coin") ? "/scenarios/rsa" : "/scenarios/coin"}>
+          {localize(ready && completed.coin?.includes("coin") ? "Continue to Breaking RSA →" : "Start with a quantum coin →")}
+        </Link>
+        <span className="self-center text-sm text-stage-muted">{t("No quantum experience needed")}</span>
       </div>
-    </main>
-  );
+      <div className="mt-12 grid gap-5 md:grid-cols-2">
+        {SCENARIOS.map((scenario) => {
+          const count = ready ? (completed[scenario.id]?.length ?? 0) : 0;
+          return <Link key={scenario.id} href={scenario.href} className="scenario-card" onClick={() => gameAudio.playSfx("select")}>
+            <div className="flex items-center justify-between"><span className="scenario-number">{localize(scenario.number)}</span><span className="coin-badge">{localize(scenario.difficulty)}</span></div>
+            <div className={`scenario-art ${scenario.id}`} aria-hidden>{scenario.id === "coin" ? <><span className="coin-token">{t("H")}<small>0</small></span><span className="text-stage-muted">{t("— H —")}</span><span className="coin-token tails">{t("T")}<small>1</small></span></> : <><span>15</span><span className="text-stage-muted">→</span><span>3 × 5</span></>}</div>
+            <p className="coin-eyebrow">{localize(scenario.setting)}</p><h2 className="mt-3">{localize(scenario.title)}</h2>
+            <p className="mt-4 text-stage-muted">{localize(scenario.description)}</p>
+            <p className="mt-5 text-sm text-accent-teal">{localize(scenario.lessons)}</p>
+            <div className="mt-6 flex items-center justify-between border-t border-stage-border pt-4 text-sm"><span>{localize(count === scenario.missions.length ? "✓ Completed" : count ? `${count}/${scenario.missions.length} missions complete` : "Ready to play")}</span><span>{t("Explore →")}</span></div>
+          </Link>;
+        })}
+      </div>
+      <p className="mt-10 text-sm text-stage-muted">{t("Pick your own path. Both scenarios are available from the start. Progress is saved in this browser.")}</p>
+      <p className="mt-4 text-xs text-stage-muted">{t("Character art and audio by ")}<a href="https://kenney.nl" className="text-accent-teal">{t("Kenney")}</a>{t(" (CC0).")}</p>
+    </div>
+  </main>;
 }

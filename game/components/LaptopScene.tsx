@@ -1,4 +1,5 @@
 "use client";
+import { t, tOptional, localize, useLocale } from "@/i18n";
 
 import { useEffect, useState, type ReactNode } from "react";
 import clsx from "clsx";
@@ -9,22 +10,17 @@ import { gameAudio } from "@/game/audio";
 import { resolvePanel } from "@/game/dialog";
 import { runApiCall } from "@/game/effects";
 import { charOf } from "@/game/secret";
-import { bandFor } from "@/game/suspicion";
 import { useGame } from "@/game/state";
 import { api } from "@/lib/api";
 import { bus } from "@/engine/bus";
-
-const BAR: Record<string, string> = {
-  calm: "bg-suspicion-calm",
-  uneasy: "bg-suspicion-uneasy",
-  alarmed: "bg-suspicion-alarmed",
-};
+import { LaptopShell } from "./LaptopShell";
 
 /**
  * Full-screen laptop: bezel + CRT screen. Decode work happens here one step
  * at a time; the street stays underneath with input locked while the lid is up.
  */
 export function LaptopScene({ act }: { act: ActNumber }) {
+  useLocale((state) => state.locale);
   const laptopOpen = useGame((s) => s.laptopOpen);
   const setLaptopOpen = useGame((s) => s.setLaptopOpen);
   const phase = useGame((s) => s.phase);
@@ -48,10 +44,6 @@ export function LaptopScene({ act }: { act: ActNumber }) {
     };
   }, [laptopOpen]);
 
-  if (!laptopOpen) return null;
-
-  const band = bandFor(suspicion);
-
   function close() {
     gameAudio.playSfx("switch");
     setLaptopOpen(false);
@@ -65,116 +57,23 @@ export function LaptopScene({ act }: { act: ActNumber }) {
   }
 
   return (
-    <div className="absolute inset-0 z-40 flex items-center justify-center bg-[#050e12]/92 p-2 sm:p-4">
-      <div
-        className="flex max-h-full w-full max-w-3xl flex-col"
-        role="dialog"
-        aria-label="th3c4p"
-      >
-        {/* Bezel */}
-        <div className="flex min-h-0 flex-1 flex-col rounded-t-lg border-2 border-[#3d4a52] bg-[#8b949a] p-2 shadow-[0_20px_60px_rgba(0,0,0,0.65)] sm:rounded-t-xl sm:p-3">
-          <div className="mb-1.5 flex items-center justify-center gap-1.5 sm:mb-2">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#2a3238] sm:h-2 sm:w-2" />
-            <span className="font-mono text-[8px] tracking-[0.18em] text-[#2a3238] sm:text-[9px]">
-              th3c4p
-            </span>
-          </div>
-
-          {/* CRT screen */}
-          <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-sm border-2 border-[#1a2228] bg-[#0a1a20]">
-            <div className="scanline pointer-events-none absolute inset-0 z-10 opacity-40" />
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-0 z-10 opacity-[0.07]"
-              style={{
-                background:
-                  "radial-gradient(ellipse at center, transparent 50%, #000 100%)",
-              }}
-            />
-
-            <header className="relative z-20 flex shrink-0 items-center justify-between gap-2 border-b border-[#1e4450] bg-[#0d222a]/90 px-2 py-1.5 sm:px-3 sm:py-2">
-              <div className="min-w-0">
-                <p className="truncate text-[9px] uppercase tracking-widest text-accent-teal sm:text-[10px]">
-                  th3c4p · act {act}
-                </p>
-                {busyLabel && (
-                  <p className="truncate text-[8px] text-accent-amber sm:text-[9px]">
-                    {busyLabel}…
-                  </p>
-                )}
-              </div>
-              <div className="flex shrink-0 items-center gap-2">
-                <div className="w-20 sm:w-28">
-                  <div className="mb-0.5 flex justify-between text-[7px] uppercase tracking-widest text-stage-muted sm:text-[8px]">
-                    <span>Sus</span>
-                    <span>{suspicion}%</span>
-                  </div>
-                  <div className="h-1.5 border border-stage-border bg-black/40 sm:h-2">
-                    <div
-                      className={clsx("h-full transition-[width] duration-500", BAR[band])}
-                      style={{ width: `${suspicion}%` }}
-                    />
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={close}
-                  className="border border-stage-border px-2 py-1 text-[8px] uppercase tracking-widest text-stage-muted hover:border-accent-teal hover:text-accent-teal sm:text-[9px]"
-                >
-                  Close
-                </button>
-              </div>
-            </header>
-
-            <div className="relative z-20 flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain p-2 sm:gap-3 sm:p-3">
-              <MemoryRail />
-              <Wizard act={act} armed={armed} />
-            </div>
-
-            <footer className="relative z-20 flex shrink-0 flex-col gap-2 border-t border-[#1e4450] bg-[#0d222a]/90 p-2 sm:flex-row sm:items-center sm:p-3">
-              <p className="min-w-0 flex-1 text-[8px] leading-relaxed text-stage-muted sm:text-[9px]">
-                {armed
-                  ? recovered
-                    ? "Plaintext ready. Hand it to the client on the street."
-                    : "Work the steps. Results land in memory."
-                  : capture
-                    ? "Lid open for notes — tools unlock when the story needs the workbench."
-                    : "No capture yet. Listen on the street first."}
-              </p>
-              <button
-                type="button"
-                disabled={!armed || !recovered}
-                onClick={finish}
-                className={clsx(
-                  "shrink-0 border-2 px-3 py-2 text-[9px] uppercase tracking-widest sm:text-[10px]",
-                  armed && recovered
-                    ? "border-accent-amber text-accent-amber hover:bg-accent-amber/15"
-                    : "cursor-not-allowed border-stage-border text-stage-muted",
-                )}
-              >
-                I have it
-              </button>
-            </footer>
-          </div>
-        </div>
-
-        {/* Keyboard deck */}
-        <div className="rounded-b-lg border-2 border-t-0 border-[#3d4a52] bg-[#6d757c] px-3 py-2 sm:rounded-b-xl sm:px-6 sm:py-3">
-          <div className="mx-auto h-1.5 max-w-[8rem] rounded-full bg-[#2a3238]/50 sm:h-2" />
-        </div>
-
-        {/* Recent log peek */}
-        {terminal.length > 0 && (
-          <p className="mt-1 truncate px-1 text-center text-[7px] text-stage-muted sm:text-[8px]">
-            log: {terminal[terminal.length - 1]?.text}
-          </p>
-        )}
-      </div>
-    </div>
+    <LaptopShell open={laptopOpen} title={tOptional(`RSA · Act ${act}`)} onClose={close}
+      status={busyLabel || `Suspicion: ${suspicion}%`}
+      memory={<MemoryRail />}
+      footer={<>
+        <p>{localize(armed ? recovered ? "Plaintext ready. Hand it to the client on the street." : "Work the steps. Results land in memory."
+          : capture ? "Lid open for notes — tools unlock when the story needs the workbench." : "No capture yet. Listen on the street first.")}</p>
+        <button className="btn-primary" disabled={!armed || !recovered} onClick={finish}>{t("I have it")}</button>
+      </>}
+    >
+      <Wizard act={act} armed={armed} />
+      {terminal.length > 0 && <p className="mt-4 text-xs text-stage-muted">{localize(terminal[terminal.length - 1]?.text)}</p>}
+    </LaptopShell>
   );
 }
 
 function MemoryRail() {
+  useLocale((state) => state.locale);
   const capture = useGame((s) => s.capture);
   const recovered = useGame((s) => s.vars.recovered);
   const vars = useGame((s) => s.vars);
@@ -185,24 +84,24 @@ function MemoryRail() {
 
   return (
     <div className="grid shrink-0 gap-2 sm:grid-cols-3">
-      <MemorySlot label="Wire" empty="No capture">
+      <MemorySlot label={t("Wire")} empty={t("No capture")}>
         {capture ? (
           <>
-            <p className="text-[7px] text-stage-muted sm:text-[8px]">{capture.scheme}</p>
+            <p className="text-[7px] text-stage-muted sm:text-[8px]">{localize(capture.scheme)}</p>
             <p className="break-all font-mono text-[10px] text-accent-amber sm:text-[11px]">
               {capture.payload}
             </p>
           </>
         ) : null}
       </MemorySlot>
-      <MemorySlot label="Notes" empty="Run a tool">
+      <MemorySlot label={t("Notes")} empty={t("Run a tool")}>
         {noteBits.length ? (
           <p className="font-mono text-[9px] leading-relaxed text-[#9fc4d0] sm:text-[10px]">
-            {noteBits.join(" · ")}
+            {localize(noteBits.join(" · "))}
           </p>
         ) : null}
       </MemorySlot>
-      <MemorySlot label="Plaintext" empty="Not recovered">
+      <MemorySlot label={t("Plaintext")} empty={t("Not recovered")}>
         {recovered ? (
           <p className="break-all font-mono text-[12px] text-actor-brayan sm:text-[14px]">
             {recovered}
@@ -222,25 +121,25 @@ function MemorySlot({
   empty: string;
   children?: ReactNode;
 }) {
+  useLocale((state) => state.locale);
   return (
     <div className="border border-[#1e4450] bg-black/25 px-2 py-1.5">
       <p className="mb-1 text-[7px] uppercase tracking-widest text-accent-teal sm:text-[8px]">
-        {label}
+        {localize(label)}
       </p>
-      {children ?? (
-        <p className="text-[8px] text-stage-muted sm:text-[9px]">{empty}</p>
-      )}
+      {localize(children ?? (
+        <p className="text-[8px] text-stage-muted sm:text-[9px]">{localize(empty)}</p>
+      ))}
     </div>
   );
 }
 
 function Wizard({ act, armed }: { act: ActNumber; armed: boolean }) {
+  useLocale((state) => state.locale);
   const capture = useGame((s) => s.capture);
   if (!capture) {
     return (
-      <div className="border border-dashed border-stage-border px-3 py-6 text-center text-[10px] text-stage-muted">
-        Waiting for a packet on the wire.
-      </div>
+      <div className="border border-dashed border-stage-border px-3 py-6 text-center text-[10px] text-stage-muted">{t("Waiting for a packet on the wire.")}</div>
     );
   }
   if (act === 1) return <MappingWizard armed={armed} />;
@@ -248,7 +147,7 @@ function Wizard({ act, armed }: { act: ActNumber; armed: boolean }) {
   if (act === 3) return <RsaWizard armed={armed} />;
   return (
     <div className={clsx(!armed && "pointer-events-none opacity-50")}>
-      <StepHeader step={1} total={1} title="Quantum uplink" />
+      <StepHeader step={1} total={1} title={t("Quantum uplink")} />
       <QuantumUplink disabled={!armed} />
     </div>
   );
@@ -263,13 +162,13 @@ function StepHeader({
   total: number;
   title: string;
 }) {
+  useLocale((state) => state.locale);
   return (
     <div className="mb-2 flex items-baseline justify-between gap-2">
       <h2 className="text-[10px] uppercase tracking-widest text-[#e8f4f8] sm:text-[11px]">
-        {title}
+        {localize(title)}
       </h2>
-      <span className="text-[8px] text-stage-muted sm:text-[9px]">
-        Step {step}/{total}
+      <span className="text-[8px] text-stage-muted sm:text-[9px]">{t("Step ")}{step}/{total}
       </span>
     </div>
   );
@@ -286,6 +185,7 @@ function StepButton({
   disabled?: boolean;
   onClick: () => void;
 }) {
+  useLocale((state) => state.locale);
   return (
     <button
       type="button"
@@ -301,12 +201,13 @@ function StepButton({
           : "border-accent-teal/60 text-[#cfe6ee] hover:border-accent-teal hover:bg-accent-teal/10",
       )}
     >
-      {busy ? `${label}…` : label}
+      {busy ? `${t(label)}…` : t(label)}
     </button>
   );
 }
 
 function MappingWizard({ armed }: { armed: boolean }) {
+  useLocale((state) => state.locale);
   const values = useGame((s) => s.vars.values);
   const recovered = useGame((s) => s.vars.recovered);
   const setVars = useGame((s) => s.setVars);
@@ -354,13 +255,10 @@ function MappingWizard({ armed }: { armed: boolean }) {
     <div className="space-y-3">
       {step === 1 && (
         <>
-          <StepHeader step={1} total={3} title="Fetch the alphabet table" />
-          <p className="text-[9px] leading-relaxed text-stage-muted sm:text-[10px]">
-            The wire carries numbers. Pull A=1 … Z=26 from the backend, then map
-            the payload.
-          </p>
+          <StepHeader step={1} total={3} title={t("Fetch the alphabet table")} />
+          <p className="text-[9px] leading-relaxed text-stage-muted sm:text-[10px]">{t("The wire carries numbers. Pull A=1 … Z=26 from the backend, then map the payload.")}</p>
           <StepButton
-            label="Fetch alphabet table"
+            label={t("Fetch alphabet table")}
             busy={busy}
             disabled={!armed}
             onClick={() => void loadTable()}
@@ -369,7 +267,7 @@ function MappingWizard({ armed }: { armed: boolean }) {
       )}
       {step >= 2 && (
         <>
-          <StepHeader step={2} total={3} title="Apply the mapping" />
+          <StepHeader step={2} total={3} title={t("Apply the mapping")} />
           <div className="grid grid-cols-6 gap-x-2 gap-y-0.5 border border-stage-border px-2 py-1.5 font-mono text-[8px] text-stage-muted sm:text-[9px]">
             {table.map((row) => (
               <span key={row.char}>
@@ -379,21 +277,22 @@ function MappingWizard({ armed }: { armed: boolean }) {
           </div>
           {!recovered && (
             <StepButton
-              label="Run payload through the table"
+              label={t("Run payload through the table")}
               disabled={!armed}
               onClick={applyMapping}
             />
           )}
         </>
       )}
-      {recovered && (
-        <StepHeader step={3} total={3} title="Plaintext recovered" />
-      )}
+      {localize(recovered && (
+        <StepHeader step={3} total={3} title={t("Plaintext recovered")} />
+      ))}
     </div>
   );
 }
 
 function CaesarWizard({ armed }: { armed: boolean }) {
+  useLocale((state) => state.locale);
   const cipherText = useGame((s) => s.vars.cipherText);
   const recovered = useGame((s) => s.vars.recovered);
   const setVars = useGame((s) => s.setVars);
@@ -441,12 +340,10 @@ function CaesarWizard({ armed }: { armed: boolean }) {
     <div className="space-y-3">
       {step === 1 && (
         <>
-          <StepHeader step={1} total={3} title="Brute-force the shift" />
-          <p className="text-[9px] leading-relaxed text-stage-muted sm:text-[10px]">
-            Only twenty-five keys. Ask the backend for every candidate word.
-          </p>
+          <StepHeader step={1} total={3} title={t("Brute-force the shift")} />
+          <p className="text-[9px] leading-relaxed text-stage-muted sm:text-[10px]">{t("Only twenty-five keys. Ask the backend for every candidate word.")}</p>
           <StepButton
-            label="Try all 25 shifts"
+            label={t("Try all 25 shifts")}
             busy={busy}
             disabled={!armed}
             onClick={() => void bruteForce()}
@@ -455,10 +352,8 @@ function CaesarWizard({ armed }: { armed: boolean }) {
       )}
       {step === 2 && (
         <>
-          <StepHeader step={2} total={3} title="Pick the English word" />
-          <p className="text-[9px] leading-relaxed text-accent-amber sm:text-[10px]">
-            Which line reads like a real word? Tap it to lock plaintext.
-          </p>
+          <StepHeader step={2} total={3} title={t("Pick the English word")} />
+          <p className="text-[9px] leading-relaxed text-accent-amber sm:text-[10px]">{t("Which line reads like a real word? Tap it to lock plaintext.")}</p>
           <ul className="max-h-[40dvh] space-y-0.5 overflow-y-auto border border-stage-border px-1 py-1 font-mono text-[10px] sm:max-h-64 sm:text-[11px]">
             {candidates.map((row) => (
               <li key={row.shift}>
@@ -468,8 +363,7 @@ function CaesarWizard({ armed }: { armed: boolean }) {
                   onClick={() => pick(row)}
                   className="flex w-full gap-3 px-2 py-1.5 text-left text-[#cfe6ee] hover:bg-accent-amber/20 hover:text-white"
                 >
-                  <span className="text-stage-muted">
-                    k={String(row.shift).padStart(2, " ")}
+                  <span className="text-stage-muted">{t("k=")}{localize(String(row.shift).padStart(2, " "))}
                   </span>
                   <span>{row.word}</span>
                 </button>
@@ -480,10 +374,8 @@ function CaesarWizard({ armed }: { armed: boolean }) {
       )}
       {step === 3 && (
         <>
-          <StepHeader step={3} total={3} title="Plaintext locked" />
-          <p className="text-[9px] text-stage-muted sm:text-[10px]">
-            You chose the English candidate. Close when ready, or hit “I have it”.
-          </p>
+          <StepHeader step={3} total={3} title={t("Plaintext locked")} />
+          <p className="text-[9px] text-stage-muted sm:text-[10px]">{t("You chose the English candidate. Close when ready, or hit “I have it”.")}</p>
         </>
       )}
     </div>
@@ -491,6 +383,7 @@ function CaesarWizard({ armed }: { armed: boolean }) {
 }
 
 function RsaWizard({ armed }: { armed: boolean }) {
+  useLocale((state) => state.locale);
   const vars = useGame((s) => s.vars);
   const recovered = useGame((s) => s.vars.recovered);
   const setVars = useGame((s) => s.setVars);
@@ -518,23 +411,23 @@ function RsaWizard({ armed }: { armed: boolean }) {
   return (
     <div className="space-y-3">
       <dl className="grid grid-cols-2 gap-x-2 gap-y-0.5 border border-stage-border px-2 py-1.5 font-mono text-[9px] sm:text-[10px]">
-        <dt className="text-stage-muted">public e</dt>
+        <dt className="text-stage-muted">{t("public e")}</dt>
         <dd className="text-[#cfe6ee]">{vars.e ?? "?"}</dd>
-        <dt className="text-stage-muted">modulus N</dt>
+        <dt className="text-stage-muted">{t("modulus N")}</dt>
         <dd className="text-[#cfe6ee]">{vars.modulus}</dd>
-        <dt className="text-stage-muted">ciphertext c</dt>
+        <dt className="text-stage-muted">{t("ciphertext c")}</dt>
         <dd className="text-accent-amber">{vars.cipherNumber ?? "?"}</dd>
-        <dt className="text-stage-muted">factors</dt>
+        <dt className="text-stage-muted">{t("factors")}</dt>
         <dd className="text-[#cfe6ee]">{vars.factors ?? "—"}</dd>
-        <dt className="text-stage-muted">private d</dt>
+        <dt className="text-stage-muted">{t("private d")}</dt>
         <dd className="text-[#cfe6ee]">{vars.d ?? "—"}</dd>
       </dl>
 
       {step === 1 && (
         <>
-          <StepHeader step={1} total={3} title="Factor the modulus" />
+          <StepHeader step={1} total={3} title={t("Factor the modulus")} />
           <StepButton
-            label={`Factor N = ${vars.modulus}`}
+            label={tOptional(`Factor N = ${vars.modulus}`)}
             busy={busy === "factor"}
             disabled={!armed}
             onClick={() => void run("rsaCrack", "factor")}
@@ -543,9 +436,9 @@ function RsaWizard({ armed }: { armed: boolean }) {
       )}
       {step === 2 && (
         <>
-          <StepHeader step={2} total={3} title="Derive d and decrypt" />
+          <StepHeader step={2} total={3} title={t("Derive d and decrypt")} />
           <StepButton
-            label="Rebuild private key and read c"
+            label={t("Rebuild private key and read c")}
             busy={busy === "derive"}
             disabled={!armed}
             onClick={() => void run("deriveKey", "derive")}
@@ -553,7 +446,7 @@ function RsaWizard({ armed }: { armed: boolean }) {
         </>
       )}
       {step === 3 && (
-        <StepHeader step={3} total={3} title="Letter recovered" />
+        <StepHeader step={3} total={3} title={t("Letter recovered")} />
       )}
     </div>
   );

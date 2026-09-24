@@ -1,6 +1,10 @@
-# RSA Quantum Teaching Game
+# Quantum Playground
 
-Interactive talk tool: Ale → Hacker → Brayan across plaintext, Caesar, RSA, and Shor, with depth tiers and live IBM batch readout.
+Playable quantum-computing scenarios: start with **Who Goes First?**, a
+simulator-only quantum coin lesson at home, then explore **Breaking RSA**
+across plaintext, Caesar, RSA, and Shor. See `game/README.md` for scenario
+structure. The separate `frontend/` presentation tool retains its depth tiers
+and IBM batch readout.
 
 ## Live (Cloud Run)
 

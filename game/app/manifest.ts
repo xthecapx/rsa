@@ -2,10 +2,10 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Man in the Middle",
-    short_name: "MITM",
+    name: "Quantum Playground",
+    short_name: "Quantum Play",
     description:
-      "A pixel-art hacking game about breaking Ale and Brayan's messages, from plaintext to Shor's algorithm.",
+      "Learn quantum computing through playable stories, from a quantum coin to breaking toy RSA.",
     start_url: "/",
     scope: "/",
     display: "standalone",

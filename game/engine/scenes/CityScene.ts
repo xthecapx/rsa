@@ -61,7 +61,8 @@ export class CityScene extends Scene {
   private parkedCars: ParkedCar[] = [];
   private clientCar!: ParkedCar;
   private clientCarFound = false;
-  private inputLocked = false;
+  // Stay locked through asset loading and the opening story setup.
+  private inputLocked = true;
   private lastNear: Landmark | null = null;
   private lastWalking = false;
   private walkIdleMs = 0;

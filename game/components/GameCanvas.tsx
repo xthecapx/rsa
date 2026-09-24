@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import type { Engine } from "excalibur";
 
 import type { ActNumber } from "@/content/types";
@@ -13,13 +13,13 @@ import { useGame } from "@/game/state";
  * Owns the Excalibur canvas. Excalibur reaches for `window` and a WebGL
  * context at import time, so the page must load this with `ssr: false`.
  */
-export function GameCanvas({ act }: { act: ActNumber }) {
+export function GameCanvas({ act, onReady, onError }: { act: ActNumber; onReady: () => void; onError: () => void }) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const engineRef = useRef<Engine | null>(null);
-  const [failed, setFailed] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
+    let bootEngine: Engine | null = null;
 
     // Keep the booted engine on the promise itself: teardown has to wait for
     // the boot it belongs to, or it disposes nothing and leaks a live engine.
@@ -28,15 +28,15 @@ export function GameCanvas({ act }: { act: ActNumber }) {
       if (!host) return null;
       try {
         const engine = await createGame(host);
+        bootEngine = engine;
         if (cancelled) return engine;
         engineRef.current = engine;
         await startAct(act);
+        if (!cancelled) onReady();
         return engine;
-      } catch (error) {
-        if (!cancelled) {
-          setFailed(error instanceof Error ? error.message : String(error));
-        }
-        return null;
+      } catch {
+        if (!cancelled) onError();
+        return bootEngine;
       }
     })();
 
@@ -47,7 +47,7 @@ export function GameCanvas({ act }: { act: ActNumber }) {
         return disposeGame(engine);
       });
     };
-  }, [act]);
+  }, [act, onReady, onError]);
 
   useEffect(
     () =>
@@ -72,11 +72,6 @@ export function GameCanvas({ act }: { act: ActNumber }) {
       {/* The canvas is created and removed by the engine, so React must not
           own this subtree. Excalibur measures this host for FitContainer. */}
       <div ref={hostRef} className="absolute inset-0" />
-      {failed && (
-        <div className="absolute inset-0 grid place-items-center bg-stage-bg/90 p-8 text-center text-[12px] text-actor-hacker">
-          The street could not be drawn: {failed}
-        </div>
-      )}
     </div>
   );
 }

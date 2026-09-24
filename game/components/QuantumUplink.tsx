@@ -1,4 +1,5 @@
 "use client";
+import { t, tOptional, localize, useLocale } from "@/i18n";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import clsx from "clsx";
@@ -38,6 +39,7 @@ const CONTROL_QUBITS = [3, 4, 6, 8];
  * rather than pretending they are still yours to choose.
  */
 export function QuantumUplink({ disabled = false }: { disabled?: boolean }) {
+  useLocale((state) => state.locale);
   const vars = useGame((s) => s.vars);
   const setVars = useGame((s) => s.setVars);
   const pushTerminal = useGame((s) => s.pushTerminal);
@@ -274,22 +276,17 @@ export function QuantumUplink({ disabled = false }: { disabled?: boolean }) {
       aria-disabled={disabled || undefined}
     >
       <div className="border-2 border-stage-border px-2.5 py-2">
-        <span className="text-[10px] uppercase tracking-widest text-[#c084fc]">
-          Quantum uplink
-        </span>
-        <p className="mt-1 text-[10px] leading-relaxed text-stage-muted">
-          Nothing here runs on your laptop. Every button is a request over the
-          network to a machine somewhere else.
-        </p>
+        <span className="text-[10px] uppercase tracking-widest text-[#c084fc]">{t("Quantum uplink")}</span>
+        <p className="mt-1 text-[10px] leading-relaxed text-stage-muted">{t("Nothing here runs on your laptop. Every button is a request over the network to a machine somewhere else.")}</p>
       </div>
 
       <div className="space-y-3 text-[11px]">
         <Field
-          label="Where the circuit runs"
+          label={t("Where the circuit runs")}
           hint={
-            locked
+            tOptional(locked
               ? "A recorded batch. It already ran, so its settings are fixed."
-              : "A local simulator. You choose the circuit, then it is built and run."
+              : "A local simulator. You choose the circuit, then it is built and run.")
           }
         >
           <div className="flex gap-2">
@@ -299,33 +296,29 @@ export function QuantumUplink({ disabled = false }: { disabled?: boolean }) {
                 setSource("aer");
                 resetRun();
               }}
-            >
-              Simulator
-            </Toggle>
+            >{t("Simulator")}</Toggle>
             <Toggle
               active={source === "qpu"}
               onClick={() => {
                 setSource("qpu");
                 resetRun();
               }}
-            >
-              Real QPU
-            </Toggle>
+            >{t("Real QPU")}</Toggle>
           </div>
         </Field>
 
         {locked ? (
           <>
-            <Field label="Recorded batch" hint="Each one is the same problem at a different qubit count.">
+            <Field label={t("Recorded batch")} hint={t("Each one is the same problem at a different qubit count.")}>
               <select
                 value={batchId}
                 onChange={(event) => setBatchId(event.target.value)}
                 className="w-full border-2 border-stage-border bg-stage-bg px-2 py-1 text-[11px] text-[#e8f4f8]"
               >
-                {batches.length === 0 && <option value="">Recorded demo batch</option>}
+                {batches.length === 0 && <option value="">{t("Recorded demo batch")}</option>}
                 {batches.map((batch) => (
                   <option key={batch.batch_id} value={batch.batch_id}>
-                    {describeBatch(batch)}
+                    {localize(describeBatch(batch))}
                   </option>
                 ))}
               </select>
@@ -336,8 +329,8 @@ export function QuantumUplink({ disabled = false }: { disabled?: boolean }) {
         ) : (
           <>
             <Field
-              label={`Number to factor  N = ${vars.modulus}`}
-              hint="Brayan's RSA modulus, straight off the wire. Split it and his private key follows."
+              label={tOptional(`Number to factor  N = ${vars.modulus}`)}
+              hint={t("Brayan's RSA modulus, straight off the wire. Split it and his private key follows.")}
             >
               <div className="flex gap-2">
                 {([15, 21] as const).map((n) => (
@@ -353,8 +346,8 @@ export function QuantumUplink({ disabled = false }: { disabled?: boolean }) {
             </Field>
 
             <Field
-              label={`Base  a = ${vars.base}`}
-              hint="Shor measures how many times you can multiply by a before the result comes back to 1. That count is the period."
+              label={tOptional(`Base  a = ${vars.base}`)}
+              hint={t("Shor measures how many times you can multiply by a before the result comes back to 1. That count is the period.")}
             >
               <div className="flex flex-wrap gap-2">
                 {BASES.map((a) => {
@@ -365,9 +358,9 @@ export function QuantumUplink({ disabled = false }: { disabled?: boolean }) {
                       active={vars.base === a}
                       tone={shares ? "bad" : "normal"}
                       title={
-                        shares
+                        tOptional(shares
                           ? `gcd(${a}, ${vars.modulus}) = ${gcd(a, vars.modulus)}, so this needs no quantum computer`
-                          : undefined
+                          : undefined)
                       }
                       onClick={() => {
                         setVars({ base: a });
@@ -380,16 +373,13 @@ export function QuantumUplink({ disabled = false }: { disabled?: boolean }) {
                 })}
               </div>
               {badBase && (
-                <p className="text-[10px] leading-relaxed text-actor-hacker">
-                  a = {vars.base} shares a factor with N. Ordinary gcd already
-                  answers this, so the precheck will stop you.
-                </p>
+                <p className="text-[10px] leading-relaxed text-actor-hacker">{t("a = ")}{vars.base}{t(" shares a factor with N. Ordinary gcd already answers this, so the precheck will stop you.")}</p>
               )}
             </Field>
 
             <Field
-              label={`Counting qubits  m = ${vars.numControl}`}
-              hint={`The register reports a fraction over 2^${vars.numControl} = ${2 ** vars.numControl}. A period only lands exactly when it divides ${2 ** vars.numControl}; otherwise you get the nearest fraction and have to round.`}
+              label={tOptional(`Counting qubits  m = ${vars.numControl}`)}
+              hint={tOptional(`The register reports a fraction over 2^${vars.numControl} = ${2 ** vars.numControl}. A period only lands exactly when it divides ${2 ** vars.numControl}; otherwise you get the nearest fraction and have to round.`)}
             >
               <div className="flex gap-2">
                 {CONTROL_QUBITS.map((m) => (
@@ -414,9 +404,7 @@ export function QuantumUplink({ disabled = false }: { disabled?: boolean }) {
           onClick={() => void runPrecheck()}
           disabled={Boolean(busy) || loadingManifest}
           className="btn-ghost w-full text-[11px]"
-        >
-          1. Classical precheck
-        </button>
+        >{t("1. Classical precheck")}</button>
 
         <button
           type="button"
@@ -424,19 +412,16 @@ export function QuantumUplink({ disabled = false }: { disabled?: boolean }) {
           disabled={Boolean(busy) || !prechecked || loadingManifest}
           className="btn-primary w-full text-[11px]"
         >
-          2. {source === "aer" ? "Run locally on the simulator" : "Submit over the uplink"}
+          2. {localize(source === "aer" ? "Run locally on the simulator" : "Submit over the uplink")}
         </button>
 
         {!prechecked && (
-          <p className="text-[10px] leading-relaxed text-stage-muted">
-            Run the precheck first. If gcd(a, N) is already bigger than 1 there
-            is nothing for a quantum computer to do.
-          </p>
+          <p className="text-[10px] leading-relaxed text-stage-muted">{t("Run the precheck first. If gcd(a, N) is already bigger than 1 there is nothing for a quantum computer to do.")}</p>
         )}
 
-        {busy && (
-          <p className="animate-pulse text-[10px] text-accent-amber">{busy}...</p>
-        )}
+        {localize(busy && (
+          <p className="animate-pulse text-[10px] text-accent-amber">{localize(busy)}...</p>
+        ))}
 
         {readout && <Outcomes readout={readout} numControl={vars.numControl} />}
 
@@ -445,9 +430,7 @@ export function QuantumUplink({ disabled = false }: { disabled?: boolean }) {
             type="button"
             onClick={() => void runApiCall("deriveKey")}
             className="btn-primary w-full border-actor-brayan text-[11px] text-actor-brayan hover:bg-actor-brayan/15"
-          >
-            3. Take the period and rebuild Brayan&apos;s key
-          </button>
+          >{t("3. Take the period and rebuild Brayan's key")}</button>
         )}
       </div>
     </div>
@@ -462,11 +445,10 @@ function Manifest({
   detail: IbmBatchDetail | null;
   loading: boolean;
 }) {
+  useLocale((state) => state.locale);
   if (loading) {
     return (
-      <p className="animate-pulse border-2 border-stage-border px-2.5 py-2 text-[10px] text-accent-amber">
-        Reading the batch manifest...
-      </p>
+      <p className="animate-pulse border-2 border-stage-border px-2.5 py-2 text-[10px] text-accent-amber">{t("Reading the batch manifest...")}</p>
     );
   }
   if (!detail) return null;
@@ -482,21 +464,16 @@ function Manifest({
 
   return (
     <div className="border-2 border-stage-border px-2.5 py-2">
-      <p className="text-[9px] uppercase tracking-widest text-stage-muted">
-        Fixed by this run
-      </p>
+      <p className="text-[9px] uppercase tracking-widest text-stage-muted">{t("Fixed by this run")}</p>
       <dl className="mt-1 grid grid-cols-2 gap-x-2 gap-y-0.5 font-mono text-[10px]">
         {rows.map(([key, value]) => (
           <div key={key} className="contents">
-            <dt className="text-stage-muted">{key}</dt>
-            <dd className="text-[#cfe6ee]">{value}</dd>
+            <dt className="text-stage-muted">{localize(key)}</dt>
+            <dd className="text-[#cfe6ee]">{localize(value)}</dd>
           </div>
         ))}
       </dl>
-      <p className="mt-1.5 text-[10px] leading-relaxed text-stage-muted">
-        This circuit ran once, months ago. You are reading its results, not
-        choosing them.
-      </p>
+      <p className="mt-1.5 text-[10px] leading-relaxed text-stage-muted">{t("This circuit ran once, months ago. You are reading its results, not choosing them.")}</p>
     </div>
   );
 }
@@ -506,6 +483,7 @@ function Manifest({
  * fraction are the two numbers that turn a bar chart into an answer.
  */
 function Outcomes({ readout, numControl }: { readout: Readout; numControl: number }) {
+  useLocale((state) => state.locale);
   const max = readout.outcomes[0]?.count ?? 1;
   const misleading = peakIsMisleading(readout);
   const top = useRef<HTMLDivElement | null>(null);
@@ -519,31 +497,25 @@ function Outcomes({ readout, numControl }: { readout: Readout; numControl: numbe
   return (
     <div ref={top} className="space-y-1.5 border-t-2 border-stage-border pt-3">
       <div className="flex items-baseline justify-between">
-        <span className="text-[10px] uppercase tracking-widest text-stage-muted">
-          Measured outcomes
-        </span>
+        <span className="text-[10px] uppercase tracking-widest text-stage-muted">{t("Measured outcomes")}</span>
         {readout.trueOrder !== null && (
-          <span className="font-mono text-[10px] text-stage-muted">
-            true r = {readout.trueOrder}
+          <span className="font-mono text-[10px] text-stage-muted">{t("true r = ")}{readout.trueOrder}
           </span>
         )}
       </div>
 
-      <p className="text-[10px] leading-relaxed text-stage-muted">
-        Each row reads the register as a number y, divides it by 2^{numControl} ={" "}
-        {2 ** numControl} to get a phase, and takes the nearest simple fraction.
-        The denominator is the candidate period r.
-        {readout.totalOutcomes > readout.outcomes.length &&
-          ` Showing the top ${readout.outcomes.length} of ${readout.totalOutcomes} measured.`}
+      <p className="text-[10px] leading-relaxed text-stage-muted">{t("Each row reads the register as a number y, divides it by 2^")}{numControl} ={localize(" ")}
+        {2 ** numControl}{t(" to get a phase, and takes the nearest simple fraction. The denominator is the candidate period r.")}{localize(readout.totalOutcomes > readout.outcomes.length &&
+          ` Showing the top ${readout.outcomes.length} of ${readout.totalOutcomes} measured.`)}
       </p>
 
       <div className="-mx-1 overflow-x-auto px-1">
       <div className="grid min-w-[18rem] grid-cols-[auto_auto_auto_1fr_auto] items-center gap-x-2 gap-y-0.5 font-mono text-[10px]">
-        <span className="text-stage-muted">bits</span>
-        <span className="text-right text-stage-muted">y</span>
-        <span className="text-stage-muted">phase</span>
-        <span className="text-stage-muted">r</span>
-        <span className="text-right text-stage-muted">shots</span>
+        <span className="text-stage-muted">{t("bits")}</span>
+        <span className="text-right text-stage-muted">{t("y")}</span>
+        <span className="text-stage-muted">{t("phase")}</span>
+        <span className="text-stage-muted">{t("r")}</span>
+        <span className="text-right text-stage-muted">{t("shots")}</span>
 
         {readout.outcomes.map((o) => {
           const winner = o.bitstring === readout.solution?.bitstring;
@@ -555,17 +527,17 @@ function Outcomes({ readout, numControl }: { readout: Readout; numControl: numbe
                   winner && "font-bold",
                 )}
               >
-                {winner ? ">" : " "}
-                {o.bitstring}
+                {localize(winner ? ">" : " ")}
+                {localize(o.bitstring)}
               </span>
               <span className="text-right text-accent-amber">{o.value}</span>
-              <span className="text-[#9fc4d0]">{o.fraction}</span>
+              <span className="text-[#9fc4d0]">{localize(o.fraction)}</span>
               <span className={VERDICT_STYLE[o.verdict]}>
-                {o.order ?? "-"}
+                {localize(o.order ?? "-")}
                 <span className="ml-1 opacity-70">
-                  {o.factors?.length
+                  {localize(o.factors?.length
                     ? `= ${o.factors.join(" x ")}`
-                    : VERDICT_LABEL[o.verdict]}
+                    : VERDICT_LABEL[o.verdict])}
                 </span>
               </span>
               <span className="text-right text-stage-muted">{o.count}</span>
@@ -585,13 +557,8 @@ function Outcomes({ readout, numControl }: { readout: Readout; numControl: numbe
       </div>
 
       {misleading && (
-        <p className="border-2 border-actor-hacker/50 bg-actor-hacker/10 px-2 py-1.5 text-[10px] leading-relaxed text-actor-hacker">
-          The tallest bar is not the answer. Noise flattened the distribution,
-          so {readout.mostMeasured?.bitstring} won on shots while{" "}
-          {readout.solution?.bitstring} is the one that splits N. Every
-          candidate has to be checked, which is cheap: multiply the factors back
-          together.
-        </p>
+        <p className="border-2 border-actor-hacker/50 bg-actor-hacker/10 px-2 py-1.5 text-[10px] leading-relaxed text-actor-hacker">{t("The tallest bar is not the answer. Noise flattened the distribution, so ")}{localize(readout.mostMeasured?.bitstring)}{t(" won on shots while")}{localize(" ")}
+          {localize(readout.solution?.bitstring)}{t(" is the one that splits N. Every candidate has to be checked, which is cheap: multiply the factors back together.")}</p>
       )}
     </div>
   );
@@ -606,15 +573,16 @@ function Field({
   hint?: string;
   children: React.ReactNode;
 }) {
+  useLocale((state) => state.locale);
   return (
     <div className="space-y-1.5">
       <div className="text-[10px] uppercase tracking-widest text-stage-muted">
-        {label}
+        {localize(label)}
       </div>
-      {children}
-      {hint && (
-        <p className="text-[10px] leading-relaxed text-stage-muted">{hint}</p>
-      )}
+      {localize(children)}
+      {localize(hint && (
+        <p className="text-[10px] leading-relaxed text-stage-muted">{localize(hint)}</p>
+      ))}
     </div>
   );
 }
@@ -632,11 +600,12 @@ function Toggle({
   title?: string;
   children: React.ReactNode;
 }) {
+  useLocale((state) => state.locale);
   return (
     <button
       type="button"
       onClick={onClick}
-      title={title}
+      title={tOptional(title)}
       className={clsx(
         "border-2 px-2.5 py-1 text-[11px] transition-colors",
         active && tone === "bad" && "border-actor-hacker bg-actor-hacker/15 text-actor-hacker",
@@ -645,7 +614,7 @@ function Toggle({
         !active && tone === "normal" && "border-stage-border text-stage-muted hover:border-accent-teal/60",
       )}
     >
-      {children}
+      {localize(children)}
       {tone === "bad" && <span className="ml-1 opacity-70">!</span>}
     </button>
   );
