@@ -113,7 +113,16 @@ export class Character extends Actor {
     this.stepFrom = null;
     this.stepTo = null;
     this.stepProgress = 0;
+    const center = tileCenter(this.grid);
+    this.pos = vec(center.x, center.y);
     this.applyGraphic(false);
+    this.arrival?.();
+    this.arrival = null;
+  }
+
+  /** Let a new input take over without snapping an unfinished tile step. */
+  clearRoute(): void {
+    this.route = [];
     this.arrival?.();
     this.arrival = null;
   }

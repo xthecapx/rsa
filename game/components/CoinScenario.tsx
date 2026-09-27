@@ -2,12 +2,12 @@
 import { t, tOptional, localize, useLocale } from "@/i18n";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { COIN_SCENES, COIN_STEPS, type CoinStep, type RoomPlace } from "@/content/coin";
 import { coinApi, type CoinResult } from "@/lib/coin";
 import { useProgress } from "@/game/progress";
 import type { Task } from "@/game/state";
 import { gameAudio } from "@/game/audio";
+import { StartOverControl, type RestartOption } from "./StartOverControl";
 import { CoinHouse } from "./CoinHouse";
 import { GameShell } from "./GameShell";
 import { MissionObjectives } from "./ObjectiveList";
@@ -141,7 +141,7 @@ function Results({ result }: { result: CoinResult }) {
   </div>;
 }
 
-export function CoinScenario() {
+export function CoinScenario({ onExit, onRestartGame }: { onExit?: () => void; onRestartGame?: () => void }) {
   useLocale((state) => state.locale);
   const assetStatus = useCoinSceneAssets();
   const [session, setSession] = useState<Session>(INITIAL);
@@ -156,6 +156,9 @@ export function CoinScenario() {
   const alive = useRef(true);
   const [nearbyPlace, setNearbyPlace] = useState<RoomPlace | null>(null);
   const [walking, setWalking] = useState(false);
+  const [nearExit, setNearExit] = useState(false);
+  const [journalOpen, setJournalOpen] = useState(false);
+  const [restartOpen, setRestartOpen] = useState(false);
 
   const sceneReady = hydrated && assetStatus === "ready";
   const scene = COIN_SCENES[session.step];
@@ -193,7 +196,7 @@ export function CoinScenario() {
   }, [sceneReady, atPlace, finishedDialog, session.step]);
 
   function interact(place: RoomPlace) {
-    if (!sceneReady || place !== scene.place || busy || laptopOpen) return;
+    if (!sceneReady || place !== scene.place || busy || laptopOpen || journalOpen || restartOpen) return;
     gameAudio.playSfx("click");
     if (!atPlace) { setActivePlace(place); patch({ place }); }
     else if (!finishedDialog) {
@@ -229,6 +232,26 @@ export function CoinScenario() {
     <button className="btn-primary" disabled={busy || disabled} onClick={onClick}>{localize(label)}</button>
   );
 
+  function leaveHouse() {
+    if (inFlight.current || !hydrated) return;
+    try { localStorage.setItem(SAVE_KEY, JSON.stringify(session)); } catch { setStorageNote(true); }
+    gameAudio.playSfx("switch");
+    if (onExit) onExit(); else window.location.assign("/");
+  }
+  function restartLesson() {
+    if (inFlight.current || !hydrated) return;
+    const fresh: Session = { ...INITIAL, codeSlots: { ...EMPTY_CODE }, circuitSlots: { ...EMPTY_CIRCUIT }, variants: newVariants() };
+    try { localStorage.setItem(SAVE_KEY, JSON.stringify(fresh)); } catch { setStorageNote(true); }
+    useProgress.getState().reset("coin");
+    setLaptopOpen(false); setActivePlace(null); setNearbyPlace(null); setNearExit(false);
+    setRoomKey((key) => key + 1); setSession(fresh); setError(null);
+    gameAudio.playSfx("confirm");
+  }
+  const restartOptions: RestartOption[] = [
+    { label: "Restart this lesson", description: "Clear the coin lesson, its puzzles, experiments, and completion. Start inside the house.", restart: restartLesson },
+    ...(onRestartGame ? [{ label: "Start the whole game over", description: "Clear both lessons and town progress. Return to the welcome at the southern entrance.", restart: onRestartGame }] : []),
+  ];
+  const restartControl = <StartOverControl options={restartOptions} disabled={busy || !sceneReady} onOpenChange={setRestartOpen} />;
   const objectives = <MissionObjectives tasks={COIN_STEPS.map((step, i): Task => ({
     id: step, label: COIN_SCENES[step].title,
     status: i < index || session.step === "done" ? "done" : i === index ? "active" : "pending",
@@ -247,20 +270,20 @@ export function CoinScenario() {
       {storageNote && <p role="status">{t("Browser storage is unavailable. Progress will last for this visit only.")}</p>}
     </div>
   </>;
-  return <GameShell title={t("Who Goes First?")} subtitle={t(scene.title)} backHref="/" backLabel={t("← Scenarios")}
+  return <GameShell restartControl={restartControl} title={t("Who Goes First?")} subtitle={t(scene.title)} backHref="/" backLabel={t("Return to town")} onBack={leaveHouse} backDisabled={busy || !sceneReady} onObjectivesOpen={setJournalOpen}
     sceneReady={sceneReady} sceneFailed={assetStatus === "error"}
     sidebar={sidebar} objectives={objectives} laptopOpen={laptopOpen} laptopReady={atPlace && finishedDialog}
     onOpenLaptop={() => { if (sceneReady) setLaptopOpen(true); }}>
     <div className="coin-world">
       {sceneReady && <CoinHouse key={roomKey} initialPlace={session.step === "welcome" ? null : session.place} target={scene.place} winner={session.step === "done" ? session.winner : null}
-        disabled={busy || laptopOpen} movementLocked={atPlace && !finishedDialog}
+        disabled={busy || laptopOpen || journalOpen || restartOpen} movementLocked={atPlace && !finishedDialog}
         onNear={(place) => { setNearbyPlace(place); setActivePlace((active) => active === place ? active : null); }}
-        onWalking={setWalking} onInteract={interact} />}
+        onWalking={setWalking} onInteract={interact} onExit={leaveHouse} onNearExit={setNearExit} />}
     </div>
     {!laptopOpen && <div className={`pointer-events-none absolute inset-x-0 bottom-0 flex justify-center p-3 sm:p-4 ${!atPlace ? "pb-20 lg:pb-4" : ""}`}>
       {!atPlace ? <div className={`textbox max-w-lg px-4 py-3 text-center transition-opacity ${walking ? "opacity-20" : ""}`}>
         <p className="text-sm leading-relaxed">{t(scene.objective)}</p>
-        <p className="mt-2 text-xs text-accent-amber">{nearbyPlace === scene.place ? t("Press Space or tap Talk") : t("Walk to the glowing marker.")}</p>
+        <p className="mt-2 text-xs text-accent-amber">{nearExit ? t("Return to town · Press Space or tap Talk") : nearbyPlace === scene.place ? t("Press Space or tap Talk") : t("Walk to the glowing marker.")}</p>
       </div> : <div className="pointer-events-auto w-full max-w-4xl">
         <DialogueFrame role={!finishedDialog ? "button" : undefined} tabIndex={!finishedDialog ? 0 : undefined}
           onClick={() => { if (!finishedDialog) interact(scene.place); }}
@@ -277,9 +300,9 @@ export function CoinScenario() {
         </DialogueFrame>
       </div>}
     </div>}
-    <TalkControl canInteract={nearbyPlace === scene.place && !busy} visible={!atPlace && !laptopOpen} onTalk={() => interact(scene.place)} />
+    <TalkControl canInteract={(nearExit || nearbyPlace === scene.place) && !busy} visible={!atPlace && !laptopOpen && !journalOpen && !restartOpen} onTalk={() => { if (nearExit) leaveHouse(); else interact(scene.place); }} />
 
-      <LaptopShell open={sceneReady && laptopOpen} title={t("Quantum Coin")} status={busy ? "Running the experiment…" : "Simulator only"} onClose={() => setLaptopOpen(false)}
+      <LaptopShell restartControl={restartControl} closeDisabled={busy} open={sceneReady && laptopOpen} title={t("Quantum Coin")} status={busy ? "Running the experiment…" : "Simulator only"} onClose={() => setLaptopOpen(false)}
         footer={<p>{t("Close the laptop to return to the room. Your results are saved.")}</p>}
         memory={<div className="grid grid-cols-3 gap-3 text-sm"><div>{t("Seed")}<br /><strong>42</strong></div><div>{t("Circuit")}<br /><strong>{session.step === "hadamard" && !session.circuitBuilt
           ? `|0⟩ → ${session.circuitSlots.first ?? "□"} → ${session.circuitSlots.second ?? "□"}`
@@ -406,8 +429,8 @@ export function CoinScenario() {
             </>}
             {session.step === "done" && <>
               <p>{t("Next: take your circuit skills onto the street and explore how period finding helps break toy RSA.")}</p>
-              <Link className="btn-primary inline-block" href="/scenarios/rsa">{t("Continue to Breaking RSA →")}</Link>
-              <button className="btn-ghost block" onClick={() => { setLaptopOpen(false); setActivePlace(null); setRoomKey((key) => key + 1); setSession({ ...INITIAL, codeSlots: { ...EMPTY_CODE }, variants: newVariants() }); setError(null); }}>{t("Replay the whole lesson")}</button>
+              <button className="btn-primary inline-block" onClick={leaveHouse}>{t("Return to town and meet the RSA client →")}</button>
+              <button className="btn-ghost block" onClick={restartLesson}>{t("Replay the whole lesson")}</button>
             </>}
           </div>}
       </section>

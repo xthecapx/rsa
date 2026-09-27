@@ -1,18 +1,24 @@
 import {
-  Axis,
+  Actor,
+  Circle,
+  GraphicsGroup,
+  Rectangle,
   BoundingBox,
   Color,
   Engine,
   Keys,
-  PointerType,
   Scene,
   TileMap,
   vec,
 } from "excalibur";
 import type { PointerEvent, Subscription } from "excalibur";
 
+import { TOWN_LOCATIONS, TOWN_TREES, townTargetAt, type TownTarget } from "@/content/town";
+import { t, useLocale } from "@/i18n";
+
 import { Bubble, Packet, ParkedCar, TapGlow, createParkedCar } from "../actors/Props";
 import { Character } from "../actors/Character";
+import { TownSign } from "../actors/TownSign";
 import type { CastMember } from "../actors/Character";
 import { bus } from "../bus";
 import type { EngineCommand, Landmark } from "../bus";
@@ -30,7 +36,7 @@ import {
   tileCenter,
 } from "../maps/street";
 import type { GridPos } from "../maps/street";
-import { citySprite } from "../resources";
+import { citySprite, images } from "../resources";
 import { TILE_SIZE } from "../tiles";
 import { clearTouchInput, consumeTouchInteract } from "../touchInput";
 
@@ -73,8 +79,16 @@ export class CityScene extends Scene {
    */
   private needsSpaceRelease = false;
   private pointerSub: Subscription | null = null;
+  private lastTownNear: TownTarget | null = null;
+  private lastPosition = "";
+  private markerLabels: { actor: TownSign; text: string; completed?: boolean; paused?: boolean }[] = [];
+  private markerLocale = "";
+  private alive = false;
+  private beacon!: Actor;
+  private tracked: TownTarget | Landmark | null = null;
 
   override onInitialize(engine: Engine): void {
+    this.alive = true;
     engine.backgroundColor = Color.fromHex("#0b1f26");
 
     this.add(this.buildLayer("rows", "legend", 0));
@@ -84,7 +98,7 @@ export class CityScene extends Scene {
       createParkedCar({ ...bay, paint: "slate" }),
     );
     for (const car of this.parkedCars) this.add(car);
-    this.reshuffleClientCar();
+    this.configureClientCar();
 
     this.tapGlow = new TapGlow(landmarkCenter("tap"));
     this.add(this.tapGlow);
@@ -107,34 +121,58 @@ export class CityScene extends Scene {
 
     const worldWidth = street.width * TILE_SIZE;
     const worldHeight = street.height * TILE_SIZE;
-    this.camera.strategy.lockToActorAxis(this.player, Axis.X);
+    this.camera.strategy.lockToActor(this.player);
     this.camera.strategy.limitCameraBounds(
       new BoundingBox(0, 0, worldWidth, worldHeight),
     );
-    this.camera.y = worldHeight / 2;
-
-    // Tap-to-walk is for phones. On a mouse/trackpad it races the keyboard and
-    // makes every click start a pathfind, which feels laggy.
-    if (isCoarsePointer()) {
-      this.pointerSub = engine.input.pointers.on("down", (event) =>
-        this.onPointerDown(event),
-      );
+    for (const tree of TOWN_TREES) {
+      const plant = new Actor({ pos: vec(tileCenter(tree).x, tileCenter(tree).y - 6), z: 6 });
+      plant.graphics.use(new GraphicsGroup({ members: [
+        { graphic: new Rectangle({ width: 5, height: 15, color: Color.fromHex("#81543d") }), offset: vec(8, 13) },
+        { graphic: new Circle({ radius: 13, color: Color.fromHex("#285548") }), offset: vec(0, 0) },
+        { graphic: new Circle({ radius: 9, color: Color.fromHex("#39785b") }), offset: vec(3, -3) },
+      ] }));
+      this.add(plant);
     }
+    const guide = new Actor({ name: "town-doctor", pos: vec(tileCenter(TOWN_LOCATIONS.guide.at).x, tileCenter(TOWN_LOCATIONS.guide.at).y), width: TILE_SIZE, height: TILE_SIZE, z: 10 });
+    guide.graphics.use(images.doctor.toSprite());
+    this.add(guide);
+    for (const [key, location] of Object.entries(TOWN_LOCATIONS)) {
+      const at = tileCenter(location.at);
+      const mounted = location.kind === "coin" || location.kind === "closed";
+      const label = new TownSign(at.x - (key === "guide" ? 44 : 0), at.y + (mounted ? -9 : 8), mounted);
+      this.add(label);
+      this.markerLabels.push({ actor: label, text: key === "coinDoor" ? "Coin house" : key === "guide" ? "Guide · Who Goes First?" : key === "sign" ? "Coin ← · RSA →" : "Coming soon" });
+    }
+    const clientLabel = new TownSign(tileCenter(LANDMARKS.car.at).x + 40, tileCenter(LANDMARKS.car.at).y + 40);
+    this.add(clientLabel); this.markerLabels.push({ actor: clientLabel, text: "RSA · Talk to the client" });
+    this.clientCar.setHighlighted(true);
+    this.beacon = new Actor({ z: 5 });
+    this.beacon.graphics.use(new Circle({ radius: 10, color: Color.Transparent, strokeColor: Color.fromHex("#efbe67"), lineWidth: 2 }));
+    this.beacon.graphics.visible = false;
+    this.add(this.beacon);
+
+    this.pointerSub = engine.input.pointers.on("down", (event) =>
+      this.onPointerDown(event),
+    );
 
     bus.setCommandHandler((command) => this.handle(command));
     bus.emit({ type: "ready" });
   }
 
   override onDeactivate(): void {
+    this.alive = false;
     this.pointerSub?.close();
     this.pointerSub = null;
+    this.player.stop();
+    this.packet.hide();
     clearTouchInput();
     bus.setCommandHandler(null);
     bus.drain();
   }
 
-  /** New bay + paint layout for the client's car; used on act start and reload. */
-  private reshuffleClientCar(): void {
+  /** Assign the stable client bay when a world instance starts. */
+  private configureClientCar(): void {
     this.clientCar?.setHighlighted(false);
     this.clientCarFound = false;
     this.lastNear = null;
@@ -176,8 +214,32 @@ export class CityScene extends Scene {
 
   override onPreUpdate(engine: Engine, elapsed: number): void {
     this.reportWalking(elapsed);
-
+    const locale = useLocale.getState().locale;
+    if (locale !== this.markerLocale) {
+      this.markerLocale = locale;
+      for (const { actor, text, completed, paused } of this.markerLabels) {
+        const caption = text === "Guide · Who Goes First?" ? `${t("Town guide")}\n${t("Who Goes First?")}` : t(paused ? "RSA · Resume mission" : text);
+        actor.setCaption(`${completed ? "★ " : paused ? "Ⅱ " : ""}${caption}`, completed);
+      }
+      // Sign widths change with their translated captions and mission status.
+      this.solid = buildSolidGrid();
+      for (const { actor } of this.markerLabels) actor.blockTiles(this.solid);
+    }
+    if (!this.player.isMoving) {
+      const position = `${this.player.grid.x},${this.player.grid.y},${this.player.facing}`;
+      if (position !== this.lastPosition) {
+        this.lastPosition = position;
+        bus.emit({ type: "position", at: { ...this.player.grid }, facing: this.player.facing });
+      }
+    }
+    if (this.tracked && this.beacon) {
+      const at = this.tracked in TOWN_LOCATIONS ? TOWN_LOCATIONS[this.tracked as TownTarget].stand : LANDMARKS[this.tracked as Landmark].stand;
+      this.beacon.pos = vec(tileCenter(at).x, tileCenter(at).y);
+      this.beacon.graphics.opacity = 0.75;
+    }
     if (this.inputLocked) return;
+    const townNear = townTargetAt(this.player.grid);
+    if (townNear !== this.lastTownNear) { this.lastTownNear = townNear; bus.emit({ type: "townMoved", near: townNear }); }
 
     const near = landmarkAt(this.player.grid);
     if (near !== this.lastNear) {
@@ -197,12 +259,20 @@ export class CityScene extends Scene {
       (!this.needsSpaceRelease && engine.input.keyboard.wasPressed(Keys.Space)) ||
       consumeTouchInteract();
 
+    if (townNear && talked) {
+      this.player.stop(); this.inputLocked = true;
+      bus.emit({ type: "townInteract", target: townNear });
+      return;
+    }
     if (near && talked) {
       this.player.stop();
       bus.emit({ type: "interact", target: near });
       return;
     }
 
+    // Keyboard input takes over after the current tile, without snapping the
+    // character or waiting for the entire clicked route to finish.
+    if (MOVE_KEYS.some(({ keys }) => keys.some((key) => engine.input.keyboard.isHeld(key)))) this.player.clearRoute();
     if (this.player.isMoving) return;
 
     for (const { keys, delta } of MOVE_KEYS) {
@@ -239,11 +309,13 @@ export class CityScene extends Scene {
     bus.emit({ type: "walking", walking: false });
   }
 
-  /** Tap anywhere on the street to walk there; the only way to move on touch. */
+  /** Click or tap the world to walk there with the same collision-aware route. */
   private onPointerDown(event: PointerEvent): void {
     if (this.inputLocked) return;
-    // Desktop mouse events can still arrive on hybrid devices; ignore them.
-    if (event.pointerType === PointerType.Mouse) return;
+    // Only primary clicks/taps move the player; secondary clicks and extra
+    // fingers must not replace the route.
+    if ("button" in event.nativeEvent && event.nativeEvent.button !== 0) return;
+    if ("isPrimary" in event.nativeEvent && event.nativeEvent.isPrimary === false) return;
     // Pinch and other multi-finger gestures are not movement.
     if ("touches" in event.nativeEvent) {
       const touches = (event.nativeEvent as TouchEvent).touches;
@@ -270,6 +342,9 @@ export class CityScene extends Scene {
   private reachableTile(tapped: GridPos): GridPos | null {
     if (isWalkable(this.solid, tapped)) return tapped;
 
+    for (const location of Object.values(TOWN_LOCATIONS)) {
+      if (Math.abs(tapped.x - location.at.x) <= 1 && Math.abs(tapped.y - location.at.y) <= 1) return { ...location.stand };
+    }
     for (const key of Object.keys(LANDMARKS) as Landmark[]) {
       const { at, size } = LANDMARKS[key];
       const inside =
@@ -302,16 +377,31 @@ export class CityScene extends Scene {
         clearTouchInput();
         return;
 
+      case "placePlayer": {
+        const requested = Number.isFinite(command.at?.x) && Number.isFinite(command.at?.y) ? { x: Math.round(command.at.x), y: Math.round(command.at.y) } : PLAYER_SPAWN;
+        const at = isWalkable(this.solid, requested) ? requested : PLAYER_SPAWN;
+        this.player.stop(); this.player.grid = { ...at };
+        this.player.pos = vec(tileCenter(at).x, tileCenter(at).y);
+        this.player.face(command.facing);
+        this.lastNear = null; this.lastTownNear = null; this.lastPosition = "";
+        return;
+      }
+      case "townProgress":
+        for (const label of this.markerLabels) {
+          if (label.text === "Coin house") label.completed = command.coinComplete;
+          if (label.text === "RSA · Talk to the client") { label.completed = command.rsaComplete; label.paused = command.rsaPaused && !command.rsaComplete; }
+        }
+        this.markerLocale = "";
+        return;
+      case "track":
+        this.tracked = command.target;
+        this.beacon.graphics.visible = command.target !== null;
+        return;
       case "reset":
         this.player.stop();
-        this.player.grid = { ...PLAYER_SPAWN };
-        this.player.pos = vec(
-          tileCenter(PLAYER_SPAWN).x,
-          tileCenter(PLAYER_SPAWN).y,
-        );
         this.packet.hide();
         this.tapGlow.setActive(false);
-        this.reshuffleClientCar();
+        this.clientCar.setHighlighted(true);
         this.needsSpaceRelease = false;
         this.lastWalking = false;
         this.walkIdleMs = 0;
@@ -363,28 +453,24 @@ export class CityScene extends Scene {
 
     if (command.intercept) {
       await this.packet.travelTo(point(tap), legDuration);
+      if (!this.alive) return;
       this.tapGlow.setActive(true);
       this.bubbles.hacker.showAbove(this.player.pos, "success");
       await wait(520);
+      if (!this.alive) return;
       this.bubbles.hacker.hide();
       await this.packet.travelTo(point(to), legDuration);
     } else {
       await this.packet.travelTo(point(to), legDuration * 1.6);
     }
 
+    if (!this.alive) return;
     await wait(220);
+    if (!this.alive) return;
     this.packet.hide();
   }
 }
 
 function wait(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-/** Same coarse-pointer check createGame uses for phone display mode. */
-function isCoarsePointer(): boolean {
-  return (
-    typeof window !== "undefined" &&
-    Boolean(window.matchMedia?.("(pointer: coarse)").matches)
-  );
 }

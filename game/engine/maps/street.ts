@@ -1,4 +1,5 @@
-import raw from "./street.json";
+import { townMap as raw, RSA_OFFSET } from "./townMap";
+import { TOWN_LOCATIONS, TOWN_SPAWN, TOWN_TREES } from "@/content/town";
 
 export interface TileEntry {
   tile: number;
@@ -52,8 +53,7 @@ export interface ParkedCarSpec extends ParkingBay {
 }
 
 /**
- * Fixed kerb bays. Which bay holds the client (and which paint each car
- * wears) is rolled per act / reload so the street has to be searched again.
+ * Fixed kerb bays. The town client stays at the same bay across missions.
  * South kerb = y:9. North kerb = y:6.
  */
 export const PARKING_BAYS: ParkingBay[] = [
@@ -65,7 +65,7 @@ export const PARKING_BAYS: ParkingBay[] = [
   { at: { x: 10, y: 6 }, facing: "west" },
   { at: { x: 26, y: 6 }, facing: "east" },
   { at: { x: 33, y: 6 }, facing: "west" },
-];
+].map((bay) => ({ ...bay, at: { x: bay.at.x + RSA_OFFSET.x, y: bay.at.y + RSA_OFFSET.y }, facing: bay.facing as CarFacing }));
 
 /** Enough paints for every bay; a couple of colours repeat across eight cars. */
 const CAR_PAINTS: CarPaint[] = [
@@ -82,15 +82,7 @@ const CAR_PAINTS: CarPaint[] = [
 function standBeside(at: GridPos): GridPos {
   // North kerb cars sit on y:6-7; stand on the roadway just south of them.
   // South kerb cars sit on y:9-10; stand on the roadway just north.
-  return at.y <= 7 ? { x: at.x, y: at.y + 2 } : { x: at.x, y: at.y - 1 };
-}
-
-function shuffleInPlace<T>(items: T[]): T[] {
-  for (let i = items.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [items[i], items[j]] = [items[j], items[i]];
-  }
-  return items;
+  return at.y <= 7 + RSA_OFFSET.y ? { x: at.x, y: at.y + 2 } : { x: at.x, y: at.y - 1 };
 }
 
 export interface ClientCarAssignment {
@@ -99,12 +91,11 @@ export interface ClientCarAssignment {
 }
 
 /**
- * Pick a random bay as the client's car and reshuffle paints so colour is not
- * a tell. Updates LANDMARKS.car so walk/interact targets follow the new bay.
+ * Resolve the stable town client and decorative car paints.
  */
 export function assignClientCar(): ClientCarAssignment {
-  const paints = shuffleInPlace([...CAR_PAINTS]);
-  const clientIndex = Math.floor(Math.random() * PARKING_BAYS.length);
+  const paints = [...CAR_PAINTS];
+  const clientIndex = 1;
   const bay = PARKING_BAYS[clientIndex];
   LANDMARKS.car.at = { ...bay.at };
   LANDMARKS.car.stand = standBeside(bay.at);
@@ -127,16 +118,22 @@ export const LANDMARKS: Record<Landmark, LandmarkSpec> = {
     label: "Junction box",
   },
   car: {
-    // Placeholder; assignClientCar() overwrites this before play begins.
-    at: { ...PARKING_BAYS[0].at },
+    // Stable client location; the world can guide players here before acceptance.
+    at: { ...PARKING_BAYS[1].at },
     size: { w: 2, h: 2 },
-    stand: standBeside(PARKING_BAYS[0].at),
+    stand: standBeside(PARKING_BAYS[1].at),
     label: "Your client's car",
   },
 };
 
-/** Middle of the road — centred in the camera, easy to spot on a phone. */
-export const PLAYER_SPAWN: GridPos = { x: 19, y: 8 };
+/** Translate the existing mission anchors into the shared town. */
+for (const key of ["ale", "brayan", "tap"] as const) {
+  const landmark = LANDMARKS[key];
+  landmark.at = { x: landmark.at.x + RSA_OFFSET.x, y: landmark.at.y + RSA_OFFSET.y };
+  landmark.stand = { x: landmark.stand.x + RSA_OFFSET.x, y: landmark.stand.y + RSA_OFFSET.y };
+}
+
+export const PLAYER_SPAWN: GridPos = TOWN_SPAWN;
 
 /** Screen-space centre of a tile, in world pixels. */
 export function tileCenter(pos: GridPos): { x: number; y: number } {
@@ -188,6 +185,17 @@ export function buildSolidGrid(): boolean[][] {
         }
       }
     }
+  }
+  // Trees rise above their trunk tile. Block the trunk and canopy above it,
+  // while keeping the tiles beside and below the tree open.
+  for (const tree of TOWN_TREES) {
+    for (const y of [tree.y - 1, tree.y]) {
+      if (grid[y]?.[tree.x] !== undefined) grid[y][tree.x] = true;
+    }
+  }
+  for (const key of ["guide", "sign"] as const) {
+    const { at } = TOWN_LOCATIONS[key];
+    grid[at.y][at.x] = true;
   }
   return grid;
 }

@@ -1,3 +1,4 @@
+import type { TownTarget, WorldFacing } from "@/content/town";
 import type { Landmark } from "./maps/street";
 
 export type { Landmark };
@@ -17,12 +18,18 @@ export type EngineCommand =
   | { type: "bubble"; actor: "ale" | "brayan" | "hacker"; face: BubbleKind }
   | { type: "tapGlow"; on: boolean }
   | { type: "lockInput"; locked: boolean }
-  | { type: "reset" };
+  | { type: "reset" }
+  | { type: "placePlayer"; at: { x: number; y: number }; facing: WorldFacing }
+  | { type: "townProgress"; coinComplete: boolean; rsaComplete: boolean; rsaPaused: boolean }
+  | { type: "track"; target: TownTarget | "car" | "tap" | "ale" | "brayan" | null };
 
 export type BubbleKind = "none" | "question" | "alert" | "success";
 
 export type EngineEvent =
   | { type: "ready" }
+  | { type: "townMoved"; near: TownTarget | null }
+  | { type: "townInteract"; target: TownTarget }
+  | { type: "position"; at: { x: number; y: number }; facing: WorldFacing }
   | { type: "interact"; target: Landmark }
   | { type: "moved"; near: Landmark | null }
   | { type: "walking"; walking: boolean };

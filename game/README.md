@@ -1,14 +1,37 @@
 # Quantum Playground
 
-The home screen is a scenario catalog. Players can start with **Who Goes
-First?** (`/scenarios/coin`), then continue to **Breaking RSA**
-(`/scenarios/rsa`). Both are available immediately. The original `/play/1`
-through `/play/4` links still work; new RSA links use
-`/scenarios/rsa/play/[act]`.
+The home screen is **Quantum Town**, a walkable world. Arrive at the southern
+entrance, meet the doctor in the white coat, then explore with arrows/WASD, mouse clicks, or taps on touch
+screens. Press Space or click/tap Talk beside a door, person, or sign.
+
+The doctor recommends **Who Goes First?** as the first challenge and explicitly
+offers starting with RSA instead. Both lessons are available immediately. Enter the coin house west of the plaza
+for **Who Goes First?**, or accept **Breaking RSA** from the client beside a
+parked car on the northeastern street. RSA happens on the town map. Two closed
+houses introduce places for future lessons. Objectives opens the journal and
+lets players track destinations without teleporting.
+
+The house door and Return to town control preserve the coin session. RSA can be
+paused and resumed from its client; checkpoint data includes story progress,
+secrets, suspicion, captured messages, and laptop results. Leaving is disabled
+while an operation finishes. Refresh during an operation restores the last safe
+checkpoint and never automatically resubmits the unfinished operation. Existing
+completion and coin saves are retained.
+
+**Start over** (↺ on small screens) is available in the game header and laptop.
+Restart just the coin lesson, the current RSA act, RSA from Act 1, or the entire
+game. Each option states which progress it clears and acts immediately. A full
+reset returns to the southern welcome and retains language and sound settings.
+Reset controls are disabled while a computation or scripted sequence finishes.
+
+Old `/scenarios/coin`, `/scenarios/rsa`, `/play/[act]`, and
+`/scenarios/rsa/play/[act]` links resolve an entry location or selected act, then
+normalize to `/`. Act links offer a mission at the client rather than resetting
+an existing attempt.
 
 ## Who Goes First?
 
-A beginner story set inside Ale’s house on game night. Walk with the arrow keys or WASD, or tap the floor to walk around furniture on touch screens. The same character and four-direction
+A beginner story set inside Ale’s house on game night. Walk with the arrow keys or WASD, or click/tap the floor to walk around furniture. The same character and four-direction
 walk animations appear in RSA. Approach the highlighted table, laptop desk, or
 whiteboard, then press Space or tap Talk. Short conversations lead into playable challenges:
 
@@ -73,7 +96,7 @@ experiment area, close button, language switch, and Escape/Tab controls. Closing
 the laptop preserves its contents. Scenario-specific tools stay inside the shell.
 
 Choose **EN / ES** on any page or inside the laptop. English and Spanish cover
-scenario cards, dialogue, choices, objectives, tool instructions, and result labels.
+town prompts, dialogue, choices, objectives, tool instructions, and result labels.
 The preference persists independently of game progress. Switching language keeps
 the current step, seeded sequence, circuit, and results. Code, formulas, API values,
 and RSA puzzle words retain their original spelling; Spanish instructions explain
@@ -91,16 +114,22 @@ Check the same controls in an RSA mission, including keyboard focus and Escape.
 
 ## Adding scenarios
 
-- `content/scenarios.ts`: catalog order, routes, learning goals, and mission IDs.
+- `content/scenarios.ts`: learning goals, mission IDs, and world entry metadata.
+- `content/town.ts`: doors, guide, signs, spawn points, and future locations.
+- `engine/maps/townMap.ts`: town terrain with the RSA street embedded.
+- `components/TownScreen.tsx`: exploration, mission offers, journal, and transitions.
+- `game/town.ts`: versioned world state and safe RSA checkpoints.
+- `game/runtime.ts`: ownership of asynchronous mission work.
 - `content/coin.ts`: the coin story, dialogue, and destination for each step.
 - `components/CoinScenario.tsx`: the lesson workbench and progression.
 - `components/CoinHouse.tsx`: the walkable house, input, animation, and proximity interaction.
 - `game/coinRoom.ts`: floor collision bounds, movement, and tap-to-walk routing.
 - `game/progress.ts`: scenario-scoped completion, shared with RSA.
 
-Add a catalog entry and its `/scenarios/<id>` route for a new scenario.
-Each scenario owns its mechanics and world; the existing RSA runner retains
-its four act IDs instead of forcing unrelated games into those IDs.
+Add scenario metadata, a town interaction location, and its start/resume behavior.
+Interior lessons can own their room and tools while sharing the shell and return
+flow. Outdoor lessons resolve mission anchors against the town map. RSA retains
+its four act IDs instead of forcing unrelated lessons into those IDs.
 
 ## Breaking RSA: Man in the Middle
 
@@ -317,3 +346,5 @@ python3 tools/preview_map.py      # render engine/maps/street.json to a PNG
 
 The street itself is `engine/maps/street.json`: an ASCII grid plus a legend
 mapping each character to a tile index and whether it blocks movement.
+
+Town directions appear on wooden street signs and house plaques. The minimap on the right shows the player, tracked destination, visited and unvisited places, and completed lessons. Terrain reveals as the player walks and is saved with town progress; a full game reset clears exploration. The minimap can be collapsed to leave more room for the game.

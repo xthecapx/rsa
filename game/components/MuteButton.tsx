@@ -2,7 +2,6 @@
 import { tOptional, localize, useLocale } from "@/i18n";
 
 import clsx from "clsx";
-import { LanguageSwitch } from "./LanguageSwitch";
 
 import { gameAudio, useAudio } from "@/game/audio";
 
@@ -12,7 +11,7 @@ export function MuteButton({ className }: { className?: string }) {
   const unlocked = useAudio((s) => s.unlocked);
 
   return (
-    <div className="flex items-center gap-2"><LanguageSwitch /><button
+    <button
       type="button"
       aria-label={tOptional(muted ? "Unmute sound" : "Mute sound")}
       title={tOptional(muted ? "Unmute" : "Mute")}
@@ -29,6 +28,6 @@ export function MuteButton({ className }: { className?: string }) {
       )}
     >
       {localize(muted ? "Sound off" : "Sound on")}
-    </button></div>
+    </button>
   );
 }

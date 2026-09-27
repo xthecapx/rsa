@@ -11,7 +11,7 @@ import type { Speaker } from "@/content/types";
 const SHEET = { tile: 16, margin: 1, columns: 54, rows: 12 };
 const STRIDE = SHEET.tile + SHEET.margin;
 
-const CAST: Record<Exclude<Speaker, "system">, { col: number; row: number }> = {
+const CAST: Record<Exclude<Speaker, "system" | "guide">, { col: number; row: number }> = {
   ale: { col: 0, row: 5 },
   brayan: { col: 1, row: 6 },
   hacker: { col: 0, row: 10 },
@@ -23,6 +23,7 @@ const BORDER: Record<Speaker, string> = {
   brayan: "border-actor-brayan",
   hacker: "border-actor-hacker",
   boss: "border-actor-boss",
+  guide: "border-accent-teal",
   system: "border-stage-border",
 };
 
@@ -31,6 +32,7 @@ export const SPEAKER_NAME: Record<Speaker, string> = {
   brayan: "Brayan",
   hacker: "You",
   boss: "The client",
+  guide: "Town guide",
   system: "Notes",
 };
 
@@ -39,6 +41,7 @@ export const SPEAKER_COLOR: Record<Speaker, string> = {
   brayan: "text-actor-brayan",
   hacker: "text-actor-hacker",
   boss: "text-actor-boss",
+  guide: "text-accent-teal",
   system: "text-accent-teal",
 };
 
@@ -60,6 +63,10 @@ export function Portrait({ speaker, size = 64 }: { speaker: Speaker; size?: numb
       </div>
     );
   }
+
+  if (speaker === "guide") return <div className={clsx("shrink-0 border-4 bg-stage-bg", BORDER.guide)} style={{ width: size, height: size,
+    backgroundImage: "url(/assets/characters/town-doctor.svg)", backgroundSize: "100% 100%", backgroundRepeat: "no-repeat", imageRendering: "pixelated" }}
+    role="img" aria-label={t("Town guide")} />;
 
   const { col, row } = CAST[speaker];
   return (

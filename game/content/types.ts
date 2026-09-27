@@ -2,7 +2,7 @@ import type { BubbleKind, PacketStyle } from "@/engine/bus";
 import type { Landmark } from "@/engine/maps/street";
 
 export type ActNumber = 1 | 2 | 3 | 4;
-export type Speaker = "ale" | "brayan" | "hacker" | "boss" | "system";
+export type Speaker = "ale" | "brayan" | "hacker" | "boss" | "guide" | "system";
 export type CastMember = "ale" | "brayan" | "hacker";
 
 /**

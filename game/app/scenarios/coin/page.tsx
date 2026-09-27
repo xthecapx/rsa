@@ -1,5 +1,3 @@
-import { CoinScenario } from "@/components/CoinScenario";
+import { TownScreen } from "@/components/TownScreen";
 
-export default function CoinPage() {
-  return <CoinScenario />;
-}
+export default function CoinPage() { return <TownScreen initialCoin />; }

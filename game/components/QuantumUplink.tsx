@@ -4,6 +4,7 @@ import { t, tOptional, localize, useLocale } from "@/i18n";
 import { useCallback, useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 
+import { missionGeneration } from "@/game/runtime";
 import { api } from "@/lib/api";
 import type { IbmBatchDetail, IbmBatchSummary, ShorSimulateResponse } from "@/lib/api";
 import {
@@ -23,6 +24,8 @@ import type { Readout } from "@/game/shor";
 import { useGame } from "@/game/state";
 
 type Source = "aer" | "qpu";
+interface UplinkMemory { source: Source; batchId: string; manifest: IbmBatchDetail | null; prechecked: boolean; readout: Readout | null; found: boolean }
+
 
 /** Wide enough that each modulus has one base that shares a factor with it. */
 const BASES = [2, 4, 5, 7, 8, 11, 13];
@@ -45,35 +48,46 @@ export function QuantumUplink({ disabled = false }: { disabled?: boolean }) {
   const pushTerminal = useGame((s) => s.pushTerminal);
   const setError = useGame((s) => s.setError);
 
-  const [source, setSource] = useState<Source>("aer");
+  const saved = useRef(useGame.getState().labMemory.uplink as UplinkMemory | undefined).current;
+  const [source, setSource] = useState<Source>(saved?.source ?? "aer");
   const [batches, setBatches] = useState<IbmBatchSummary[]>([]);
-  const [batchId, setBatchId] = useState<string>("");
-  const [manifest, setManifest] = useState<IbmBatchDetail | null>(null);
+  const [batchId, setBatchId] = useState<string>(saved?.batchId ?? "");
+  const [manifest, setManifest] = useState<IbmBatchDetail | null>(saved?.manifest ?? null);
   const [loadingManifest, setLoadingManifest] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
-  const [prechecked, setPrechecked] = useState(false);
-  const [readout, setReadout] = useState<Readout | null>(null);
-  const [found, setFound] = useState(false);
+  const [prechecked, setPrechecked] = useState(saved?.prechecked ?? false);
+  const [readout, setReadout] = useState<Readout | null>(saved?.readout ?? null);
+  const [found, setFound] = useState(saved?.found ?? false);
   const manifestTicket = useRef(0);
 
   useEffect(() => {
+    if (busy || loadingManifest) return;
+    useGame.getState().setLabMemory({ uplink: { source, batchId, manifest, prechecked, readout, found } satisfies UplinkMemory });
+  }, [source, batchId, manifest, prechecked, readout, found, busy, loadingManifest]);
+
+  useEffect(() => {
+    let alive = true;
     api.ibm
       .batches()
       .then((res) => {
+        if (!alive) return;
         setBatches(res.batches);
-        if (res.batches[0]) setBatchId(res.batches[0].batch_id);
+        if (res.batches[0]) setBatchId((current) => current || res.batches[0].batch_id);
       })
-      .catch(() => setBatches([]));
+      .catch(() => { if (alive) setBatches([]); });
+    return () => { alive = false; manifestTicket.current += 1; };
   }, []);
 
   const guard = useCallback(
     async (label: string, work: () => Promise<void>) => {
+      if (useGame.getState().operations) return;
+      const token = missionGeneration();
       setBusy(label);
       setError(null);
       try {
         await work();
       } catch (error) {
-        setError(error instanceof Error ? error.message : String(error));
+        if (token === missionGeneration()) setError(error instanceof Error ? error.message : String(error));
       } finally {
         setBusy(null);
       }
@@ -133,15 +147,16 @@ export function QuantumUplink({ disabled = false }: { disabled?: boolean }) {
    */
   const loadManifest = useCallback(
     async (id: string) => {
+      const token = missionGeneration();
       const ticket = ++manifestTicket.current;
       setLoadingManifest(true);
       setManifest(null);
       resetRun();
       try {
         const detail = id
-          ? await api.ibm.batch(id).catch(() => api.ibm.cached())
+          ? await api.ibm.batch(id).catch((error) => { if (token !== missionGeneration()) throw error; return api.ibm.cached(); })
           : await api.ibm.cached();
-        if (ticket !== manifestTicket.current) return;
+        if (ticket !== manifestTicket.current || token !== missionGeneration()) return;
         setManifest(detail);
 
         const n = detail.N === 15 || detail.N === 21 ? detail.N : null;
@@ -151,11 +166,11 @@ export function QuantumUplink({ disabled = false }: { disabled?: boolean }) {
           ...(detail.num_control ? { numControl: detail.num_control } : {}),
         });
       } catch (error) {
-        if (ticket === manifestTicket.current) {
+        if (ticket === manifestTicket.current && token === missionGeneration()) {
           setError(error instanceof Error ? error.message : String(error));
         }
       } finally {
-        if (ticket === manifestTicket.current) setLoadingManifest(false);
+        if (ticket === manifestTicket.current && token === missionGeneration()) setLoadingManifest(false);
       }
     },
     [rekey, setError, setVars, vars.modulus],
@@ -164,7 +179,7 @@ export function QuantumUplink({ disabled = false }: { disabled?: boolean }) {
   // Start reading the default batch straight away, so the manifest is on
   // screen by the time the player has finished the dialog.
   useEffect(() => {
-    if (source !== "qpu" || !batchId) return;
+    if (source !== "qpu" || !batchId || manifest?.batch_id === batchId) return;
     void loadManifest(batchId);
     // loadManifest is recreated whenever vars.modulus changes, which would
     // otherwise refetch the batch every time it re-keys.

@@ -41,11 +41,7 @@ export const act1 = defineAct({
           text: "Nobody bothers. That is close enough. Same line as always, tonight.",
         },
       ],
-      travelTo: {
-        at: "car",
-        objective: "Your client is waiting in a car on this street. Find it and press Space.",
-        next: "briefing",
-      },
+      next: "briefing",
     },
 
     briefing: {

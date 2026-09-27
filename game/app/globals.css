@@ -180,9 +180,9 @@ html[data-boot="done"] #mitm-boot {
 .language-switch button { padding: 5px 7px; color: #c0d6dc; border-radius: 3px; }
 .language-switch button[aria-pressed="true"] { background: #315b61; color: #fff; }
 .language-switch button:focus-visible { outline: 2px solid #f5c56d; outline-offset: 2px; }
-.laptop-overlay { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 16px; background: #050e12ee; font: 15px/1.6 var(--font-dm-sans), sans-serif; }
+.laptop-overlay { --laptop-gap: 16px; position: fixed; inset: 0; height: 100dvh; z-index: 80; display: grid; grid-template: minmax(0, 1fr) / minmax(0, 1fr); place-items: center; overflow: hidden; padding: max(var(--laptop-gap), env(safe-area-inset-top)) max(var(--laptop-gap), env(safe-area-inset-right)) max(var(--laptop-gap), env(safe-area-inset-bottom)) max(var(--laptop-gap), env(safe-area-inset-left)); background: #050e12ee; font: 15px/1.6 var(--font-dm-sans), sans-serif; }
 .laptop-overlay[hidden] { display: none; }
-.shared-laptop { width: 100%; max-width: 900px; max-height: calc(100dvh - 32px); display: flex; flex-direction: column; outline: none; }
+.shared-laptop { width: 100%; max-width: 900px; min-width: 0; min-height: 0; max-height: 100%; display: flex; flex-direction: column; outline: none; }
 .laptop-bezel { display: flex; min-height: 0; flex-direction: column; border: 2px solid #3d4a52; border-radius: 16px 16px 0 0; background: #8b949a; padding: 12px; box-shadow: 0 20px 60px #0008; }
 .laptop-camera { flex-shrink: 0; text-align: center; font: 10px/1.8 monospace; letter-spacing: .2em; color: #293740; margin-bottom: 6px; }
 .laptop-screen { min-height: 0; display: flex; flex-direction: column; border: 2px solid #1a2228; background: #0a1a20; border-radius: 4px; overflow: hidden; }
@@ -190,7 +190,7 @@ html[data-boot="done"] #mitm-boot {
 .laptop-toolbar h2 { font-size: 14px; color: #90e0cd; font-weight: bold; }
 .laptop-toolbar button { font-size: 12px; }
 .laptop-status { color: #e4b56f; font-size: 12px; }
-.laptop-scroll { min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 16px; }
+.laptop-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 16px; }
 .laptop-memory { padding: 12px; margin-bottom: 16px; border: 1px solid #35515a; background: #132e37; }
 .laptop-footer { flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 12px 16px; border-top: 1px solid #35515a; color: #abc2cb; font-size: 13px; }
 .laptop-deck { flex-shrink: 0; padding: 12px; background: #6d757c; border: 2px solid #3d4a52; border-top: 0; border-radius: 0 0 14px 14px; }
@@ -198,8 +198,7 @@ html[data-boot="done"] #mitm-boot {
 .laptop-scroll .coin-workbench { border: 0; padding: 0; box-shadow: none; background: transparent; }
 .coin-shared-layout { display: block; max-width: 850px; }
 @media(max-width: 600px) {
-  .laptop-overlay { padding: 6px; }
-  .shared-laptop { max-height: calc(100dvh - 12px); }
+  .laptop-overlay { --laptop-gap: 6px; }
   .laptop-bezel { padding: 6px; }
   .laptop-toolbar, .laptop-footer { padding: 8px; flex-wrap: wrap; }
   .laptop-scroll { padding: 10px; }
@@ -210,6 +209,8 @@ html[data-boot="done"] #mitm-boot {
 .coin-house-map { touch-action: manipulation; cursor: crosshair; }
 
 /* One readable game interface for the house and the street. */
+.game-canvas-host { display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.game-canvas-host > canvas { flex: none; cursor: crosshair; }
 .game-shell { font-family: var(--font-dm-sans), sans-serif; font-size: 15px; line-height: 1.5; }
 .game-shell > header { background: #102630; min-height: 56px; }
 .game-shell > header h1 { font-size: 15px; font-weight: 700; }

@@ -39,11 +39,7 @@ export const act4 = defineAct({
         },
         { speaker: "ale", text: "Then send the key. Same as last night." },
       ],
-      travelTo: {
-        at: "car",
-        objective: "Your client is waiting in a car on this street. Find it and press Space.",
-        next: "briefing",
-      },
+      next: "briefing",
     },
 
     briefing: {

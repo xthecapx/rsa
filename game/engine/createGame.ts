@@ -1,4 +1,4 @@
-import { Color, DisplayMode, Engine } from "excalibur";
+import { Color, DisplayMode, Engine, PointerScope } from "excalibur";
 
 import { CityScene } from "./scenes/CityScene";
 import { bus } from "./bus";
@@ -74,8 +74,9 @@ export function createGame(container: HTMLElement): Promise<Engine> {
 
     const engine = new Engine({
       canvasElement: canvas,
-      // 30 x 16 tiles of 16px, matching the street map exactly so the camera
-      // bounds are never smaller than the viewport.
+      // HUD buttons, dialogs, and the minimap never issue movement commands.
+      pointerScope: PointerScope.Canvas,
+      // A readable 30 x 16 tile viewport into the larger, scrolling town.
       resolution: { width: 480, height: 256 },
       displayMode: displayModeForDevice(),
       pixelArt: true,

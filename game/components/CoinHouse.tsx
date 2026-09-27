@@ -12,9 +12,10 @@ const DIRECTIONS: Record<string, [number, number]> = {
   ArrowLeft: [-1, 0], a: [-1, 0], ArrowRight: [1, 0], d: [1, 0],
 };
 /** Same walking vocabulary as the street: arrows/WASD, tap to walk, Space to talk. */
-export function CoinHouse({ initialPlace, target, winner, onNear, onInteract, onWalking, disabled, movementLocked }: {
+export function CoinHouse({ initialPlace, target, winner, onNear, onInteract, onWalking, disabled, movementLocked, onExit, onNearExit }: {
   initialPlace: RoomPlace | null; target: RoomPlace; winner: number | null; disabled: boolean; movementLocked: boolean;
   onWalking: (walking: boolean) => void;
+  onExit?: () => void; onNearExit?: (near: boolean) => void;
   onNear: (place: RoomPlace | null) => void; onInteract: (place: RoomPlace) => void;
 }) {
   useLocale((state) => state.locale);
@@ -23,8 +24,8 @@ export function CoinHouse({ initialPlace, target, winner, onNear, onInteract, on
   const position = useRef<RoomPoint>({ ...(initialPlace ? ROOM_STATIONS[initialPlace] : ROOM_START) });
   const keys = useRef(new Set<string>());
   const route = useRef<RoomPoint[]>([]);
-  const config = useRef({ disabled, movementLocked, onNear, onInteract, onWalking });
-  config.current = { disabled, movementLocked, onNear, onInteract, onWalking };
+  const config = useRef({ disabled, movementLocked, onNear, onInteract, onWalking, onExit, onNearExit });
+  config.current = { disabled, movementLocked, onNear, onInteract, onWalking, onExit, onNearExit };
   const [actor, setActor] = useState({ ...position.current, column: 1 });
   const [destination, setDestination] = useState<RoomPoint | null>(null);
 
@@ -37,6 +38,8 @@ export function CoinHouse({ initialPlace, target, winner, onNear, onInteract, on
     let frame = 0, previousTime = 0, facing = 0, wasWalking = false;
     let reported = nearbyStation(position.current);
     config.current.onNear(reported);
+    let nearExit = Math.hypot(position.current.x - 200, position.current.y - 224) < 15;
+    config.current.onNearExit?.(nearExit);
     function stop() { keys.current.clear(); route.current = []; setDestination(null); }
     function down(event: KeyboardEvent) {
       if (config.current.disabled || event.altKey || event.ctrlKey || event.metaKey) return;
@@ -54,6 +57,7 @@ export function CoinHouse({ initialPlace, target, winner, onNear, onInteract, on
         keys.current.add(key); route.current = []; setDestination(null);
       } else if (event.code === "Space" && !event.repeat && !element.closest?.("button, a")) {
         event.preventDefault();
+        if (Math.hypot(position.current.x - 200, position.current.y - 224) < 15) { config.current.onExit?.(); return; }
         const place = nearbyStation(position.current);
         if (place) config.current.onInteract(place);
       }
@@ -88,6 +92,8 @@ export function CoinHouse({ initialPlace, target, winner, onNear, onInteract, on
       position.current = point;
       const column = facing + (walking ? [0, 1, 2, 1][Math.floor(time / 130) % 4] : 1);
       setActor((old) => old.x === point.x && old.y === point.y && old.column === column ? old : { ...point, column });
+      const atExit = Math.hypot(point.x - 200, point.y - 224) < 15;
+      if (atExit !== nearExit) { nearExit = atExit; config.current.onNearExit?.(atExit); }
       const current = nearbyStation(point);
       if (current !== reported) { reported = current; config.current.onNear(current); }
       frame = requestAnimationFrame(tick);
@@ -102,7 +108,7 @@ export function CoinHouse({ initialPlace, target, winner, onNear, onInteract, on
   }, []);
 
   function walkTo(event: React.PointerEvent<SVGSVGElement>) {
-    if (disabled || movementLocked || event.button !== 0) return;
+    if (disabled || movementLocked || event.button !== 0 || !event.isPrimary) return;
     room.current?.focus({ preventScroll: true });
     const matrix = svg.current?.getScreenCTM();
     if (!matrix) return;
@@ -156,6 +162,9 @@ export function CoinHouse({ initialPlace, target, winner, onNear, onInteract, on
         {winner !== null && <g className="coin-winner-banner"><rect x="138" y="98" width="124" height="23" rx="4" fill="#173e3b" stroke="#efbe67" />
           <text x="200" y="113" textAnchor="middle" fontSize="9" fill="#ffe9a5">{t(winner === 0 ? "Ale goes first!" : "Brayan goes first!")}</text></g>}
         <g aria-hidden="true">
+          <rect x="178" y="234" width="44" height="12" fill="#162b32" stroke="#bba783" strokeWidth="2" />
+          <path d="M193 225h14m-7-4v8m-4-4 4 4 4-4" stroke="#90e0cd" fill="none" strokeWidth="2" />
+          <text x="200" y="246" textAnchor="middle" fontSize="7" fill="#ffe4a2">{t("Town")}</text>
           <ellipse cx={ROOM_STATIONS[target].x} cy={ROOM_STATIONS[target].y} rx="19" ry="8" fill="#f2c98322" stroke="#f2c983" strokeDasharray="3 3" />
           <text x={ROOM_STATIONS[target].x} y={ROOM_STATIONS[target].y - 29} textAnchor="middle" fontSize="9" fill="#ffe4a2">{localize(LABELS[target])}</text>
           {destination && <path d={`M${destination.x - 4} ${destination.y}h8 M${destination.x} ${destination.y - 4}v8`} stroke="#90e0cd" strokeWidth="2" />}

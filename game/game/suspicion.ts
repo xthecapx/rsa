@@ -1,5 +1,6 @@
 import { bus } from "@/engine/bus";
 import { useGame } from "./state";
+import { missionGeneration } from "./runtime";
 
 export const SUSPICION_MAX = 100;
 export const DEFAULT_SUSPICION_HIT = 25;
@@ -49,4 +50,14 @@ export async function raiseSuspicion(amount: number): Promise<boolean> {
 export async function clearSuspicionBubbles(): Promise<void> {
   await bus.send({ type: "bubble", actor: "ale", face: "none" });
   await bus.send({ type: "bubble", actor: "brayan", face: "none" });
+}
+
+/** Restore the visual band without increasing the meter or replaying a mistake. */
+export async function syncSuspicionBubbles(): Promise<void> {
+  const token = missionGeneration();
+  const band = bandFor(useGame.getState().suspicion);
+  const face = band === "alarmed" ? "alert" : band === "uneasy" ? "question" : "none";
+  await bus.send({ type: "bubble", actor: "ale", face });
+  if (token !== missionGeneration()) return;
+  await bus.send({ type: "bubble", actor: "brayan", face });
 }

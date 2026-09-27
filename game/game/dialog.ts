@@ -8,6 +8,7 @@ import { DEFAULT_SUSPICION_HIT, clearSuspicionBubbles, raiseSuspicion } from "./
 import { pickSecret } from "./secret";
 import { useGame } from "./state";
 import type { DisplayLine } from "./state";
+import { invalidateMission, missionGeneration } from "./runtime";
 import { yieldToPaint } from "./yieldToPaint";
 
 /** Suspicion added when the client is handed the wrong plaintext. */
@@ -34,17 +35,20 @@ function render(node: DialogNode<string>): DisplayLine[] {
 }
 
 async function enter(act: ActNumber, id: string): Promise<void> {
+  const token = missionGeneration();
   const store = useGame.getState();
   const node = nodeOf(act, id);
 
   store.setPhase("busy");
   await yieldToPaint();
+  if (token !== missionGeneration()) return;
   try {
     await runEffects(node.onEnter);
   } catch (error) {
-    useGame.getState().setError(errorText(error));
+    if (token === missionGeneration()) useGame.getState().setError(errorText(error));
   }
 
+  if (token !== missionGeneration()) return;
   const after = useGame.getState();
   after.setNode(id, render(node), node.waitsFor ?? null);
   after.setPendingTravel(null);
@@ -64,10 +68,12 @@ async function enter(act: ActNumber, id: string): Promise<void> {
 
 /**
  * Begin an act: reset the run, roll this run's secret, put the checklist up,
- * and play the opening scene. Nothing has to be walked to first -- the act
- * explains itself before it asks the player for anything.
+ * and play the opening exchange after acceptance at the town client.
+ * Reset mission props while keeping the player in place on the town map.
  */
 export async function startAct(act: ActNumber): Promise<void> {
+  invalidateMission();
+  const token = missionGeneration();
   const current = script(act);
   const store = useGame.getState();
   store.resetRun(act);
@@ -85,8 +91,11 @@ export async function startAct(act: ActNumber): Promise<void> {
   );
 
   await bus.send({ type: "reset" });
+  if (token !== missionGeneration()) return;
   await clearSuspicionBubbles();
+  if (token !== missionGeneration()) return;
   await bus.send({ type: "lockInput", locked: true });
+  if (token !== missionGeneration()) return;
   await enter(act, current.entry);
 }
 
@@ -140,13 +149,16 @@ async function handOverToPlayer(travelTo: {
  * waiting on does anything, so the rest of the street stays quiet.
  */
 export async function interactAt(target: Landmark): Promise<void> {
+  const token = missionGeneration();
   const state = useGame.getState();
   if (state.phase !== "exploring") return;
   const travel = state.pendingTravel;
   if (!travel || travel.at !== target) return;
 
+  state.setPhase("busy");
   state.setPendingTravel(null);
   await bus.send({ type: "lockInput", locked: true });
+  if (token !== missionGeneration()) return;
   await enter(state.act, travel.next);
 }
 
@@ -161,6 +173,7 @@ export function visibleChoices(): Choice<string>[] {
 }
 
 export async function choose(index: number): Promise<void> {
+  const token = missionGeneration();
   const state = useGame.getState();
   if (state.phase !== "dialog" || !state.choicesVisible) return;
 
@@ -170,13 +183,15 @@ export async function choose(index: number): Promise<void> {
   state.setChoicesVisible(false);
   state.setPhase("busy");
   await yieldToPaint();
+  if (token !== missionGeneration()) return;
 
   try {
     await runEffects(choice.effects);
   } catch (error) {
-    useGame.getState().setError(errorText(error));
+    if (token === missionGeneration()) useGame.getState().setError(errorText(error));
   }
 
+  if (token !== missionGeneration()) return;
   if (choice.outcome === "advance") {
     await enter(state.act, choice.next as string);
     return;
@@ -184,6 +199,7 @@ export async function choose(index: number): Promise<void> {
 
   if (choice.outcome === "suspicion") {
     const blown = await raiseSuspicion(choice.suspicion ?? DEFAULT_SUSPICION_HIT);
+    if (token !== missionGeneration()) return;
     if (blown) {
       await enter(state.act, script(state.act).caught);
       return;
@@ -220,6 +236,7 @@ export async function resolvePanel(): Promise<void> {
  * leaves the player on the same dialog so they can try again.
  */
 export async function submitReport(answer: string): Promise<void> {
+  const token = missionGeneration();
   const state = useGame.getState();
   const { act, nodeId, waitingFor } = state;
   if (!nodeId || waitingFor !== "report") return;
@@ -235,10 +252,11 @@ export async function submitReport(answer: string): Promise<void> {
     state.setBusy("Reporting to the client");
     state.setPhase("busy");
     await yieldToPaint();
+    if (token !== missionGeneration()) return;
     try {
       if (node.next) await enter(act, node.next);
     } finally {
-      useGame.getState().setBusy(null);
+      if (token === missionGeneration()) useGame.getState().setBusy(null);
     }
     return;
   }

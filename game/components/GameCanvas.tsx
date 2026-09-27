@@ -3,17 +3,13 @@
 import { useEffect, useRef } from "react";
 import type { Engine } from "excalibur";
 
-import type { ActNumber } from "@/content/types";
-import { bus } from "@/engine/bus";
 import { createGame, disposeGame } from "@/engine/createGame";
-import { interactAt, startAct } from "@/game/dialog";
-import { useGame } from "@/game/state";
 
 /**
  * Owns the Excalibur canvas. Excalibur reaches for `window` and a WebGL
  * context at import time, so the page must load this with `ssr: false`.
  */
-export function GameCanvas({ act, onReady, onError }: { act: ActNumber; onReady: () => void; onError: () => void }) {
+export function GameCanvas({ onReady, onError }: { onReady: () => void | Promise<void>; onError: () => void }) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const engineRef = useRef<Engine | null>(null);
 
@@ -31,8 +27,7 @@ export function GameCanvas({ act, onReady, onError }: { act: ActNumber; onReady:
         bootEngine = engine;
         if (cancelled) return engine;
         engineRef.current = engine;
-        await startAct(act);
-        if (!cancelled) onReady();
+        if (!cancelled) await onReady();
         return engine;
       } catch {
         if (!cancelled) onError();
@@ -47,31 +42,9 @@ export function GameCanvas({ act, onReady, onError }: { act: ActNumber; onReady:
         return disposeGame(engine);
       });
     };
-  }, [act, onReady, onError]);
+  }, [onReady, onError]);
 
-  useEffect(
-    () =>
-      bus.on((event) => {
-        if (event.type === "moved") {
-          useGame.getState().setNear(event.near);
-          return;
-        }
-        if (event.type === "walking") {
-          useGame.getState().setWalking(event.walking);
-          return;
-        }
-        // Which landmark matters depends on where the story is, so the runner
-        // decides whether this press does anything.
-        if (event.type === "interact") void interactAt(event.target);
-      }),
-    [],
-  );
-
-  return (
-    <div className="absolute inset-0">
-      {/* The canvas is created and removed by the engine, so React must not
-          own this subtree. Excalibur measures this host for FitContainer. */}
-      <div ref={hostRef} className="absolute inset-0" />
-    </div>
-  );
+  // Excalibur owns this subtree and measures the host for FitContainer.
+  // Center the fitted canvas so any unused space is shared on both sides.
+  return <div ref={hostRef} className="game-canvas-host absolute inset-0" />;
 }

@@ -5,6 +5,7 @@ import { SHEET_COLUMNS, TILE_SIZE } from "./tiles";
 export const images = {
   city: new ImageSource("/assets/kenney/city_tiles.png"),
   characters: new ImageSource("/assets/kenney/characters.png"),
+  doctor: new ImageSource("/assets/characters/town-doctor.svg"),
   portraits: new ImageSource("/assets/kenney/portraits.png"),
 };
 

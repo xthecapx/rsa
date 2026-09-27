@@ -12,7 +12,9 @@ import { useProgress } from "@/game/progress";
 import { ACT_NUMBERS } from "@/content";
 
 /** Shown when the act ends, either because you won it or because they saw you. */
-export function GameOver({ act }: { act: ActNumber }) {
+export function GameOver({ act, onReturn, onRetry, onNext }: {
+  act: ActNumber; onReturn?: () => void; onRetry?: () => void; onNext?: (act: ActNumber) => void;
+}) {
   useLocale((state) => state.locale);
   const phase = useGame((s) => s.phase);
   const suspicion = useGame((s) => s.suspicion);
@@ -57,14 +59,15 @@ export function GameOver({ act }: { act: ActNumber }) {
             type="button"
             onClick={() => {
               gameAudio.playSfx("click");
-              window.location.reload();
+              if (onRetry) onRetry(); else window.location.reload();
             }}
             className="btn-ghost text-[11px]"
           >
             {localize(caught ? "Try this act again" : "Replay this act")}
           </button>
 
-          {!caught && hasNext && (
+          {!caught && hasNext && onNext && <button className="btn-primary text-[11px]" onClick={() => onNext(next)}>{t("Return to town for the next mission")}</button>}
+          {!caught && hasNext && !onNext && (
             <Link
               href={`/scenarios/rsa/play/${next}`}
               onClick={() => gameAudio.playSfx("confirm")}
@@ -77,12 +80,12 @@ export function GameOver({ act }: { act: ActNumber }) {
             <p className="text-[11px] text-accent-amber">{t("Breaking RSA complete. You finished all four missions.")}</p>
           )}
 
-          <Link
+          {onReturn ? <button className="btn-ghost text-[11px]" onClick={onReturn}>{t("Return to town")}</button> : <><Link
             href="/scenarios/rsa"
             onClick={() => gameAudio.playSfx("click")}
             className="btn-ghost text-[11px]"
           >{t("Back to RSA missions")}</Link>
-          <Link href="/" className="btn-ghost text-[11px]">{t("All scenarios")}</Link>
+          <Link href="/" className="btn-ghost text-[11px]">{t("All scenarios")}</Link></>}
         </div>
       </div>
     </div>

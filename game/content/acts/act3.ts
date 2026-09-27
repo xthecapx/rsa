@@ -41,11 +41,7 @@ export const act3 = defineAct({
           text: "One warning. It is arithmetic on numbers smaller than the key, so I can only send you one letter at a time.",
         },
       ],
-      travelTo: {
-        at: "car",
-        objective: "Find your client's car and report before Brayan publishes.",
-        next: "briefing",
-      },
+      next: "briefing",
     },
 
     briefing: {

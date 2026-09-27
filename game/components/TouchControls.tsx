@@ -7,8 +7,8 @@ import clsx from "clsx";
 import { clearTouchInput, queueTouchInteract } from "@/engine/touchInput";
 
 /**
- * Talk button for touch play. Walking is handled by tapping the street, so
- * this is the only control the HUD needs; the keyboard covers desktop.
+ * Talk button for mouse and touch play. Walking is handled by clicking or
+ * tapping the world; Space remains available for keyboard interaction.
  */
 export function TouchControls({
   canInteract,
@@ -28,13 +28,16 @@ export function TalkControl({ canInteract, visible, onTalk }: { canInteract: boo
   if (!visible) return null;
 
   return (
-    <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex justify-end p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:hidden">
+    <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex justify-end p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
       <button
         type="button"
         aria-label={t("Talk")}
         disabled={!canInteract}
-        onPointerDown={(event) => {
-          event.preventDefault();
+        onPointerDown={(event) => event.stopPropagation()}
+        onKeyDown={(event) => event.stopPropagation()}
+        onKeyUp={(event) => event.stopPropagation()}
+        onClick={(event) => {
+          event.stopPropagation();
           if (!canInteract) return;
           onTalk();
         }}

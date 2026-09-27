@@ -11,6 +11,7 @@ import { resolvePanel } from "@/game/dialog";
 import { runApiCall } from "@/game/effects";
 import { charOf } from "@/game/secret";
 import { useGame } from "@/game/state";
+import { missionGeneration } from "@/game/runtime";
 import { api } from "@/lib/api";
 import { bus } from "@/engine/bus";
 import { LaptopShell } from "./LaptopShell";
@@ -19,7 +20,7 @@ import { LaptopShell } from "./LaptopShell";
  * Full-screen laptop: bezel + CRT screen. Decode work happens here one step
  * at a time; the street stays underneath with input locked while the lid is up.
  */
-export function LaptopScene({ act }: { act: ActNumber }) {
+export function LaptopScene({ act, restartControl }: { act: ActNumber; restartControl?: ReactNode }) {
   useLocale((state) => state.locale);
   const laptopOpen = useGame((s) => s.laptopOpen);
   const setLaptopOpen = useGame((s) => s.setLaptopOpen);
@@ -30,6 +31,7 @@ export function LaptopScene({ act }: { act: ActNumber }) {
   const recovered = useGame((s) => s.vars.recovered);
   const terminal = useGame((s) => s.terminal);
   const busyLabel = useGame((s) => s.busyLabel);
+  const operations = useGame((s) => s.operations);
   const suspicion = useGame((s) => s.suspicion);
   const armed = waitingFor === "workbench" && panel === "workbench";
 
@@ -45,25 +47,26 @@ export function LaptopScene({ act }: { act: ActNumber }) {
   }, [laptopOpen]);
 
   function close() {
+    if (useGame.getState().operations || useGame.getState().phase === "busy") return;
     gameAudio.playSfx("switch");
     setLaptopOpen(false);
     if (phase === "exploring") void bus.send({ type: "lockInput", locked: false });
   }
 
   function finish() {
-    if (!armed || !recovered) return;
+    if (!armed || !recovered || useGame.getState().operations) return;
     gameAudio.playSfx("confirm");
     void resolvePanel();
   }
 
   return (
-    <LaptopShell open={laptopOpen} title={tOptional(`RSA · Act ${act}`)} onClose={close}
-      status={busyLabel || `Suspicion: ${suspicion}%`}
+    <LaptopShell restartControl={restartControl} open={laptopOpen} title={tOptional(`RSA · Act ${act}`)} onClose={close}
+      status={busyLabel || (operations ? "Finishing the current operation…" : `Suspicion: ${suspicion}%`)} closeDisabled={operations > 0 || phase === "busy"}
       memory={<MemoryRail />}
       footer={<>
         <p>{localize(armed ? recovered ? "Plaintext ready. Hand it to the client on the street." : "Work the steps. Results land in memory."
           : capture ? "Lid open for notes — tools unlock when the story needs the workbench." : "No capture yet. Listen on the street first.")}</p>
-        <button className="btn-primary" disabled={!armed || !recovered} onClick={finish}>{t("I have it")}</button>
+        <button className="btn-primary" disabled={!armed || !recovered || operations > 0} onClick={finish}>{t("I have it")}</button>
       </>}
     >
       <Wizard act={act} armed={armed} />
@@ -212,22 +215,27 @@ function MappingWizard({ armed }: { armed: boolean }) {
   const recovered = useGame((s) => s.vars.recovered);
   const setVars = useGame((s) => s.setVars);
   const pushTerminal = useGame((s) => s.pushTerminal);
-  const [table, setTable] = useState<{ char: string; value: number }[]>([]);
+  const [table, setTable] = useState<{ char: string; value: number }[]>(() => (useGame.getState().labMemory.alphabet as { char: string; value: number }[] | undefined) ?? []);
   const [busy, setBusy] = useState(false);
 
   const step = recovered ? 3 : table.length ? 2 : 1;
 
   async function loadTable() {
     if (!armed) return;
+    const token = missionGeneration();
     setBusy(true);
     try {
       const res = await api.keyboard();
-      setTable(res.keys.map((key) => ({ char: key.char, value: key.value })));
+      const alphabet = res.keys.map((key) => ({ char: key.char, value: key.value }));
+      setTable(alphabet);
+      useGame.getState().setLabMemory({ alphabet });
       pushTerminal({
         tone: "info",
         text: "Pulled the alphabet table: A=1 through Z=26.",
       });
       gameAudio.playSfx("computer");
+    } catch (error) {
+      if (token === missionGeneration()) useGame.getState().setError(error instanceof Error ? error.message : String(error));
     } finally {
       setBusy(false);
     }
@@ -297,13 +305,14 @@ function CaesarWizard({ armed }: { armed: boolean }) {
   const recovered = useGame((s) => s.vars.recovered);
   const setVars = useGame((s) => s.setVars);
   const pushTerminal = useGame((s) => s.pushTerminal);
-  const [candidates, setCandidates] = useState<{ shift: number; word: string }[]>([]);
+  const [candidates, setCandidates] = useState<{ shift: number; word: string }[]>(() => (useGame.getState().labMemory.candidates as { shift: number; word: string }[] | undefined) ?? []);
   const [busy, setBusy] = useState(false);
 
   const step = recovered ? 3 : candidates.length ? 2 : 1;
 
   async function bruteForce() {
     if (!armed) return;
+    const token = missionGeneration();
     setBusy(true);
     try {
       const perChar = await Promise.all(
@@ -319,11 +328,14 @@ function CaesarWizard({ armed }: { armed: boolean }) {
         return { shift, word };
       });
       setCandidates(rows);
+      useGame.getState().setLabMemory({ candidates: rows });
       pushTerminal({
         tone: "info",
         text: `Tried all 25 shifts against "${cipherText}". One of them is English.`,
       });
       gameAudio.playSfx("computer");
+    } catch (error) {
+      if (token === missionGeneration()) useGame.getState().setError(error instanceof Error ? error.message : String(error));
     } finally {
       setBusy(false);
     }
@@ -393,6 +405,7 @@ function RsaWizard({ armed }: { armed: boolean }) {
 
   async function run(call: "rsaCrack" | "deriveKey", key: string) {
     if (!armed) return;
+    const token = missionGeneration();
     setBusy(key);
     try {
       await runApiCall(call);
@@ -403,6 +416,8 @@ function RsaWizard({ armed }: { armed: boolean }) {
       } else {
         gameAudio.playSfx("computer");
       }
+    } catch (error) {
+      if (token === missionGeneration()) useGame.getState().setError(error instanceof Error ? error.message : String(error));
     } finally {
       setBusy(null);
     }

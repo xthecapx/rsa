@@ -3,27 +3,30 @@
  * runs on its own port and reaches the backend through the /api/* rewrite.
  */
 
-async function post<T>(path: string, body?: unknown): Promise<T> {
-  const res = await fetch(path, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-  });
-  if (!res.ok) {
-    const detail = await res.text();
-    throw new Error(detail || `POST ${path} failed (${res.status})`);
-  }
-  return res.json() as Promise<T>;
-}
+import { useGame } from "@/game/state";
+import { missionGeneration } from "@/game/runtime";
 
-async function get<T>(path: string): Promise<T> {
-  const res = await fetch(path);
-  if (!res.ok) {
-    const detail = await res.text();
-    throw new Error(detail || `GET ${path} failed (${res.status})`);
+/** Requests cannot land in a different mission after navigation or retry. */
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const token = missionGeneration();
+  useGame.getState().changeOperations(1);
+  try {
+    const res = await fetch(path, init);
+    if (!res.ok) {
+      const detail = await res.text();
+      throw new Error(detail || `${init?.method ?? "GET"} ${path} failed (${res.status})`);
+    }
+    const result = await res.json() as T;
+    if (token !== missionGeneration()) throw new Error("The mission changed before this operation finished.");
+    return result;
+  } finally {
+    if (token === missionGeneration()) useGame.getState().changeOperations(-1);
   }
-  return res.json() as Promise<T>;
 }
+async function post<T>(path: string, body?: unknown): Promise<T> {
+  return request<T>(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: body !== undefined ? JSON.stringify(body) : undefined });
+}
+async function get<T>(path: string): Promise<T> { return request<T>(path); }
 
 // --- Shared types ---
 

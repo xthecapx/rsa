@@ -5,6 +5,7 @@ import { fill } from "./interpolate";
 import { charOf, lettersOf } from "./secret";
 import { useGame } from "./state";
 import type { TerminalLine } from "./state";
+import { missionGeneration } from "./runtime";
 import { yieldToPaint } from "./yieldToPaint";
 
 const LABELS: Record<string, string> = {
@@ -75,18 +76,23 @@ export function modInverse(a: number, m: number): number | null {
  * player presses behaves exactly like the same step in a cutscene.
  */
 export async function runApiCall(call: ApiCallName): Promise<void> {
+  const token = missionGeneration();
   const store = useGame.getState();
   store.setBusy(LABELS[call] ?? "Working");
   await yieldToPaint();
   try {
     await runApi(call);
   } finally {
-    useGame.getState().setBusy(null);
+    if (token === missionGeneration()) useGame.getState().setBusy(null);
   }
 }
 
 async function runApi(call: string): Promise<void> {
-  const { vars, setVars } = useGame.getState();
+  const token = missionGeneration();
+  const state = useGame.getState();
+  const vars = state.vars;
+  const setVars: typeof state.setVars = (patch) => { if (token === missionGeneration()) state.setVars(patch); };
+  const say = (line: TerminalLine) => { if (token === missionGeneration()) state.pushTerminal(line); };
 
   switch (call) {
     // Ale types a whole word, so every character goes down the wire through
@@ -309,6 +315,7 @@ export function applyShorResult(
 
 /** Run one effect and wait for it, including the world animation. */
 export async function runEffect(effect: Effect): Promise<void> {
+  const token = missionGeneration();
   const store = useGame.getState();
 
   switch (effect.kind) {
@@ -318,7 +325,7 @@ export async function runEffect(effect: Effect): Promise<void> {
       try {
         await runApi(effect.call);
       } finally {
-        useGame.getState().setBusy(null);
+        if (token === missionGeneration()) useGame.getState().setBusy(null);
       }
       return;
     }
@@ -340,13 +347,14 @@ export async function runEffect(effect: Effect): Promise<void> {
           intercept: effect.intercept ?? false,
         });
       } finally {
-        useGame.getState().setBusy(null);
+        if (token === missionGeneration()) useGame.getState().setBusy(null);
       }
       return;
     case "bubble":
       await bus.send({ type: "bubble", actor: effect.actor, face: effect.face });
       return;
     case "tapGlow":
+      useGame.setState((state) => ({ flags: { ...state.flags, listenerActive: effect.on } }));
       await bus.send({ type: "tapGlow", on: effect.on });
       return;
     case "flag":
@@ -379,5 +387,9 @@ export async function runEffect(effect: Effect): Promise<void> {
 }
 
 export async function runEffects(effects: Effect[] | undefined): Promise<void> {
-  for (const effect of effects ?? []) await runEffect(effect);
+  const token = missionGeneration();
+  for (const effect of effects ?? []) {
+    if (token !== missionGeneration()) return;
+    await runEffect(effect);
+  }
 }

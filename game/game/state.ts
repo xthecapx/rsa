@@ -97,7 +97,11 @@ export interface DisplayLine {
   text: string;
 }
 
-interface GameState {
+export interface GameState {
+  labMemory: Record<string, unknown>;
+  operations: number;
+  setLabMemory: (patch: Record<string, unknown>) => void;
+  changeOperations: (delta: number) => void;
   act: ActNumber;
   phase: Phase;
   suspicion: number;
@@ -156,6 +160,10 @@ interface GameState {
 }
 
 export const useGame = create<GameState>((set, get) => ({
+  labMemory: {},
+  operations: 0,
+  setLabMemory: (patch) => set((state) => ({ labMemory: { ...state.labMemory, ...patch } })),
+  changeOperations: (delta) => set((state) => ({ operations: Math.max(0, state.operations + delta) })),
   act: 1,
   phase: "exploring",
   suspicion: 0,
@@ -230,6 +238,8 @@ export const useGame = create<GameState>((set, get) => ({
   resetRun: (act) =>
     set({
       act,
+      labMemory: {},
+      operations: 0,
       phase: "exploring",
       suspicion: 0,
       nodeId: null,
