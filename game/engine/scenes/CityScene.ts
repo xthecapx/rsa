@@ -1,8 +1,6 @@
 import {
   Actor,
   Circle,
-  GraphicsGroup,
-  Rectangle,
   BoundingBox,
   Color,
   Engine,
@@ -13,10 +11,11 @@ import {
 } from "excalibur";
 import type { PointerEvent, Subscription } from "excalibur";
 
-import { TOWN_LOCATIONS, TOWN_TREES, townTargetAt, type TownTarget } from "@/content/town";
+import { TOWN_LOCATIONS, townTargetAt, type TownTarget } from "@/content/town";
 import { t, useLocale } from "@/i18n";
+import { gameAudio } from "@/game/audio";
 
-import { Bubble, Packet, ParkedCar, TapGlow, createParkedCar } from "../actors/Props";
+import { Bubble, Packet, ParkedCar, TapGlow, Wire, createParkedCar } from "../actors/Props";
 import { Character } from "../actors/Character";
 import { TownSign } from "../actors/TownSign";
 import type { CastMember } from "../actors/Character";
@@ -125,15 +124,8 @@ export class CityScene extends Scene {
     this.camera.strategy.limitCameraBounds(
       new BoundingBox(0, 0, worldWidth, worldHeight),
     );
-    for (const tree of TOWN_TREES) {
-      const plant = new Actor({ pos: vec(tileCenter(tree).x, tileCenter(tree).y - 6), z: 6 });
-      plant.graphics.use(new GraphicsGroup({ members: [
-        { graphic: new Rectangle({ width: 5, height: 15, color: Color.fromHex("#81543d") }), offset: vec(8, 13) },
-        { graphic: new Circle({ radius: 13, color: Color.fromHex("#285548") }), offset: vec(0, 0) },
-        { graphic: new Circle({ radius: 9, color: Color.fromHex("#39785b") }), offset: vec(3, -3) },
-      ] }));
-      this.add(plant);
-    }
+    // The tapped line runs above the sidewalk from Ale's window, past the junction box, to Brayan's.
+    this.add(new Wire([LANDMARKS.ale.at, { x: LANDMARKS.tap.at.x - 4, y: LANDMARKS.tap.at.y }, LANDMARKS.tap.at, { x: LANDMARKS.tap.at.x + 3, y: LANDMARKS.tap.at.y }, LANDMARKS.brayan.at]));
     const guide = new Actor({ name: "professor-thecap", pos: vec(tileCenter(TOWN_LOCATIONS.guide.at).x, tileCenter(TOWN_LOCATIONS.guide.at).y), width: TILE_SIZE, height: TILE_SIZE, z: 10 });
     guide.graphics.use(images.doctor.toSprite());
     this.add(guide);
@@ -449,12 +441,14 @@ export class CityScene extends Scene {
     const point = (pos: GridPos) => vec(tileCenter(pos).x, wireY);
 
     this.packet.show(command.style, point(from));
+    gameAudio.playSynth("wire");
     const legDuration = 900;
 
     if (command.intercept) {
       await this.packet.travelTo(point(tap), legDuration);
       if (!this.alive) return;
       this.tapGlow.setActive(true);
+      gameAudio.playSynth("capture");
       this.bubbles.hacker.showAbove(this.player.pos, "success");
       await wait(520);
       if (!this.alive) return;

@@ -5,17 +5,18 @@ import { useEffect, useState, type ReactNode } from "react";
 import clsx from "clsx";
 
 import type { ActNumber } from "@/content/types";
-import { QuantumUplink } from "./QuantumUplink";
 import { gameAudio } from "@/game/audio";
 import { resolvePanel } from "@/game/dialog";
 import { runApiCall } from "@/game/effects";
-import { charOf } from "@/game/secret";
 import { useGame } from "@/game/state";
 import { missionGeneration } from "@/game/runtime";
 import { api } from "@/lib/api";
 import { bus } from "@/engine/bus";
 import { LaptopShell } from "./LaptopShell";
-import { LaptopChoiceButton, LaptopQuestion } from "./LaptopControls";
+import { LaptopChoiceButton, LaptopQuestion, StepHeader } from "./LaptopControls";
+import { PlaintextWorkbench } from "./PlaintextWorkbench";
+import { RsaWorkbench } from "./RsaWorkbench";
+import { ShorPipeline } from "./ShorPipeline";
 import { RsaProgress } from "./RsaProgress";
 
 /**
@@ -147,36 +148,10 @@ function Wizard({ act, armed }: { act: ActNumber; armed: boolean }) {
       <div className="border border-dashed border-stage-border px-3 py-6 text-center text-sm text-stage-muted">{t("Waiting for a packet on the wire.")}</div>
     );
   }
-  if (act === 1) return <MappingWizard armed={armed} />;
+  if (act === 1) return <PlaintextWorkbench armed={armed} />;
   if (act === 2) return <CaesarWizard armed={armed} />;
-  if (act === 3) return <RsaWizard armed={armed} />;
-  return (
-    <div className={clsx("laptop-challenge", !armed && "pointer-events-none opacity-50")}>
-      <StepHeader step={1} total={1} title={t("Quantum uplink")} />
-      <QuantumUplink disabled={!armed} />
-    </div>
-  );
-}
-
-function StepHeader({
-  step,
-  total,
-  title,
-}: {
-  step: number;
-  total: number;
-  title: string;
-}) {
-  useLocale((state) => state.locale);
-  return (
-    <div className="mb-2 flex items-baseline justify-between gap-2">
-      <h2 className="text-sm font-semibold text-[#e8f4f8]">
-        {localize(title)}
-      </h2>
-      <span className="text-xs text-stage-muted">{t("Step ")}{step}/{total}
-      </span>
-    </div>
-  );
+  if (act === 3) return <RsaWorkbench armed={armed} />;
+  return <ShorPipeline armed={armed} />;
 }
 
 function StepButton({
@@ -202,96 +177,6 @@ function StepButton({
     >
       {busy ? `${t(label)}…` : t(label)}
     </LaptopChoiceButton>
-  );
-}
-
-function MappingWizard({ armed }: { armed: boolean }) {
-  useLocale((state) => state.locale);
-  const values = useGame((s) => s.vars.values);
-  const recovered = useGame((s) => s.vars.recovered);
-  const setVars = useGame((s) => s.setVars);
-  const pushTerminal = useGame((s) => s.pushTerminal);
-  const [table, setTable] = useState<{ char: string; value: number }[]>(() => (useGame.getState().labMemory.alphabet as { char: string; value: number }[] | undefined) ?? []);
-  const [busy, setBusy] = useState(false);
-
-  const step = recovered ? 3 : table.length ? 2 : 1;
-
-  async function loadTable() {
-    if (!armed) return;
-    const token = missionGeneration();
-    setBusy(true);
-    try {
-      const res = await api.keyboard();
-      const alphabet = res.keys.map((key) => ({ char: key.char, value: key.value }));
-      setTable(alphabet);
-      useGame.getState().setLabMemory({ alphabet });
-      pushTerminal({
-        tone: "info",
-        text: "Pulled the alphabet table: A=1 through Z=26.",
-      });
-      gameAudio.playSfx("computer");
-    } catch (error) {
-      if (token === missionGeneration()) useGame.getState().setError(error instanceof Error ? error.message : String(error));
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  function applyMapping() {
-    if (!armed || !table.length) return;
-    const numbers = String(values).trim().split(/\s+/).filter(Boolean);
-    const lookup = new Map(table.map((row) => [row.value, row.char]));
-    const word = numbers
-      .map((n) => lookup.get(Number(n)) ?? charOf(Number(n)))
-      .join("");
-    for (const n of numbers) {
-      pushTerminal({
-        tone: "info",
-        text: `${n} -> ${lookup.get(Number(n)) ?? "?"}`,
-      });
-    }
-    pushTerminal({ tone: "good", text: `Message reads: ${word}` });
-    setVars({ recovered: word });
-    gameAudio.playSfx("confirm");
-  }
-
-  return (
-    <div className="laptop-challenge space-y-3">
-      {step === 1 && (
-        <>
-          <StepHeader step={1} total={3} title={t("Fetch the alphabet table")} />
-          <p className="laptop-note">{t("The wire carries numbers. Pull A=1 … Z=26 from the backend, then map the payload.")}</p>
-          <StepButton
-            label={t("Fetch alphabet table")}
-            busy={busy}
-            disabled={!armed}
-            onClick={() => void loadTable()}
-          />
-        </>
-      )}
-      {step >= 2 && (
-        <>
-          <StepHeader step={2} total={3} title={t("Apply the mapping")} />
-          <div className="grid grid-cols-6 gap-x-2 gap-y-1 overflow-x-auto border border-stage-border px-2 py-2 font-mono text-xs text-stage-muted">
-            {table.map((row) => (
-              <span key={row.char}>
-                {row.char}={row.value}
-              </span>
-            ))}
-          </div>
-          {!recovered && (
-            <StepButton
-              label={t("Run payload through the table")}
-              disabled={!armed}
-              onClick={applyMapping}
-            />
-          )}
-        </>
-      )}
-      {localize(recovered && (
-        <StepHeader step={3} total={3} title={t("Plaintext recovered")} />
-      ))}
-    </div>
   );
 }
 
@@ -390,75 +275,3 @@ function CaesarWizard({ armed }: { armed: boolean }) {
   );
 }
 
-function RsaWizard({ armed }: { armed: boolean }) {
-  useLocale((state) => state.locale);
-  const vars = useGame((s) => s.vars);
-  const recovered = useGame((s) => s.vars.recovered);
-  const setVars = useGame((s) => s.setVars);
-  const [busy, setBusy] = useState<string | null>(null);
-
-  const step = recovered ? 3 : vars.factors ? 2 : 1;
-
-  async function run(call: "rsaCrack" | "deriveKey", key: string) {
-    if (!armed) return;
-    const token = missionGeneration();
-    setBusy(key);
-    try {
-      await runApiCall(call);
-      if (call === "deriveKey") {
-        const next = useGame.getState().vars.recovered;
-        if (next) setVars({ recovered: String(next) });
-        gameAudio.playSfx("confirm");
-      } else {
-        gameAudio.playSfx("computer");
-      }
-    } catch (error) {
-      if (token === missionGeneration()) useGame.getState().setError(error instanceof Error ? error.message : String(error));
-    } finally {
-      setBusy(null);
-    }
-  }
-
-  return (
-    <div className="laptop-challenge space-y-3">
-      <dl className="grid grid-cols-2 gap-x-2 gap-y-1 border border-stage-border px-3 py-2 font-mono text-xs">
-        <dt className="text-stage-muted">{t("public e")}</dt>
-        <dd className="text-[#cfe6ee]">{vars.e ?? "?"}</dd>
-        <dt className="text-stage-muted">{t("modulus N")}</dt>
-        <dd className="text-[#cfe6ee]">{vars.modulus}</dd>
-        <dt className="text-stage-muted">{t("ciphertext c")}</dt>
-        <dd className="text-accent-amber">{vars.cipherNumber ?? "?"}</dd>
-        <dt className="text-stage-muted">{t("factors")}</dt>
-        <dd className="text-[#cfe6ee]">{vars.factors ?? "—"}</dd>
-        <dt className="text-stage-muted">{t("private d")}</dt>
-        <dd className="text-[#cfe6ee]">{vars.d ?? "—"}</dd>
-      </dl>
-
-      {step === 1 && (
-        <>
-          <StepHeader step={1} total={3} title={t("Factor the modulus")} />
-          <StepButton
-            label={tOptional(`Factor N = ${vars.modulus}`)}
-            busy={busy === "factor"}
-            disabled={!armed}
-            onClick={() => void run("rsaCrack", "factor")}
-          />
-        </>
-      )}
-      {step === 2 && (
-        <>
-          <StepHeader step={2} total={3} title={t("Derive d and decrypt")} />
-          <StepButton
-            label={t("Rebuild private key and read c")}
-            busy={busy === "derive"}
-            disabled={!armed}
-            onClick={() => void run("deriveKey", "derive")}
-          />
-        </>
-      )}
-      {step === 3 && (
-        <StepHeader step={3} total={3} title={t("Letter recovered")} />
-      )}
-    </div>
-  );
-}

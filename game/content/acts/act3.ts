@@ -19,7 +19,7 @@ export const act3 = defineAct({
   tasks: [
     { id: "brief", label: "Hear the client out" },
     { id: "install", label: "Be on the line before the key is published" },
-    { id: "decode", label: "Factor N and rebuild the private key" },
+    { id: "decode", label: "Factor N, rebuild d, and decrypt by hand" },
     { id: "report", label: "Report the message to the client" },
   ],
 
@@ -100,6 +100,7 @@ export const act3 = defineAct({
     installed: {
       onEnter: [
         { kind: "tapGlow", on: true },
+        { kind: "api", call: "rollModulus" },
         { kind: "api", call: "rsaKeygen" },
         { kind: "packet", style: "key", from: "brayan", to: "ale", intercept: true },
         { kind: "task", id: "install", status: "done" },
@@ -154,7 +155,7 @@ export const act3 = defineAct({
         },
         {
           speaker: "system",
-          text: "Factor N on the laptop, then derive d and decrypt. This modulus falls in microseconds -- which is precisely why real ones are hundreds of digits long.",
+          text: "Do it by hand on the laptop: pick the two primes, compute phi(N), find d, then multiply c by itself d times mod N. Every number you need is on the screen. Real moduli have hundreds of digits precisely so nobody can.",
         },
       ],
       waitsFor: "workbench",
@@ -171,7 +172,7 @@ export const act3 = defineAct({
       lines: [
         {
           speaker: "hacker",
-          text: "N = {factors}, so d = {d}. His private key, rebuilt from something he published on purpose.",
+          text: "N = {factors}, so d = {d}, and c^d mod N gave me the letter. His private key, rebuilt by hand from something he published on purpose.",
         },
         {
           speaker: "system",
@@ -212,7 +213,7 @@ export const act3 = defineAct({
         },
         {
           speaker: "system",
-          text: "Act 3 clear. Run the same attack against a 2048-bit modulus and it needs about {projectedYears} years. RSA is not broken by cleverness -- it is broken by a faster way to factor.",
+          text: "Act 3 clear. You factored N = {modulus} in a few taps. The same attack on a 2048-bit modulus needs about {projectedYears} years. RSA is not broken by cleverness -- it is broken by a faster way to factor.",
         },
       ],
       ending: "win",

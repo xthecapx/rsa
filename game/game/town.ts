@@ -5,6 +5,7 @@ import { createJSONStorage, persist } from "zustand/middleware";
 import { getAct } from "@/content";
 import type { ActNumber } from "@/content/types";
 import { TOWN_SPAWN, type WorldFacing } from "@/content/town";
+import { isToyModulus } from "./secret";
 import { useGame, type GameState } from "./state";
 import { townMap } from "@/engine/maps/townMap";
 
@@ -19,7 +20,7 @@ export function validCheckpoint(value: RsaCheckpoint | null): value is RsaCheckp
     && typeof value.nodeId === "string" && Array.isArray(value.lines) && Array.isArray(value.tasks)
     && !!value.vars && !!value.flags && typeof value.suspicion === "number"
     && Number.isInteger(value.lineIndex) && value.lineIndex >= 0 && Array.isArray(value.terminal)
-    && (value.vars.modulus === 15 || value.vars.modulus === 21) && !!getAct(value.act).nodes[value.nodeId]
+    && isToyModulus(value.vars.modulus) && !!getAct(value.act).nodes[value.nodeId]
     && (value.phase !== "exploring" || !!value.pendingTravel);
 }
 export function restoreRsa(checkpoint: RsaCheckpoint) {

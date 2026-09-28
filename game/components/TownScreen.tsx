@@ -13,6 +13,8 @@ import { captureRsa, restoreRsa, townStorageUnavailable, useTown, validCheckpoin
 import { invalidateMission, missionGeneration } from "@/game/runtime";
 import { interactAt, startAct } from "@/game/dialog";
 import { useProgress } from "@/game/progress";
+import { useMedals } from "@/game/medals";
+import { MedalCase } from "./MedalCase";
 import { syncSuspicionBubbles } from "@/game/suspicion";
 import { gameAudio } from "@/game/audio";
 import { t, useLocale } from "@/i18n";
@@ -91,7 +93,7 @@ export function TownScreen({ initialAct, initialCoin = false, visitRsa = false }
   useEffect(() => {
     let cancelled = false;
     void (async () => {
-      await Promise.all([useTown.persist.rehydrate(), useProgress.persist.rehydrate()]);
+      await Promise.all([useTown.persist.rehydrate(), useProgress.persist.rehydrate(), useMedals.persist.rehydrate()]);
       if (cancelled) return;
       const saved = useTown.getState();
       useGame.setState({ laptopOpen: false, walking: false, near: null, operations: 0, busyLabel: null });
@@ -187,10 +189,12 @@ export function TownScreen({ initialAct, initialCoin = false, visitRsa = false }
   }
   function enterCoin() {
     if (!saveAndPause()) return;
+    gameAudio.playSynth("door");
     closeConversation(); readyRef.current = false; setSceneStatus("loading"); setTownNear(null);
     useTown.getState().patch({ location: "coin", position: { ...TOWN_LOCATIONS.coinDoor.stand }, facing: "down" });
   }
   function leaveCoin() {
+    gameAudio.playSynth("door");
     readyRef.current = false; setSceneStatus("loading");
     useGame.getState().setWalking(false); useGame.getState().setNear(null);
     useTown.getState().patch({ location: "town", position: { x: TOWN_LOCATIONS.coinDoor.stand.x, y: TOWN_LOCATIONS.coinDoor.stand.y + 1 }, facing: "down", tracked: useProgress.getState().completed.coin?.includes("coin") ? "rsa" : "coin" });
@@ -244,15 +248,15 @@ export function TownScreen({ initialAct, initialCoin = false, visitRsa = false }
     readyRef.current = false; setSceneStatus("loading");
     setJournalOpen(false); setRestartOpen(false); setTownNear(null);
     try { localStorage.removeItem("quantum-coin-session-v1"); } catch { /* In-memory reset remains available. */ }
-    useProgress.getState().reset(); useGame.getState().resetRun(1); useGame.setState({ completedActs: [] });
+    useProgress.getState().reset(); useMedals.getState().reset(); useGame.getState().resetRun(1); useGame.setState({ completedActs: [] });
     useTown.getState().reset(); setCoinSaved(false);
     setWorldKey((key) => key + 1); greet();
   }
   const restartOptions: RestartOption[] = [
-    ...(rsaActive ? [{ label: "Restart this RSA act", description: "Clear this act’s attempt and results. Other completed acts stay saved.", restart: () => void restartRsa(false) }] : []),
+    ...(rsaActive ? [{ label: "Restart this RSA act", description: "Clear this act’s attempt and results. Other completed acts and your medals stay saved.", restart: () => void restartRsa(false) }] : []),
     { label: "Restart Who Goes First?", description: "Clear the coin lesson, its puzzles, experiments, and completion. Start inside the house.", restart: restartCoin },
     { label: "Restart RSA from Act 1", description: "Clear RSA progress and begin the first act with the client.", restart: () => void restartRsa(true) },
-    { label: "Start the whole game over", description: "Clear both lessons and town progress. Return to the welcome at the southern entrance.", restart: restartGame },
+    { label: "Start the whole game over", description: "Clear both lessons, your medal case, and town progress. Return to the welcome at the southern entrance.", restart: restartGame },
   ];
   const restartControl = <StartOverControl options={restartOptions} disabled={!sceneReady || (rsaActive && blocked)} onOpenChange={setRestartOpen} />;
 
@@ -266,10 +270,11 @@ export function TownScreen({ initialAct, initialCoin = false, visitRsa = false }
     const unfinished = validCheckpoint(checkpoint) && checkpoint.phase !== "won" && checkpoint.phase !== "caught";
     const next = ACT_NUMBERS.find((act) => !useProgress.getState().completed.rsa?.includes(String(act))) ?? 1;
     const act = saved.requestedAct ?? (unfinished ? checkpoint.act : next);
-    setConversation({ title: "Breaking RSA", rsaAct: unfinished ? checkpoint.act : act, text: unfinished ? "Your client is still waiting. Resume the saved mission, or choose another act to start a new attempt." : "Ale and Brayan think their messages are secret. Help me recover them, from simple encodings to RSA. You can start now, or try the beginner coin lesson first.",
+    const allDone = ACT_NUMBERS.every((number) => useProgress.getState().completed.rsa?.includes(String(number)));
+    setConversation({ title: "Breaking RSA", rsaAct: unfinished ? checkpoint.act : act, text: unfinished ? "Your client is still waiting. Resume the saved mission, or choose another act to start a new attempt." : allDone ? "You recovered every message, from plaintext to RSA. The four medals are yours to keep. Replay any act to sharpen a skill; nothing is lost." : "Ale and Brayan think their messages are secret. Help me recover them, from simple encodings to RSA. You can start now, or try the beginner coin lesson first.",
       choices: [
         ...(unfinished ? [{ label: "Resume", act: checkpoint.act, action: () => void resumeRsa() }] : []),
-        ...(!unfinished ? [{ label: "Start", act, action: () => void beginRsa(act) }] : []),
+        ...(!unfinished && !allDone ? [{ label: "Start", act, action: () => void beginRsa(act) }] : []),
         ...(unfinished && saved.requestedAct && saved.requestedAct !== checkpoint.act ? [{ label: "Replace saved attempt with selected act", action: () => void beginRsa(act) }] : []),
         { label: "Choose an act to replay", action: () => setConversation({ title: "RSA missions", rsaAct: act, text: "Choose an act. Starting it replaces your saved RSA attempt; your completed lessons stay saved.", choices: [...ACT_NUMBERS.map((number) => ({ label: `Act ${number}: ${getAct(number).title}`, action: () => void beginRsa(number) })), { label: "Later", action: later }] }) },
         { label: "Later", action: later },
@@ -313,6 +318,7 @@ export function TownScreen({ initialAct, initialCoin = false, visitRsa = false }
       <button className="btn-ghost" disabled={rsaActive && blocked} onClick={() => trackDestination(id)}>{t(id === "coin" ? "Track coin house" : "Track RSA client")}</button>
       <p className="text-xs text-stage-muted">{t(town.discovered.includes(id === "coin" ? "coinDoor" : "rsa") || done ? "Visited" : "Not visited yet")}</p>
     </div>; })}
+    <MedalCase />
     <p className="text-stage-muted">{t("Two more houses will open for future lessons.")}</p>
     {townStorageUnavailable && <p role="status">{t("Browser storage is unavailable. Progress will last for this visit only.")}</p>}
   </div>;

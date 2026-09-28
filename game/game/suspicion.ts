@@ -1,3 +1,4 @@
+import { gameAudio } from "./audio";
 import { bus } from "@/engine/bus";
 import { useGame } from "./state";
 import { missionGeneration } from "./runtime";
@@ -36,6 +37,7 @@ export async function raiseSuspicion(amount: number): Promise<boolean> {
   const state = useGame.getState();
   const before = bandFor(state.suspicion);
   const value = state.addSuspicion(amount);
+  gameAudio.playSynth("alarm");
   const after = bandFor(value);
 
   if (after !== before) {

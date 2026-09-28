@@ -1,4 +1,5 @@
 "use client";
+import { t, localize, useLocale } from "@/i18n";
 
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import clsx from "clsx";
@@ -17,4 +18,25 @@ export function LaptopChoiceButton({ selected = false, className, children, ...p
   return <button {...props} type="button" className={clsx("laptop-choice", selected && "selected", className)}>
     {children}
   </button>;
+}
+
+export function StepHeader({
+  step,
+  total,
+  title,
+}: {
+  step: number;
+  total: number;
+  title: string;
+}) {
+  useLocale((state) => state.locale);
+  return (
+    <div className="mb-2 flex items-baseline justify-between gap-2">
+      <h2 className="text-sm font-semibold text-[#e8f4f8]">
+        {localize(title)}
+      </h2>
+      <span className="text-xs text-stage-muted">{t("Step ")}{step}/{total}
+      </span>
+    </div>
+  );
 }

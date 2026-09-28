@@ -11,7 +11,7 @@ const { width, height, rows } = townMap;
 const terrain = new Map<string, string>();
 for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
   const tile = rows[y][x];
-  const color = tile === "p" ? "#708082" : "ryzm".includes(tile) ? "#354754" : ".,".includes(tile) ? "#37624e" : "#ae8967";
+  const color = "pq".includes(tile) ? "#708082" : "ryzm".includes(tile) ? "#354754" : ".,e".includes(tile) ? "#37624e" : "svd".includes(tile) ? "#8a7b5a" : "#ae8967";
   terrain.set(color, (terrain.get(color) ?? "") + `M${x} ${y}h1v1h-1z`);
 }
 const places = [

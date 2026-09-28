@@ -51,7 +51,7 @@ export interface RunVars {
   value: number | null;
   shift: number;
   cipherChar: string | null;
-  modulus: 15 | 21;
+  modulus: number;
   base: number;
   numControl: number;
   e: number | null;

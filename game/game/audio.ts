@@ -1,4 +1,7 @@
 import { create } from "zustand";
+import { Synth, type SynthId } from "./synth";
+
+export type { SynthId };
 
 /** Kenney CC0 clips under public/assets/kenney/audio/. */
 export const AUDIO = {
@@ -77,6 +80,7 @@ class GameAudioController {
   private sfxCache = new Map<string, HTMLAudioElement>();
   private preloadPromise: Promise<void> | null = null;
   private desiredTrack: MusicTrack | null = null;
+  private synth = new Synth();
 
   preload(): Promise<void> {
     if (this.preloadPromise) return this.preloadPromise;
@@ -122,6 +126,7 @@ class GameAudioController {
     const muted = readMutedPreference();
     useAudio.getState().setMuted(muted);
     useAudio.getState().setUnlocked(true);
+    this.synth.setMuted(muted);
 
     this.playSfx("confirm");
 
@@ -141,6 +146,7 @@ class GameAudioController {
     }
     if (this.bgm) this.bgm.muted = muted;
     if (this.jingle) this.jingle.muted = muted;
+    this.synth.setMuted(muted);
     if (!muted && useAudio.getState().unlocked && this.desiredTrack) {
       void this.playMusic(this.desiredTrack);
     }
@@ -190,12 +196,19 @@ class GameAudioController {
     }
   }
 
+  /** Procedural cues (footsteps, wire blips, alarms, chimes). */
+  playSynth(id: SynthId): void {
+    if (!useAudio.getState().unlocked || useAudio.getState().muted) return;
+    this.synth.play(id);
+  }
+
   async playJingle(id: JingleId): Promise<void> {
     if (!useAudio.getState().unlocked) return;
     const muted = useAudio.getState().muted;
     const url = AUDIO.jingles[id];
 
     this.jingle?.pause();
+    if (muted) return; // Nothing to wait for; callers only await the sting to sequence music.
     const audio = new Audio(url);
     audio.volume = JINGLE_VOLUME;
     audio.muted = muted;
@@ -207,7 +220,7 @@ class GameAudioController {
     }
 
     try {
-      if (!muted) await audio.play();
+      await audio.play();
     } catch {
       return;
     }

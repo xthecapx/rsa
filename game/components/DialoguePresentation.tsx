@@ -1,5 +1,6 @@
 "use client";
 
+import { gameAudio } from "@/game/audio";
 import { useEffect, useRef, useState, type HTMLAttributes, type ReactNode } from "react";
 import clsx from "clsx";
 import type { Speaker } from "@/content/types";
@@ -27,9 +28,10 @@ export function useDialogueText(text: string) {
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
   useEffect(() => {
     setTyped("");
-    let length = 0;
+    let length = 0, ticks = 0;
     timer.current = setInterval(() => {
       length = Math.min(text.length, length + 3);
+      if (ticks++ % 4 === 0 && length < text.length) gameAudio.playSynth("tick");
       setTyped(text.slice(0, length));
       if (length >= text.length && timer.current) clearInterval(timer.current);
     }, 12);

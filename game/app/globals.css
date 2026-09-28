@@ -233,6 +233,7 @@ html[data-boot="done"] #mitm-boot {
 .game-shell .game-dialogue { border-radius: 6px; background-color: #122a33f5; box-shadow: 0 8px 30px #0005; }
 .game-shell .game-dialogue > div:last-child { font-size: 12px; }
 .game-shell .game-dialogue li button { font-size: 14px; line-height: 1.55; border-radius: 4px; }
+.game-shell .game-dialogue li button:focus-visible { outline: 3px solid #efbe67; outline-offset: 2px; border-color: #efbe67; }
 .game-shell .game-dialogue input { font-size: 15px; }
 .game-shell .btn-primary, .game-shell .btn-ghost { border-radius: 4px; }
 .game-shell aside { background: #0d222b; }
@@ -297,3 +298,51 @@ html[data-boot="done"] #mitm-boot {
   .coin-world { padding: 12px 64px 48px; }
   .game-shell .game-dialogue { max-height: 48dvh; overflow-y: auto; }
 }
+
+/* Medal case: knowledge badges kept across replays. */
+.medal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 8px; list-style: none; margin: 0; padding: 0; }
+.medal-grid-compact { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; }
+.medal { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 4px; text-align: center; border: 1px solid #45616a; border-radius: 8px; background: #0d263066; }
+.medal-glyph { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; border: 2px solid #45616a; font-size: 18px; line-height: 1; color: #78949a; }
+.medal-title { font-size: 10px; letter-spacing: .04em; }
+.medal-skill { font-size: 9px; color: #78949a; line-height: 1.3; }
+.medal-locked .medal-title { color: #78949a; }
+.medal-earned { border-color: #c7a65f; background: #55442955; }
+.medal-earned .medal-glyph { border-color: #f2cc7e; color: #f5c56d; background: radial-gradient(circle at 35% 30%, #7a6230, #3b2f14); box-shadow: 0 0 0 2px #3b2f14, 0 0 10px #c7a65f88; }
+.medal-earned .medal-title { color: #f2cc7e; }
+.medal-reveal { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 12px; text-align: center; border: 1px solid #ac8c50; background: #423a222e; }
+.medal-reveal-label { color: #f5c56d; font-size: 10px; letter-spacing: .2em; }
+.medal-reveal-glyph { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; border: 3px solid #f2cc7e; font-size: 28px; line-height: 1; color: #f5c56d; background: radial-gradient(circle at 35% 30%, #7a6230, #3b2f14); box-shadow: 0 0 0 3px #3b2f14, 0 0 18px #c7a65f88; }
+.medal-reveal-new .medal-reveal-glyph { animation: medal-pop .6s cubic-bezier(.2,1.4,.4,1) both, medal-shine 2.4s ease-in-out 1s infinite; }
+.medal-reveal-title { font-size: 16px; color: #f2cc7e; }
+.medal-reveal-ability { font-size: 11px; color: #f5c56d; border-top: 1px dashed #ac8c50; padding-top: 8px; }
+@keyframes medal-pop { from { transform: scale(.2) rotate(-30deg); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes medal-shine { 0%, 100% { box-shadow: 0 0 0 3px #3b2f14, 0 0 18px #c7a65f88; } 50% { box-shadow: 0 0 0 3px #3b2f14, 0 0 30px #f2cc7ecc; } }
+
+/* Act 3 workbench: equations with holes, pieces to fill them. */
+.rsa-eq { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 16px; line-height: 2.4; color: #cfe6ee; overflow-wrap: anywhere; }
+.rsa-slot { display: inline-flex; align-items: center; justify-content: center; min-width: 56px; min-height: 44px; margin: 0 4px; padding: 4px 10px; border: 2px dashed #70c6b2; border-radius: 6px; background: #0b1f28; color: #d8ede5; font: inherit; line-height: 1.2; vertical-align: middle; cursor: pointer; }
+.rsa-slot.filled { border-style: solid; border-color: #3d6b60; color: #8fe0cd; }
+.rsa-chip { flex: none !important; min-width: 52px; justify-content: center; padding: 6px 10px; text-align: center; font-size: 15px; line-height: 1.2; }
+.rsa-chip small { display: block; font-size: 10px; color: #a7bbc0; }
+.rsa-chip .puzzle-drag-grip { display: none; }
+.rsa-chip.spent { opacity: .35; pointer-events: none; }
+
+/* Act 4 pipeline rail: black boxes stacked top to bottom, wired by drag and drop. */
+.pipe-rail { display: flex; flex-direction: column; }
+.pipe-box { position: relative; border: 2px solid #1e4450; border-radius: 8px; background: #0b1f28; padding: 10px 12px 12px; transition: border-color .2s, box-shadow .2s; }
+.pipe-box.is-unplugged { border-style: dashed; }
+.pipe-box.is-done { border-color: #3d6b60; }
+.pipe-box.is-active { border-color: #efbe67; box-shadow: 0 0 0 4px #efbe6730, 0 0 18px #efbe6740; animation: pipe-pulse 1s ease-in-out infinite; }
+@keyframes pipe-pulse { 50% { box-shadow: 0 0 0 6px #efbe6718, 0 0 26px #efbe6760; } }
+.pipe-head { display: flex; align-items: flex-start; gap: 10px; margin: 6px 0 8px; }
+.pipe-index { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: #163a34; color: #8fe0cd; font: 700 12px/1 ui-monospace, monospace; }
+.pipe-fact { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; color: #cfe6ee; overflow-wrap: anywhere; }
+.pipe-port { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pipe-port.out { margin-top: 10px; padding-top: 8px; border-top: 1px dashed #1e4450; }
+.pipe-port-label { font: 700 9px/1 ui-monospace, monospace; letter-spacing: .12em; text-transform: uppercase; color: #688c91; min-width: 24px; }
+.pipe-port .rsa-slot { margin: 0; min-height: 40px; font-size: 13px; }
+.pipe-port .rsa-chip { min-height: 40px; }
+.pipe-link { width: 4px; height: 22px; margin: 0 auto; background: repeating-linear-gradient(#1e4450 0 4px, transparent 4px 8px); }
+.pipe-link.is-wired { background: #3d6b60; }
+.pipe-link.is-flowing { background: linear-gradient(#efbe67, #8fe0cd); box-shadow: 0 0 10px #efbe67; }

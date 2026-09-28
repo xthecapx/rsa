@@ -5,6 +5,8 @@ import { useEffect, useRef, useState } from "react";
 import { COIN_SCENES, COIN_STEPS, type CoinStep, type RoomPlace } from "@/content/coin";
 import { coinApi, type CoinResult } from "@/lib/coin";
 import { useProgress } from "@/game/progress";
+import { useMedals } from "@/game/medals";
+import { MedalReveal } from "./MedalCase";
 import type { Task } from "@/game/state";
 import { gameAudio } from "@/game/audio";
 import { StartOverControl, type RestartOption } from "./StartOverControl";
@@ -172,7 +174,7 @@ export function CoinScenario({ onExit, onRestartGame }: { onExit?: () => void; o
   useEffect(() => {
     alive.current = true;
     void gameAudio.playMusic("play");
-    void useProgress.persist.rehydrate();
+    void useProgress.persist.rehydrate(); void useMedals.persist.rehydrate();
     try {
       const saved = JSON.parse(localStorage.getItem(SAVE_KEY) ?? "null");
       if (saved && COIN_STEPS.includes(saved.step) && ["table", "desk", "board"].includes(saved.place)
@@ -329,6 +331,7 @@ export function CoinScenario({ onExit, onRestartGame }: { onExit?: () => void; o
         {localize(error && <p role="alert" className="my-4 text-actor-hacker">{localize(error)}</p>)}
         {session.step === "done" && <div className="coin-achievement mt-5" aria-live="polite"><span>{t("QUANTUM COIN")}</span><h2>{localize(session.winner === 0 ? "Ale" : "Brayan")}{t(" goes first!")}</h2>
           <Coins bits={[session.winner ?? 0]} /><p>{t("Your first quantum program, tested in a simulator.")}</p></div>}
+        {session.step === "done" && <div className="mt-4"><MedalReveal id="quantum-coin" /></div>}
         {!atPlace || !finishedDialog ? <p className="coin-placeholder">{localize(!atPlace ? "Visit the highlighted location to open this step." : "Finish the conversation to unlock the experiment.")}</p> :
           <div className="mt-5 space-y-5">
             {session.step === "welcome" && <>
@@ -434,7 +437,7 @@ export function CoinScenario({ onExit, onRestartGame }: { onExit?: () => void; o
               }))}
             </>}
             {session.step === "done" && <>
-              <p>{t("Next: take your circuit skills onto the street and explore how period finding helps break toy RSA.")}</p>
+              <p>{t("This lesson is complete and stays complete. Next: take your circuit skills onto the street and explore how period finding helps break toy RSA.")}</p>
               <button className="btn-primary inline-block" onClick={leaveHouse}>{t("Return to town and meet the RSA client →")}</button>
               <button className="btn-ghost block" onClick={restartLesson}>{t("Replay the whole lesson")}</button>
             </>}

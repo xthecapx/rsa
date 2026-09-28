@@ -1,5 +1,5 @@
 import { townMap as raw, RSA_OFFSET } from "./townMap";
-import { TOWN_LOCATIONS, TOWN_SPAWN, TOWN_TREES } from "@/content/town";
+import { TOWN_LOCATIONS, TOWN_SPAWN } from "@/content/town";
 
 export interface TileEntry {
   tile: number;
@@ -184,13 +184,6 @@ export function buildSolidGrid(): boolean[][] {
           grid[at.y + dy][at.x + dx] = true;
         }
       }
-    }
-  }
-  // Trees rise above their trunk tile. Block the trunk and canopy above it,
-  // while keeping the tiles beside and below the tree open.
-  for (const tree of TOWN_TREES) {
-    for (const y of [tree.y - 1, tree.y]) {
-      if (grid[y]?.[tree.x] !== undefined) grid[y][tree.x] = true;
     }
   }
   for (const key of ["guide", "sign"] as const) {

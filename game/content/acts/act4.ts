@@ -20,7 +20,7 @@ export const act4 = defineAct({
     { id: "brief", label: "Hear the client out" },
     { id: "install", label: "Tap the line for the key and message" },
     { id: "uplink", label: "Open a route to a quantum backend" },
-    { id: "decode", label: "Find the period and rebuild the key" },
+    { id: "decode", label: "Wire the pipeline and run it" },
     { id: "report", label: "Report the message to the client" },
   ],
 
@@ -142,15 +142,15 @@ export const act4 = defineAct({
         },
         {
           speaker: "system",
-          text: "Three settings: N is Brayan's modulus, {modulus}, so it is fixed. You choose a; if it already shares a factor with N, the precheck catches that easy win without using the QPU.",
+          text: "This is a software job. Five boxes: a classical PC hands N and a to the QPU setup, the Shor circuit runs as a black box, Measure returns bitstrings, and a classical PC turns them into r, the key and the message. Wire each output into the box that needs it.",
         },
         {
           speaker: "system",
-          text: "m is the counting qubits. Think of marks on a ruler: more marks give a finer reading of the period; too few can round to the wrong one.",
+          text: "On the QPU setup you choose the counting qubits m and the shots. Think of m as marks on a ruler: more marks read the period finer. Each shot is one sample, so more shots make the real peaks stand out.",
         },
         {
           speaker: "system",
-          text: "The simulator runs your settings. A hardware batch is a saved real run, so its N, a and m are fixed.",
+          text: "The simulator runs your settings. An IBM batch is a real execution that already happened, so its a, m and shots are fixed. Either way, every box shows what went in and what came out.",
         },
       ],
       waitsFor: "workbench",

@@ -1,4 +1,5 @@
 import {
+  Canvas,
   Actor,
   Circle,
   Color,
@@ -16,7 +17,7 @@ import { citySprite } from "../resources";
 import { Props as PropTiles, TILE_SIZE } from "../tiles";
 import type { BubbleKind, PacketStyle } from "../bus";
 import type { CarFacing, CarPaint, ParkedCarSpec } from "../maps/street";
-import { tileCenter } from "../maps/street";
+import { tileCenter, type GridPos } from "../maps/street";
 
 const PACKET_COLORS: Record<PacketStyle, Color> = {
   plain: Color.fromHex("#f5a623"),
@@ -226,5 +227,30 @@ export class TapGlow extends Actor {
     } else {
       this.scale = vec(1, 1);
     }
+  }
+}
+
+/** The overhead line the packets ride: a sagging cable between the buildings, the lamp posts and the junction box. */
+export class Wire extends Actor {
+  constructor(anchors: GridPos[]) {
+    const points = anchors.map((grid) => { const center = tileCenter(grid); return { x: center.x, y: center.y + TILE_SIZE * 0.15 }; });
+    const minX = Math.min(...points.map((p) => p.x)) - 2, minY = Math.min(...points.map((p) => p.y)) - 2;
+    const width = Math.max(...points.map((p) => p.x)) - minX + 4, height = Math.max(...points.map((p) => p.y)) - minY + 10;
+    super({ name: "wire", pos: vec(minX, minY), anchor: vec(0, 0), z: 3 });
+    this.graphics.use(new Canvas({ width, height, cache: true, draw: (ctx) => {
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "#1c2a30";
+      ctx.beginPath();
+      for (let i = 0; i < points.length - 1; i++) {
+        const a = points[i], b = points[i + 1];
+        const sag = Math.min(4, Math.abs(b.x - a.x) / 24);
+        ctx.moveTo(a.x - minX, a.y - minY);
+        ctx.quadraticCurveTo((a.x + b.x) / 2 - minX, (a.y + b.y) / 2 + sag * 2 - minY, b.x - minX, b.y - minY);
+      }
+      ctx.stroke();
+      // Insulators where the cable meets a post.
+      ctx.fillStyle = "#5a6a70";
+      for (const p of points.slice(1, -1)) ctx.fillRect(p.x - minX - 1, p.y - minY - 1, 3, 3);
+    } }));
   }
 }

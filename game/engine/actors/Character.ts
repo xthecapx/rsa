@@ -4,6 +4,7 @@ import { CHARACTER_COLUMNS, characterSheet } from "../resources";
 import { TILE_SIZE } from "../tiles";
 import type { GridPos } from "../maps/street";
 import { tileCenter } from "../maps/street";
+import { gameAudio } from "@/game/audio";
 
 export type CastMember = "hacker" | "ale" | "brayan";
 export type Facing = "down" | "up" | "left" | "right";
@@ -153,6 +154,7 @@ export class Character extends Actor {
   private beginStep(): void {
     const next = this.route.shift();
     if (!next) return;
+    if (this.member === "hacker") gameAudio.playSynth("step");
     const dx = next.x - this.grid.x;
     const dy = next.y - this.grid.y;
     if (dx !== 0) this.facing = dx > 0 ? "right" : "left";

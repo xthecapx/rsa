@@ -1,8 +1,9 @@
+import { gameAudio } from "./audio";
 import { api } from "@/lib/api";
 import type { ApiCallName, Effect } from "@/content/types";
 import { bus } from "@/engine/bus";
 import { fill } from "./interpolate";
-import { charOf, lettersOf } from "./secret";
+import { pickToyModulus, charOf, lettersOf } from "./secret";
 import { useGame } from "./state";
 import type { TerminalLine } from "./state";
 import { missionGeneration } from "./runtime";
@@ -12,6 +13,7 @@ const LABELS: Record<string, string> = {
   plaintext: "Reading the wire",
   caesarEncrypt: "Ale is encrypting",
   caesarCrack: "Brute-forcing 25 shifts",
+  rollModulus: "Brayan is choosing primes",
   rsaKeygen: "Brayan is generating keys",
   rsaEncrypt: "Ale is encrypting",
   rsaDecrypt: "Decrypting",
@@ -55,6 +57,15 @@ export function pickRsaPlaintext(N: number, e: number): number {
   );
   if (!candidates.length) return 2;
   return candidates[Math.floor(Math.random() * candidates.length)];
+}
+
+/** "3.2e+21" reads like a bug in dialogue; say it the way a person would. */
+export function humanYears(years: number): string {
+  if (!Number.isFinite(years) || years <= 0) return "an unknown number of";
+  const units: [number, string][] = [[1e12, "trillion"], [1e9, "billion"], [1e6, "million"], [1e3, "thousand"]];
+  if (years >= 1e15) return `10^${Math.round(Math.log10(years))}`;
+  for (const [size, name] of units) if (years >= size) return `${(years / size).toPrecision(2).replace(/\.0$/, "")} ${name}`;
+  return Math.round(years).toString();
 }
 
 /** Modular inverse via the extended Euclidean algorithm. */
@@ -151,20 +162,24 @@ async function runApi(call: string): Promise<void> {
       return;
     }
 
+    case "rollModulus": {
+      const modulus = pickToyModulus();
+      setVars({ modulus });
+      say({ tone: "note", text: `Brayan picks two small primes. Their product will be his modulus.` });
+      return;
+    }
+
     case "rsaKeygen": {
       const res = await api.rsa.keygen(vars.modulus);
       // The message has to be picked against the key, not before it.
       const value = pickRsaPlaintext(res.N, res.e);
+      // Brayan's p, q and d are his. Only (e, N) go down the wire, so only those land in the hacker's vars.
       setVars({
         e: res.e,
-        d: res.d,
-        p: res.p,
-        q: res.q,
         value,
         letter: charOf(value),
         message: charOf(value),
       });
-      for (const step of res.trace) say({ tone: "info", text: step.detail });
       say({
         tone: "note",
         text: `Public key (e=${res.e}, N=${res.N}) is visible. The private exponent d stays with Brayan.`,
@@ -200,7 +215,7 @@ async function runApi(call: string): Promise<void> {
         factors,
         p: res.toy.p,
         q: res.toy.q,
-        projectedYears: res.rsa2048_projection.projected_years_scientific,
+        projectedYears: humanYears(res.rsa2048_projection.projected_years),
       });
       for (const step of res.toy.trace) say({ tone: "info", text: step.detail });
       say({ tone: "good", text: `N = ${factors} by ${res.toy.method}.` });
@@ -374,6 +389,7 @@ export async function runEffect(effect: Effect): Promise<void> {
       return;
     case "task":
       store.setTaskStatus(effect.id, effect.status);
+      if (effect.status === "done") gameAudio.playSynth("chime");
       return;
     case "capture": {
       const { vars } = useGame.getState();

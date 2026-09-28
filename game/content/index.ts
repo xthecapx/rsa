@@ -20,7 +20,7 @@ import { act4 } from "./acts/act4";
  *   {shift}           the Caesar key k, once it is known
  *   {cipherChar}      the first Caesar ciphertext letter
  *   {crackMs}         milliseconds the 25-shift brute force took
- *   {modulus}         the RSA modulus N (15 or 21)
+ *   {modulus}         the RSA modulus N (15, 21, 33, 35 or 39; Act 4 keeps 15)
  *   {e} {d} {p} {q}   RSA exponents and prime factors
  *   {cipherNumber}    the RSA ciphertext c
  *   {factors}         the factorisation of N, as "3 x 5"

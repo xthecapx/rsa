@@ -11,6 +11,9 @@ import { useGame } from "@/game/state";
 import { useProgress } from "@/game/progress";
 import { ACT_NUMBERS } from "@/content";
 import { RsaProgress } from "./RsaProgress";
+import { MedalReveal } from "./MedalCase";
+import { medalFor } from "@/content/medals";
+import { useMedals } from "@/game/medals";
 
 /** Shown when the act ends, either because you won it or because they saw you. */
 export function GameOver({ act, onReturn, onRetry, onNext }: {
@@ -24,14 +27,15 @@ export function GameOver({ act, onReturn, onRetry, onNext }: {
 
   useEffect(() => {
     if (phase !== "won") return;
-    void Promise.resolve(useProgress.persist.rehydrate()).then(() => useProgress.getState().complete("rsa", String(act)));
+    void Promise.all([useProgress.persist.rehydrate(), useMedals.persist.rehydrate()]).then(() => useProgress.getState().complete("rsa", String(act)));
   }, [phase, act]);
 
+  // A win is scored by the medal ceremony below; only a capture gets the Kenney sting.
   useEffect(() => {
-    if (phase !== "won" && phase !== "caught") return;
+    if (phase !== "caught") return;
     if (played.current === phase) return;
     played.current = phase;
-    void gameAudio.playJingle(phase === "caught" ? "lose" : "win");
+    void gameAudio.playJingle("lose");
   }, [phase]);
 
   if (phase !== "won" && phase !== "caught") return null;
@@ -41,6 +45,7 @@ export function GameOver({ act, onReturn, onRetry, onNext }: {
     ?? ACT_NUMBERS.find((number) => number !== act && !completed?.includes(String(number)));
   const hasNext = next !== undefined;
   const script = getAct(act);
+  const medal = medalFor("rsa", String(act));
 
   return (
     <div className="pointer-events-auto absolute inset-0 z-20 grid place-items-center overflow-y-auto bg-stage-bg/85 p-3 sm:p-6">
@@ -58,6 +63,7 @@ export function GameOver({ act, onReturn, onRetry, onNext }: {
         </p>
 
         <div className="mt-4"><RsaProgress act={act} /></div>
+        {!caught && medal && <div className="mt-4"><MedalReveal id={medal.id} /></div>}
         <div className="mt-6 flex flex-col gap-2">
           {!caught && hasNext && (onNext ? <button className="btn-primary text-[11px]" onClick={() => { gameAudio.playSfx("confirm"); onNext(next); }}>{t("Continue to Act ")}{next}: {t(getAct(next).title)}</button> : <Link
             href={`/scenarios/rsa/play/${next}`}
@@ -65,7 +71,7 @@ export function GameOver({ act, onReturn, onRetry, onNext }: {
             className="btn-primary text-[11px]"
           >{t("Continue to Act ")}{next}: {t(getAct(next).title)}</Link>)}
 
-          {!caught && !hasNext && <p className="text-[11px] text-accent-amber">{t("Breaking RSA complete. You finished all four missions.")}</p>}
+          {!caught && !hasNext && <p className="text-[11px] text-accent-amber">{t("Breaking RSA complete. All four medals are in your case; replay any act whenever you like.")}</p>}
           <button
             type="button"
             onClick={() => {

@@ -4,7 +4,8 @@
  * spacing). index = row * 37 + column.
  *
  * These are here so the map legend in maps/street.json stays readable; run
- * tools/preview_map.py after changing anything to see the result.
+ * `node tools/dump-town.cjs > /tmp/town.json && python3 tools/preview_town.py`
+ * after changing anything to see the composed town in /tmp/town_preview.png.
  */
 
 export const SHEET_COLUMNS = 37;

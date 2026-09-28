@@ -8,6 +8,11 @@ from typing import Any, Dict, List, Optional
 TOY_MODULI: Dict[int, Dict[str, int]] = {
     15: {"p": 3, "q": 5, "phi": 8, "e": 3, "d": 3},
     21: {"p": 3, "q": 7, "phi": 12, "e": 5, "d": 5},
+    # Extra moduli keep the hands-on Act 3 fresh: d stays small enough (<= 7)
+    # to decrypt by repeated multiplication on screen.
+    33: {"p": 3, "q": 11, "phi": 20, "e": 3, "d": 7},
+    35: {"p": 5, "q": 7, "phi": 24, "e": 5, "d": 5},
+    39: {"p": 3, "q": 13, "phi": 24, "e": 5, "d": 5},
 }
 
 

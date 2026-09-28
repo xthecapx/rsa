@@ -24,6 +24,7 @@ export type ApiCallName =
   | "plaintext"
   | "caesarEncrypt"
   | "caesarCrack"
+  | "rollModulus"
   | "rsaKeygen"
   | "rsaEncrypt"
   | "rsaDecrypt"

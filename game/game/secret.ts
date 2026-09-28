@@ -3,10 +3,20 @@
  *
  * Acts 1 and 2 can carry a whole word: the mapping and the Caesar shift work
  * one character at a time, so the wire just carries more of them. Acts 3 and 4
- * are stuck with a single letter, because the toy RSA modulus (15 or 21) can
+ * are stuck with a single letter, because the toy RSA modulus (15 to 39) can
  * only carry a number smaller than itself -- which is a point those acts make
  * out loud rather than hide.
  */
+
+/** Toy moduli the backend hands out keys for. Act 3 rolls one per run so the
+ * hand computation changes; Act 4 keeps 15, the size the simulated QPU can take. */
+export const TOY_MODULI = [15, 21, 33, 35, 39] as const;
+export function isToyModulus(value: unknown): value is number {
+  return typeof value === "number" && (TOY_MODULI as readonly number[]).includes(value);
+}
+export function pickToyModulus(): number {
+  return TOY_MODULI[Math.floor(Math.random() * TOY_MODULI.length)];
+}
 
 /** Short enough to decode by hand, and in character for the two of them. */
 const WORDS = [
