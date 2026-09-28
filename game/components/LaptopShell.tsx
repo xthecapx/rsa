@@ -31,6 +31,9 @@ export function LaptopShell({ open, title, status, memory, footer, children, onC
     document.body.style.overflow = "hidden";
     element?.focus();
     function key(event: KeyboardEvent) {
+      // A puzzle owns Escape/Tab while dragging. The dnd-kit keyboard sensor
+      // also marks handled events before they reach this dialog.
+      if (event.defaultPrevented || element?.querySelector('[data-puzzle-dragging="true"]')) return;
       if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); closeRef.current(); }
       if (event.key !== "Tab") return;
       const controls = Array.from(dialog.current?.querySelectorAll<HTMLElement>(
@@ -45,7 +48,9 @@ export function LaptopShell({ open, title, status, memory, footer, children, onC
       }
     }
     // Keep game keyboard shortcuts from consuming typing and interaction keys.
-    function stop(event: KeyboardEvent) { event.stopPropagation(); }
+    function stop(event: KeyboardEvent) {
+      if (!element?.querySelector('[data-puzzle-dragging="true"]')) event.stopPropagation();
+    }
     element?.addEventListener("keydown", key);
     element?.addEventListener("keydown", stop);
     return () => {

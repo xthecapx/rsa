@@ -15,6 +15,8 @@ import { missionGeneration } from "@/game/runtime";
 import { api } from "@/lib/api";
 import { bus } from "@/engine/bus";
 import { LaptopShell } from "./LaptopShell";
+import { LaptopChoiceButton, LaptopQuestion } from "./LaptopControls";
+import { RsaProgress } from "./RsaProgress";
 
 /**
  * Full-screen laptop: bezel + CRT screen. Decode work happens here one step
@@ -62,7 +64,7 @@ export function LaptopScene({ act, restartControl }: { act: ActNumber; restartCo
   return (
     <LaptopShell restartControl={restartControl} open={laptopOpen} title={tOptional(`RSA · Act ${act}`)} onClose={close}
       status={busyLabel || (operations ? "Finishing the current operation…" : `Suspicion: ${suspicion}%`)} closeDisabled={operations > 0 || phase === "busy"}
-      memory={<MemoryRail />}
+      memory={<div className="space-y-3"><RsaProgress act={act} showObjective /><MemoryRail /></div>}
       footer={<>
         <p>{localize(armed ? recovered ? "Plaintext ready. Hand it to the client on the street." : "Work the steps. Results land in memory."
           : capture ? "Lid open for notes — tools unlock when the story needs the workbench." : "No capture yet. Listen on the street first.")}</p>
@@ -90,8 +92,8 @@ function MemoryRail() {
       <MemorySlot label={t("Wire")} empty={t("No capture")}>
         {capture ? (
           <>
-            <p className="text-[7px] text-stage-muted sm:text-[8px]">{localize(capture.scheme)}</p>
-            <p className="break-all font-mono text-[10px] text-accent-amber sm:text-[11px]">
+            <p className="text-xs text-stage-muted">{localize(capture.scheme)}</p>
+            <p className="break-all font-mono text-sm text-accent-amber">
               {capture.payload}
             </p>
           </>
@@ -99,14 +101,14 @@ function MemoryRail() {
       </MemorySlot>
       <MemorySlot label={t("Notes")} empty={t("Run a tool")}>
         {noteBits.length ? (
-          <p className="font-mono text-[9px] leading-relaxed text-[#9fc4d0] sm:text-[10px]">
+          <p className="font-mono text-xs leading-relaxed text-[#9fc4d0]">
             {localize(noteBits.join(" · "))}
           </p>
         ) : null}
       </MemorySlot>
       <MemorySlot label={t("Plaintext")} empty={t("Not recovered")}>
         {recovered ? (
-          <p className="break-all font-mono text-[12px] text-actor-brayan sm:text-[14px]">
+          <p className="break-all font-mono text-sm text-actor-brayan">
             {recovered}
           </p>
         ) : null}
@@ -127,11 +129,11 @@ function MemorySlot({
   useLocale((state) => state.locale);
   return (
     <div className="border border-[#1e4450] bg-black/25 px-2 py-1.5">
-      <p className="mb-1 text-[7px] uppercase tracking-widest text-accent-teal sm:text-[8px]">
+      <p className="mb-1 text-xs uppercase tracking-widest text-accent-teal">
         {localize(label)}
       </p>
       {localize(children ?? (
-        <p className="text-[8px] text-stage-muted sm:text-[9px]">{localize(empty)}</p>
+        <p className="text-xs text-stage-muted">{localize(empty)}</p>
       ))}
     </div>
   );
@@ -142,14 +144,14 @@ function Wizard({ act, armed }: { act: ActNumber; armed: boolean }) {
   const capture = useGame((s) => s.capture);
   if (!capture) {
     return (
-      <div className="border border-dashed border-stage-border px-3 py-6 text-center text-[10px] text-stage-muted">{t("Waiting for a packet on the wire.")}</div>
+      <div className="border border-dashed border-stage-border px-3 py-6 text-center text-sm text-stage-muted">{t("Waiting for a packet on the wire.")}</div>
     );
   }
   if (act === 1) return <MappingWizard armed={armed} />;
   if (act === 2) return <CaesarWizard armed={armed} />;
   if (act === 3) return <RsaWizard armed={armed} />;
   return (
-    <div className={clsx(!armed && "pointer-events-none opacity-50")}>
+    <div className={clsx("laptop-challenge", !armed && "pointer-events-none opacity-50")}>
       <StepHeader step={1} total={1} title={t("Quantum uplink")} />
       <QuantumUplink disabled={!armed} />
     </div>
@@ -168,10 +170,10 @@ function StepHeader({
   useLocale((state) => state.locale);
   return (
     <div className="mb-2 flex items-baseline justify-between gap-2">
-      <h2 className="text-[10px] uppercase tracking-widest text-[#e8f4f8] sm:text-[11px]">
+      <h2 className="text-sm font-semibold text-[#e8f4f8]">
         {localize(title)}
       </h2>
-      <span className="text-[8px] text-stage-muted sm:text-[9px]">{t("Step ")}{step}/{total}
+      <span className="text-xs text-stage-muted">{t("Step ")}{step}/{total}
       </span>
     </div>
   );
@@ -190,22 +192,16 @@ function StepButton({
 }) {
   useLocale((state) => state.locale);
   return (
-    <button
-      type="button"
+    <LaptopChoiceButton
       onClick={() => {
         gameAudio.playSfx("click");
         onClick();
       }}
       disabled={disabled || busy}
-      className={clsx(
-        "w-full border-2 px-3 py-2.5 text-left text-[10px] transition-colors sm:text-[11px]",
-        disabled || busy
-          ? "cursor-not-allowed border-stage-border text-stage-muted"
-          : "border-accent-teal/60 text-[#cfe6ee] hover:border-accent-teal hover:bg-accent-teal/10",
-      )}
+      className="w-full"
     >
       {busy ? `${t(label)}…` : t(label)}
-    </button>
+    </LaptopChoiceButton>
   );
 }
 
@@ -260,11 +256,11 @@ function MappingWizard({ armed }: { armed: boolean }) {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="laptop-challenge space-y-3">
       {step === 1 && (
         <>
           <StepHeader step={1} total={3} title={t("Fetch the alphabet table")} />
-          <p className="text-[9px] leading-relaxed text-stage-muted sm:text-[10px]">{t("The wire carries numbers. Pull A=1 … Z=26 from the backend, then map the payload.")}</p>
+          <p className="laptop-note">{t("The wire carries numbers. Pull A=1 … Z=26 from the backend, then map the payload.")}</p>
           <StepButton
             label={t("Fetch alphabet table")}
             busy={busy}
@@ -276,7 +272,7 @@ function MappingWizard({ armed }: { armed: boolean }) {
       {step >= 2 && (
         <>
           <StepHeader step={2} total={3} title={t("Apply the mapping")} />
-          <div className="grid grid-cols-6 gap-x-2 gap-y-0.5 border border-stage-border px-2 py-1.5 font-mono text-[8px] text-stage-muted sm:text-[9px]">
+          <div className="grid grid-cols-6 gap-x-2 gap-y-1 overflow-x-auto border border-stage-border px-2 py-2 font-mono text-xs text-stage-muted">
             {table.map((row) => (
               <span key={row.char}>
                 {row.char}={row.value}
@@ -349,11 +345,11 @@ function CaesarWizard({ armed }: { armed: boolean }) {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="laptop-challenge space-y-3">
       {step === 1 && (
         <>
           <StepHeader step={1} total={3} title={t("Brute-force the shift")} />
-          <p className="text-[9px] leading-relaxed text-stage-muted sm:text-[10px]">{t("Only twenty-five keys. Ask the backend for every candidate word.")}</p>
+          <p className="laptop-note">{t("Only twenty-five keys. Ask the backend for every candidate word.")}</p>
           <StepButton
             label={t("Try all 25 shifts")}
             busy={busy}
@@ -365,29 +361,29 @@ function CaesarWizard({ armed }: { armed: boolean }) {
       {step === 2 && (
         <>
           <StepHeader step={2} total={3} title={t("Pick the English word")} />
-          <p className="text-[9px] leading-relaxed text-accent-amber sm:text-[10px]">{t("Which line reads like a real word? Tap it to lock plaintext.")}</p>
-          <ul className="max-h-[40dvh] space-y-0.5 overflow-y-auto border border-stage-border px-1 py-1 font-mono text-[10px] sm:max-h-64 sm:text-[11px]">
+          <LaptopQuestion prompt={t("Which line reads like a real word? Tap it to lock plaintext.")} className="space-y-3">
+          <ul className="max-h-[40dvh] space-y-2 overflow-y-auto sm:max-h-64">
             {candidates.map((row) => (
               <li key={row.shift}>
-                <button
-                  type="button"
+                <LaptopChoiceButton
                   disabled={!armed}
                   onClick={() => pick(row)}
-                  className="flex w-full gap-3 px-2 py-1.5 text-left text-[#cfe6ee] hover:bg-accent-amber/20 hover:text-white"
+                  className="flex w-full gap-3 font-mono"
                 >
                   <span className="text-stage-muted">{t("k=")}{localize(String(row.shift).padStart(2, " "))}
                   </span>
                   <span>{row.word}</span>
-                </button>
+                </LaptopChoiceButton>
               </li>
             ))}
           </ul>
+          </LaptopQuestion>
         </>
       )}
       {step === 3 && (
         <>
           <StepHeader step={3} total={3} title={t("Plaintext locked")} />
-          <p className="text-[9px] text-stage-muted sm:text-[10px]">{t("You chose the English candidate. Close when ready, or hit “I have it”.")}</p>
+          <p className="laptop-note">{t("You chose the English candidate. Close when ready, or hit “I have it”.")}</p>
         </>
       )}
     </div>
@@ -424,8 +420,8 @@ function RsaWizard({ armed }: { armed: boolean }) {
   }
 
   return (
-    <div className="space-y-3">
-      <dl className="grid grid-cols-2 gap-x-2 gap-y-0.5 border border-stage-border px-2 py-1.5 font-mono text-[9px] sm:text-[10px]">
+    <div className="laptop-challenge space-y-3">
+      <dl className="grid grid-cols-2 gap-x-2 gap-y-1 border border-stage-border px-3 py-2 font-mono text-xs">
         <dt className="text-stage-muted">{t("public e")}</dt>
         <dd className="text-[#cfe6ee]">{vars.e ?? "?"}</dd>
         <dt className="text-stage-muted">{t("modulus N")}</dt>

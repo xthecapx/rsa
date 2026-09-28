@@ -134,7 +134,7 @@ export class CityScene extends Scene {
       ] }));
       this.add(plant);
     }
-    const guide = new Actor({ name: "town-doctor", pos: vec(tileCenter(TOWN_LOCATIONS.guide.at).x, tileCenter(TOWN_LOCATIONS.guide.at).y), width: TILE_SIZE, height: TILE_SIZE, z: 10 });
+    const guide = new Actor({ name: "professor-thecap", pos: vec(tileCenter(TOWN_LOCATIONS.guide.at).x, tileCenter(TOWN_LOCATIONS.guide.at).y), width: TILE_SIZE, height: TILE_SIZE, z: 10 });
     guide.graphics.use(images.doctor.toSprite());
     this.add(guide);
     for (const [key, location] of Object.entries(TOWN_LOCATIONS)) {
@@ -142,7 +142,7 @@ export class CityScene extends Scene {
       const mounted = location.kind === "coin" || location.kind === "closed";
       const label = new TownSign(at.x - (key === "guide" ? 44 : 0), at.y + (mounted ? -9 : 8), mounted);
       this.add(label);
-      this.markerLabels.push({ actor: label, text: key === "coinDoor" ? "Coin house" : key === "guide" ? "Guide · Who Goes First?" : key === "sign" ? "Coin ← · RSA →" : "Coming soon" });
+      this.markerLabels.push({ actor: label, text: key === "coinDoor" ? "Coin house" : key === "guide" ? "Professor Thecap · Who Goes First?" : key === "sign" ? "Coin ← · RSA →" : "Coming soon" });
     }
     const clientLabel = new TownSign(tileCenter(LANDMARKS.car.at).x + 40, tileCenter(LANDMARKS.car.at).y + 40);
     this.add(clientLabel); this.markerLabels.push({ actor: clientLabel, text: "RSA · Talk to the client" });
@@ -218,7 +218,7 @@ export class CityScene extends Scene {
     if (locale !== this.markerLocale) {
       this.markerLocale = locale;
       for (const { actor, text, completed, paused } of this.markerLabels) {
-        const caption = text === "Guide · Who Goes First?" ? `${t("Town guide")}\n${t("Who Goes First?")}` : t(paused ? "RSA · Resume mission" : text);
+        const caption = text === "Professor Thecap · Who Goes First?" ? `${t("Professor Thecap")}\n${t("Who Goes First?")}` : t(paused ? "RSA · Resume mission" : text);
         actor.setCaption(`${completed ? "★ " : paused ? "Ⅱ " : ""}${caption}`, completed);
       }
       // Sign widths change with their translated captions and mission status.

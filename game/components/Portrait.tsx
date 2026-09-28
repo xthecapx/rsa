@@ -32,7 +32,7 @@ export const SPEAKER_NAME: Record<Speaker, string> = {
   brayan: "Brayan",
   hacker: "You",
   boss: "The client",
-  guide: "Town guide",
+  guide: "Professor Thecap",
   system: "Notes",
 };
 
@@ -66,7 +66,7 @@ export function Portrait({ speaker, size = 64 }: { speaker: Speaker; size?: numb
 
   if (speaker === "guide") return <div className={clsx("shrink-0 border-4 bg-stage-bg", BORDER.guide)} style={{ width: size, height: size,
     backgroundImage: "url(/assets/characters/town-doctor.svg)", backgroundSize: "100% 100%", backgroundRepeat: "no-repeat", imageRendering: "pixelated" }}
-    role="img" aria-label={t("Town guide")} />;
+    role="img" aria-label={t("Professor Thecap")} />;
 
   const { col, row } = CAST[speaker];
   return (

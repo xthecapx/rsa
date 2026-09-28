@@ -15,6 +15,7 @@ import { DialogueFrame, DialogueLine, useDialogueText } from "./DialoguePresenta
 import { useCoinSceneAssets } from "./useSceneAssets";
 import { TalkControl } from "./TouchControls";
 import { LaptopShell } from "./LaptopShell";
+import { LaptopChoiceButton, LaptopQuestion } from "./LaptopControls";
 import { ChoiceChallenge, CodePuzzle, CircuitPuzzle, CircuitSnapshot, EMPTY_CODE, EMPTY_CIRCUIT, type CodeBlock, type CodeSlots, type CircuitSlots } from "./CoinChallenges";
 
 type ReplayChoice = "same" | "different" | "first";
@@ -280,10 +281,15 @@ export function CoinScenario({ onExit, onRestartGame }: { onExit?: () => void; o
         onNear={(place) => { setNearbyPlace(place); setActivePlace((active) => active === place ? active : null); }}
         onWalking={setWalking} onInteract={interact} onExit={leaveHouse} onNearExit={setNearExit} />}
     </div>
-    {!laptopOpen && <div className={`pointer-events-none absolute inset-x-0 bottom-0 flex justify-center p-3 sm:p-4 ${!atPlace ? "pb-20 lg:pb-4" : ""}`}>
+    {!laptopOpen && !journalOpen && !restartOpen && <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center p-3 sm:p-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
       {!atPlace ? <div className={`textbox max-w-lg px-4 py-3 text-center transition-opacity ${walking ? "opacity-20" : ""}`}>
         <p className="text-sm leading-relaxed">{t(scene.objective)}</p>
-        <p className="mt-2 text-xs text-accent-amber">{nearExit ? t("Return to town · Press Space or tap Talk") : nearbyPlace === scene.place ? t("Press Space or tap Talk") : t("Walk to the glowing marker.")}</p>
+        <p className="mt-2 text-xs text-accent-amber">{nearExit ? t("Leave the house and return to Quantum Town. Your lesson is saved.") : nearbyPlace === scene.place ? t("Use Talk to interact.") : t("Walk to the glowing marker.")}</p>
+        {(nearExit || nearbyPlace === scene.place) && <>
+          <p className="coin-keyboard-hint mt-2 text-xs text-stage-muted">{t(nearExit ? "Press Space to return to town." : "Press Space to talk.")}</p>
+          <TalkControl inline label={nearExit ? "Return to town" : "Talk"} canInteract={sceneReady && !busy}
+            visible={true} onTalk={() => { if (nearExit) leaveHouse(); else interact(scene.place); }} />
+        </>}
       </div> : <div className="pointer-events-auto w-full max-w-4xl">
         <DialogueFrame role={!finishedDialog ? "button" : undefined} tabIndex={!finishedDialog ? 0 : undefined}
           onClick={() => { if (!finishedDialog) interact(scene.place); }}
@@ -300,7 +306,6 @@ export function CoinScenario({ onExit, onRestartGame }: { onExit?: () => void; o
         </DialogueFrame>
       </div>}
     </div>}
-    <TalkControl canInteract={(nearExit || nearbyPlace === scene.place) && !busy} visible={!atPlace && !laptopOpen && !journalOpen && !restartOpen} onTalk={() => { if (nearExit) leaveHouse(); else interact(scene.place); }} />
 
       <LaptopShell restartControl={restartControl} closeDisabled={busy} open={sceneReady && laptopOpen} title={t("Quantum Coin")} status={busy ? "Running the experiment…" : "Simulator only"} onClose={() => setLaptopOpen(false)}
         footer={<p>{t("Close the laptop to return to the room. Your results are saved.")}</p>}
@@ -369,9 +374,10 @@ export function CoinScenario({ onExit, onRestartGame }: { onExit?: () => void; o
                 <p className="coin-callout">{t("Brayan’s sixth value")}: <strong>{t(session.prediction === 0 ? "Heads (0)" : "Tails (1)")}</strong></p>
               </>}
               {session.comparison.length === 6 && session.sixth === null ? <>
-                <p>{t("What will your sixth call return? Choose before revealing it.")}</p>
-                <div className="coin-choices">{session.variants.sixth.map((bit) => <button key={bit} className={session.sixthChoice === bit ? "coin-choice selected" : "coin-choice"}
-                  disabled={session.sixthChoice !== null} onClick={() => patch({ sixthChoice: bit })}>{t(bit === 0 ? "Heads (0)" : "Tails (1)")}</button>)}</div>
+                <LaptopQuestion prompt={t("What will your sixth call return? Choose before revealing it.")}>
+                  <div className="coin-choices">{session.variants.sixth.map((bit) => <LaptopChoiceButton key={bit} selected={session.sixthChoice === bit}
+                    disabled={session.sixthChoice !== null} onClick={() => patch({ sixthChoice: bit })}>{t(bit === 0 ? "Heads (0)" : "Tails (1)")}</LaptopChoiceButton>)}</div>
+                </LaptopQuestion>
                 {session.sixthChoice !== null && action("Reveal your sixth toss", () => void run(async () => ({ sixth: (await coinApi.classical(6)).bits[5] })))}
               </> : session.sixth !== null && <><p>{t("Your sixth call")}</p><Coins bits={[session.sixth]} />
                 <p className="coin-callout">{t(session.sixthChoice === session.sixth ? "Your prediction matched. Replaying a known seed and call count reveals the next value." : "Brayan’s prediction matched. The same seed and call sequence reproduce the next value; your guess does not affect progress.")}</p>

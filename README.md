@@ -23,8 +23,21 @@ Redeploy after code changes:
 ```
 
 The script builds `linux/amd64` images, deploys both services, and prunes older
-Artifact Registry digests (keeps the last two complete pushes) so storage stays
-under the free-tier 0.5 GB cap.
+Artifact Registry images. Cleanup requires Python 3 and Docker Buildx. By default,
+it retains two complete image versions (`KEEP_IMAGES=2`), along with tagged releases
+and every manifest referenced by retained images. It deletes obsolete image indexes
+before their child manifests and reports cleanup failures instead of silently skipping them.
+This reduces storage use; actual usage depends on image sizes and retained releases.
+
+Prune existing images without rebuilding or deploying:
+
+```bash
+CLEANUP_DRY_RUN=1 ./deploy-cloudrun.sh cleanup  # preview the deletions
+./deploy-cloudrun.sh cleanup                  # apply cleanup
+```
+
+Use `KEEP_IMAGES=1` to retain only one complete image version, plus any other tagged releases.
+Cleanup only affects the configured repository's `backend` and `game` images.
 
 Both services use `min-instances=0` (scale to zero) so idle time stays inside Cloud Run’s Always Free allowance. Before a talk, warm them; afterward, cool them:
 

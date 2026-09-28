@@ -10,6 +10,7 @@ import { gameAudio } from "@/game/audio";
 import { useGame } from "@/game/state";
 import { useProgress } from "@/game/progress";
 import { ACT_NUMBERS } from "@/content";
+import { RsaProgress } from "./RsaProgress";
 
 /** Shown when the act ends, either because you won it or because they saw you. */
 export function GameOver({ act, onReturn, onRetry, onNext }: {
@@ -18,6 +19,7 @@ export function GameOver({ act, onReturn, onRetry, onNext }: {
   useLocale((state) => state.locale);
   const phase = useGame((s) => s.phase);
   const suspicion = useGame((s) => s.suspicion);
+  const completed = useProgress((s) => s.completed.rsa);
   const played = useRef<string | null>(null);
 
   useEffect(() => {
@@ -35,13 +37,14 @@ export function GameOver({ act, onReturn, onRetry, onNext }: {
   if (phase !== "won" && phase !== "caught") return null;
 
   const caught = phase === "caught";
-  const next = ACT_NUMBERS[ACT_NUMBERS.indexOf(act) + 1];
+  const next = ACT_NUMBERS[ACT_NUMBERS.indexOf(act) + 1]
+    ?? ACT_NUMBERS.find((number) => number !== act && !completed?.includes(String(number)));
   const hasNext = next !== undefined;
   const script = getAct(act);
 
   return (
-    <div className="pointer-events-auto absolute inset-0 z-20 grid place-items-center bg-stage-bg/85 p-6">
-      <div className="textbox w-full max-w-md p-6 text-center">
+    <div className="pointer-events-auto absolute inset-0 z-20 grid place-items-center overflow-y-auto bg-stage-bg/85 p-3 sm:p-6">
+      <div className="textbox w-full max-w-lg p-4 text-center sm:p-6">
         <h2
           className={`text-sm ${caught ? "text-actor-hacker" : "text-actor-brayan"}`}
         >
@@ -54,7 +57,15 @@ export function GameOver({ act, onReturn, onRetry, onNext }: {
             : `${t(script.title)} - ${t(script.subtitle)}. You finished on ${suspicion}% suspicion.`)}
         </p>
 
+        <div className="mt-4"><RsaProgress act={act} /></div>
         <div className="mt-6 flex flex-col gap-2">
+          {!caught && hasNext && (onNext ? <button className="btn-primary text-[11px]" onClick={() => { gameAudio.playSfx("confirm"); onNext(next); }}>{t("Continue to Act ")}{next}: {t(getAct(next).title)}</button> : <Link
+            href={`/scenarios/rsa/play/${next}`}
+            onClick={() => gameAudio.playSfx("confirm")}
+            className="btn-primary text-[11px]"
+          >{t("Continue to Act ")}{next}: {t(getAct(next).title)}</Link>)}
+
+          {!caught && !hasNext && <p className="text-[11px] text-accent-amber">{t("Breaking RSA complete. You finished all four missions.")}</p>}
           <button
             type="button"
             onClick={() => {
@@ -66,21 +77,7 @@ export function GameOver({ act, onReturn, onRetry, onNext }: {
             {localize(caught ? "Try this act again" : "Replay this act")}
           </button>
 
-          {!caught && hasNext && onNext && <button className="btn-primary text-[11px]" onClick={() => onNext(next)}>{t("Return to town for the next mission")}</button>}
-          {!caught && hasNext && !onNext && (
-            <Link
-              href={`/scenarios/rsa/play/${next}`}
-              onClick={() => gameAudio.playSfx("confirm")}
-              className="btn-primary text-[11px]"
-            >{t("Continue to Act ")}{next}
-            </Link>
-          )}
-
-          {!caught && !hasNext && (
-            <p className="text-[11px] text-accent-amber">{t("Breaking RSA complete. You finished all four missions.")}</p>
-          )}
-
-          {onReturn ? <button className="btn-ghost text-[11px]" onClick={onReturn}>{t("Return to town")}</button> : <><Link
+          {onReturn ? <button className="btn-ghost text-[11px]" onClick={onReturn}>{t("Explore town")}</button> : <><Link
             href="/scenarios/rsa"
             onClick={() => gameAudio.playSfx("click")}
             className="btn-ghost text-[11px]"

@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, type DragEvent } from "react";
+import { useState } from "react";
+import { PuzzleDragDrop, PuzzlePiece, PuzzleSlot } from "./PuzzleDragDrop";
+import { LaptopChoiceButton, LaptopQuestion } from "./LaptopControls";
 import { t, useLocale } from "@/i18n";
 
 export type CodeBlock = "seed" | "reset" | "return";
@@ -25,11 +27,11 @@ export function ChoiceChallenge<T extends string>({ prompt, choices, order, valu
   prompt: string; choices: Record<T, string>; order: T[]; value: T | null; onChoose: (choice: T) => void;
 }) {
   useLocale((state) => state.locale);
-  return <div className="coin-challenge"><p className="font-semibold">{t(prompt)}</p>
-    <div className="coin-choices">{order.map((id) => <button key={id} type="button"
-      className={value === id ? "coin-choice selected" : "coin-choice"} disabled={value !== null}
-      aria-pressed={value === id} onClick={() => onChoose(id)}>{t(choices[id])}</button>)}</div>
-  </div>;
+  return <LaptopQuestion prompt={t(prompt)}>
+    <div className="coin-choices">{order.map((id) => <LaptopChoiceButton key={id}
+      selected={value === id} disabled={value !== null}
+      aria-pressed={value === id} onClick={() => onChoose(id)}>{t(choices[id])}</LaptopChoiceButton>)}</div>
+  </LaptopQuestion>;
 }
 
 export function CodePuzzle({ slots, order, onChange, onSolved }: {
@@ -53,29 +55,29 @@ export function CodePuzzle({ slots, order, onChange, onSolved }: {
     else if (slots.body !== "return") setMessage("Inside flip_coin(), return the next bit from coin.");
     else onSolved();
   }
-  return <div className="coin-challenge space-y-3">
+  return <PuzzleDragDrop labels={CODE_BLOCKS} targets={{ setup: t(CODE_LABELS.setup), body: t(CODE_LABELS.body) }}
+    onPlace={(slot, block) => place(slot as CodeSlot, block as CodeBlock)}
+    renderPreview={(id) => <code>{CODE_BLOCKS[id as CodeBlock]}</code>}>
+    <div className="coin-challenge space-y-3">
     <p>{t("Build the program. Select or drag a line into a slot; then check it.")}</p>
-    <div className="coin-block-tray" aria-label={t("Available code lines")}>{order.map((id) => <button key={id} type="button" draggable
-      onDragStart={(event) => event.dataTransfer.setData("text/plain", id)}
-      onClick={() => setSelected(id)} aria-pressed={selected === id}
-      className={selected === id ? "coin-block selected" : "coin-block"}>{CODE_BLOCKS[id]}</button>)}</div>
+    <div className="coin-block-tray" aria-label={t("Available code lines")}>{order.map((id) => <PuzzlePiece key={id} id={id} label={CODE_BLOCKS[id]}
+      onSelect={() => setSelected(id)} selected={selected === id}>{CODE_BLOCKS[id]}</PuzzlePiece>)}</div>
     <div className="coin-code-scaffold"><code>import random</code>
       {(Object.keys(CODE_LABELS) as CodeSlot[]).map((slot) => <div key={slot} className={`coin-slot-row ${slot}`}>
         {slot === "body" && <code>def flip_coin():</code>}
         <span>{t(CODE_LABELS[slot])}</span>
-        <button type="button" className="coin-drop-slot" onClick={() => place(slot)}
-          onDragOver={(event) => event.preventDefault()}
-          onDrop={(event) => { event.preventDefault(); const id = event.dataTransfer.getData("text/plain"); if (id === "seed" || id === "reset" || id === "return") place(slot, id); }}
-          aria-label={`${t(CODE_LABELS[slot])}: ${slots[slot] ? CODE_BLOCKS[slots[slot]] : t("Empty")}`}>
+        <PuzzleSlot id={slot} className="coin-drop-slot" onSelect={() => place(slot)}
+          label={`${t(CODE_LABELS[slot])}: ${slots[slot] ? CODE_BLOCKS[slots[slot]] : t("Empty")}`}>
           <code>{slots[slot] ? CODE_BLOCKS[slots[slot]] : t("Tap to place selected line")}</code>
-        </button>
+        </PuzzleSlot>
       </div>)}</div>
     <div className="flex flex-wrap gap-2"><button className="btn-ghost" disabled={!history.length} onClick={() => { onChange(history.at(-1)!); setHistory((past) => past.slice(0, -1)); setMessage(null); }}>{t("Undo")}</button>
       <button className="btn-ghost" onClick={() => update(EMPTY_CODE)}>{t("Reset")}</button>
       <button className="btn-ghost" onClick={() => setMessage("Hint: create coin once above the function. Inside flip_coin(), only return its next bit.")}>{t("Hint")}</button>
       <button className="btn-primary" onClick={check}>{t("Check program")}</button></div>
     {message && <p role="status" className="text-accent-amber">{t(message)}</p>}
-  </div>;
+    </div>
+  </PuzzleDragDrop>;
 }
 
 function MeasurementIcon() {
@@ -112,13 +114,6 @@ export function CircuitPuzzle({ slots, onChange, onSolved }: { slots: CircuitSlo
     next[position] = operation;
     onChange(next); setSelected(null); setMessage(null);
   }
-  const drop = (position: CircuitPosition) => ({
-    onDragOver: (event: DragEvent) => event.preventDefault(),
-    onDrop: (event: DragEvent) => {
-      event.preventDefault(); const operation = event.dataTransfer.getData("text/plain");
-      if (operation === "H" || operation === "M") place(position, operation);
-    },
-  });
   function hint() {
     if (slots.first === "M" && slots.second === "H")
       setMessage("H after measurement cannot change a result that was already read. Swap the operations.");
@@ -136,29 +131,34 @@ export function CircuitPuzzle({ slots, onChange, onSolved }: { slots: CircuitSlo
     if (operation === "H") codeLines.push("circuit.h(0)");
     if (operation === "M") codeLines.push("circuit.measure(0, 0)");
   }
-  return <div className="coin-challenge space-y-3">
+  return <PuzzleDragDrop labels={{ H: t("Hadamard · H"), M: t("Measurement · M") }}
+    targets={{ first: t("First operation"), second: t("Second operation") }}
+    onPlace={(position, operation) => place(position as CircuitPosition, operation as CircuitOperation)}
+    renderPreview={(operation) => <span className="coin-operation-tool">
+      <span className={`qiskit-gate ${operation === "H" ? "hadamard" : "measure"}`}>{operation === "H" ? "H" : <MeasurementIcon />}</span>
+      <span>{t(operation === "H" ? "Hadamard · H" : "Measurement · M")}</span>
+    </span>}>
+    <div className="coin-challenge space-y-3">
     <p>{t("Build a one-qubit circuit. Select or drag H and measurement onto the wire in the order they should run.")}</p>
     <div className="coin-block-tray" aria-label={t("Circuit operations")}>
-      {(["H", "M"] as const).map((operation) => <button key={operation} type="button" draggable
-        className={selected === operation ? "coin-block selected coin-operation-tool" : "coin-block coin-operation-tool"}
-        onDragStart={(event) => event.dataTransfer.setData("text/plain", operation)}
-        onClick={() => setSelected(operation)} aria-pressed={selected === operation}>
+      {(["H", "M"] as const).map((operation) => <PuzzlePiece key={operation} id={operation} label={t(operation === "H" ? "Hadamard · H" : "Measurement · M")}
+        className="coin-operation-tool" onSelect={() => setSelected(operation)} selected={selected === operation}>
         <span className={`qiskit-gate ${operation === "H" ? "hadamard" : "measure"}`}>{operation === "H" ? "H" : <MeasurementIcon />}</span>
         <span>{t(operation === "H" ? "Hadamard · H" : "Measurement · M")}</span>
-      </button>)}
+      </PuzzlePiece>)}
     </div>
     <div className="qiskit-circuit" role="group" aria-label={t("Single-qubit circuit editor")}>
       <div className="qiskit-register-labels"><span>q₀ <small>|0⟩</small></span><span>c₀</span></div>
       <div className="qiskit-tracks">
         <div className="qiskit-quantum-wire">
-          {(["first", "second"] as const).map((position, index) => <button key={position} type="button"
+          {(["first", "second"] as const).map((position, index) => <PuzzleSlot key={position} id={position}
             className={`qiskit-wire-slot ${slots[position] ? "filled" : ""}`}
-            {...drop(position)} onClick={() => place(position)}
-            aria-label={`${t(index === 0 ? "First operation" : "Second operation")}: ${slots[position] ? t(slots[position] === "H" ? "Hadamard" : "Measurement") : t("Empty")}`}>
+            onSelect={() => place(position)}
+            label={`${t(index === 0 ? "First operation" : "Second operation")}: ${slots[position] ? t(slots[position] === "H" ? "Hadamard" : "Measurement") : t("Empty")}`}>
             {slots[position] === "H" ? <span className="qiskit-gate hadamard">H</span>
               : slots[position] === "M" ? <span className="qiskit-gate measure"><MeasurementIcon /></span>
                 : <span className="qiskit-empty">{index + 1}</span>}
-          </button>)}
+          </PuzzleSlot>)}
         </div>
         <div className="qiskit-classical-wire" />
         {(["first", "second"] as const).map((position) => slots[position] === "M" && <span key={position}
@@ -171,5 +171,6 @@ export function CircuitPuzzle({ slots, onChange, onSolved }: { slots: CircuitSlo
       <button className="btn-ghost" onClick={hint}>{t("Hint")}</button>
       <button className="btn-primary" onClick={check}>{t("Check circuit")}</button></div>
     {message && <p role="status" className="text-accent-amber">{t(message)}</p>}
-  </div>;
+    </div>
+  </PuzzleDragDrop>;
 }

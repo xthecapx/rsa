@@ -20,6 +20,7 @@ import { GameShell } from "./GameShell";
 import { CoinScenario } from "./CoinScenario";
 import { StartOverControl, type RestartOption } from "./StartOverControl";
 import { TownMinimap } from "./TownMinimap";
+import { RsaProgress } from "./RsaProgress";
 import { SceneLoading } from "./SceneLoading";
 import { DialogBox } from "./DialogBox";
 import { DialogueFrame, DialogueLine } from "./DialoguePresentation";
@@ -32,7 +33,8 @@ import { TouchControls } from "./TouchControls";
 const GameCanvas = dynamic(() => import("./GameCanvas").then((mod) => mod.GameCanvas), { ssr: false });
 interface TownConversation {
   title: string; text: string;
-  choices: { label: string; action: () => void }[];
+  rsaAct?: ActNumber;
+  choices: { label: string; act?: ActNumber; action: () => void }[];
 }
 
 /** The world owns navigation; missions own only their story and tools. */
@@ -76,9 +78,9 @@ export function TownScreen({ initialAct, initialCoin = false, visitRsa = false }
   }
   function greet() {
     const firstDone = useProgress.getState().completed.coin?.includes("coin");
-    setConversation({ title: "Town guide", text: firstDone
+    setConversation({ title: "Professor Thecap", text: firstDone
       ? "Who Goes First? is the first challenge in Quantum Town. You’ve completed it! You can replay it, or explore secret messages with the RSA client."
-      : "Welcome to Quantum Town! I’m the town doctor. Your first challenge is Who Goes First?: help Ale and Brayan build a fair coin for game night. You can also start with RSA if you prefer.",
+      : "Welcome to Quantum Town! I’m Professor Thecap, the town doctor. Your first challenge is Who Goes First?: help Ale and Brayan build a fair coin for game night. You can also start with RSA if you prefer.",
       choices: [
         { label: "First challenge: Who Goes First?", action: recommendCoin },
         { label: "Start with RSA instead", action: chooseRsa },
@@ -264,12 +266,12 @@ export function TownScreen({ initialAct, initialCoin = false, visitRsa = false }
     const unfinished = validCheckpoint(checkpoint) && checkpoint.phase !== "won" && checkpoint.phase !== "caught";
     const next = ACT_NUMBERS.find((act) => !useProgress.getState().completed.rsa?.includes(String(act))) ?? 1;
     const act = saved.requestedAct ?? (unfinished ? checkpoint.act : next);
-    setConversation({ title: "Breaking RSA", text: unfinished ? "Your client is still waiting. Resume the saved mission, or choose another act to start a new attempt." : "Ale and Brayan think their messages are secret. Help me recover them, from simple encodings to RSA. You can start now, or try the beginner coin lesson first.",
+    setConversation({ title: "Breaking RSA", rsaAct: unfinished ? checkpoint.act : act, text: unfinished ? "Your client is still waiting. Resume the saved mission, or choose another act to start a new attempt." : "Ale and Brayan think their messages are secret. Help me recover them, from simple encodings to RSA. You can start now, or try the beginner coin lesson first.",
       choices: [
-        ...(unfinished ? [{ label: "Resume mission", action: () => void resumeRsa() }] : []),
-        ...(!unfinished ? [{ label: saved.requestedAct || rsaComplete ? "Start selected act" : "Accept mission", action: () => void beginRsa(act) }] : []),
+        ...(unfinished ? [{ label: "Resume", act: checkpoint.act, action: () => void resumeRsa() }] : []),
+        ...(!unfinished ? [{ label: "Start", act, action: () => void beginRsa(act) }] : []),
         ...(unfinished && saved.requestedAct && saved.requestedAct !== checkpoint.act ? [{ label: "Replace saved attempt with selected act", action: () => void beginRsa(act) }] : []),
-        { label: "Choose an act to replay", action: () => setConversation({ title: "RSA missions", text: "Choose an act. Starting it replaces your saved RSA attempt; your completed lessons stay saved.", choices: [...ACT_NUMBERS.map((number) => ({ label: `Act ${number}: ${getAct(number).title}`, action: () => void beginRsa(number) })), { label: "Later", action: later }] }) },
+        { label: "Choose an act to replay", action: () => setConversation({ title: "RSA missions", rsaAct: act, text: "Choose an act. Starting it replaces your saved RSA attempt; your completed lessons stay saved.", choices: [...ACT_NUMBERS.map((number) => ({ label: `Act ${number}: ${getAct(number).title}`, action: () => void beginRsa(number) })), { label: "Later", action: later }] }) },
         { label: "Later", action: later },
       ] });
   }
@@ -316,7 +318,8 @@ export function TownScreen({ initialAct, initialCoin = false, visitRsa = false }
   </div>;
 
   return <GameShell key={worldKey} restartControl={restartControl} title={t("Quantum Town")} subtitle={rsaActive ? `${t("Act")} ${game.act}: ${t(getAct(game.act).title)}` : t("Explore · meet neighbors · learn quantum computing")}
-    backHref="/" backLabel={t(rsaActive ? "Pause mission" : "Town guide")} onBack={() => { if (rsaActive) saveAndPause(); else greet(); }} backDisabled={rsaActive && blocked}
+    missionProgress={rsaActive ? <RsaProgress act={game.act} showObjective /> : undefined}
+    backHref="/" backLabel={t(rsaActive ? "Pause mission" : "Professor Thecap")} onBack={() => { if (rsaActive) saveAndPause(); else greet(); }} backDisabled={rsaActive && blocked}
     sidebar={journal} objectives={journal} onObjectivesOpen={setJournalOpen}
     sceneReady={sceneReady} sceneFailed={sceneStatus === "error"}
     laptopOpen={rsaActive && game.laptopOpen} laptopReady={rsaActive && game.waitingFor === "workbench"}
@@ -341,10 +344,10 @@ export function TownScreen({ initialAct, initialCoin = false, visitRsa = false }
           else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
         }
       }}>
-        <DialogueFrame className="max-w-4xl"><DialogueLine speaker={conversation.title === "Town guide" ? "guide" : "boss"} label={t(conversation.title)}>{t(conversation.text)}</DialogueLine><div className="flex min-h-0 flex-wrap gap-2 overflow-y-auto">{conversation.choices.map((choice) => <button key={choice.label} className="btn-ghost text-sm" onClick={() => { gameAudio.playSfx("select"); choice.action(); }}>{t(choice.label)}</button>)}</div></DialogueFrame>
+        <DialogueFrame className="max-w-4xl">{conversation.rsaAct && <div className="shrink-0"><RsaProgress act={conversation.rsaAct} /></div>}<DialogueLine speaker={conversation.title === "Professor Thecap" ? "guide" : "boss"} label={t(conversation.title)}>{t(conversation.text)}</DialogueLine><div className="flex min-h-0 flex-wrap gap-2 overflow-y-auto">{conversation.choices.map((choice) => <button key={choice.label} className="btn-ghost text-sm" onClick={() => { gameAudio.playSfx("select"); choice.action(); }}>{t(choice.label)}{choice.act && `: ${t(`Act ${choice.act}: ${getAct(choice.act).title}`)}`}</button>)}</div></DialogueFrame>
       </div>}
       <TouchControls canInteract={canInteract} visible={!inputLocked} />
-      {rsaActive && <><LaptopScene key={`${game.act}:${missionGeneration()}`} act={game.act} restartControl={restartControl} /><GameOver key={`result:${missionGeneration()}`} act={game.act} onReturn={() => { saveAndPause(); }} onRetry={() => void beginRsa(game.act)} onNext={(act) => { saveAndPause(); useTown.getState().patch({ requestedAct: act, tracked: "rsa" }); }} /></>}
+      {rsaActive && <><LaptopScene key={`${game.act}:${missionGeneration()}`} act={game.act} restartControl={restartControl} /><GameOver key={`result:${missionGeneration()}`} act={game.act} onReturn={() => { saveAndPause(); }} onRetry={() => void beginRsa(game.act)} onNext={(act) => void beginRsa(act)} /></>}
       {rsaActive && game.error && <div className="textbox absolute inset-x-3 top-16 z-10 px-3 py-2 text-xs text-actor-hacker" role="alert">{t(game.error)}</div>}
     </>}
   </GameShell>;

@@ -10,9 +10,10 @@ import { SceneLoading } from "./SceneLoading";
 import { OrientationNotice } from "./OrientationNotice";
 
 /** Every scenario occupies the same game screen; only its world and tools change. */
-export function GameShell({ title, subtitle, backHref, backLabel, sidebar, objectives, children, laptopOpen, laptopReady, onOpenLaptop, sceneReady = true, sceneFailed = false, onBack, backDisabled = false, onObjectivesOpen, restartControl }: {
+export function GameShell({ title, subtitle, backHref, backLabel, sidebar, objectives, children, laptopOpen, laptopReady, onOpenLaptop, sceneReady = true, sceneFailed = false, onBack, backDisabled = false, onObjectivesOpen, restartControl, missionProgress }: {
   title: string; subtitle: string; backHref: string; backLabel: string;
   restartControl?: ReactNode;
+  missionProgress?: ReactNode;
   sidebar: ReactNode; objectives: ReactNode; children: ReactNode;
   laptopOpen: boolean; laptopReady: boolean; onOpenLaptop: () => void;
   sceneReady?: boolean; sceneFailed?: boolean;
@@ -37,6 +38,7 @@ export function GameShell({ title, subtitle, backHref, backLabel, sidebar, objec
         <MuteButton />
       </div>
     </header>
+    {sceneReady && !laptopOpen && missionProgress && <div className="shrink-0 border-b border-stage-border bg-stage-surface px-3 py-2 sm:px-4">{missionProgress}</div>}
     <div className="flex min-h-0 flex-1">
       <section className="relative min-h-0 min-w-0 flex-1 overflow-hidden">
         <div className="absolute inset-0" inert={!sceneReady} aria-hidden={!sceneReady} style={{ visibility: sceneReady ? "visible" : "hidden" }}>{children}</div>

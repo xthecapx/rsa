@@ -196,6 +196,17 @@ html[data-boot="done"] #mitm-boot {
 .laptop-deck { flex-shrink: 0; padding: 12px; background: #6d757c; border: 2px solid #3d4a52; border-top: 0; border-radius: 0 0 14px 14px; }
 .laptop-deck span { display: block; margin: auto; width: 100px; height: 6px; border-radius: 10px; background: #2a323880; }
 .laptop-scroll .coin-workbench { border: 0; padding: 0; box-shadow: none; background: transparent; }
+.laptop-scroll .btn-primary, .laptop-scroll .btn-ghost, .laptop-footer .btn-primary { min-height: 44px; font-size: 14px; }
+.laptop-challenge, .coin-challenge { padding: 16px; border: 1px solid #456a70; border-radius: 8px; background: #18343c; }
+.laptop-challenge .laptop-challenge { padding: 0; border: 0; background: transparent; }
+.laptop-question { font-size: 15px; font-weight: 600; line-height: 1.5; }
+.laptop-note { font-size: 14px; line-height: 1.5; color: #a7bbc0; }
+.laptop-choice { flex: 1 1 170px; min-height: 48px; border: 1px solid #688c91; border-radius: 6px; background: #102630; color: #d8ede5; padding: 10px 12px; text-align: left; font-size: 15px; line-height: 1.5; cursor: pointer; }
+.laptop-choice:not(:disabled):hover { border-color: #efbe67; background: #29443e; }
+.laptop-choice:focus-visible { outline: 3px solid #efbe67; outline-offset: 3px; }
+.laptop-choice.selected { border-color: #efbe67; background: #405039; color: #ffe5aa; }
+.laptop-choice:disabled { cursor: default; opacity: .65; }
+.laptop-choice.selected:disabled { opacity: 1; }
 .coin-shared-layout { display: block; max-width: 850px; }
 @media(max-width: 600px) {
   .laptop-overlay { --laptop-gap: 6px; }
@@ -207,6 +218,10 @@ html[data-boot="done"] #mitm-boot {
 
 .coin-room:focus-visible { outline: 2px solid #f2c983; outline-offset: -3px; }
 .coin-house-map { touch-action: manipulation; cursor: crosshair; }
+.coin-keyboard-hint { display: none; }
+@media (hover: hover) and (pointer: fine) {
+  .coin-keyboard-hint { display: block; }
+}
 
 /* One readable game interface for the house and the street. */
 .game-canvas-host { display: flex; align-items: center; justify-content: center; overflow: hidden; }
@@ -225,19 +240,25 @@ html[data-boot="done"] #mitm-boot {
 .coin-world .coin-room { width: 100%; height: 100%; max-width: none; border: 0; border-radius: 0; background: transparent; }
 .coin-world .coin-room > svg { width: 100%; height: 100%; image-rendering: pixelated; }
 .coin-workbench th, .coin-workbench td { padding: 7px; border-bottom: 1px solid #284751; }
-.coin-challenge { padding: 16px; border: 1px solid #456a70; border-radius: 8px; background: #18343c; }
 .coin-choices, .coin-block-tray { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-.coin-choice, .coin-block, .coin-drop-slot { border: 1px solid #688c91; border-radius: 6px; background: #102630; color: #d8ede5; padding: 10px 12px; text-align: left; cursor: pointer; }
-.coin-choice { flex: 1 1 170px; }
+.coin-block, .coin-drop-slot { border: 1px solid #688c91; border-radius: 6px; background: #102630; color: #d8ede5; padding: 10px 12px; text-align: left; cursor: pointer; }
 .coin-block { font-family: monospace; font-size: 12px; touch-action: manipulation; }
-.coin-choice.selected, .coin-block.selected { border-color: #efbe67; background: #405039; color: #ffe5aa; }
-.coin-choice:disabled { cursor: default; opacity: .65; }
-.coin-choice.selected:disabled { opacity: 1; }
+.puzzle-drag-help { margin-bottom: 10px; color: #a7bbc0; font-size: 12px; line-height: 1.5; }
+.puzzle-drag-piece { display: inline-flex; align-items: center; gap: 10px; min-height: 48px; max-width: 100%; overflow-wrap: anywhere; cursor: grab; user-select: none; -webkit-touch-callout: none; }
+.puzzle-drag-piece.is-dragging { opacity: .35; }
+.puzzle-drag-grip { margin-left: auto; flex: none; color: #90e0cd; font: 22px/1 sans-serif; }
+.puzzle-drag-piece:focus-visible, .puzzle-drop-slot:focus-visible { outline: 3px solid #efbe67; outline-offset: 3px; }
+.puzzle-drop-slot.is-over { outline: 3px solid #efbe67; outline-offset: 3px; background: #47605a; box-shadow: 0 0 0 6px #efbe6725; }
+.puzzle-drop-slot.is-over .qiskit-empty { border-color: #b67b17; background: #fff0c8; }
+.puzzle-drag-overlay { z-index: 110; pointer-events: none; }
+.puzzle-drag-preview { display: inline-flex; align-items: center; max-width: min(420px, 85vw); padding: 12px 16px; border: 2px solid #efbe67; border-radius: 8px; background: #18343c; color: #ffe5aa; box-shadow: 0 12px 30px #0008; font: 14px/1.5 var(--font-dm-sans), sans-serif; overflow-wrap: anywhere; }
+.puzzle-drag-preview code { font-size: 12px; }
+.coin-block.selected { border-color: #efbe67; background: #405039; color: #ffe5aa; }
 .coin-code-scaffold { display: grid; gap: 10px; padding: 14px; border: 1px solid #385864; border-radius: 6px; background: #081b24; }
 .coin-code-scaffold > code, .coin-slot-row > code { color: #a6d9c9; }
 .coin-slot-row { display: grid; gap: 6px; }
 .coin-slot-row > span { font-size: 12px; color: #a7bbc0; }
-.coin-drop-slot { min-height: 42px; border-style: dashed; border-color: #70c6b2; overflow-wrap: anywhere; }
+.coin-drop-slot { min-height: 48px; border-style: dashed; border-color: #70c6b2; overflow-wrap: anywhere; }
 .coin-slot-row.body .coin-drop-slot { margin-left: 16px; }
 .coin-operation-tool { display: inline-flex; align-items: center; gap: 10px; min-height: 58px; font-family: var(--font-dm-sans), sans-serif; font-size: 13px; }
 .qiskit-gate { display: grid; place-items: center; width: 46px; height: 46px; border: 2px solid; border-radius: 3px; font: 700 24px/1 monospace; flex: none; }

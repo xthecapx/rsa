@@ -15,14 +15,16 @@
 #   ./deploy-cloudrun.sh            # backend + game (default)
 #   ./deploy-cloudrun.sh backend    # backend only
 #   ./deploy-cloudrun.sh game       # game only (reuses the deployed backend URL)
+#   ./deploy-cloudrun.sh cleanup    # prune images without building or deploying
+#   CLEANUP_DRY_RUN=1 ./deploy-cloudrun.sh cleanup  # preview only
 
 set -euo pipefail
 
 TARGET="${1:-all}"
 case "${TARGET}" in
-  all|backend|game) ;;
+  all|backend|game|cleanup) ;;
   *)
-    echo "Usage: $0 [all|backend|game]"
+    echo "Usage: $0 [all|backend|game|cleanup]"
     exit 1
     ;;
 esac
@@ -41,54 +43,35 @@ ROOT="$(cd "$(dirname "$0")" && pwd)"
 REGISTRY="${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPO}"
 BACKEND_IMAGE="${REGISTRY}/backend:latest"
 GAME_IMAGE="${REGISTRY}/game:latest"
-# Each push can leave several digests (image index, platform manifest,
-# attestation). KEEP_IMAGES is how many complete pushes to retain; we multiply
-# by MANIFESTS_PER_PUSH so we never try to delete a child of a kept parent.
+# Retain complete image indexes and their children, not an estimated number
+# of raw digests. Tagged releases are also protected.
 KEEP_IMAGES="${KEEP_IMAGES:-2}"
-MANIFESTS_PER_PUSH="${MANIFESTS_PER_PUSH:-4}"
+if [[ ! "${KEEP_IMAGES}" =~ ^[1-9][0-9]*$ ]]; then
+  echo "KEEP_IMAGES must be a positive integer" >&2
+  exit 1
+fi
+if ! command -v python3 >/dev/null 2>&1; then
+  echo "python3 is required for Artifact Registry cleanup" >&2
+  exit 1
+fi
 
 prune_old_digests() {
   local package="$1"
-  local keep=$((KEEP_IMAGES * MANIFESTS_PER_PUSH))
-  echo "==> Pruning old digests for ${package} (keeping ${KEEP_IMAGES} images ≈ ${keep} digests)"
-
-  local -a newest_first=()
-  while IFS= read -r digest; do
-    [[ -n "${digest}" ]] && newest_first+=("${digest}")
-  done < <(gcloud artifacts docker images list "${package}" \
-    --sort-by=~CREATE_TIME \
-    --format='value(version)' 2>/dev/null || true)
-
-  local total=${#newest_first[@]}
-  if (( total <= keep )); then
-    echo "    nothing to prune (${total} digests)"
-    return 0
+  local -a cleanup_args=("${ROOT}/scripts/prune-artifact-images.py" "${package}"
+    "--project=${PROJECT_ID}" "--keep=${KEEP_IMAGES}")
+  if [[ "${CLEANUP_DRY_RUN:-0}" == "1" ]]; then cleanup_args+=(--dry-run); fi
+  if ! python3 "${cleanup_args[@]}"; then
+    echo "Image cleanup did not complete for ${package}. Any completed deployment remains deployed." >&2
+    return 1
   fi
-
-  # Delete oldest first so an old index goes before its children.
-  local -a oldest_first=()
-  local i
-  for ((i = total - 1; i >= keep; i--)); do
-    oldest_first+=("${newest_first[i]}")
-  done
-
-  local digest err
-  for digest in "${oldest_first[@]}"; do
-    echo "    delete ${digest}"
-    if err="$(gcloud artifacts docker images delete "${package}@${digest}" \
-      --quiet --delete-tags 2>&1)"; then
-      continue
-    fi
-    # Child digests of a kept parent fail until that parent is gone; skip them.
-    if [[ "${err}" == *"referenced by parent"* || "${err}" == *"referenced parents"* ]]; then
-      echo "    skip (still referenced by a kept parent)"
-    else
-      echo "    warning: ${err}" >&2
-    fi
-  done
 }
 
 echo "==> Project ${PROJECT_ID}  region ${REGION}  target ${TARGET}"
+if [[ "${TARGET}" == "cleanup" ]]; then
+  prune_old_digests "${REGISTRY}/backend"
+  prune_old_digests "${REGISTRY}/game"
+  exit 0
+fi
 # Cloud Run only runs linux/amd64. On Apple Silicon, the default build is
 # arm64 and the deploy fails with "must support amd64/linux".
 PLATFORM="${PLATFORM:-linux/amd64}"

@@ -17,7 +17,7 @@ for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
 const places = [
   { id: "coinDoor", at: TOWN_LOCATIONS.coinDoor.at, label: "Who Goes First?", symbol: "1", scenario: "coin" },
   { id: "rsa", at: CLIENT_POSITION, label: "RSA client", symbol: "2", scenario: "rsa" },
-  { id: "guide", at: TOWN_LOCATIONS.guide.at, label: "Town guide", symbol: "G", scenario: null },
+  { id: "guide", at: TOWN_LOCATIONS.guide.at, label: "Professor Thecap", symbol: "P", scenario: null },
   { id: "sign", at: TOWN_LOCATIONS.sign.at, label: "Signpost", symbol: "S", scenario: null },
   { id: "futureA", at: TOWN_LOCATIONS.futureA.at, label: "Coming soon", symbol: "?", scenario: null },
   { id: "futureB", at: TOWN_LOCATIONS.futureB.at, label: "Coming soon", symbol: "?", scenario: null },
@@ -84,7 +84,7 @@ export function TownMinimap() {
       </div>
       <p className="mt-1 text-[10px] text-stage-muted">{visitedCount}/{places.length} · {t("Places visited")}</p>
       <p className="mt-1 text-[10px] text-stage-muted">1 · {t("Coin house")}　2 · {t("RSA client")}</p>
-      <p className="mt-1 text-[10px] text-stage-muted">G · {t("Town guide")}　S · {t("Signpost")}</p>
+      <p className="mt-1 text-[10px] text-stage-muted">P · {t("Professor Thecap")}　S · {t("Signpost")}</p>
     </div>
   </aside>;
 }

@@ -118,6 +118,7 @@ export function CoinHouse({ initialPlace, target, winner, onNear, onInteract, on
     if (tap.x >= 28 && tap.x <= 134 && tap.y < 108) goal = ROOM_STATIONS.desk;
     else if (tap.x >= 275 && tap.x <= 367 && tap.y < 95) goal = ROOM_STATIONS.board;
     else if (tap.x >= 150 && tap.x <= 253 && tap.y >= 126 && tap.y <= 177) goal = ROOM_STATIONS.table;
+    else if (tap.x >= 156 && tap.x <= 244 && tap.y >= 218) goal = ROOM_START;
     keys.current.clear(); route.current = roomRoute(position.current, goal);
     setDestination(route.current.at(-1) ?? null);
   }
@@ -162,9 +163,9 @@ export function CoinHouse({ initialPlace, target, winner, onNear, onInteract, on
         {winner !== null && <g className="coin-winner-banner"><rect x="138" y="98" width="124" height="23" rx="4" fill="#173e3b" stroke="#efbe67" />
           <text x="200" y="113" textAnchor="middle" fontSize="9" fill="#ffe9a5">{t(winner === 0 ? "Ale goes first!" : "Brayan goes first!")}</text></g>}
         <g aria-hidden="true">
-          <rect x="178" y="234" width="44" height="12" fill="#162b32" stroke="#bba783" strokeWidth="2" />
+          <rect x="156" y="234" width="88" height="12" fill="#162b32" stroke="#bba783" strokeWidth="2" />
           <path d="M193 225h14m-7-4v8m-4-4 4 4 4-4" stroke="#90e0cd" fill="none" strokeWidth="2" />
-          <text x="200" y="246" textAnchor="middle" fontSize="7" fill="#ffe4a2">{t("Town")}</text>
+          <text x="200" y="243" textAnchor="middle" fontSize="7" fill="#ffe4a2">{t("Exit to town")}</text>
           <ellipse cx={ROOM_STATIONS[target].x} cy={ROOM_STATIONS[target].y} rx="19" ry="8" fill="#f2c98322" stroke="#f2c983" strokeDasharray="3 3" />
           <text x={ROOM_STATIONS[target].x} y={ROOM_STATIONS[target].y - 29} textAnchor="middle" fontSize="9" fill="#ffe4a2">{localize(LABELS[target])}</text>
           {destination && <path d={`M${destination.x - 4} ${destination.y}h8 M${destination.x} ${destination.y - 4}v8`} stroke="#90e0cd" strokeWidth="2" />}

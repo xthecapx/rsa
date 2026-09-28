@@ -11,6 +11,8 @@
     "test": "node --test tests/*.test.cjs"
   },
   "dependencies": {
+    "@dnd-kit/dom": "^0.5.0",
+    "@dnd-kit/react": "^0.5.0",
     "autoprefixer": "^10.4.20",
     "clsx": "^2.1.1",
     "excalibur": "^0.32.0",

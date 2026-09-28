@@ -290,12 +290,12 @@ export function QuantumUplink({ disabled = false }: { disabled?: boolean }) {
       className={clsx("space-y-3", disabled && "pointer-events-none opacity-50")}
       aria-disabled={disabled || undefined}
     >
-      <div className="border-2 border-stage-border px-2.5 py-2">
-        <span className="text-[10px] uppercase tracking-widest text-[#c084fc]">{t("Quantum uplink")}</span>
-        <p className="mt-1 text-[10px] leading-relaxed text-stage-muted">{t("Nothing here runs on your laptop. Every button is a request over the network to a machine somewhere else.")}</p>
+      <div className="laptop-challenge">
+        <h2 className="laptop-question text-[#c084fc]">{t("Quantum uplink")}</h2>
+        <p className="laptop-note mt-1">{t("Nothing here runs on your laptop. Every button is a request over the network to a machine somewhere else.")}</p>
       </div>
 
-      <div className="space-y-3 text-[11px]">
+      <div className="laptop-challenge space-y-4">
         <Field
           label={t("Where the circuit runs")}
           hint={
@@ -328,7 +328,7 @@ export function QuantumUplink({ disabled = false }: { disabled?: boolean }) {
               <select
                 value={batchId}
                 onChange={(event) => setBatchId(event.target.value)}
-                className="w-full border-2 border-stage-border bg-stage-bg px-2 py-1 text-[11px] text-[#e8f4f8]"
+                className="min-h-12 w-full rounded border-2 border-stage-border bg-stage-bg px-3 py-2 text-sm text-[#e8f4f8]"
               >
                 {batches.length === 0 && <option value="">{t("Recorded demo batch")}</option>}
                 {batches.map((batch) => (
@@ -388,7 +388,7 @@ export function QuantumUplink({ disabled = false }: { disabled?: boolean }) {
                 })}
               </div>
               {badBase && (
-                <p className="text-[10px] leading-relaxed text-actor-hacker">{t("a = ")}{vars.base}{t(" shares a factor with N. Ordinary gcd already answers this, so the precheck will stop you.")}</p>
+                <p className="text-sm leading-relaxed text-actor-hacker">{t("a = ")}{vars.base}{t(" shares a factor with N. Ordinary gcd already answers this, so the precheck will stop you.")}</p>
               )}
             </Field>
 
@@ -418,24 +418,24 @@ export function QuantumUplink({ disabled = false }: { disabled?: boolean }) {
           type="button"
           onClick={() => void runPrecheck()}
           disabled={Boolean(busy) || loadingManifest}
-          className="btn-ghost w-full text-[11px]"
+          className="btn-ghost w-full"
         >{t("1. Classical precheck")}</button>
 
         <button
           type="button"
           onClick={() => void (source === "aer" ? runAer() : runQpu())}
           disabled={Boolean(busy) || !prechecked || loadingManifest}
-          className="btn-primary w-full text-[11px]"
+          className="btn-primary w-full"
         >
           2. {localize(source === "aer" ? "Run locally on the simulator" : "Submit over the uplink")}
         </button>
 
         {!prechecked && (
-          <p className="text-[10px] leading-relaxed text-stage-muted">{t("Run the precheck first. If gcd(a, N) is already bigger than 1 there is nothing for a quantum computer to do.")}</p>
+          <p className="laptop-note">{t("Run the precheck first. If gcd(a, N) is already bigger than 1 there is nothing for a quantum computer to do.")}</p>
         )}
 
         {localize(busy && (
-          <p className="animate-pulse text-[10px] text-accent-amber">{localize(busy)}...</p>
+          <p className="animate-pulse text-sm text-accent-amber">{localize(busy)}...</p>
         ))}
 
         {readout && <Outcomes readout={readout} numControl={vars.numControl} />}
@@ -444,7 +444,7 @@ export function QuantumUplink({ disabled = false }: { disabled?: boolean }) {
           <button
             type="button"
             onClick={() => void runApiCall("deriveKey")}
-            className="btn-primary w-full border-actor-brayan text-[11px] text-actor-brayan hover:bg-actor-brayan/15"
+            className="btn-primary w-full border-actor-brayan text-actor-brayan hover:bg-actor-brayan/15"
           >{t("3. Take the period and rebuild Brayan's key")}</button>
         )}
       </div>
@@ -591,12 +591,12 @@ function Field({
   useLocale((state) => state.locale);
   return (
     <div className="space-y-1.5">
-      <div className="text-[10px] uppercase tracking-widest text-stage-muted">
+      <div className="text-sm font-semibold text-[#e8f4f8]">
         {localize(label)}
       </div>
       {localize(children)}
       {localize(hint && (
-        <p className="text-[10px] leading-relaxed text-stage-muted">{localize(hint)}</p>
+        <p className="laptop-note">{localize(hint)}</p>
       ))}
     </div>
   );
@@ -622,7 +622,7 @@ function Toggle({
       onClick={onClick}
       title={tOptional(title)}
       className={clsx(
-        "border-2 px-2.5 py-1 text-[11px] transition-colors",
+        "min-h-12 rounded border-2 px-3 py-2 text-sm transition-colors",
         active && tone === "bad" && "border-actor-hacker bg-actor-hacker/15 text-actor-hacker",
         active && tone === "normal" && "border-accent-teal bg-accent-teal/15 text-accent-teal",
         !active && tone === "bad" && "border-stage-border text-actor-hacker/60 hover:border-actor-hacker/60",

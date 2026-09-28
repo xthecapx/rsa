@@ -45,8 +45,12 @@ whiteboard, then press Space or tap Talk. Short conversations lead into playable
 6. Predict whether 100 shots must split exactly in half, compare 100 with 1,000 shots, and explain the observed counts.
 7. Agree that 0 means Ale and 1 means Brayan, then use one simulated shot.
 
-Code and gate blocks support drag-and-drop, tap/click selection followed by a
-slot, and keyboard activation. Hints, undo/reset, and feedback are available
+Code and gate blocks share a dnd-kit builder with a visible drag preview, highlighted
+drop targets, and automatic scrolling inside the laptop. On phones, hold a block
+briefly before dragging; normal swipes still scroll. Tap/click a block and then a
+slot remains available. Keyboard controls: Space picks up/drops, arrows move,
+Escape cancels, and Enter selects/places. Drag instructions and announcements
+are available in English and Spanish. Hints, undo/reset, and feedback are available
 without penalties. The three achievement badges reward building the program,
 explaining the seed replay, and building the circuit. Block trays and answer choices
 are shuffled once per lesson and saved with progress. The code scaffold has a
