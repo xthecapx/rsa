@@ -45,13 +45,16 @@ export function PuzzleDragDrop({ labels, targets, onPlace, renderPreview, childr
         const target = operation.target?.id;
         setAnnouncement(target === undefined ? t("Outside a drop slot.") : `${t("Drop here")}: ${targets[String(target)] ?? target}`);
       }}
-      onDragEnd={({ operation, canceled }) => {
+      onDragEnd={({ operation, canceled }, manager) => {
         suppressClicksUntil.current = performance.now() + 250;
         setDragging(false);
         const source = operation.source?.id, target = operation.target?.id;
         if (!canceled && source !== undefined && target !== undefined
           && Object.hasOwn(labels, String(source)) && Object.hasOwn(targets, String(target))) {
-          onPlace(String(target), String(source));
+          // A placement may unmount this puzzle (e.g. the last correct piece). Wait until
+          // dnd-kit has reset the operation, or its teardown updates state mid-commit.
+          const place = () => manager.dragOperation.status.idle ? onPlace(String(target), String(source)) : requestAnimationFrame(place);
+          place();
           setAnnouncement(`${t("Placed")}: ${sourceLabel(source)}. ${targets[String(target)]}`);
         } else setAnnouncement(t("Drag canceled. The puzzle is unchanged."));
       }}>

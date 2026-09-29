@@ -2,8 +2,9 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const path = require('node:path');
 const { loadTs } = require('./loadTs.cjs');
-const exportsObject = loadTs(path.join(__dirname, '../game/coinRoom.ts'));
-const { ROOM_START, ROOM_STATIONS, canStand, nearbyStation, moveInRoom, roomRoute } = exportsObject;
+const exportsObject = loadTs(path.join(__dirname, '../game/groverRoom.ts'));
+const { GROVER_ROOM, canStand, nearbyStation, moveInRoom, roomRoute } = exportsObject;
+const ROOM_START = GROVER_ROOM.start, ROOM_STATIONS = GROVER_ROOM.stations;
 
 test('start requires walking; each destination is reachable without crossing furniture', () => {
   assert.equal(nearbyStation(ROOM_START), null);
@@ -21,16 +22,16 @@ test('start requires walking; each destination is reachable without crossing fur
     }
   }
 });
-test('keyboard movement stops at walls, table and couch, even for a long step', () => {
+test('keyboard movement stops at walls, the workbench and Thecap', () => {
   assert.ok(moveInRoom(ROOM_START, 1000, 0).x <= 376);
-  const table = moveInRoom(ROOM_STATIONS.table, 0, -150);
-  assert.ok(table.y > 177);
-  assert.ok(canStand(table));
-  const couch = moveInRoom({ x: 120, y: 190 }, -100, 0);
-  assert.ok(couch.x > 110);
+  const bench = moveInRoom(ROOM_STATIONS.core, 0, -150);
+  assert.ok(bench.y > 166);
+  assert.ok(canStand(bench));
+  const thecap = moveInRoom({ x: 310, y: 144 }, -100, 0);
+  assert.ok(thecap.x > 290);
 });
-test('tapping furniture finds a safe reachable floor tile', () => {
-  const route = roomRoute(ROOM_START, { x: 190, y: 145 });
+test('tapping the workbench finds a safe reachable floor tile', () => {
+  const route = roomRoute(ROOM_START, { x: 200, y: 140 });
   assert.ok(route.length);
   assert.ok(route.every(canStand));
 });

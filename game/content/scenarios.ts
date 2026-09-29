@@ -14,6 +14,13 @@ export const SCENARIOS = [
     worldEntry: { target: "car", mode: "outdoor" },
     lessons: "Encryption · factoring · Shor", missions: ["1", "2", "3", "4"],
   },
+  {
+    id: "grover", number: "03", title: "Echo Chamber", difficulty: "Advanced",
+    setting: "Emergency · Thecap’s workshop", href: "/scenarios/grover",
+    description: "A drone core armed itself with a 4-bit PIN and three tries. Build Grover’s search and find the PIN with one measurement.",
+    worldEntry: { target: "groverDoor", mode: "interior" },
+    lessons: "Search · oracle · amplitude amplification", missions: ["grover"],
+  },
 ] as const;
 
 export type ScenarioId = (typeof SCENARIOS)[number]["id"];

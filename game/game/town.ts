@@ -29,10 +29,10 @@ export function restoreRsa(checkpoint: RsaCheckpoint) {
 
 interface TownState {
   welcomed: boolean;
-  location: "town" | "coin";
+  location: "town" | "coin" | "grover";
   position: { x: number; y: number };
   facing: WorldFacing;
-  tracked: "coin" | "rsa" | null;
+  tracked: "coin" | "rsa" | "grover" | null;
   discovered: string[];
   explored: number[];
   checkpoint: RsaCheckpoint | null;
@@ -75,13 +75,13 @@ export const useTown = create<TownState>()(persist((set) => ({
     return {
       ...current, ...data, patch: current.patch, discover: current.discover, explore: current.explore, reset: current.reset,
       welcomed: data.welcomed === true,
-      location: data.location === "coin" ? "coin" : "town",
+      location: data.location === "coin" || data.location === "grover" ? data.location : "town",
       position: Number.isInteger(data.position?.x) && Number.isInteger(data.position?.y) ? data.position! : { ...TOWN_SPAWN },
       facing: ["up", "down", "left", "right"].includes(data.facing ?? "") ? data.facing! : "up",
       checkpoint: validCheckpoint(data.checkpoint ?? null) ? data.checkpoint! : null,
       discovered: Array.isArray(data.discovered) ? data.discovered.filter((id) => typeof id === "string") : [],
       explored: Array.isArray(data.explored) ? [...new Set(data.explored.filter((id) => Number.isInteger(id) && id >= 0 && id < townMap.width * townMap.height))] : [],
-      tracked: data.tracked === "rsa" || data.tracked === "coin" ? data.tracked : null,
+      tracked: data.tracked === "rsa" || data.tracked === "coin" || data.tracked === "grover" ? data.tracked : null,
       rsaPosition: Number.isInteger(data.rsaPosition?.x) && Number.isInteger(data.rsaPosition?.y) ? data.rsaPosition! : null,
       rsaRunning: data.rsaRunning === true, interrupted: data.interrupted === true,
       requestedAct: [1, 2, 3, 4].includes(data.requestedAct ?? 0) ? data.requestedAct! : null,

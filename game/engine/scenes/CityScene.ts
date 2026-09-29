@@ -48,6 +48,9 @@ const MOVE_KEYS: { keys: Keys[]; delta: GridPos }[] = [
 
 /** How long the player has to stand still before they count as stopped. */
 const WALK_SETTLE_MS = 220;
+// Marker keys for captions that are built per locale and progress.
+const GUIDE_LABEL = "Professor Thecap · next challenge";
+const SIGN_LABEL = "Quantum Town signpost";
 
 const NEIGHBOURS: GridPos[] = [
   { x: 0, y: 1 },
@@ -80,6 +83,8 @@ export class CityScene extends Scene {
   private pointerSub: Subscription | null = null;
   private lastTownNear: TownTarget | null = null;
   private lastPosition = "";
+  /** Title of the challenge Thecap recommends next; null once all are done. */
+  private guideNext: string | null = "Who Goes First?";
   private markerLabels: { actor: TownSign; text: string; completed?: boolean; paused?: boolean }[] = [];
   private markerLocale = "";
   private alive = false;
@@ -131,10 +136,10 @@ export class CityScene extends Scene {
     this.add(guide);
     for (const [key, location] of Object.entries(TOWN_LOCATIONS)) {
       const at = tileCenter(location.at);
-      const mounted = location.kind === "coin" || location.kind === "closed";
+      const mounted = location.kind === "coin" || location.kind === "grover" || location.kind === "closed";
       const label = new TownSign(at.x - (key === "guide" ? 44 : 0), at.y + (mounted ? -9 : 8), mounted);
       this.add(label);
-      this.markerLabels.push({ actor: label, text: key === "coinDoor" ? "Coin house" : key === "guide" ? "Professor Thecap · Who Goes First?" : key === "sign" ? "Coin ← · RSA →" : "Coming soon" });
+      this.markerLabels.push({ actor: label, text: key === "coinDoor" ? "Coin house" : key === "groverDoor" ? "Thecap’s workshop" : key === "guide" ? GUIDE_LABEL : key === "sign" ? SIGN_LABEL : "Coming soon" });
     }
     const clientLabel = new TownSign(tileCenter(LANDMARKS.car.at).x + 40, tileCenter(LANDMARKS.car.at).y + 40);
     this.add(clientLabel); this.markerLabels.push({ actor: clientLabel, text: "RSA · Talk to the client" });
@@ -210,7 +215,8 @@ export class CityScene extends Scene {
     if (locale !== this.markerLocale) {
       this.markerLocale = locale;
       for (const { actor, text, completed, paused } of this.markerLabels) {
-        const caption = text === "Professor Thecap · Who Goes First?" ? `${t("Professor Thecap")}\n${t("Who Goes First?")}` : t(paused ? "RSA · Resume mission" : text);
+        const caption = text === GUIDE_LABEL ? (this.guideNext ? `${t("Professor Thecap")}\n${t(this.guideNext)}` : t("Professor Thecap"))
+          : text === SIGN_LABEL ? `${t("Coin ← · RSA →")}\n${t("Workshop ↖")}` : t(paused ? "RSA · Resume mission" : text);
         actor.setCaption(`${completed ? "★ " : paused ? "Ⅱ " : ""}${caption}`, completed);
       }
       // Sign widths change with their translated captions and mission status.
@@ -382,7 +388,9 @@ export class CityScene extends Scene {
         for (const label of this.markerLabels) {
           if (label.text === "Coin house") label.completed = command.coinComplete;
           if (label.text === "RSA · Talk to the client") { label.completed = command.rsaComplete; label.paused = command.rsaPaused && !command.rsaComplete; }
+          if (label.text === "Thecap’s workshop") label.completed = command.groverComplete;
         }
+        this.guideNext = !command.coinComplete ? "Who Goes First?" : !command.rsaComplete ? "Breaking RSA" : !command.groverComplete ? "Echo Chamber" : null;
         this.markerLocale = "";
         return;
       case "track":

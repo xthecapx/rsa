@@ -69,6 +69,11 @@ class Settings(BaseSettings):
     # Ceiling for one circuit build plus simulation on the quantum worker.
     quantum_timeout: float = 120.0
 
+    # Signs the Grover lesson's device tokens so the page never holds the PIN.
+    # The fallback only keeps puzzles honest against casual inspection; set a
+    # real secret in deployment.
+    game_token_key: str = "quantum-town-local-key"
+
     ibm_console_base: str = "https://quantum.cloud.ibm.com"
     # Batch / session: /instances/{crn_encoded}/sessions/{id}
     ibm_session_path_template: str = "/instances/{crn_encoded}/sessions/{id}"

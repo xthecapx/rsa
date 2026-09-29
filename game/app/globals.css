@@ -346,3 +346,68 @@ html[data-boot="done"] #mitm-boot {
 .pipe-link { width: 4px; height: 22px; margin: 0 auto; background: repeating-linear-gradient(#1e4450 0 4px, transparent 4px 8px); }
 .pipe-link.is-wired { background: #3d6b60; }
 .pipe-link.is-flowing { background: linear-gradient(#efbe67, #8fe0cd); box-shadow: 0 0 10px #efbe67; }
+
+/* Echo Chamber (Grover): keypad, circuit, equalizer, whiteboard. */
+.grover-battery { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #a7bbc0; }
+.grover-cell { width: 22px; height: 12px; border: 1px solid #688c91; border-radius: 2px; background: #1a2a30; }
+.grover-cell.full { background: #5ee0a0; border-color: #5ee0a0; }
+.grover-switches { display: flex; gap: 10px; }
+.grover-switch { display: grid; justify-items: center; gap: 6px; width: 54px; padding: 8px 0; border: 1px solid #688c91; border-radius: 6px; background: #102630; color: #d8ede5; font-family: monospace; font-size: 18px; cursor: pointer; touch-action: manipulation; }
+.grover-switch-knob { width: 14px; height: 26px; border-radius: 7px; background: #33444b; box-shadow: inset 0 14px 0 #9aa6b2; transition: box-shadow .15s; }
+.grover-switch.on { border-color: #efbe67; color: #ffe5aa; }
+.grover-switch.on .grover-switch-knob { background: #5c4a22; box-shadow: inset 0 -14px 0 #efbe67; }
+.grover-switch:disabled { opacity: .5; cursor: default; }
+.grover-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; max-width: 280px; font-family: monospace; font-size: 13px; }
+.grover-grid span { padding: 6px 0; border: 1px solid #385864; border-radius: 3px; text-align: center; background: #081b24; color: #a6d9c9; }
+.grover-grid span.tried { color: #ef8a8a; border-color: #7a3434; background: #2a1316; text-decoration: line-through; }
+.grover-math { font-family: monospace; color: #efbe67; }
+.grover-alert { border-left-color: #ef4444; background: #3a1c1f; }
+.grover-box { display: inline-grid; place-items: center; min-width: 58px; min-height: 40px; padding: 4px 10px; border: 2px solid; border-radius: 4px; font: 700 15px/1 monospace; }
+.grover-box.h { border-color: #326ba8; background: #70aaf0; color: #0a2942; }
+.grover-box.oracle { border-color: #000; background: #1d1d22; color: #e9e2ff; }
+.grover-box.diffuser { border-color: #1e7a66; background: #66ddba; color: #07322a; }
+.grover-box.x { border-color: #8f3d3d; background: #f0a0a0; color: #3b0f0f; }
+.grover-box.m { border-color: #829094; background: #c7d1d2; color: #284047; }
+.grover-circuit { display: flex; gap: 10px; padding: 14px; overflow-x: auto; border: 1px solid #718e97; border-radius: 7px; background: #e7eeee; color: #20333a; }
+.grover-register { display: grid; align-content: center; gap: 6px; min-width: 52px; font: 700 13px/1 monospace; }
+.grover-register small { font-weight: 400; }
+.grover-track { position: relative; display: flex; align-items: center; gap: 10px; flex: 1; }
+.grover-track::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 12px; margin-top: -6px; border-block: 2px solid #607b83; background: repeating-linear-gradient(transparent 0 3px, #607b83 3px 4px); opacity: .5; }
+.grover-slot { position: relative; z-index: 1; display: grid; place-items: center; min-width: 72px; min-height: 96px; border: 2px dashed #70a69a; border-radius: 6px; background: #f6faf9; cursor: pointer; }
+.grover-slot.filled { border-style: solid; }
+.grover-slot .grover-box { min-height: 84px; }
+.grover-empty { color: #8aa3a8; font: 700 16px/1 monospace; }
+.grover-repeat { position: relative; z-index: 1; display: grid; gap: 6px; padding: 6px; border: 2px solid #b67b17; border-radius: 8px; background: #fff3d6; }
+.grover-repeat-head { display: flex; align-items: center; justify-content: center; gap: 8px; font: 700 13px/1 monospace; color: #6b4a10; }
+.grover-count { width: 32px; height: 32px; border: 1px solid #b67b17; border-radius: 4px; background: #fff; color: #6b4a10; font: 700 18px/1 monospace; cursor: pointer; touch-action: manipulation; }
+.grover-count:disabled { opacity: .35; cursor: default; }
+.grover-repeat-body { display: flex; gap: 8px; }
+.grover-equalizer { display: grid; gap: 8px; padding: 12px; border: 1px solid #385864; border-radius: 6px; background: #081b24; }
+.grover-equalizer svg { width: 100%; height: auto; max-height: min(32vh, 220px); }
+.grover-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.grover-axis { stroke: #607b83; stroke-width: 1; }
+.grover-mean { stroke: #efbe67; stroke-width: 1.5; stroke-dasharray: 4 3; transition: all .35s ease; }
+.grover-bar-slot { transition: transform .6s ease; }
+.grover-bar { fill: #2dd4bf; transition: y .35s ease, height .35s ease, fill .35s; }
+.grover-bar.negative { fill: #ef8a8a; }
+.grover-bar.measured { fill: #efbe67; }
+.grover-bar-label { fill: #a6d9c9; font: 6px monospace; }
+.grover-bar-label.measured { fill: #ffe5aa; font-weight: 700; }
+.grover-chip { font: 700 16px/1 monospace; }
+.grover-chip.pin, .grover-pin { color: #ffe5aa; letter-spacing: .15em; font-family: monospace; }
+.grover-formula { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 14px; border: 5px solid #a08460; border-radius: 4px; background: #d2ddcc; color: #294953; font: 700 16px/1.4 monospace; }
+.grover-formula.solved { justify-content: center; }
+.grover-chip-slot { display: grid; place-items: center; min-width: 52px; min-height: 44px; border: 2px dashed #389992; border-radius: 4px; background: #eef4ea; cursor: pointer; }
+.grover-chip-slot.filled { border-style: solid; }
+.grover-chip-slot.active { border-color: #d98a1c; box-shadow: 0 0 0 3px rgba(217, 138, 28, .35); }
+.grover-slot-cell { display: inline-grid; justify-items: center; gap: 2px; }
+.grover-slot-cell small { font: 600 10px/1.1 sans-serif; color: #4d6a70; white-space: nowrap; }
+.grover-disarm { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.grover-keypad-slot { min-height: 56px; padding: 12px 18px; border: 2px dashed #ef4444; border-radius: 6px; background: #28313b; color: #d8ede5; font-family: monospace; cursor: pointer; }
+.grover-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.grover-compare > div { display: grid; gap: 4px; padding: 12px; border: 1px solid #385864; border-radius: 6px; text-align: center; }
+.grover-compare > div:last-child { border-color: #5ee0a0; }
+.grover-compare strong { font-size: 24px; }
+.grover-core-pulse { animation: grover-core-pulse 1s ease-in-out infinite; }
+@keyframes grover-core-pulse { 50% { opacity: .55; } }
+@media (prefers-reduced-motion: reduce) { .grover-core-pulse { animation: none; } .grover-bar-slot, .grover-bar, .grover-mean { transition: none; } }

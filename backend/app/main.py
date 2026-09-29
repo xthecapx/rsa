@@ -6,7 +6,7 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import classical, coin, ibm, rsa, shor
+from app.api.routes import classical, coin, grover, ibm, rsa, shor
 
 # Without this the only record of anything is uvicorn's access log, which says
 # a request arrived and nothing about why it never finished.
@@ -37,6 +37,7 @@ app.add_middleware(
 
 app.include_router(classical.router, prefix="/api", tags=["classical"])
 app.include_router(coin.router, prefix="/api/coin", tags=["coin"])
+app.include_router(grover.router, prefix="/api/grover", tags=["grover"])
 app.include_router(rsa.router, prefix="/api/rsa", tags=["rsa"])
 app.include_router(shor.router, prefix="/api/shor", tags=["shor"])
 app.include_router(ibm.router, prefix="/api/ibm", tags=["ibm"])

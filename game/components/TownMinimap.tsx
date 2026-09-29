@@ -19,7 +19,7 @@ const places = [
   { id: "rsa", at: CLIENT_POSITION, label: "RSA client", symbol: "2", scenario: "rsa" },
   { id: "guide", at: TOWN_LOCATIONS.guide.at, label: "Professor Thecap", symbol: "P", scenario: null },
   { id: "sign", at: TOWN_LOCATIONS.sign.at, label: "Signpost", symbol: "S", scenario: null },
-  { id: "futureA", at: TOWN_LOCATIONS.futureA.at, label: "Coming soon", symbol: "?", scenario: null },
+  { id: "groverDoor", at: TOWN_LOCATIONS.groverDoor.at, label: "Thecap’s workshop", symbol: "3", scenario: "grover" },
   { id: "futureB", at: TOWN_LOCATIONS.futureB.at, label: "Coming soon", symbol: "?", scenario: null },
 ] as const;
 
@@ -46,7 +46,8 @@ export function TownMinimap() {
   const rotation = { up: 0, right: 90, down: 180, left: 270 }[facing];
   const coinDone = !!completed.coin?.includes("coin");
   const rsaDone = ["1", "2", "3", "4"].every((act) => completed.rsa?.includes(act));
-  const visitedCount = places.filter((place) => discovered.includes(place.id) || (place.scenario === "coin" && coinDone) || (place.scenario === "rsa" && rsaDone)).length;
+  const groverDone = !!completed.grover?.includes("grover");
+  const visitedCount = places.filter((place) => discovered.includes(place.id) || (place.scenario === "coin" && coinDone) || (place.scenario === "rsa" && rsaDone) || (place.scenario === "grover" && groverDone)).length;
 
   return <aside className="town-minimap panel w-44 bg-stage-bg/95 p-2 sm:w-56" aria-label={t("Town minimap")}>
     <button type="button" className="flex w-full items-center justify-between gap-2 text-xs text-accent-teal" aria-expanded={!collapsed} aria-controls={mapId}
@@ -54,12 +55,12 @@ export function TownMinimap() {
       <span>{t("Town minimap")}</span><span aria-hidden="true">{collapsed ? "+" : "−"}</span>
     </button>
     <div id={mapId} hidden={collapsed}>
-      <svg viewBox={`-2 -2 ${width + 4} ${height + 4}`} className="mt-2 block w-full border border-stage-border bg-stage-bg" role="img" aria-label={t("Your position and explored terrain. Number 1 is the coin house; number 2 is the RSA client.")}>
+      <svg viewBox={`-2 -2 ${width + 4} ${height + 4}`} className="mt-2 block w-full border border-stage-border bg-stage-bg" role="img" aria-label={t("Your position and explored terrain. Number 1 is the coin house; number 2 is the RSA client; number 3 is Thecap’s workshop.")}>
         {Array.from(terrain, ([color, path]) => <path key={color} d={path} fill={color} />)}
         {TOWN_TREES.map(({ x, y }) => <circle key={`${x}:${y}`} cx={x + 0.5} cy={y + 0.5} r={0.7} fill="#214636" />)}
         <path d={fog} fill="#07161f" opacity={0.88} />
         {places.map((place) => {
-          const done = place.scenario === "coin" ? coinDone : place.scenario === "rsa" ? rsaDone : false;
+          const done = place.scenario === "coin" ? coinDone : place.scenario === "rsa" ? rsaDone : place.scenario === "grover" ? groverDone : false;
           const visited = discovered.includes(place.id) || done;
           const selected = place.scenario !== null && tracked === place.scenario;
           const color = done ? "#90e0cd" : visited ? "#a9cbd4" : "#f2c983";
@@ -83,7 +84,7 @@ export function TownMinimap() {
         <span><span className="text-accent-teal">✓</span> {t("Completed")}</span>
       </div>
       <p className="mt-1 text-[10px] text-stage-muted">{visitedCount}/{places.length} · {t("Places visited")}</p>
-      <p className="mt-1 text-[10px] text-stage-muted">1 · {t("Coin house")}　2 · {t("RSA client")}</p>
+      <p className="mt-1 text-[10px] text-stage-muted">1 · {t("Coin house")}　2 · {t("RSA client")}　3 · {t("Workshop")}</p>
       <p className="mt-1 text-[10px] text-stage-muted">P · {t("Professor Thecap")}　S · {t("Signpost")}</p>
     </div>
   </aside>;

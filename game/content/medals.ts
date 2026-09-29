@@ -15,7 +15,7 @@ export interface Medal {
   hint: string;
 }
 
-export type MedalId = "quantum-coin" | "codebook" | "key-ring" | "prime-cutter" | "period-lens";
+export type MedalId = "quantum-coin" | "codebook" | "key-ring" | "prime-cutter" | "period-lens" | "amplifier";
 
 export const MEDALS: readonly Medal[] = [
   {
@@ -52,6 +52,13 @@ export const MEDALS: readonly Medal[] = [
     description: "You wired a classical program around a quantum processor: the Shor box found the period, and your laptop turned it into factors, a key and the message.",
     ability: "Quantum Solve: hand the hard step to a QPU, then finish the job on a classical machine.",
     hint: "Clear Act 4: Shor with the RSA client.",
+  },
+  {
+    id: "amplifier", scenario: "grover", mission: "grover", glyph: "▲",
+    title: "Amplitude Amplifier", skill: "Grover search",
+    description: "You spread a guess over all sixteen PINs, then let the Oracle and Diffuser grow the right one in three rounds.",
+    ability: "Needle Finder: find one marked item among N in about √N queries.",
+    hint: "Disarm the drone core in Thecap’s workshop.",
   },
 ];
 

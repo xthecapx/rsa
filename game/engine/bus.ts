@@ -20,7 +20,7 @@ export type EngineCommand =
   | { type: "lockInput"; locked: boolean }
   | { type: "reset" }
   | { type: "placePlayer"; at: { x: number; y: number }; facing: WorldFacing }
-  | { type: "townProgress"; coinComplete: boolean; rsaComplete: boolean; rsaPaused: boolean }
+  | { type: "townProgress"; coinComplete: boolean; rsaComplete: boolean; groverComplete: boolean; rsaPaused: boolean }
   | { type: "track"; target: TownTarget | "car" | "tap" | "ale" | "brayan" | null };
 
 export type BubbleKind = "none" | "question" | "alert" | "success";

@@ -19,7 +19,7 @@ test('Spanish preserves every runtime placeholder', () => {
 });
 test('all scenario dialogue, choices, objectives and catalog entries have translations', () => {
   const fields = new Set(['text', 'label', 'title', 'subtitle', 'brief', 'feedback', 'objective', 'wrong', 'description', 'setting', 'difficulty', 'lessons', 'scheme', 'skill', 'ability', 'hint']);
-  const files = ['content/coin.ts', 'content/scenarios.ts', 'content/medals.ts', ...[1, 2, 3, 4].map((n) => `content/acts/act${n}.ts`)];
+  const files = ['content/coin.ts', 'content/grover.ts', 'content/town.ts', 'content/scenarios.ts', 'content/medals.ts', ...[1, 2, 3, 4].map((n) => `content/acts/act${n}.ts`)];
   let checked = 0;
   for (const file of files) {
     const ast = ts.createSourceFile(file, fs.readFileSync(path.join(root, file), 'utf8'), ts.ScriptTarget.Latest, true);
