@@ -27,6 +27,7 @@ export const VAULT_SCENES: Record<VaultStep, Scene> = {
     lines: [
       { speaker: "ofelia", text: "The vault hides a code: 25 digits, each 0 or 1. The ghost knows it." },
       { speaker: "ofelia", text: "Mark a tumbler for the ghost and ask. A knock means its digit is 1. Silence means 0." },
+      { speaker: "system", text: "In quantum terms the ghost is the vault’s Oracle: a sealed box that knows the code and only answers questions." },
       { speaker: "ofelia", text: "Three candles, three questions. At midnight the code changes. We can’t open it tonight — let’s find out why." },
     ],
   },
@@ -77,14 +78,14 @@ export const VAULT_SCENES: Record<VaultStep, Scene> = {
     title: "One tumbler, one sign", place: "table", objective: "At the table, follow one qubit through the ghost.",
     lines: [
       { speaker: "ofelia", text: "Explain it to me with one tumbler. I’m old, not slow." },
-      { speaker: "system", text: "The ghost only ever flips the helper qubit. Follow what that does to a tumbler’s qubit." },
+      { speaker: "system", text: "The ghost is the vault’s Oracle, and it only ever flips the helper qubit. Follow what that does to a tumbler’s qubit." },
     ],
   },
   bvWire: {
     title: "Open the black box", place: "desk", objective: "Build the one-question circuit from boxes.",
     lines: [
       { speaker: "system", text: "Remember the sealed Oracle in the workshop? It had a helper qubit hidden inside. This time you prepare the helper yourself." },
-      { speaker: "system", text: "Put the helper in |−⟩ and the ghost’s answer becomes a phase. Then read the phases with H." },
+      { speaker: "system", text: "Put the helper in |−⟩ and the Oracle’s answer, the ghost’s knock, becomes a phase. Then read the phases with H." },
     ],
   },
   execute: {

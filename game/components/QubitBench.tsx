@@ -7,6 +7,8 @@ import type { BenchStep, QuestionStep } from "@/content/coinTown";
 import { KET, STATES, expand, ketName, probabilities, solves, trace, type Gate } from "@/game/qubit";
 import { gameAudio } from "@/game/audio";
 import { OceanWaves, RippleGraph } from "./InterferenceWaves";
+import { AmplitudeBars } from "./RegisterBench";
+import { startRegister, traceReg } from "@/game/register";
 import { t, useLocale } from "@/i18n";
 
 const GATE_LABELS: Record<Gate, string> = { X: "X gate · flip", Z: "Z gate · sign", H: "Hadamard · H" };
@@ -98,6 +100,13 @@ export function BenchQuestion({ step, onSolved }: { step: QuestionStep; onSolved
   const [picked, setPicked] = useState<number | null>(null);
   const option = picked === null ? null : step.options[picked];
   return <LaptopQuestion prompt={t(step.text)}>
+    {step.bars && (() => {
+      const before = traceReg(startRegister(step.bars.qubits, step.bars.start), step.bars.ops).at(-1)!;
+      return <div className="mb-3 space-y-2">
+        <AmplitudeBars amps={before} mean={step.bars.mean} title={step.bars.after ? "Before the press" : undefined} />
+        {step.bars.after && option?.correct && <AmplitudeBars amps={traceReg(before, step.bars.after).at(-1)!} title="After the press" legend={false} />}
+      </div>;
+    })()}
     <div className="coin-choices">{step.options.map((choice, i) => <LaptopChoiceButton key={choice.label} selected={picked === i}
       disabled={!!option?.correct} aria-pressed={picked === i}
       onClick={() => {

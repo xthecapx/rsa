@@ -495,6 +495,35 @@ html[data-boot="done"] #mitm-boot {
 /* Coin Town qubit benches and knowledge cards. */
 .qiskit-gate.pauli-x { border-color: #1f7a4d; background: #6fd6a0; color: #0b3320; }
 .qiskit-gate.pauli-z { border-color: #8a4bb8; background: #d2a8f0; color: #331247; }
+.qiskit-gate.reg-oracle { border-color: #b45309; background: #fbbf77; color: #3b1d05; }
+.qiskit-gate.reg-diffuser { border-color: #0f766e; background: #7ee0d0; color: #083a35; }
+/* Foundry Town register circuit: one wire per qubit; boxes that act on the whole register span every wire. */
+.reg-grid { display: grid; flex: 1; min-width: 200px; column-gap: 4px; }
+.reg-label { display: flex; align-items: baseline; gap: 6px; font-size: 16px; font-weight: 700; align-self: center; }
+.reg-label small { font-size: 11px; font-weight: 400; }
+.reg-wire { position: relative; align-self: center; height: 2px; background: #607b83; }
+.reg-square { display: grid; place-items: center; z-index: 2; }
+.reg-cell { display: grid; place-items: center; width: 58px; height: 100%; min-height: 58px; padding: 0; border: 0; border-radius: 4px; background: transparent; cursor: pointer; }
+.reg-cell:focus-visible { outline: 3px solid #e3a33d; outline-offset: 3px; }
+.qiskit-gate.reg-span { display: flex; flex-direction: column; justify-content: center; gap: 4px; width: 58px; height: calc(100% - 12px); min-height: 46px; }
+.reg-span-name { font: 600 9px/1.1 system-ui, sans-serif; text-align: center; }
+/* Foundry Town register bars: amplitude up for +, down for −, dashed average line. */
+.amp-bars { padding: 10px 12px; border: 1px solid #456a70; border-radius: 6px; background: #102630; }
+.amp-plot { position: relative; display: grid; gap: 6px; height: 128px; }
+.amp-col { display: grid; grid-template-rows: 1fr 1fr; border-radius: 3px; }
+.amp-col.marked { background: rgba(242, 201, 131, .08); outline: 1px dashed rgba(242, 201, 131, .45); }
+.amp-half { display: flex; justify-content: center; }
+.amp-half.up { align-items: flex-end; border-bottom: 1px solid #5d8a93; }
+.amp-half.down { align-items: flex-start; }
+.amp-bar { display: block; width: 70%; max-width: 28px; background: #2dd4bf; border-radius: 2px 2px 0 0; transition: height .45s ease; }
+.amp-bar.negative { background: #f5a623; border-radius: 0 0 2px 2px; }
+.amp-mean { position: absolute; left: 0; right: 0; border-top: 2px dashed #e8f4f8; opacity: .7; transition: top .45s ease; pointer-events: none; }
+.amp-head { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; margin-bottom: 8px; font-size: 11px; }
+.amp-mean-tag { position: absolute; right: 2px; top: -16px; padding: 0 4px; border-radius: 3px; background: #102630; color: #e8f4f8; font-size: 10px; white-space: nowrap; }
+.amp-labels { display: grid; gap: 6px; margin-top: 6px; font-size: 11px; text-align: center; }
+.amp-labels strong { font-size: 13px; }
+.amp-labels > span { display: flex; flex-direction: column; }
+@media (prefers-reduced-motion: reduce) { .amp-bar, .amp-mean { transition: none; } }
 .qubit-cases { display: grid; gap: 8px; }
 .qubit-case { padding: 10px 12px; border: 1px solid #456a70; border-radius: 6px; background: #102630; }
 .qubit-trace { font-family: ui-monospace, monospace; font-size: 14px; overflow-wrap: anywhere; }

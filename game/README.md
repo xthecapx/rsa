@@ -1,15 +1,29 @@
 # Quantum Playground
 
-The home screen is **Quantum Town**, a walkable world. Arrive at the southern
-entrance, meet the doctor in the white coat, then explore with arrows/WASD, mouse clicks, or taps on touch
-screens. Press Space or click/tap Talk beside a door, person, or sign.
+The game is a road of small walkable towns, one challenge each, ordered by what
+each lesson needs from the one before. Explore with arrows/WASD, mouse clicks, or
+taps; press Space or tap Talk beside a door, person, or sign.
 
-The doctor recommends **Who Goes First?** as the first challenge and explicitly
-offers starting with RSA instead. Both lessons are available immediately. Enter the coin house west of the plaza
-for **Who Goes First?**, or accept **Breaking RSA** from the client beside a
-parked car on the northeastern street. RSA happens on the town map. Two closed
-houses introduce places for future lessons. Objectives opens the journal and
-lets players track destinations without teleporting.
+```
+                 [Quantum Town]   hub: every challenge has a replay door; RSA lives here for now
+                       │ north road (Foundry Badge)
+[Hollow Town] ── [Coin Town] ── [Foundry Town]
+ west, closed      start          east road (Coin Town badge)
+```
+
+- **Coin Town** (start): Mayor Cap. Five neighbors teach one-qubit ideas as
+  knowledge cards; the coin house holds **Who Goes First?**. Cards plus the coin
+  lesson earn the Coin Town badge, which opens the east road.
+- **Foundry Town**: VP Cap. Five factory hands teach Grover's pieces on register
+  benches (registers, even spread, the oracle stamp, the Diffuser, round counts);
+  Thecap's workshop holds **Echo Chamber**. Cards plus the lesson earn the Foundry
+  Badge, which opens Coin Town's north road.
+- **Hollow Town**: placeholder for **Operation Ghost Key**; its road is gated.
+- **Quantum Town**: Professor Thecap. Keeps a door for every lesson, including a
+  replay door to the same workshop save, and hosts **Breaking RSA**.
+
+Cards are never required for a lesson, only for the town badge. Saves that
+already reached Quantum Town keep the north road open.
 
 The house door and Return to town control preserve the coin session. RSA can be
 paused and resumed from its client; checkpoint data includes story progress,
@@ -129,6 +143,16 @@ Check the same controls in an RSA mission, including keyboard focus and Escape.
 - `components/CoinHouse.tsx`: the walkable house, input, animation, and proximity interaction.
 - `game/coinRoom.ts`: floor collision bounds, movement, and tap-to-walk routing.
 - `game/progress.ts`: scenario-scoped completion, shared with RSA.
+
+### Adding a town
+
+- `content/<town>.ts`: cards, neighbors and their activity steps, greeter lines, spawn and door positions.
+- `content/knowledge.ts`: card ids (one shared store keeps every town's cards) and the step kinds.
+- `engine/maps/<town>Map.ts`: terrain, built like `coinTownMap.ts`.
+- `engine/scenes/WorldScene.ts`: a `WorldDef` (NPCs, doors, gates, animals, props) and a scene class, registered in `engine/createGame.ts`.
+- `components/<Town>Screen.tsx`: a `TownConfig` for `WorldTownScreen` (greeter, route, challenge door, badge, exits, gates, minimap).
+- `game/town.ts`: a saved slot for the town; `components/TownScreen.tsx`: the travel handlers.
+- Sprites: `node tools/gen_npc_sprites.cjs`. Tests: copy `tests/foundry.test.cjs`.
 
 Add scenario metadata, a town interaction location, and its start/resume behavior.
 Interior lessons can own their room and tools while sharing the shell and return

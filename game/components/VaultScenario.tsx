@@ -92,9 +92,9 @@ function restoreSession(saved: Partial<Session>): Session {
 
 const REFUSALS: Record<string, string> = {
   extra: "Notes: the core refused. Nothing to amplify — empty the repeat box.",
-  prep: "Notes: the core refused. The data bus needs H before the ghost.",
+  prep: "Notes: the core refused. The data bus needs H before the Oracle (the ghost).",
   helper: "Notes: the core refused. The helper must be |−⟩ for the answer to become a phase.",
-  output: "Notes: the core refused. Add H after the ghost, or the signs stay invisible.",
+  output: "Notes: the core refused. Add H after the Oracle (the ghost), or the signs stay invisible.",
   measure: "Notes: the core refused. Put M at the end of the data bus.",
 };
 

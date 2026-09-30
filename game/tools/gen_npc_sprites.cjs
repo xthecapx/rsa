@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Draw the Coin Town neighbors (and the animals wandering the town) as 16x16 front-facing SVG sprites in
+ * Draw the town neighbors, the animals wandering the towns and Foundry Town's props as 16x16 front-facing SVG sprites in
  * public/assets/characters/, in the same pixel idiom as tools/gen_characters.py.
  * NPCs never walk, so one frame per character is enough; the same file is the
  * world sprite and the dialogue portrait.
@@ -61,6 +61,36 @@ const NPCS = {
     palette: { o: "#171717", h: "#f97316", H: "#c2410c", s: "#c68b59", e: "#171717", c: "#fde047", C: "#a16207", p: "#1f2937", b: "#0b0f14", a: "#e5e7eb" },
     rows: { 2: "....HHHHHHHH....", 3: "...HhhhhhhhhH...", 4: "...HHHHHHHHHH...", 10: "...socaccacos..." },
   },
+  vpcap: {
+    // Foundry Town's VP of engineering: white hard hat, safety vest over a navy shirt.
+    palette: { o: "#141414", h: "#f8fafc", H: "#cbd5e1", s: "#d9a577", e: "#141414", c: "#1e3a8a", C: "#172554", p: "#334155", b: "#0f172a", a: "#f97316", y: "#facc15" },
+    rows: { 2: ".....HHHHHH.....", 3: "....hhhhhhhh....", 4: "...HhhhhhhhhH...", 9: "....oacccao.....", 10: "...soayccyaos...", 11: "....oaccccao...." },
+  },
+  rosa: {
+    // Switchboard operator: headset over dark curls.
+    palette: { o: "#1a1410", h: "#3b2616", s: "#e0a878", e: "#1a1410", c: "#14b8a6", C: "#0f766e", p: "#1f2937", b: "#111827", a: "#9ca3af", m: "#ef4444" },
+    rows: { 3: "...aohhhhhhoa...", 4: "...ahhhhhhhha...", 5: "...ahssssssh....", 6: "...mhsessesh...." },
+  },
+  paco: {
+    // Paint mixer: splattered overalls and a cap.
+    palette: { o: "#161616", h: "#2563eb", H: "#1d4ed8", s: "#c68b59", e: "#161616", c: "#e5e7eb", C: "#9ca3af", p: "#1e40af", b: "#0f172a", r: "#ef4444", g: "#22c55e", y: "#facc15" },
+    rows: { 2: "....HHHHHH......", 3: "....hhhhhhhHH...", 9: "....ocrcgco.....", 10: "...soccyccros...", 12: "....oprpgppo....", 13: "....oppyppro...." },
+  },
+  ines: {
+    // Quality inspector: goggles and a clipboard.
+    palette: { o: "#171717", h: "#7c2d12", s: "#f1c9a3", e: "#171717", c: "#f8fafc", C: "#e2e8f0", p: "#3f3f46", b: "#18181b", g: "#38bdf8", G: "#0c4a6e", k: "#a16207", w: "#fefce8" },
+    rows: { 3: "...ohhhhhhhho...", 4: "...hhhhhhhhhh...", 6: "....GggGGggG....", 10: "...soccccckws...", 11: "....occcckwo...." },
+  },
+  joaquin: {
+    // Press operator: welding cap, heavy apron.
+    palette: { o: "#141414", h: "#111827", H: "#dc2626", s: "#a8703f", e: "#141414", c: "#78350f", C: "#451a03", p: "#27272a", b: "#09090b", a: "#d4d4d8" },
+    rows: { 2: ".....HHHHHH.....", 3: "....HHHHHHHH....", 9: "....occaacco....", 10: "...soccaaccos...", 11: "....occaacco...." },
+  },
+  vera: {
+    // Crane operator: yellow hard hat and hi-vis jacket.
+    palette: { o: "#171717", h: "#facc15", H: "#ca8a04", s: "#e8b98f", e: "#171717", c: "#f97316", C: "#c2410c", p: "#1e293b", b: "#0f172a", a: "#e5e7eb", t: "#6b3e1f" },
+    rows: { 2: ".....HHHHHH.....", 3: "....hhhhhhhh....", 4: "...HhhhhhhhhH...", 5: "...thssssssht...", 10: "...socaccacos...", 11: "....occaacco...." },
+  },
 };
 
 /** Side-view animals, facing right; the scene mirrors them to walk left. Rows not listed are empty. */
@@ -81,6 +111,38 @@ const ANIMALS = {
     palette: { w: "#f5f5f0", W: "#c9ccc4", e: "#1a1a1a", y: "#f59e0b", b: "#5fb3d9" },
     rows: { 9: "..........ww....", 10: ".........wweyy..", 11: "..........ww....", 12: "..w.wwwwwww.....", 13: "..wwwWWwwww.....", 14: "...wwwwwww......", 15: "..bbbbbbbbbb...." },
   },
+  bot: {
+    // Foundry delivery robot: a crate on wheels with one blinking eye.
+    palette: { g: "#cbd5e1", G: "#64748b", e: "#22d3ee", k: "#1f2937", y: "#facc15", a: "#94a3b8" },
+    rows: { 5: ".........a......", 6: "........aaa.....", 7: "....GGGGGGGG....", 8: "....GggggggG....", 9: "....GggggeeG....", 10: "....GgyggggG....", 11: "....GggggggG....", 12: "....GGGGGGGG....", 13: "....k.kk.kk.k...", 14: "...kkk....kkk..." },
+  },
+};
+
+
+/** Foundry Town props, one 16x16 tile each; tall things are two tiles stacked. */
+const PROPS = {
+  "stack-top": { palette: { r: "#b91c1c", w: "#f5f5f4", k: "#292524", d: "#7f1d1d" },
+    rows: { 0: "....kkkkkkkk....", 1: "....krrrrrrk....", 2: ".....rrrrrr.....", 3: ".....wwwwww.....", 4: ".....rrrrrr.....", 5: ".....rrrrrd.....", 6: ".....wwwwww.....", 7: ".....rrrrrd.....", 8: ".....rrrrrd.....", 9: ".....wwwwww.....", 10: ".....rrrrrd.....", 11: ".....rrrrrd.....", 12: ".....rrrrrd.....", 13: ".....rrrrrd.....", 14: ".....rrrrrd.....", 15: ".....rrrrrd....." } },
+  "stack-base": { palette: { r: "#991b1b", d: "#7f1d1d", k: "#292524", g: "#57534e" },
+    rows: { 0: ".....rrrrrd.....", 1: ".....rdrrdd.....", 2: ".....rrrrrd.....", 3: "....rrdrrrdr....", 4: "....rrrrrrdr....", 5: "....rdrrdrrd....", 6: "....rrrrrrdr....", 7: "...rrrdrrrrdr...", 8: "...rrrrrrdrrr...", 9: "...rdrrrrrrdr...", 10: "...rrrrdrrrrr...", 11: "..gggggggggggg..", 12: "..gkkkkkkkkkkg..", 13: "..gggggggggggg..", 14: "................", 15: "................" } },
+  "silo-top": { palette: { s: "#e2e8f0", S: "#94a3b8", k: "#475569", y: "#facc15" },
+    rows: { 4: "......kkkk......", 5: "....kkssssk.....", 6: "...kssssssSk....", 7: "..kssssssssSk...", 8: "..ksssssssSSk...", 9: "..kkkkkkkkkkk...", 10: "..ksssssssSSk...", 11: "..ksyyyyysSSk...", 12: "..ksssssssSSk...", 13: "..ksssssssSSk...", 14: "..ksssssssSSk...", 15: "..ksssssssSSk..." } },
+  "silo-base": { palette: { s: "#e2e8f0", S: "#94a3b8", k: "#475569", g: "#64748b" },
+    rows: { 0: "..ksssssssSSk...", 1: "..ksssssssSSk...", 2: "..kkkkkkkkkkk...", 3: "..ksssssssSSk...", 4: "..ksssssssSSk...", 5: "..ksssssssSSk...", 6: "..ksssssssSSk...", 7: "..kkkkkkkkkkk...", 8: "..ksssssssSSk...", 9: "..ksssssssSSk...", 10: "..ksssssssSSk...", 11: "...kg.....gk....", 12: "...kg.....gk....", 13: "..kkkk...kkkk...", 14: "................", 15: "................" } },
+  belt: { palette: { k: "#1f2937", g: "#6b7280", G: "#9ca3af", y: "#facc15" },
+    rows: { 6: "gggggggggggggggg", 7: "kkkkkkkkkkkkkkkk", 8: "kGkkkGkkkGkkkGkk", 9: "kkkkkkkkkkkkkkkk", 10: "gggggggggggggggg", 11: "y.y.y.y.y.y.y.y.", 12: ".k...k...k...k..", 13: ".k...k...k...k.." } },
+  crate: { palette: { w: "#c08a4b", W: "#8a5a2b", k: "#4a2e14" },
+    rows: { 1: "....kkkkkkkk....", 2: "....kwwwwwWk....", 3: "....kWwwwWWk....", 4: "....kwWwWwWk....", 5: "....kwwWwwWk....", 6: "....kwWwWwWk....", 7: "....kWwwwWWk....", 8: "....kkkkkkkk...." } },
+  "press-top": { palette: { g: "#9ca3af", G: "#4b5563", k: "#1f2937", y: "#facc15", r: "#dc2626" },
+    rows: { 2: "..kkkkkkkkkkkk..", 3: "..kggggggggggk..", 4: "..kgrgggggggGk..", 5: "..kggggggggGGk..", 6: "..kkkkkkkkkkkk..", 7: "......kGGk......", 8: "......kGGk......", 9: "......kGGk......", 10: "......kGGk......", 11: "....kkkkkkkk....", 12: "....kggggggk....", 13: "....kkkkkkkk....", 14: "..k..........k..", 15: "..k..........k.." } },
+  "press-base": { palette: { g: "#9ca3af", G: "#4b5563", k: "#1f2937", y: "#facc15" },
+    rows: { 0: "..k..........k..", 1: "..k..........k..", 2: "..k..........k..", 3: "..kkkkkkkkkkkk..", 4: "..kykykykykykk..", 5: "..kkykykykykyk..", 6: "..kggggggggggk..", 7: "..kgggggggggGk..", 8: "..kggggggggGGk..", 9: "..kkkkkkkkkkkk..", 10: "..GG........GG.." } },
+  "crane-top": { palette: { y: "#facc15", Y: "#ca8a04", k: "#1f2937", c: "#6b7280" },
+    rows: { 2: "kkkkkkkkkkkkkkkk", 3: "yYyYyYyYyYyYyYyk", 4: "kkkkkkkkkkkkkkkk", 5: "c.........kYYk..", 6: "c.........kyyk..", 7: "c.........kYyk..", 8: "c.........kyYk..", 9: "c.........kYyk..", 10: "k.........kyYk..", 11: "k.........kYyk..", 12: "kk........kyYk..", 13: "..........kYyk..", 14: "..........kyYk..", 15: "..........kYyk.." } },
+  "crane-base": { palette: { y: "#facc15", Y: "#ca8a04", k: "#1f2937", g: "#57534e" },
+    rows: { 0: "..........kyYk..", 1: "..........kYyk..", 2: "..........kyYk..", 3: "..........kYyk..", 4: "..........kyYk..", 5: "..........kYyk..", 6: "..........kyYk..", 7: "..........kYyk..", 8: "..........kyYk..", 9: "........gggggggg", 10: "........gkkkkkkg", 11: "........gggggggg" } },
+  sign: { palette: { w: "#b7793f", W: "#7c4a22", k: "#3b2412", t: "#fef3c7" },
+    rows: { 2: "..kkkkkkkkkkkk..", 3: "..kwwwwwwwwwwk..", 4: "..kwtttwtttwwk..", 5: "..kwwwwwwwwwWk..", 6: "..kwttwtttwwWk..", 7: "..kwwwwwwwwWWk..", 8: "..kkkkkkkkkkkk..", 9: ".......kW.......", 10: ".......kW.......", 11: ".......kW.......", 12: ".......kW.......", 13: ".......kW.......", 14: "......kkWW......" } },
 };
 
 function svg(rows, palette) {
@@ -110,4 +172,9 @@ for (const [name, { palette, rows }] of Object.entries(ANIMALS)) {
   const pattern = Array.from({ length: 16 }, (_, y) => rows[y] ?? "................");
   fs.writeFileSync(path.join(OUT, `animal-${name}.svg`), svg(pattern, palette));
   console.log(`wrote animal-${name}.svg`);
+}
+for (const [name, { palette, rows }] of Object.entries(PROPS)) {
+  const pattern = Array.from({ length: 16 }, (_, y) => rows[y] ?? "................");
+  fs.writeFileSync(path.join(OUT, `prop-${name}.svg`), svg(pattern, palette));
+  console.log(`wrote prop-${name}.svg`);
 }

@@ -119,7 +119,7 @@ export const LEDGER: FormulaSpec<LedgerSlot, LedgerChip> = {
   order: ["helper", "a0", "a1", "a2", "b0", "b1", "b2"],
   given: ["a0", "a1", "a2"],
   slots: {
-    helper: { name: "Helper state", caption: "helper", answer: "minus", prompt: "Step 1 of 4 · The ghost flips the helper when sᵢ·xᵢ = 1. Pick a helper state that a flip only multiplies by −1.",
+    helper: { name: "Helper state", caption: "helper", answer: "minus", prompt: "Step 1 of 4 · The ghost, the vault’s Oracle, flips the helper when sᵢ·xᵢ = 1. Pick a helper state that a flip only multiplies by −1.",
       wrong: { zero: "With the helper in |0⟩ the ghost just flips it to |1⟩: the answer lands in the helper, not in a phase.", one: "|1⟩ flips to |0⟩: again the answer lands in the helper, not in a phase.", plus: "A flip leaves |+⟩ exactly as it was: nothing kicks back." } },
     a0: { name: "Tumbler qubit after H, sᵢ = 0", caption: "after H", answer: "plus", prompt: "Step 2 of 7 · H turns |0⟩ into an equal mix of 0 and 1. Which state is that?" },
     a1: { name: "Tumbler qubit after the ghost, sᵢ = 0", caption: "after the ghost", answer: "plus", prompt: "Step 3 of 7 · sᵢ = 0: the ghost never touches this tumbler. Nothing changes." },

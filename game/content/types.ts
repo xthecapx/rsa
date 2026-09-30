@@ -3,7 +3,8 @@ import type { Landmark } from "@/engine/maps/street";
 
 export type ActNumber = 1 | 2 | 3 | 4;
 export type Speaker = "ale" | "brayan" | "hacker" | "boss" | "guide" | "ofelia" | "system"
-  | "mayor" | "luz" | "nico" | "tomas" | "marisol" | "oscar" | "warden";
+  | "mayor" | "luz" | "nico" | "tomas" | "marisol" | "oscar" | "warden"
+  | "vpcap" | "rosa" | "paco" | "ines" | "joaquin" | "vera";
 export type CastMember = "ale" | "brayan" | "hacker";
 
 /**

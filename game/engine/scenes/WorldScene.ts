@@ -2,7 +2,10 @@ import { Actor, BoundingBox, Circle, Color, Engine, Keys, Scene, TileMap, vec, t
 import type { PointerEvent, Subscription } from "excalibur";
 
 import { useLocale, t } from "@/i18n";
-import { COIN_TOWN_ANIMALS, COIN_TOWN_DOOR, COIN_TOWN_NORTH_ROAD, COIN_TOWN_NPCS, COIN_TOWN_SPAWN, NORTH_GATE_ROW, type AnimalSpec } from "@/content/coinTown";
+import { COIN_TOWN_ANIMALS, COIN_TOWN_DOOR, COIN_TOWN_EAST_SIGN, COIN_TOWN_NORTH_ROAD, COIN_TOWN_NPCS, COIN_TOWN_SIDE_ROAD, COIN_TOWN_SPAWN, COIN_TOWN_WEST_SIGN,
+  EAST_GATE_COL, NORTH_GATE_ROW, WEST_GATE_COL, type AnimalSpec } from "@/content/coinTown";
+import { FOUNDRY_ANIMALS, FOUNDRY_BELT, FOUNDRY_DOOR, FOUNDRY_NPCS, FOUNDRY_PROPS, FOUNDRY_SMOKE, FOUNDRY_SPAWN, type PropSprite } from "@/content/foundry";
+import { foundryMap } from "../maps/foundryMap";
 import { Wanderer } from "../actors/Wanderer";
 import { coinTownMap } from "../maps/coinTownMap";
 import { Character } from "../actors/Character";
@@ -10,7 +13,7 @@ import { TownSign } from "../actors/TownSign";
 import { bus } from "../bus";
 import type { EngineCommand } from "../bus";
 import { tileCenter, type GridPos } from "../maps/street";
-import { citySprite, npcImages, type NpcSprite } from "../resources";
+import { citySprite, npcImages, propImages, type NpcSprite } from "../resources";
 import { TILE_SIZE } from "../tiles";
 import { clearTouchInput, consumeTouchInteract } from "../touchInput";
 import { findRoute, walkable, type WorldGrid } from "../maps/grid";
@@ -24,6 +27,12 @@ export interface WorldDef {
   animals?: AnimalSpec[];
   /** Barriers React can lift, e.g. the road to the next town. Closed until told otherwise. */
   gates?: { id: string; tiles: GridPos[] }[];
+  /** Decor drawn over the terrain; every prop blocks its tile. */
+  props?: { sprite: PropSprite; at: GridPos }[];
+  /** A conveyor row that crates ride along, from one tile column to another. */
+  belt?: { y: number; from: number; to: number };
+  /** Tiles that smoke rises from. */
+  smoke?: GridPos[];
 }
 
 const MOVE_KEYS: { keys: Keys[]; delta: GridPos }[] = [
@@ -33,12 +42,17 @@ const MOVE_KEYS: { keys: Keys[]; delta: GridPos }[] = [
   { keys: [Keys.ArrowRight, Keys.D], delta: { x: 1, y: 0 } },
 ];
 const WALK_SETTLE_MS = 220;
+/** Crates ride the belt this many tiles apart, at this many tiles per second. */
+const CRATE_GAP = 3, BELT_SPEED = 0.6;
+/** Puffs per stack, and seconds for one puff to rise and fade. */
+const PUFFS = 3, PUFF_SECONDS = 3.6;
 
 /** Build the solid grid once from both tile layers plus the people standing on it. */
 export function worldGrid(def: WorldDef): WorldGrid {
   const grid = def.map.rows.map((row, y) => [...row].map((tile, x) =>
     !!def.map.legend[tile]?.solid || !!def.map.overlayLegend[def.map.overlay[y][x]]?.solid));
   for (const npc of def.npcs) grid[npc.at.y][npc.at.x] = true;
+  for (const prop of def.props ?? []) grid[prop.at.y][prop.at.x] = true;
   return grid;
 }
 
@@ -72,6 +86,8 @@ export class WorldScene extends Scene {
   private idlers: { actor: Actor; sprite: Sprite; seed: number; glance: number }[] = [];
   private clock = 0;
   private gates = new Map<string, { tiles: GridPos[]; bars: Actor[] }>();
+  private crates: Actor[] = [];
+  private puffs: { actor: Actor; from: GridPos; offset: number }[] = [];
 
   constructor(private readonly def: WorldDef) {
     super();
@@ -108,6 +124,26 @@ export class WorldScene extends Scene {
         return bar;
       });
       this.gates.set(gate.id, { tiles: gate.tiles, bars });
+    }
+    for (const prop of this.def.props ?? []) {
+      const at = tileCenter(prop.at);
+      const actor = new Actor({ pos: vec(at.x, at.y), width: TILE_SIZE, height: TILE_SIZE, z: 3 });
+      actor.graphics.use(propImages[prop.sprite].toSprite());
+      this.add(actor);
+    }
+    if (this.def.belt) {
+      const { from, to, y } = this.def.belt;
+      for (let x = from; x <= to; x += CRATE_GAP) {
+        const at = tileCenter({ x, y });
+        const crate = new Actor({ pos: vec(at.x, at.y - 3), width: TILE_SIZE, height: TILE_SIZE, z: 4 });
+        crate.graphics.use(propImages.crate.toSprite());
+        this.add(crate); this.crates.push(crate);
+      }
+    }
+    for (const from of this.def.smoke ?? []) for (let i = 0; i < PUFFS; i++) {
+      const actor = new Actor({ z: 20 });
+      actor.graphics.use(new Circle({ radius: 3, color: Color.fromHex("#cbd5e1") }));
+      this.add(actor); this.puffs.push({ actor, from, offset: i / PUFFS });
     }
     const ground = (pos: GridPos) => this.def.map.rows[pos.y]?.[pos.x] ?? "";
     for (const spec of this.def.animals ?? []) { const animal = new Wanderer(spec, this.grid, ground); this.animals.push(animal); this.add(animal); }
@@ -181,6 +217,22 @@ export class WorldScene extends Scene {
 
   private animateLife(elapsed: number): void {
     this.clock += elapsed;
+    if (this.def.belt) {
+      const { from, to } = this.def.belt;
+      const span = (to - from + 1) * TILE_SIZE;
+      const start = from * TILE_SIZE;
+      this.crates.forEach((crate, i) => {
+        const x = (i * CRATE_GAP * TILE_SIZE + (this.clock / 1000) * BELT_SPEED * TILE_SIZE) % span;
+        crate.pos = vec(start + x + TILE_SIZE / 2, crate.pos.y);
+      });
+    }
+    for (const puff of this.puffs) {
+      const life = ((this.clock / 1000) / PUFF_SECONDS + puff.offset) % 1;
+      const at = tileCenter(puff.from);
+      puff.actor.pos = vec(at.x + life * 6, at.y - 8 - life * 22);
+      puff.actor.scale = vec(0.7 + life * 1.1, 0.7 + life * 1.1);
+      puff.actor.graphics.opacity = 0.55 * (1 - life);
+    }
     for (const animal of this.animals) animal.tick(elapsed, this.player.grid);
     for (const idler of this.idlers) {
       // A one-pixel lift now and then reads as breathing without making the town jittery.
@@ -276,11 +328,26 @@ export class WorldScene extends Scene {
 export const COIN_TOWN_WORLD: WorldDef = {
   map: coinTownMap, spawn: COIN_TOWN_SPAWN,
   npcs: COIN_TOWN_NPCS.map((npc) => ({ id: npc.id, at: npc.at, label: npc.title })),
-  doors: [{ id: "coinDoor", ...COIN_TOWN_DOOR, label: "Coin house" }],
+  doors: [{ id: "coinDoor", ...COIN_TOWN_DOOR, label: "Coin house" },
+    { id: "eastSign", ...COIN_TOWN_EAST_SIGN, label: "Foundry Town →" }, { id: "westSign", ...COIN_TOWN_WEST_SIGN, label: "← Hollow Town" }],
   animals: COIN_TOWN_ANIMALS,
-  gates: [{ id: "north", tiles: COIN_TOWN_NORTH_ROAD.map((x) => ({ x, y: NORTH_GATE_ROW })) }],
+  gates: [{ id: "north", tiles: COIN_TOWN_NORTH_ROAD.map((x) => ({ x, y: NORTH_GATE_ROW })) },
+    { id: "east", tiles: COIN_TOWN_SIDE_ROAD.map((y) => ({ x: EAST_GATE_COL, y })) }, { id: "west", tiles: COIN_TOWN_SIDE_ROAD.map((y) => ({ x: WEST_GATE_COL, y })) }],
+  props: [{ sprite: "sign", at: COIN_TOWN_EAST_SIGN.at }, { sprite: "sign", at: COIN_TOWN_WEST_SIGN.at }],
 };
 
 export class CoinTownScene extends WorldScene {
   constructor() { super(COIN_TOWN_WORLD); }
+}
+
+export const FOUNDRY_WORLD: WorldDef = {
+  map: foundryMap, spawn: FOUNDRY_SPAWN,
+  npcs: FOUNDRY_NPCS.map((npc) => ({ id: npc.id, at: npc.at, label: npc.title })),
+  doors: [{ id: "workshopDoor", ...FOUNDRY_DOOR, label: "Thecap’s workshop" }],
+  animals: FOUNDRY_ANIMALS,
+  props: FOUNDRY_PROPS, belt: FOUNDRY_BELT, smoke: FOUNDRY_SMOKE,
+};
+
+export class FoundryScene extends WorldScene {
+  constructor() { super(FOUNDRY_WORLD); }
 }

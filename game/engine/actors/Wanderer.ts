@@ -12,6 +12,7 @@ const PACE: Record<AnimalSpec["kind"], { speed: number; rest: [number, number] }
   dog: { speed: 3.2, rest: [1200, 4000] },
   pigeon: { speed: 2.6, rest: [900, 2600] },
   duck: { speed: 0.9, rest: [1500, 4000] },
+  bot: { speed: 1.8, rest: [2000, 5000] },
 };
 const FLY_SPEED = 9;
 const random = (min: number, max: number) => min + Math.random() * (max - min);
@@ -87,7 +88,7 @@ export class Wanderer extends Actor {
     this.progress = Math.min(1, this.progress + (elapsed / 1000) * this.speed / tiles);
     this.pos = this.from!.lerp(this.to!, this.progress);
     // Walkers hop a pixel per tile; a startled bird arcs up and lands.
-    const lift = this.flying ? Math.sin(this.progress * Math.PI) * 10 : this.spec.kind === "duck" ? 0 : Math.abs(Math.sin(this.progress * Math.PI)) * 1.5;
+    const lift = this.flying ? Math.sin(this.progress * Math.PI) * 10 : this.spec.kind === "duck" || this.spec.kind === "bot" ? 0 : Math.abs(Math.sin(this.progress * Math.PI)) * 1.5;
     this.graphics.offset = vec(0, -Math.round(lift));
     if (this.progress >= 1) this.next();
   }

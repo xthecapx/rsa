@@ -21,7 +21,10 @@ import { t, useLocale } from "@/i18n";
 import { GameShell } from "./GameShell";
 import { CoinScenario } from "./CoinScenario";
 import { CoinTownScreen } from "./CoinTownScreen";
-import { COIN_TOWN_DOOR, COIN_TOWN_FROM_NORTH, QUANTUM_SOUTH_GATE, QUANTUM_SOUTH_ROW } from "@/content/coinTown";
+import { COIN_TOWN_DOOR, COIN_TOWN_FROM_EAST, COIN_TOWN_FROM_NORTH, QUANTUM_SOUTH_GATE, QUANTUM_SOUTH_ROW } from "@/content/coinTown";
+import { FOUNDRY_DOOR, FOUNDRY_SPAWN } from "@/content/foundry";
+import { FoundryScreen } from "./FoundryScreen";
+import { TravelPass } from "./TravelPass";
 import { useKnowledge } from "@/game/knowledge";
 import { GroverScenario } from "./GroverScenario";
 import { VaultScenario } from "./VaultScenario";
@@ -46,7 +49,8 @@ interface TownConversation {
   choices: { label: string; act?: ActNumber; done?: boolean; action: () => void }[];
 }
 type Challenge = "coin" | "rsa" | "grover" | "vault";
-const CHALLENGES: Challenge[] = ["coin", "rsa", "grover", "vault"];
+/** The order of the road: each challenge uses what the one before taught. */
+const CHALLENGES: Challenge[] = ["coin", "grover", "vault", "rsa"];
 const COIN_SAVE = "quantum-coin-session-v1";
 const GROVER_SAVE = "quantum-grover-session-v1";
 const VAULT_SAVE = "quantum-vault-session-v1";
@@ -55,14 +59,14 @@ const TRACK_TARGETS: Record<Challenge, TownTarget | "car"> = { coin: "southPath"
 const TRACK_LABELS: Record<Challenge, string> = { coin: "Track the south road", rsa: "Track RSA client", grover: "Track Thecap’s workshop", vault: "Track Casa Ofelia" };
 const VISIT_KEYS: Record<Challenge, string> = { coin: "coinDoor", rsa: "rsa", grover: "groverDoor", vault: "vaultDoor" };
 /** Thecap's greeting is composed from progress: first meeting, all done, or "so far" + "next". */
-const GREETING_FIRST = "Welcome to Quantum Town! I’m Professor Thecap, the town doctor and, on weekends, the town tinkerer. My cousin Cap, the mayor down in Coin Town, wrote that you were coming. Good: three bigger problems need a quantum hand here. Someone is listening to Ale and Brayan’s messages on the street. An old drone core has locked itself in my workshop. And Doña Ofelia swears her house is haunted. Each challenge uses what the last one taught you.";
+const GREETING_FIRST = "Welcome to Quantum Town! I’m Professor Thecap, the town doctor and, on weekends, the town tinkerer. My cousins, Mayor Cap in Coin Town and VP Cap in Foundry Town, wrote that you were coming. Every lesson on the road has a door here too, so you can replay any of them. Two bigger problems are still waiting: Doña Ofelia swears her house is haunted, and someone is listening to Ale and Brayan’s messages on the street. Each challenge uses what the last one taught you.";
 const GREETING_ALL = "Coin, codes, a disarmed core and a ghost laid to rest. You’ve seen both kinds of quantum speed-up. Replay anything you like; your medals stay.";
 const GREETING_COUNT = ["", "One challenge down, three to go.", "Two challenges down, two to go.", "Three down, one to go."];
 const GREETING_SKIPPED = "You jumped ahead. Bold! The earlier lessons still teach what the later ones assume.";
 const GREETING_NEXT: Record<Challenge, string> = {
   coin: "Coin Town is down the south road. The neighbors there teach what a qubit can do, and Ale and Brayan’s game night is waiting.",
-  rsa: "Next, the street: someone is intercepting Ale and Brayan’s messages.",
-  grover: "Next, my workshop: an old drone core, sixteen PINs, three tries, no hints.",
+  rsa: "Last, the street: someone is intercepting Ale and Brayan’s messages. Everything you’ve learned comes together to break their code.",
+  grover: "Next, my workshop in Foundry Town: an old drone core, sixteen PINs, three tries, no hints. The workshop door here opens it too.",
   vault: "Doña Ofelia came by. Her house has been knocking every night since we silenced that drone; her husband built it. She thinks it’s his ghost. I think it’s his vault. Take my laptop.",
 };
 const GREETING_VAULT_EARLY = "Ofelia’s haunted house? Bold. My workshop teaches the trick you’ll try first there, and why it isn’t enough.";
@@ -130,9 +134,9 @@ export function TownScreen({ initialAct, initialCoin = false, initialGrover = fa
     setConversation({ title: "Professor Thecap", text: parts.join(" "), parts,
       choices: [
         { label: "1 · Who Goes First? (Beginner)", done: done.coin, action: () => chooseChallenge("coin") },
-        { label: "2 · Breaking RSA (Intermediate)", done: done.rsa, action: () => chooseChallenge("rsa") },
-        { label: "3 · Echo Chamber (Advanced)", done: done.grover, action: () => chooseChallenge("grover") },
-        { label: "4 · Operation Ghost Key (Expert)", done: done.vault, action: () => chooseChallenge("vault") },
+        { label: "2 · Echo Chamber (Intermediate)", done: done.grover, action: () => chooseChallenge("grover") },
+        { label: "3 · Operation Ghost Key (Advanced)", done: done.vault, action: () => chooseChallenge("vault") },
+        { label: "4 · Breaking RSA (Final)", done: done.rsa, action: () => chooseChallenge("rsa") },
         { label: "I’ll explore", action: () => { useTown.getState().patch({ welcomed: true }); closeConversation(); } },
       ] });
   }
@@ -146,7 +150,7 @@ export function TownScreen({ initialAct, initialCoin = false, initialGrover = fa
       useGame.setState({ laptopOpen: false, walking: false, near: null, operations: 0, busyLabel: null });
       try { setCoinSaved(localStorage.getItem(COIN_SAVE) !== null); setGroverSaved(localStorage.getItem(GROVER_SAVE) !== null); setVaultSaved(localStorage.getItem(VAULT_SAVE) !== null); } catch { /* In-memory play remains available. */ }
       if (initialCoin) saved.patch({ location: "coin", coinTown: { ...saved.coinTown, position: { x: COIN_TOWN_DOOR.stand.x, y: COIN_TOWN_DOOR.stand.y + 1 }, facing: "down" }, rsaRunning: false });
-      else if (initialGrover) saved.patch({ location: "grover", position: { ...TOWN_LOCATIONS.groverDoor.stand }, facing: "down", rsaRunning: false });
+      else if (initialGrover) saved.patch({ location: "grover", groverFrom: "foundry", foundry: { ...saved.foundry, position: { ...FOUNDRY_DOOR.stand }, facing: "down" }, rsaRunning: false });
       else if (initialVault) saved.patch({ location: "vault", position: { ...TOWN_LOCATIONS.vaultDoor.stand }, facing: "down", rsaRunning: false });
       else if (initialAct || visitRsa) {
         saved.patch({ location: "town", position: { ...CLIENT_POSITION }, facing: "down", tracked: "rsa", rsaRunning: false, requestedAct: initialAct ?? null });
@@ -268,11 +272,26 @@ export function TownScreen({ initialAct, initialCoin = false, initialGrover = fa
     saved.patch({ location: "coinTown", coinTown: { ...saved.coinTown, position: { x: COIN_TOWN_DOOR.stand.x, y: COIN_TOWN_DOOR.stand.y + 1 }, facing: "down" } });
     setCoinSaved(true);
   }
-  function enterGrover() {
+  /** Coin Town's east road leads to Foundry Town; coming back arrives just inside Coin Town's east gate. */
+  function enterFoundry() {
+    readyRef.current = false; setSceneStatus("loading");
+    useGame.getState().setWalking(false); useGame.getState().setNear(null);
+    const saved = useTown.getState();
+    saved.patch({ location: "foundry", foundry: { ...saved.foundry, position: { ...FOUNDRY_SPAWN }, facing: "right" }, coinTown: { ...saved.coinTown, position: { ...COIN_TOWN_FROM_EAST }, facing: "left" } });
+  }
+  function leaveFoundry() {
+    readyRef.current = false; setSceneStatus("loading");
+    useGame.getState().setWalking(false); useGame.getState().setNear(null);
+    const saved = useTown.getState();
+    saved.patch({ location: "coinTown", coinTown: { ...saved.coinTown, position: { ...COIN_TOWN_FROM_EAST }, facing: "left" }, foundry: { ...saved.foundry, position: { ...FOUNDRY_SPAWN }, facing: "right" } });
+  }
+  /** Thecap's workshop has two doors: the lesson's home in Foundry Town, and a replay door in Quantum Town. */
+  function enterGrover(from: "town" | "foundry" = "town") {
     if (!saveAndPause()) return;
     gameAudio.playSynth("door");
     closeConversation(); readyRef.current = false; setSceneStatus("loading"); setTownNear(null);
-    useTown.getState().patch({ location: "grover", position: { ...TOWN_LOCATIONS.groverDoor.stand }, facing: "down" });
+    if (from === "foundry") useTown.getState().patch({ location: "grover", groverFrom: "foundry" });
+    else useTown.getState().patch({ location: "grover", groverFrom: "town", position: { ...TOWN_LOCATIONS.groverDoor.stand }, facing: "down" });
   }
   function enterVault() {
     if (!saveAndPause()) return;
@@ -289,7 +308,15 @@ export function TownScreen({ initialAct, initialCoin = false, initialGrover = fa
     if (door === "groverDoor") setGroverSaved(true); else setVaultSaved(true);
     if (!useTown.getState().welcomed) greet();
   }
-  const leaveGrover = () => leaveHouse("groverDoor");
+  function leaveGrover() {
+    const saved = useTown.getState();
+    if (saved.groverFrom !== "foundry") { leaveHouse("groverDoor"); return; }
+    gameAudio.playSynth("door");
+    readyRef.current = false; setSceneStatus("loading");
+    useGame.getState().setWalking(false); useGame.getState().setNear(null);
+    saved.patch({ location: "foundry", foundry: { ...saved.foundry, position: { ...FOUNDRY_DOOR.stand }, facing: "down" } });
+    setGroverSaved(true);
+  }
   const leaveVault = () => leaveHouse("vaultDoor");
   async function beginRsa(act: ActNumber) {
     if (startingRef.current || ((useGame.getState().phase === "busy" || useGame.getState().operations > 0 || !!useGame.getState().busyLabel) && activeRef.current)) return;
@@ -324,8 +351,9 @@ export function TownScreen({ initialAct, initialCoin = false, initialGrover = fa
   function restartGrover() {
     if (!saveAndPause()) return;
     try { localStorage.removeItem(GROVER_SAVE); } catch { /* Reset still works for the current visit. */ }
-    useProgress.getState().reset("grover"); setGroverSaved(false);
-    enterGrover();
+    // The Foundry Badge's record stays; only the lesson restarts.
+    useProgress.getState().reset("grover", "grover"); setGroverSaved(false);
+    enterGrover(useTown.getState().location === "foundry" ? "foundry" : useTown.getState().groverFrom);
   }
   function restartVault() {
     if (!saveAndPause()) return;
@@ -389,12 +417,12 @@ export function TownScreen({ initialAct, initialCoin = false, initialGrover = fa
     interactTown: (target) => {
       if (conversation || journalOpen || (rsaActive && blocked)) return;
       const location = TOWN_LOCATIONS[target];
-      if (location.kind === "coin") setConversation({ title: "Who Goes First?", text: "Nobody’s home. A note on the door: “Game night moved to Coin Town. Take the south road. — Ale & Brayan”", choices: [{ label: "Walk north to Coin Town", action: enterCoinTown }, { label: "Later", action: closeConversation }] });
+      if (location.kind === "coin") setConversation({ title: "Who Goes First?", text: "Nobody’s home. A note on the door: “Game night moved to Coin Town. Take the south road. — Ale & Brayan”", choices: [{ label: "Walk south to Coin Town", action: enterCoinTown }, { label: "Later", action: closeConversation }] });
       else if (location.kind === "path") enterCoinTown();
-      else if (location.kind === "grover") setConversation({ title: "Echo Chamber", text: "Emergency · Advanced. An old drone core has locked itself with a 4-bit PIN and three tries. Build Grover’s search on the quantum core and disarm it.", choices: [{ label: groverSaved || groverComplete ? "Resume in the workshop" : "Enter the workshop", action: enterGrover }, { label: "Later", action: closeConversation }] });
+      else if (location.kind === "grover") setConversation({ title: "Echo Chamber", text: "Emergency · Intermediate. An old drone core has locked itself with a 4-bit PIN and three tries. Build Grover’s search on the quantum core and disarm it.", choices: [{ label: groverSaved || groverComplete ? "Resume in the workshop" : "Enter the workshop", action: () => enterGrover("town") }, { label: "Later", action: closeConversation }] });
       else if (location.kind === "vault") {
         const early = !doneChallenges().grover && !vaultComplete;
-        setConversation({ title: "Operation Ghost Key", text: "Haunted house · Expert. Doña Ofelia’s house knocks at night. She needs her late husband’s vault opened: 25 bits, three questions.", parts: ["Haunted house · Expert. Doña Ofelia’s house knocks at night. She needs her late husband’s vault opened: 25 bits, three questions.", ...(early ? [GREETING_VAULT_EARLY] : [])],
+        setConversation({ title: "Operation Ghost Key", text: "Haunted house · Advanced. Doña Ofelia’s house knocks at night. She needs her late husband’s vault opened: 25 bits, three questions.", parts: ["Haunted house · Advanced. Doña Ofelia’s house knocks at night. She needs her late husband’s vault opened: 25 bits, three questions.", ...(early ? [GREETING_VAULT_EARLY] : [])],
           choices: [{ label: vaultSaved || vaultComplete ? "Resume in Casa Ofelia" : "Knock and go in", action: enterVault }, { label: "Later", action: closeConversation }] });
       }
       else if (location.kind === "guide") greet();
@@ -414,12 +442,15 @@ export function TownScreen({ initialAct, initialCoin = false, initialGrover = fa
   };
 
   if (!hydrated) return <main className="relative h-dvh bg-stage-bg"><SceneLoading /></main>;
-  if (town.location === "coin") return <CoinScenario onExit={leaveCoin} onRestartGame={restartGame} />;
-  if (town.location === "coinTown") return <CoinTownScreen key={worldKey} onLeave={leaveCoinTown} onEnterCoin={enterCoin}
+  if (town.location === "coin") return <><CoinScenario onExit={leaveCoin} onRestartGame={restartGame} /><TravelPass /></>;
+  if (town.location === "foundry") return <><FoundryScreen key={worldKey} onWest={leaveFoundry} onEnterWorkshop={() => enterGrover("foundry")}
+    restartOptions={[{ label: "Restart Echo Chamber", description: "Clear the workshop lesson, its circuit, runs, and completion. Start inside the workshop.", restart: restartGrover },
+      { label: "Start the whole game over", description: "Clear every lesson, your medal case, and town progress. Return to Mayor Cap’s welcome in Coin Town.", restart: restartGame }]} /><TravelPass /></>;
+  if (town.location === "coinTown") return <><CoinTownScreen key={worldKey} onLeave={leaveCoinTown} onEast={enterFoundry} onEnterCoin={enterCoin}
     restartOptions={[{ label: "Restart Who Goes First?", description: "Clear the coin lesson, its puzzles, experiments, and completion. Start inside the house.", restart: restartCoin },
-      { label: "Start the whole game over", description: "Clear every lesson, your medal case, and town progress. Return to Mayor Cap’s welcome in Coin Town.", restart: restartGame }]} />;
-  if (town.location === "grover") return <GroverScenario onExit={leaveGrover} onRestartGame={restartGame} />;
-  if (town.location === "vault") return <VaultScenario onExit={leaveVault} onRestartGame={restartGame} />;
+      { label: "Start the whole game over", description: "Clear every lesson, your medal case, and town progress. Return to Mayor Cap’s welcome in Coin Town.", restart: restartGame }]} /><TravelPass /></>;
+  if (town.location === "grover") return <><GroverScenario onExit={leaveGrover} onRestartGame={restartGame} /><TravelPass /></>;
+  if (town.location === "vault") return <><VaultScenario onExit={leaveVault} onRestartGame={restartGame} /><TravelPass /></>;
 
   const canInteract = !!townNear || !!game.near;
   const journal = <div className="space-y-4 text-sm">
@@ -471,5 +502,6 @@ export function TownScreen({ initialAct, initialCoin = false, initialGrover = fa
       {rsaActive && <><LaptopScene key={`${game.act}:${missionGeneration()}`} act={game.act} restartControl={restartControl} /><GameOver key={`result:${missionGeneration()}`} act={game.act} onReturn={() => { saveAndPause(); }} onRetry={() => void beginRsa(game.act)} onNext={(act) => void beginRsa(act)} /></>}
       {rsaActive && game.error && <div className="textbox absolute inset-x-3 top-16 z-10 px-3 py-2 text-xs text-actor-hacker" role="alert">{t(game.error)}</div>}
     </>}
+    <TravelPass />
   </GameShell>;
 }

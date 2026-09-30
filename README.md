@@ -1,8 +1,9 @@
 # Quantum Playground
 
-Playable quantum-computing scenarios: start with **Who Goes First?**, a
-simulator-only quantum coin lesson at home, then explore **Breaking RSA**
-across plaintext, Caesar, RSA, and Shor. See `game/README.md` for scenario
+Playable quantum-computing scenarios on a road of small towns: **Who Goes
+First?** in Coin Town, **Echo Chamber** (Grover) in Foundry Town, **Operation
+Ghost Key** (Bernstein–Vazirani), and **Breaking RSA** across plaintext,
+Caesar, RSA, and Shor. See `game/README.md` for scenario
 structure. The separate `frontend/` presentation tool retains its depth tiers
 and IBM batch readout.
 

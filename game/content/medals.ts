@@ -15,7 +15,7 @@ export interface Medal {
   hint: string;
 }
 
-export type MedalId = "quantum-coin" | "coin-town" | "codebook" | "key-ring" | "prime-cutter" | "period-lens" | "amplifier" | "ghost-key";
+export type MedalId = "quantum-coin" | "coin-town" | "codebook" | "key-ring" | "prime-cutter" | "period-lens" | "amplifier" | "foundry-town" | "ghost-key";
 
 export const MEDALS: readonly Medal[] = [
   {
@@ -66,6 +66,13 @@ export const MEDALS: readonly Medal[] = [
     description: "You spread a guess over all sixteen PINs, then let the Oracle and Diffuser grow the right one in three rounds.",
     ability: "Needle Finder: find one marked item among N in about √N queries.",
     hint: "Disarm the drone core in Thecap’s workshop.",
+  },
+  {
+    id: "foundry-town", scenario: "grover", mission: "town", glyph: "⚙",
+    title: "Foundry Badge", skill: "Amplitude amplification",
+    description: "You learned how a register holds 2ⁿ states, how one H box spreads it evenly, how the Oracle marks the answer with a hidden minus, how the Diffuser lifts it and when to stop, then disarmed the drone core.",
+    ability: "Round Counter: build Grover rounds from an Oracle and a Diffuser and stop at about π/4·√N.",
+    hint: "Collect all five Foundry cards and disarm the drone core in Thecap’s workshop.",
   },
   {
     id: "ghost-key", scenario: "vault", mission: "vault", glyph: "±",

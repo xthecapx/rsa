@@ -1,7 +1,7 @@
 import { Color, DisplayMode, Engine, PointerScope } from "excalibur";
 
 import { CityScene } from "./scenes/CityScene";
-import { CoinTownScene } from "./scenes/WorldScene";
+import { CoinTownScene, FoundryScene } from "./scenes/WorldScene";
 import { bus } from "./bus";
 import { createLoader } from "./resources";
 
@@ -66,7 +66,7 @@ function displayModeForDevice(): DisplayMode {
  * The canvas is created here rather than rendered by React because each engine
  * needs an element of its own to leave its listeners on.
  */
-export type WorldName = "city" | "coinTown";
+export type WorldName = "city" | "coinTown" | "foundry";
 
 export function createGame(container: HTMLElement, world: WorldName = "city"): Promise<Engine> {
   return serial(async () => {
@@ -85,7 +85,7 @@ export function createGame(container: HTMLElement, world: WorldName = "city"): P
       pixelArt: true,
       suppressPlayButton: true,
       backgroundColor: Color.fromHex("#0b1f26"),
-      scenes: { city: CityScene, coinTown: CoinTownScene },
+      scenes: { city: CityScene, coinTown: CoinTownScene, foundry: FoundryScene },
     });
 
     const live = { engine, canvas };

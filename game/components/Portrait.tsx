@@ -14,6 +14,7 @@ const STRIDE = SHEET.tile + SHEET.margin;
 /** Speakers drawn as their own SVG sprite rather than a Kenney bust. */
 const SVG_SPRITES: Partial<Record<Speaker, string>> = {
   guide: "town-doctor", ofelia: "ofelia", mayor: "mayor", luz: "luz", nico: "nico", tomas: "tomas", marisol: "marisol", oscar: "oscar", warden: "warden",
+  vpcap: "vpcap", rosa: "rosa", paco: "paco", ines: "ines", joaquin: "joaquin", vera: "vera",
 };
 const CAST: Record<"ale" | "brayan" | "hacker" | "boss", { col: number; row: number }> = {
   ale: { col: 0, row: 5 },
@@ -32,6 +33,7 @@ const BORDER: Record<Speaker, string> = {
   system: "border-stage-border",
   mayor: "border-accent-amber", luz: "border-accent-amber", nico: "border-accent-teal", tomas: "border-accent-teal",
   marisol: "border-accent-teal", oscar: "border-accent-amber", warden: "border-stage-border",
+  vpcap: "border-accent-amber", rosa: "border-accent-teal", paco: "border-accent-amber", ines: "border-accent-teal", joaquin: "border-accent-amber", vera: "border-accent-teal",
 };
 
 export const SPEAKER_NAME: Record<Speaker, string> = {
@@ -43,6 +45,7 @@ export const SPEAKER_NAME: Record<Speaker, string> = {
   ofelia: "Doña Ofelia",
   system: "Notes",
   mayor: "Mayor Cap", luz: "Luz", nico: "Nico", tomas: "Tomás", marisol: "Marisol", oscar: "Don Óscar", warden: "Beto",
+  vpcap: "VP Cap", rosa: "Rosa", paco: "Paco", ines: "Inés", joaquin: "Joaquín", vera: "Vera",
 };
 
 export const SPEAKER_COLOR: Record<Speaker, string> = {
@@ -55,6 +58,7 @@ export const SPEAKER_COLOR: Record<Speaker, string> = {
   system: "text-accent-teal",
   mayor: "text-accent-amber", luz: "text-accent-amber", nico: "text-accent-teal", tomas: "text-accent-teal",
   marisol: "text-accent-teal", oscar: "text-accent-amber", warden: "text-stage-muted",
+  vpcap: "text-accent-amber", rosa: "text-accent-teal", paco: "text-accent-amber", ines: "text-accent-teal", joaquin: "text-accent-amber", vera: "text-accent-teal",
 };
 
 export function Portrait({ speaker, size = 64 }: { speaker: Speaker; size?: number }) {

@@ -1,5 +1,7 @@
 import type { BenchCase, Gate } from "@/game/qubit";
-import type { Speaker } from "./types";
+import { COIN_KNOWLEDGE_IDS, type BenchStep, type CoinKnowledgeId, type KnowledgeCard, type Line, type TownNpc } from "./knowledge";
+
+export type { ActivityStep, BenchStep, KnowledgeCard, Line, QuestionStep } from "./knowledge";
 
 /**
  * Coin Town: the first town on the road. Its challenge is the coin house
@@ -7,21 +9,10 @@ import type { Speaker } from "./types";
  * that the later lessons assume. A card is never required for the coin toss,
  * but the town badge needs the toss and all five cards.
  */
-export type KnowledgeId = "bits" | "four-states" | "phase" | "interference" | "basis";
-export const KNOWLEDGE_IDS: KnowledgeId[] = ["bits", "four-states", "phase", "interference", "basis"];
+export type KnowledgeId = CoinKnowledgeId;
+export const KNOWLEDGE_IDS = COIN_KNOWLEDGE_IDS;
 
-export interface KnowledgeCard {
-  id: KnowledgeId;
-  glyph: string;
-  title: string;
-  text: string;
-  /** Written with kets only, shown as-is in every language. */
-  formula: string;
-  /** Where the card pays off later. */
-  hint: string;
-}
-
-export const KNOWLEDGE: Record<KnowledgeId, KnowledgeCard> = {
+export const KNOWLEDGE: Record<CoinKnowledgeId, KnowledgeCard> = {
   bits: {
     id: "bits", glyph: "01", title: "Bits of a qubit",
     text: "A qubit has two basis states, |0⟩ and |1⟩. Measuring |0⟩ always reads 0 and |1⟩ always reads 1. The X gate swaps them.",
@@ -35,7 +26,7 @@ export const KNOWLEDGE: Record<KnowledgeId, KnowledgeCard> = {
   phase: {
     id: "phase", glyph: "±", title: "The hidden sign",
     text: "|+⟩ and |−⟩ differ only by the sign on |1⟩. Z flips that sign. A plain measurement gives 50/50 for both, so the sign is invisible.",
-    formula: "Z|+⟩ = |−⟩ · P(0) = P(1) = ½", hint: "An oracle marks answers by flipping signs.",
+    formula: "Z|+⟩ = |−⟩ · P(0) = P(1) = ½", hint: "The Oracle, a sealed box you’ll meet in Foundry Town, marks answers by flipping exactly this sign.",
   },
   interference: {
     id: "interference", glyph: "≈", title: "Echoes cancel",
@@ -49,38 +40,8 @@ export const KNOWLEDGE: Record<KnowledgeId, KnowledgeCard> = {
   },
 };
 
-export interface Line { speaker: Speaker; text: string }
-export interface BenchStep {
-  kind: "bench"; title: string; text: string;
-  cases: BenchCase[]; slots: number; gates: Gate[];
-  /** Every slot must hold a gate. */
-  fill?: boolean;
-  /** Draw the last H as interfering ripples. */
-  waves?: boolean;
-  feedback: string;
-}
-export interface QuestionStep {
-  kind: "question"; title: string; text: string;
-  options: { label: string; correct?: boolean; wrong?: string }[];
-  /** After any answer, show H acting on |+⟩ as ripples. */
-  waves?: boolean;
-  feedback: string;
-}
-export type ActivityStep = BenchStep | QuestionStep;
-
 export type CoinTownNpcId = "mayor" | "luz" | "nico" | "tomas" | "marisol" | "oscar" | "warden";
-export interface CoinTownNpc {
-  id: CoinTownNpcId;
-  title: string;
-  /** Short role under the name on the job sheet. */
-  description: string;
-  at: { x: number; y: number };
-  knowledge?: KnowledgeId;
-  intro: Line[];
-  steps: ActivityStep[];
-  outro: Line[];
-  repeat: Line[];
-}
+export type CoinTownNpc = TownNpc<CoinTownNpcId>;
 
 const bench = (title: string, text: string, cases: BenchCase[], slots: number, gates: Gate[], feedback: string, fill = false): BenchStep =>
   ({ kind: "bench", title, text, cases, slots, gates, feedback, fill });
@@ -202,19 +163,26 @@ export function coinTownNpc(id: CoinTownNpcId): CoinTownNpc {
 
 /** Mayor Cap's lines, picked from the player's progress. Every town is welcomed by a Cap; Professor Thecap in Quantum Town is her cousin. */
 export const MAYOR = {
-  welcome: { speaker: "mayor", text: "Welcome to Coin Town! I’m Cap, the mayor. Everyone here knows one small piece of how a qubit works. Learn from five neighbors, settle Ale and Brayan’s coin toss in the house up north, and the town badge is yours. The badge also opens the north road to Quantum Town." },
+  welcome: { speaker: "mayor", text: "Welcome to Coin Town! I’m Cap, the mayor. Everyone here knows one small piece of how a qubit works. Learn from five neighbors, settle Ale and Brayan’s coin toss in the house up north, and the town badge is yours. The badge also opens the east road to Foundry Town." },
   guide: { speaker: "mayor", text: "Luz is by the lamps, Don Óscar at his lens shop, Tomás at the east house, Nico at the weathervane and Marisol at the fountain. You don’t need them for the coin toss, but the badge needs everything." },
   coinWaiting: { speaker: "mayor", text: "The coin toss is still waiting in the house up north." },
   coinDone: { speaker: "mayor", text: "Ale and Brayan’s coin toss is settled." },
-  ready: { speaker: "mayor", text: "Five cards and a fair coin. You know what a qubit can be, how H mixes it, how a sign hides inside it and how to read that sign. That’s the Coin Town badge, and Beto will open the north road for you." },
-  done: { speaker: "mayor", text: "The badge suits you. Quantum Town is up the north road; my cousin, Professor Thecap, looks after it. Tell him Cap sent you. Replay anything here you like; cards and medals stay." },
+  ready: { speaker: "mayor", text: "Five cards and a fair coin. You know what a qubit can be, how H mixes it, how a sign hides inside it and how to read that sign. That’s the Coin Town badge, and the east gate will open for you." },
+  done: { speaker: "mayor", text: "The badge suits you. Foundry Town is down the east road; my cousin VP Cap runs it, and our cousin Professor Thecap keeps a workshop there. Tell them Cap sent you. Replay anything here you like; cards and medals stay." },
 } satisfies Record<string, Line>;
 /** "{count} of 5 knowledge cards." is composed at runtime. */
 export const CARD_COUNT = "You have {count} of 5 knowledge cards.";
 
 export const WARDEN = {
-  closed: { speaker: "warden", text: "This road goes north to Quantum Town, where the big problems are. I only open it for travellers with the Coin Town badge. Mayor Cap hands it out, by the entrance." },
+  closed: { speaker: "warden", text: "This road goes north to Quantum Town, where the big problems are. I only open it for travellers with the Foundry Badge. VP Cap hands it out, down the east road." },
   open: { speaker: "warden", text: "Badge checked. The road north to Quantum Town is open. Say hi to Professor Thecap for me." },
+} satisfies Record<string, Line>;
+
+/** Signposts at the ends of the crossing street. */
+export const SIGNS = {
+  eastClosed: { speaker: "system", text: "East road · Foundry Town. The gate opens for holders of the Coin Town badge. Mayor Cap hands it out, by the entrance." },
+  eastOpen: { speaker: "system", text: "East road · Foundry Town. VP Cap’s factories and Professor Thecap’s workshop. The gate is open." },
+  west: { speaker: "system", text: "West road · Hollow Town. The road is still being built. Doña Ofelia’s troubles will wait for you there." },
 } satisfies Record<string, Line>;
 
 export const COIN_TOWN_DOOR = { at: { x: 20, y: 5 }, stand: { x: 20, y: 6 } };
@@ -223,6 +191,14 @@ export const COIN_TOWN_SPAWN = { x: 20, y: 28 };
 /** The north road to Quantum Town runs up these columns to the top edge; the barrier sits on NORTH_GATE_ROW. */
 export const COIN_TOWN_NORTH_ROAD = [25, 26];
 export const NORTH_GATE_ROW = 1;
+/** The crossing street runs out to both side edges on these rows: east to Foundry Town, west to Hollow Town (still closed). */
+export const COIN_TOWN_SIDE_ROAD = [14, 15, 16];
+export const EAST_GATE_COL = 38;
+export const WEST_GATE_COL = 1;
+export const COIN_TOWN_EAST_SIGN = { at: { x: 36, y: 13 }, stand: { x: 36, y: 14 } };
+export const COIN_TOWN_WEST_SIGN = { at: { x: 3, y: 13 }, stand: { x: 3, y: 14 } };
+/** Walking back from Foundry Town arrives just inside the east gate. */
+export const COIN_TOWN_FROM_EAST = { x: 37, y: 15 };
 /** Walking back from Quantum Town arrives just inside the gate. */
 export const COIN_TOWN_FROM_NORTH = { x: 25, y: 2 };
 /** Quantum Town's southern entrance, where the road from Coin Town arrives; its bottom row leads back. */
@@ -230,7 +206,7 @@ export const QUANTUM_SOUTH_GATE = { x: 24, y: 33 };
 export const QUANTUM_SOUTH_ROW = 35;
 
 /** Town life: animals wander near a home tile and never block the player. */
-export type AnimalKind = "cat" | "dog" | "pigeon" | "duck";
+export type AnimalKind = "cat" | "dog" | "pigeon" | "duck" | "bot";
 export interface AnimalSpec {
   kind: AnimalKind;
   home: { x: number; y: number };

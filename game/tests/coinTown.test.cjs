@@ -4,7 +4,8 @@ const path = require('node:path');
 const { loadTs } = require('./loadTs.cjs');
 const catalog = require('../i18n/es.json');
 const { STATES, apply, trace, sameState, probabilities, ketName, expand, solves } = loadTs(path.join(__dirname, '../game/qubit.ts'));
-const { COIN_TOWN_ANIMALS, COIN_TOWN_NPCS, KNOWLEDGE, KNOWLEDGE_IDS, MAYOR, WARDEN, CARD_COUNT, COIN_TOWN_SPAWN, COIN_TOWN_DOOR, COIN_TOWN_NORTH_ROAD, NORTH_GATE_ROW, COIN_TOWN_FROM_NORTH, QUANTUM_SOUTH_GATE, QUANTUM_SOUTH_ROW } = loadTs(path.join(__dirname, '../content/coinTown.ts'));
+const { COIN_TOWN_ANIMALS, COIN_TOWN_NPCS, KNOWLEDGE, KNOWLEDGE_IDS, MAYOR, WARDEN, SIGNS, CARD_COUNT, COIN_TOWN_SPAWN, COIN_TOWN_DOOR, COIN_TOWN_NORTH_ROAD, NORTH_GATE_ROW, COIN_TOWN_FROM_NORTH,
+  COIN_TOWN_SIDE_ROAD, EAST_GATE_COL, WEST_GATE_COL, COIN_TOWN_EAST_SIGN, COIN_TOWN_WEST_SIGN, COIN_TOWN_FROM_EAST, QUANTUM_SOUTH_GATE, QUANTUM_SOUTH_ROW } = loadTs(path.join(__dirname, '../content/coinTown.ts'));
 const { coinTownMap } = loadTs(path.join(__dirname, '../engine/maps/coinTownMap.ts'));
 const { townMap } = loadTs(path.join(__dirname, '../engine/maps/townMap.ts'));
 const { findRoute, tilesNear } = loadTs(path.join(__dirname, '../engine/maps/grid.ts'));
@@ -49,7 +50,7 @@ test('each knowledge card is taught by exactly one neighbor, and the badge is a 
 });
 
 test('every Coin Town line, step and card has a Spanish translation', () => {
-  const strings = [CARD_COUNT, ...Object.values(MAYOR).map((l) => l.text), ...Object.values(WARDEN).map((l) => l.text)];
+  const strings = [CARD_COUNT, ...[MAYOR, WARDEN, SIGNS].flatMap((lines) => Object.values(lines).map((l) => l.text))];
   for (const card of Object.values(KNOWLEDGE)) strings.push(card.title, card.text, card.hint);
   for (const npc of COIN_TOWN_NPCS) {
     strings.push(npc.title, npc.description, ...[...npc.intro, ...npc.outro, ...npc.repeat].map((l) => l.text));
@@ -66,21 +67,34 @@ function solidGrid(map, extra = []) {
   for (const at of extra) grid[at.y][at.x] = true;
   return grid;
 }
-test('Coin Town: every neighbor, the coin house and the north road are reachable from the start', () => {
-  const grid = solidGrid(coinTownMap, COIN_TOWN_NPCS.map((npc) => npc.at));
+test('Coin Town: every neighbor, the coin house and all three roads are reachable from the start', () => {
+  const signs = [COIN_TOWN_EAST_SIGN.at, COIN_TOWN_WEST_SIGN.at];
+  const grid = solidGrid(coinTownMap, [...COIN_TOWN_NPCS.map((npc) => npc.at), ...signs]);
   const beside = (at) => [{ x: 0, y: 1 }, { x: 0, y: -1 }, { x: 1, y: 0 }, { x: -1, y: 0 }].map((d) => ({ x: at.x + d.x, y: at.y + d.y }));
   for (const npc of COIN_TOWN_NPCS) assert.ok(beside(npc.at).some((pos) => findRoute(grid, COIN_TOWN_SPAWN, pos)), npc.id);
   assert.ok(findRoute(grid, COIN_TOWN_SPAWN, COIN_TOWN_DOOR.stand));
+  for (const sign of [COIN_TOWN_EAST_SIGN, COIN_TOWN_WEST_SIGN]) assert.ok(findRoute(grid, COIN_TOWN_SPAWN, sign.stand));
   for (const x of COIN_TOWN_NORTH_ROAD) assert.ok(findRoute(grid, COIN_TOWN_SPAWN, { x, y: 0 }), `north road column ${x}`);
-  // The only way out is the north road, and the gate closes it completely.
+  const right = coinTownMap.width - 1;
+  for (const y of COIN_TOWN_SIDE_ROAD) {
+    assert.ok(findRoute(grid, COIN_TOWN_SPAWN, { x: right, y }), `east road row ${y}`);
+    assert.ok(findRoute(grid, COIN_TOWN_SPAWN, { x: 0, y }), `west road row ${y}`);
+  }
+  // The roads are the only ways out, and each gate closes its road completely.
   assert.ok(grid[coinTownMap.height - 1].every((solid) => solid), 'south wall is closed');
   grid[0].forEach((solid, x) => assert.equal(!solid, COIN_TOWN_NORTH_ROAD.includes(x), `top edge ${x}`));
+  grid.forEach((row, y) => {
+    assert.equal(!row[0], COIN_TOWN_SIDE_ROAD.includes(y), `left edge ${y}`);
+    assert.equal(!row[right], COIN_TOWN_SIDE_ROAD.includes(y), `right edge ${y}`);
+  });
   const gated = grid.map((row) => [...row]);
   for (const x of COIN_TOWN_NORTH_ROAD) gated[NORTH_GATE_ROW][x] = true;
+  for (const y of COIN_TOWN_SIDE_ROAD) { gated[y][EAST_GATE_COL] = true; gated[y][WEST_GATE_COL] = true; }
   assert.equal(findRoute(gated, COIN_TOWN_SPAWN, { x: COIN_TOWN_NORTH_ROAD[0], y: 0 }), null);
+  assert.equal(findRoute(gated, COIN_TOWN_SPAWN, { x: right, y: COIN_TOWN_SIDE_ROAD[1] }), null);
+  assert.equal(findRoute(gated, COIN_TOWN_SPAWN, { x: 0, y: COIN_TOWN_SIDE_ROAD[1] }), null);
   assert.ok(findRoute(grid, COIN_TOWN_FROM_NORTH, COIN_TOWN_SPAWN));
-  // The road east ends at the barrier until the next town exists.
-  assert.equal(coinTownMap.overlay[15][38], 'Z');
+  assert.ok(findRoute(grid, COIN_TOWN_FROM_EAST, COIN_TOWN_SPAWN));
 });
 
 test('Quantum Town: the south road from Coin Town arrives inside the wall, and its bottom row leads back', () => {
@@ -92,7 +106,7 @@ test('Quantum Town: the south road from Coin Town arrives inside the wall, and i
 });
 
 test('Coin Town animals start on open ground and have somewhere to wander', () => {
-  const grid = solidGrid(coinTownMap, COIN_TOWN_NPCS.map((npc) => npc.at));
+  const grid = solidGrid(coinTownMap, [...COIN_TOWN_NPCS.map((npc) => npc.at), COIN_TOWN_EAST_SIGN.at, COIN_TOWN_WEST_SIGN.at]);
   for (const animal of COIN_TOWN_ANIMALS) {
     const allowed = (pos) => !animal.ground || coinTownMap.rows[pos.y][pos.x] === animal.ground;
     assert.ok(!grid[animal.home.y][animal.home.x] && allowed(animal.home), `${animal.kind} at ${animal.home.x},${animal.home.y}`);

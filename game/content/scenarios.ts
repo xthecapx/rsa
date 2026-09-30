@@ -8,25 +8,25 @@ export const SCENARIOS = [
     lessons: "Seeds · one qubit · measurement", missions: ["coin"],
   },
   {
-    id: "rsa", number: "02", title: "Breaking RSA", difficulty: "Intermediate",
-    setting: "Man in the Middle · on the street", href: "/scenarios/rsa",
-    description: "Tap Ale and Brayan’s messages as they move from plaintext to RSA. Use Shor’s algorithm to recover the secret.",
-    worldEntry: { target: "car", mode: "outdoor" },
-    lessons: "Encryption · factoring · Shor", missions: ["1", "2", "3", "4"],
-  },
-  {
-    id: "grover", number: "03", title: "Echo Chamber", difficulty: "Advanced",
-    setting: "Emergency · Thecap’s workshop", href: "/scenarios/grover",
+    id: "grover", number: "02", title: "Echo Chamber", difficulty: "Intermediate",
+    setting: "Emergency · Thecap’s workshop, Foundry Town", href: "/scenarios/grover",
     description: "A drone core armed itself with a 4-bit PIN and three tries. Build Grover’s search and find the PIN with one measurement.",
     worldEntry: { target: "groverDoor", mode: "interior" },
     lessons: "Search · oracle · amplitude amplification", missions: ["grover"],
   },
   {
-    id: "vault", number: "04", title: "Operation Ghost Key", difficulty: "Expert",
+    id: "vault", number: "03", title: "Operation Ghost Key", difficulty: "Advanced",
     setting: "Haunted house · Casa Ofelia", href: "/scenarios/vault",
     description: "Doña Ofelia’s house knocks at night. Open her late husband’s 25-bit vault with three questions, and find out what the ghost really is.",
     worldEntry: { target: "vaultDoor", mode: "interior" },
     lessons: "Structure · phase kickback · Bernstein–Vazirani", missions: ["vault"],
+  },
+  {
+    id: "rsa", number: "04", title: "Breaking RSA", difficulty: "Final",
+    setting: "Man in the Middle · on the street", href: "/scenarios/rsa",
+    description: "Tap Ale and Brayan’s messages as they move from plaintext to RSA. Use Shor’s algorithm to recover the secret.",
+    worldEntry: { target: "car", mode: "outdoor" },
+    lessons: "Encryption · factoring · Shor", missions: ["1", "2", "3", "4"],
   },
 ] as const;
 

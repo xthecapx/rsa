@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { KNOWLEDGE_IDS, type KnowledgeId } from "@/content/coinTown";
+import { ALL_KNOWLEDGE_IDS, type KnowledgeId } from "@/content/knowledge";
 
 /** Knowledge cards learned from town neighbors. Like medals, replaying a lesson never removes one. */
 interface KnowledgeCase {
@@ -11,6 +11,8 @@ interface KnowledgeCase {
   fresh: KnowledgeId | null;
   learn: (id: KnowledgeId) => boolean;
   dismiss: () => void;
+  /** Forget one town's cards; the other towns keep theirs. */
+  resetTown: (ids: readonly KnowledgeId[]) => void;
   reset: () => void;
 }
 
@@ -23,6 +25,7 @@ export const useKnowledge = create<KnowledgeCase>()(persist((set, get) => ({
     return true;
   },
   dismiss: () => set({ fresh: null }),
+  resetTown: (ids) => set((state) => ({ cards: state.cards.filter((id) => !ids.includes(id)), fresh: null })),
   reset: () => set({ cards: [], fresh: null }),
 }), {
   name: "quantum-town-knowledge-v1",
@@ -30,6 +33,6 @@ export const useKnowledge = create<KnowledgeCase>()(persist((set, get) => ({
   partialize: (state) => ({ cards: state.cards }),
   merge: (saved, current) => {
     const cards = (saved as { cards?: unknown } | undefined)?.cards;
-    return { ...current, cards: Array.isArray(cards) ? KNOWLEDGE_IDS.filter((id) => cards.includes(id)) : [] };
+    return { ...current, cards: Array.isArray(cards) ? ALL_KNOWLEDGE_IDS.filter((id) => cards.includes(id)) : [] };
   },
 }));

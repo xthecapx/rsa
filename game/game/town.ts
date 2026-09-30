@@ -9,8 +9,20 @@ import { isToyModulus } from "./secret";
 import { useGame, type GameState } from "./state";
 import { townMap } from "@/engine/maps/townMap";
 import { COIN_TOWN_SPAWN } from "@/content/coinTown";
+import { FOUNDRY_SPAWN } from "@/content/foundry";
 
-const COIN_TOWN_START = () => ({ position: { ...COIN_TOWN_SPAWN }, facing: "up" as WorldFacing, welcomed: false });
+/** Where the player stands in a small town, and whether its greeter has met them. */
+interface TownPlace { position: { x: number; y: number }; facing: WorldFacing; welcomed: boolean }
+export type TownSlot = "coinTown" | "foundry";
+const COIN_TOWN_START = (): TownPlace => ({ position: { ...COIN_TOWN_SPAWN }, facing: "up", welcomed: false });
+const FOUNDRY_START = (): TownPlace => ({ position: { ...FOUNDRY_SPAWN }, facing: "right", welcomed: false });
+const FACINGS: WorldFacing[] = ["up", "down", "left", "right"];
+function townPlace(value: Partial<TownPlace> | undefined, fallback: () => TownPlace): TownPlace {
+  return Number.isInteger(value?.position?.x) && Number.isInteger(value?.position?.y)
+    ? { position: value!.position!, facing: FACINGS.includes(value!.facing!) ? value!.facing! : fallback().facing, welcomed: value!.welcomed === true }
+    : fallback();
+}
+const LOCATIONS = ["town", "coinTown", "foundry", "coin", "grover", "vault"] as const;
 
 const CHECKPOINT_KEYS = ["act", "phase", "suspicion", "nodeId", "lineIndex", "lines", "choicesVisible", "waitingFor", "feedback", "panel", "terminal", "flags", "vars", "tasks", "pendingTravel", "capture", "reportError", "completedActs", "labMemory"] as const;
 export type RsaCheckpoint = Pick<GameState, (typeof CHECKPOINT_KEYS)[number]>;
@@ -32,12 +44,15 @@ export function restoreRsa(checkpoint: RsaCheckpoint) {
 
 interface TownState {
   welcomed: boolean;
-  /** A new game starts in Coin Town; Quantum Town ("town") is the final town, up its north road. */
-  location: "town" | "coinTown" | "coin" | "grover" | "vault";
+  /** A new game starts in Coin Town; Foundry Town is east of it and Quantum Town ("town") is the final town, up its north road. */
+  location: (typeof LOCATIONS)[number];
   position: { x: number; y: number };
   facing: WorldFacing;
-  /** Where the player stands in Coin Town; `position` stays Quantum Town's. */
-  coinTown: { position: { x: number; y: number }; facing: WorldFacing; welcomed: boolean };
+  /** Where the player stands in each small town; `position` stays Quantum Town's. */
+  coinTown: TownPlace;
+  foundry: TownPlace;
+  /** The workshop has a door in Foundry Town and a replay door in Quantum Town; leaving goes back out the one you came in. */
+  groverFrom: "town" | "foundry";
   tracked: "coin" | "rsa" | "grover" | "vault" | null;
   discovered: string[];
   explored: number[];
@@ -59,7 +74,7 @@ const storage = createJSONStorage<TownState>(() => ({
 }));
 
 export const useTown = create<TownState>()(persist((set) => ({
-  welcomed: false, location: "coinTown", position: { ...TOWN_SPAWN }, facing: "up", tracked: "coin", coinTown: COIN_TOWN_START(),
+  welcomed: false, location: "coinTown", position: { ...TOWN_SPAWN }, facing: "up", tracked: "coin", coinTown: COIN_TOWN_START(), foundry: FOUNDRY_START(), groverFrom: "foundry",
   discovered: [], explored: [], checkpoint: null, rsaPosition: null, requestedAct: null, interrupted: false, rsaRunning: false,
   patch: (values) => set(values),
   discover: (id) => set((state) => ({ discovered: Array.from(new Set([...state.discovered, id])) })),
@@ -71,7 +86,7 @@ export const useTown = create<TownState>()(persist((set) => ({
     }
     return cells.size === state.explored.length ? state : { explored: [...cells] };
   }),
-  reset: () => set({ welcomed: false, location: "coinTown", position: { ...TOWN_SPAWN }, facing: "up", tracked: "coin", coinTown: COIN_TOWN_START(),
+  reset: () => set({ welcomed: false, location: "coinTown", position: { ...TOWN_SPAWN }, facing: "up", tracked: "coin", coinTown: COIN_TOWN_START(), foundry: FOUNDRY_START(), groverFrom: "foundry",
     discovered: [], explored: [], checkpoint: null, rsaPosition: null, requestedAct: null, interrupted: false, rsaRunning: false }),
 }), {
   name: "quantum-town-v1", version: 1, storage, skipHydration: true,
@@ -81,10 +96,11 @@ export const useTown = create<TownState>()(persist((set) => ({
     return {
       ...current, ...data, patch: current.patch, discover: current.discover, explore: current.explore, reset: current.reset,
       welcomed: data.welcomed === true,
-      location: data.location === "coin" || data.location === "coinTown" || data.location === "grover" || data.location === "vault" ? data.location : "town",
-      coinTown: Number.isInteger(data.coinTown?.position?.x) && Number.isInteger(data.coinTown?.position?.y)
-        ? { position: data.coinTown!.position, facing: ["up", "down", "left", "right"].includes(data.coinTown!.facing) ? data.coinTown!.facing : "up", welcomed: data.coinTown!.welcomed === true }
-        : COIN_TOWN_START(),
+      location: LOCATIONS.includes(data.location!) ? data.location! : "town",
+      coinTown: townPlace(data.coinTown, COIN_TOWN_START),
+      foundry: townPlace(data.foundry, FOUNDRY_START),
+      // Saves from before Foundry Town only had the Quantum Town door.
+      groverFrom: data.groverFrom === "foundry" || data.groverFrom === "town" ? data.groverFrom : "town",
       position: Number.isInteger(data.position?.x) && Number.isInteger(data.position?.y) ? data.position! : { ...TOWN_SPAWN },
       facing: ["up", "down", "left", "right"].includes(data.facing ?? "") ? data.facing! : "up",
       checkpoint: validCheckpoint(data.checkpoint ?? null) ? data.checkpoint! : null,
