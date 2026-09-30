@@ -8,11 +8,16 @@ import { useProgress } from "@/game/progress";
 import { t, useLocale } from "@/i18n";
 
 const { width, height, rows } = townMap;
-const terrain = new Map<string, string>();
-for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
-  const tile = rows[y][x];
-  const color = "pq".includes(tile) ? "#708082" : "ryzm".includes(tile) ? "#354754" : ".,e".includes(tile) ? "#37624e" : "svd".includes(tile) ? "#8a7b5a" : "#ae8967";
-  terrain.set(color, (terrain.get(color) ?? "") + `M${x} ${y}h1v1h-1z`);
+const terrain = terrainPaths(rows);
+
+/** One SVG path per terrain colour, a unit square per tile. Shared by every town's minimap. */
+export function terrainPaths(rows: string[]): Map<string, string> {
+  const paths = new Map<string, string>();
+  rows.forEach((row, y) => [...row].forEach((tile, x) => {
+    const color = "pq".includes(tile) ? "#708082" : "ryzm".includes(tile) ? "#354754" : ".,e".includes(tile) ? "#37624e" : "svd".includes(tile) ? "#8a7b5a" : "#ae8967";
+    paths.set(color, (paths.get(color) ?? "") + `M${x} ${y}h1v1h-1z`);
+  }));
+  return paths;
 }
 const places = [
   { id: "coinDoor", at: TOWN_LOCATIONS.coinDoor.at, label: "Who Goes First?", symbol: "1", scenario: "coin" },
@@ -20,7 +25,8 @@ const places = [
   { id: "guide", at: TOWN_LOCATIONS.guide.at, label: "Professor Thecap", symbol: "P", scenario: null },
   { id: "sign", at: TOWN_LOCATIONS.sign.at, label: "Signpost", symbol: "S", scenario: null },
   { id: "groverDoor", at: TOWN_LOCATIONS.groverDoor.at, label: "Thecap’s workshop", symbol: "3", scenario: "grover" },
-  { id: "futureB", at: TOWN_LOCATIONS.futureB.at, label: "Coming soon", symbol: "?", scenario: null },
+  { id: "vaultDoor", at: TOWN_LOCATIONS.vaultDoor.at, label: "Casa Ofelia", symbol: "4", scenario: "vault" },
+  { id: "southPath", at: TOWN_LOCATIONS.southPath.at, label: "South road to Coin Town", symbol: "↓", scenario: null },
 ] as const;
 
 /** The map stays legible without loading another game engine or canvas. */
@@ -47,7 +53,8 @@ export function TownMinimap() {
   const coinDone = !!completed.coin?.includes("coin");
   const rsaDone = ["1", "2", "3", "4"].every((act) => completed.rsa?.includes(act));
   const groverDone = !!completed.grover?.includes("grover");
-  const visitedCount = places.filter((place) => discovered.includes(place.id) || (place.scenario === "coin" && coinDone) || (place.scenario === "rsa" && rsaDone) || (place.scenario === "grover" && groverDone)).length;
+  const vaultDone = !!completed.vault?.includes("vault");
+  const visitedCount = places.filter((place) => discovered.includes(place.id) || (place.scenario === "coin" && coinDone) || (place.scenario === "rsa" && rsaDone) || (place.scenario === "grover" && groverDone) || (place.scenario === "vault" && vaultDone)).length;
 
   return <aside className="town-minimap panel w-44 bg-stage-bg/95 p-2 sm:w-56" aria-label={t("Town minimap")}>
     <button type="button" className="flex w-full items-center justify-between gap-2 text-xs text-accent-teal" aria-expanded={!collapsed} aria-controls={mapId}
@@ -60,7 +67,7 @@ export function TownMinimap() {
         {TOWN_TREES.map(({ x, y }) => <circle key={`${x}:${y}`} cx={x + 0.5} cy={y + 0.5} r={0.7} fill="#214636" />)}
         <path d={fog} fill="#07161f" opacity={0.88} />
         {places.map((place) => {
-          const done = place.scenario === "coin" ? coinDone : place.scenario === "rsa" ? rsaDone : place.scenario === "grover" ? groverDone : false;
+          const done = place.scenario === "coin" ? coinDone : place.scenario === "rsa" ? rsaDone : place.scenario === "grover" ? groverDone : place.scenario === "vault" ? vaultDone : false;
           const visited = discovered.includes(place.id) || done;
           const selected = place.scenario !== null && tracked === place.scenario;
           const color = done ? "#90e0cd" : visited ? "#a9cbd4" : "#f2c983";

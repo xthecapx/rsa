@@ -20,7 +20,11 @@ import { gameAudio } from "@/game/audio";
 import { t, useLocale } from "@/i18n";
 import { GameShell } from "./GameShell";
 import { CoinScenario } from "./CoinScenario";
+import { CoinTownScreen } from "./CoinTownScreen";
+import { COIN_TOWN_DOOR, COIN_TOWN_FROM_NORTH, QUANTUM_SOUTH_GATE, QUANTUM_SOUTH_ROW } from "@/content/coinTown";
+import { useKnowledge } from "@/game/knowledge";
 import { GroverScenario } from "./GroverScenario";
+import { VaultScenario } from "./VaultScenario";
 import { StartOverControl, type RestartOption } from "./StartOverControl";
 import { TownMinimap } from "./TownMinimap";
 import { RsaProgress } from "./RsaProgress";
@@ -36,31 +40,36 @@ import { TouchControls } from "./TouchControls";
 const GameCanvas = dynamic(() => import("./GameCanvas").then((mod) => mod.GameCanvas), { ssr: false });
 interface TownConversation {
   title: string; text: string;
+  /** Sentences translated one by one, for text composed from progress. */
+  parts?: string[];
   rsaAct?: ActNumber;
   choices: { label: string; act?: ActNumber; done?: boolean; action: () => void }[];
 }
-type Challenge = "coin" | "rsa" | "grover";
+type Challenge = "coin" | "rsa" | "grover" | "vault";
+const CHALLENGES: Challenge[] = ["coin", "rsa", "grover", "vault"];
 const COIN_SAVE = "quantum-coin-session-v1";
 const GROVER_SAVE = "quantum-grover-session-v1";
-const CHALLENGE_TITLES: Record<Challenge, string> = { coin: "Who Goes First?", rsa: "Breaking RSA", grover: "Echo Chamber" };
-const TRACK_TARGETS: Record<Challenge, TownTarget | "car"> = { coin: "coinDoor", rsa: "car", grover: "groverDoor" };
-const TRACK_LABELS: Record<Challenge, string> = { coin: "Track coin house", rsa: "Track RSA client", grover: "Track Thecap’s workshop" };
-const VISIT_KEYS: Record<Challenge, string> = { coin: "coinDoor", rsa: "rsa", grover: "groverDoor" };
-/** Thecap's greeting, keyed by which of coin, RSA and Grover are done ("1" = done). */
-const GREETINGS: Record<string, string> = {
-  "000": "Welcome to Quantum Town! I’m Professor Thecap, the town doctor and, on weekends, the town tinkerer. Three problems need a quantum hand today. At the house to the west, Ale and Brayan can’t agree who goes first at game night. On the street, someone is listening to their messages. And in my workshop up north, an old drone core has locked itself; I can’t guess its PIN in time. Start with the coin: each challenge uses what the last one taught you.",
-  "100": "A fair coin from one qubit, nicely done. Next, the street: someone is intercepting Ale and Brayan’s messages. Or, if you’re feeling bold, my workshop.",
-  "110": "You settled game night and broke RSA. One problem left: my drone core. No structure, no hints, sixteen PINs, three tries. Come to the workshop.",
-  "010": "You broke RSA before learning the coin? Impressive. The coin house explains the gate you’ll need in my workshop.",
-  "001": "You disarmed my drone core before anything else? Bold. The coin house and the RSA client still have lessons for you. Start with the coin.",
-  "101": "A fair coin and a disarmed core. One problem left: someone is intercepting Ale and Brayan’s messages on the street.",
-  "011": "Codes broken and my core disarmed, but you skipped the basics. The coin house is waiting for you.",
-  "111": "Coin, codes and a disarmed core. Quantum Town owes you one. Replay anything you like; your medals stay.",
+const VAULT_SAVE = "quantum-vault-session-v1";
+const CHALLENGE_TITLES: Record<Challenge, string> = { coin: "Who Goes First?", rsa: "Breaking RSA", grover: "Echo Chamber", vault: "Operation Ghost Key" };
+const TRACK_TARGETS: Record<Challenge, TownTarget | "car"> = { coin: "southPath", rsa: "car", grover: "groverDoor", vault: "vaultDoor" };
+const TRACK_LABELS: Record<Challenge, string> = { coin: "Track the south road", rsa: "Track RSA client", grover: "Track Thecap’s workshop", vault: "Track Casa Ofelia" };
+const VISIT_KEYS: Record<Challenge, string> = { coin: "coinDoor", rsa: "rsa", grover: "groverDoor", vault: "vaultDoor" };
+/** Thecap's greeting is composed from progress: first meeting, all done, or "so far" + "next". */
+const GREETING_FIRST = "Welcome to Quantum Town! I’m Professor Thecap, the town doctor and, on weekends, the town tinkerer. My cousin Cap, the mayor down in Coin Town, wrote that you were coming. Good: three bigger problems need a quantum hand here. Someone is listening to Ale and Brayan’s messages on the street. An old drone core has locked itself in my workshop. And Doña Ofelia swears her house is haunted. Each challenge uses what the last one taught you.";
+const GREETING_ALL = "Coin, codes, a disarmed core and a ghost laid to rest. You’ve seen both kinds of quantum speed-up. Replay anything you like; your medals stay.";
+const GREETING_COUNT = ["", "One challenge down, three to go.", "Two challenges down, two to go.", "Three down, one to go."];
+const GREETING_SKIPPED = "You jumped ahead. Bold! The earlier lessons still teach what the later ones assume.";
+const GREETING_NEXT: Record<Challenge, string> = {
+  coin: "Coin Town is down the south road. The neighbors there teach what a qubit can do, and Ale and Brayan’s game night is waiting.",
+  rsa: "Next, the street: someone is intercepting Ale and Brayan’s messages.",
+  grover: "Next, my workshop: an old drone core, sixteen PINs, three tries, no hints.",
+  vault: "Doña Ofelia came by. Her house has been knocking every night since we silenced that drone; her husband built it. She thinks it’s his ghost. I think it’s his vault. Take my laptop.",
 };
+const GREETING_VAULT_EARLY = "Ofelia’s haunted house? Bold. My workshop teaches the trick you’ll try first there, and why it isn’t enough.";
 
 /** The world owns navigation; missions own only their story and tools. */
-export function TownScreen({ initialAct, initialCoin = false, initialGrover = false, visitRsa = false }: {
-  initialAct?: ActNumber; initialCoin?: boolean; initialGrover?: boolean; visitRsa?: boolean;
+export function TownScreen({ initialAct, initialCoin = false, initialGrover = false, initialVault = false, visitRsa = false }: {
+  initialAct?: ActNumber; initialCoin?: boolean; initialGrover?: boolean; initialVault?: boolean; visitRsa?: boolean;
 }) {
   useLocale((state) => state.locale);
   const router = useRouter();
@@ -78,39 +87,52 @@ export function TownScreen({ initialAct, initialCoin = false, initialGrover = fa
   const [townNear, setTownNear] = useState<TownTarget | null>(null);
   const [coinSaved, setCoinSaved] = useState(false);
   const [groverSaved, setGroverSaved] = useState(false);
+  const [vaultSaved, setVaultSaved] = useState(false);
   const readyRef = useRef(false);
   const activeRef = useRef(false);
   const startingRef = useRef(false);
-  const events = useRef({ interactTown: (_target: TownTarget) => {}, interactRsa: (_target: Landmark) => {} });
+  const events = useRef({ interactTown: (_target: TownTarget) => {}, interactRsa: (_target: Landmark) => {}, travelSouth: () => {} });
   const conversationRef = useRef<HTMLDivElement>(null);
   activeRef.current = rsaActive;
 
   const coinComplete = !!completed.coin?.includes("coin");
   const rsaComplete = ACT_NUMBERS.every((act) => completed.rsa?.includes(String(act)));
   const groverComplete = !!completed.grover?.includes("grover");
+  const vaultComplete = !!completed.vault?.includes("vault");
   const blocked = game.phase === "busy" || !!game.busyLabel || game.operations > 0 || starting;
 
   function closeConversation() { setConversation(null); }
   function doneChallenges(): Record<Challenge, boolean> {
     const done = useProgress.getState().completed;
-    return { coin: !!done.coin?.includes("coin"), rsa: ACT_NUMBERS.every((act) => done.rsa?.includes(String(act))), grover: !!done.grover?.includes("grover") };
+    return { coin: !!done.coin?.includes("coin"), rsa: ACT_NUMBERS.every((act) => done.rsa?.includes(String(act))), grover: !!done.grover?.includes("grover"), vault: !!done.vault?.includes("vault") };
   }
   /** Challenges are recommended in order, but all of them are open. */
   function nextChallenge(): Challenge | null {
     const done = doneChallenges();
-    return (["coin", "rsa", "grover"] as const).find((id) => !done[id]) ?? null;
+    return CHALLENGES.find((id) => !done[id]) ?? null;
   }
   function chooseChallenge(id: Challenge) {
     if (!saveAndPause()) return;
     useTown.getState().patch({ tracked: id, welcomed: true }); closeConversation();
   }
+  function greetingParts(done: Record<Challenge, boolean>): string[] {
+    const count = CHALLENGES.filter((id) => done[id]).length;
+    const next = CHALLENGES.find((id) => !done[id]);
+    if (!next) return [GREETING_ALL];
+    if (!useTown.getState().welcomed || count === 0) return [GREETING_FIRST];
+    const skipped = CHALLENGES.slice(CHALLENGES.indexOf(next) + 1).some((id) => done[id]);
+    if (done.vault && !done.grover && next === "grover") return [GREETING_COUNT[count], GREETING_SKIPPED, GREETING_NEXT.grover];
+    return [GREETING_COUNT[count], ...(skipped ? [GREETING_SKIPPED] : []), GREETING_NEXT[next]];
+  }
   function greet() {
     const done = doneChallenges();
-    setConversation({ title: "Professor Thecap", text: GREETINGS[`${+done.coin}${+done.rsa}${+done.grover}`],
+    const parts = greetingParts(done);
+    setConversation({ title: "Professor Thecap", text: parts.join(" "), parts,
       choices: [
         { label: "1 · Who Goes First? (Beginner)", done: done.coin, action: () => chooseChallenge("coin") },
         { label: "2 · Breaking RSA (Intermediate)", done: done.rsa, action: () => chooseChallenge("rsa") },
         { label: "3 · Echo Chamber (Advanced)", done: done.grover, action: () => chooseChallenge("grover") },
+        { label: "4 · Operation Ghost Key (Expert)", done: done.vault, action: () => chooseChallenge("vault") },
         { label: "I’ll explore", action: () => { useTown.getState().patch({ welcomed: true }); closeConversation(); } },
       ] });
   }
@@ -118,19 +140,20 @@ export function TownScreen({ initialAct, initialCoin = false, initialGrover = fa
   useEffect(() => {
     let cancelled = false;
     void (async () => {
-      await Promise.all([useTown.persist.rehydrate(), useProgress.persist.rehydrate(), useMedals.persist.rehydrate()]);
+      await Promise.all([useTown.persist.rehydrate(), useProgress.persist.rehydrate(), useMedals.persist.rehydrate(), useKnowledge.persist.rehydrate()]);
       if (cancelled) return;
       const saved = useTown.getState();
       useGame.setState({ laptopOpen: false, walking: false, near: null, operations: 0, busyLabel: null });
-      try { setCoinSaved(localStorage.getItem(COIN_SAVE) !== null); setGroverSaved(localStorage.getItem(GROVER_SAVE) !== null); } catch { /* In-memory play remains available. */ }
-      if (initialCoin) saved.patch({ location: "coin", position: { ...TOWN_LOCATIONS.coinDoor.stand }, facing: "down", rsaRunning: false });
+      try { setCoinSaved(localStorage.getItem(COIN_SAVE) !== null); setGroverSaved(localStorage.getItem(GROVER_SAVE) !== null); setVaultSaved(localStorage.getItem(VAULT_SAVE) !== null); } catch { /* In-memory play remains available. */ }
+      if (initialCoin) saved.patch({ location: "coin", coinTown: { ...saved.coinTown, position: { x: COIN_TOWN_DOOR.stand.x, y: COIN_TOWN_DOOR.stand.y + 1 }, facing: "down" }, rsaRunning: false });
       else if (initialGrover) saved.patch({ location: "grover", position: { ...TOWN_LOCATIONS.groverDoor.stand }, facing: "down", rsaRunning: false });
+      else if (initialVault) saved.patch({ location: "vault", position: { ...TOWN_LOCATIONS.vaultDoor.stand }, facing: "down", rsaRunning: false });
       else if (initialAct || visitRsa) {
         saved.patch({ location: "town", position: { ...CLIENT_POSITION }, facing: "down", tracked: "rsa", rsaRunning: false, requestedAct: initialAct ?? null });
       } else if (saved.location === "town" && saved.rsaRunning && validCheckpoint(saved.checkpoint) && !["won", "caught"].includes(saved.checkpoint.phase) && !saved.interrupted) {
         restoreRsa(saved.checkpoint); setRsaActive(true); activeRef.current = true;
       }
-      if (initialCoin || initialGrover || initialAct || visitRsa) { router.replace("/"); return; }
+      if (initialCoin || initialGrover || initialVault || initialAct || visitRsa) { router.replace("/"); return; }
       if (!saved.welcomed && saved.location === "town") greet();
       else if (saved.interrupted && saved.location === "town") setConversation({ title: "Progress saved", text: "The last operation was interrupted. Your last safe checkpoint is saved. Talk to the client to resume; an unfinished operation will only run again when you choose it.", choices: [{ label: "Keep exploring", action: closeConversation }] });
       setHydrated(true);
@@ -146,6 +169,8 @@ export function TownScreen({ initialAct, initialCoin = false, initialGrover = fa
     if (event.type === "position") {
       useTown.getState().patch({ position: event.at, facing: event.facing });
       useTown.getState().explore(event.at);
+      // The only tiles on the bottom row are the southern entrance.
+      if (event.at.y === QUANTUM_SOUTH_ROW) events.current.travelSouth();
     }
     if (event.type === "townMoved") { setTownNear(event.near); if (event.near) useTown.getState().discover(event.near); }
     if (event.type === "moved") { useGame.getState().setNear(event.near); if (event.near === "car") useTown.getState().discover("rsa"); }
@@ -192,8 +217,8 @@ export function TownScreen({ initialAct, initialCoin = false, initialGrover = fa
     void bus.send({ type: "track", target });
   }, [sceneReady, rsaActive, game.pendingTravel?.at, town.tracked]);
   useEffect(() => {
-    if (sceneReady) void bus.send({ type: "townProgress", coinComplete, rsaComplete, groverComplete, rsaPaused: !rsaActive && !!town.checkpoint && !["won", "caught"].includes(town.checkpoint.phase) });
-  }, [sceneReady, coinComplete, rsaComplete, groverComplete, rsaActive, town.checkpoint?.phase]);
+    if (sceneReady) void bus.send({ type: "townProgress", coinComplete, rsaComplete, groverComplete, vaultComplete, rsaPaused: !rsaActive && !!town.checkpoint && !["won", "caught"].includes(town.checkpoint.phase) });
+  }, [sceneReady, coinComplete, rsaComplete, groverComplete, vaultComplete, rsaActive, town.checkpoint?.phase]);
   useEffect(() => {
     conversationRef.current?.querySelector<HTMLButtonElement>("button")?.focus();
   }, [conversation]);
@@ -217,7 +242,31 @@ export function TownScreen({ initialAct, initialCoin = false, initialGrover = fa
     if (!saveAndPause()) return;
     gameAudio.playSynth("door");
     closeConversation(); readyRef.current = false; setSceneStatus("loading"); setTownNear(null);
-    useTown.getState().patch({ location: "coin", position: { ...TOWN_LOCATIONS.coinDoor.stand }, facing: "down" });
+    useTown.getState().patch({ location: "coin" });
+  }
+  /** Quantum Town's southern entrance is the road back down to Coin Town, where the game begins. */
+  function enterCoinTown() {
+    if (!saveAndPause()) return;
+    gameAudio.playSynth("door");
+    closeConversation(); readyRef.current = false; setSceneStatus("loading"); setTownNear(null);
+    useGame.getState().setWalking(false); useGame.getState().setNear(null);
+    const saved = useTown.getState();
+    saved.patch({ location: "coinTown", position: { ...QUANTUM_SOUTH_GATE }, facing: "up", coinTown: { ...saved.coinTown, position: { ...COIN_TOWN_FROM_NORTH }, facing: "down" } });
+  }
+  function leaveCoinTown() {
+    readyRef.current = false; setSceneStatus("loading");
+    useGame.getState().setWalking(false); useGame.getState().setNear(null);
+    useTown.getState().patch({ location: "town", position: { ...QUANTUM_SOUTH_GATE }, facing: "up", tracked: nextChallenge() });
+    // Arriving for the first time: Professor Thecap takes it from his cousin.
+    if (!useTown.getState().welcomed) greet();
+  }
+  function leaveCoin() {
+    gameAudio.playSynth("door");
+    readyRef.current = false; setSceneStatus("loading");
+    useGame.getState().setWalking(false); useGame.getState().setNear(null);
+    const saved = useTown.getState();
+    saved.patch({ location: "coinTown", coinTown: { ...saved.coinTown, position: { x: COIN_TOWN_DOOR.stand.x, y: COIN_TOWN_DOOR.stand.y + 1 }, facing: "down" } });
+    setCoinSaved(true);
   }
   function enterGrover() {
     if (!saveAndPause()) return;
@@ -225,17 +274,23 @@ export function TownScreen({ initialAct, initialCoin = false, initialGrover = fa
     closeConversation(); readyRef.current = false; setSceneStatus("loading"); setTownNear(null);
     useTown.getState().patch({ location: "grover", position: { ...TOWN_LOCATIONS.groverDoor.stand }, facing: "down" });
   }
-  function leaveHouse(door: "coinDoor" | "groverDoor") {
+  function enterVault() {
+    if (!saveAndPause()) return;
+    gameAudio.playSynth("door");
+    closeConversation(); readyRef.current = false; setSceneStatus("loading"); setTownNear(null);
+    useTown.getState().patch({ location: "vault", position: { ...TOWN_LOCATIONS.vaultDoor.stand }, facing: "down" });
+  }
+  function leaveHouse(door: "groverDoor" | "vaultDoor") {
     gameAudio.playSynth("door");
     readyRef.current = false; setSceneStatus("loading");
     useGame.getState().setWalking(false); useGame.getState().setNear(null);
     const stand = TOWN_LOCATIONS[door].stand;
     useTown.getState().patch({ location: "town", position: { x: stand.x, y: stand.y + 1 }, facing: "down", tracked: nextChallenge() });
-    if (door === "coinDoor") setCoinSaved(true); else setGroverSaved(true);
+    if (door === "groverDoor") setGroverSaved(true); else setVaultSaved(true);
     if (!useTown.getState().welcomed) greet();
   }
-  const leaveCoin = () => leaveHouse("coinDoor");
   const leaveGrover = () => leaveHouse("groverDoor");
+  const leaveVault = () => leaveHouse("vaultDoor");
   async function beginRsa(act: ActNumber) {
     if (startingRef.current || ((useGame.getState().phase === "busy" || useGame.getState().operations > 0 || !!useGame.getState().busyLabel) && activeRef.current)) return;
     closeConversation(); startingRef.current = true; setStarting(true); activeRef.current = true; setRsaActive(true);
@@ -272,6 +327,12 @@ export function TownScreen({ initialAct, initialCoin = false, initialGrover = fa
     useProgress.getState().reset("grover"); setGroverSaved(false);
     enterGrover();
   }
+  function restartVault() {
+    if (!saveAndPause()) return;
+    try { localStorage.removeItem(VAULT_SAVE); } catch { /* Reset still works for the current visit. */ }
+    useProgress.getState().reset("vault"); setVaultSaved(false);
+    enterVault();
+  }
   async function restartRsa(fromBeginning: boolean) {
     if (activeRef.current && blocked) return;
     const act = fromBeginning ? 1 : useGame.getState().act;
@@ -288,17 +349,18 @@ export function TownScreen({ initialAct, initialCoin = false, initialGrover = fa
     setRsaActive(false); setStarting(false); startingRef.current = false;
     readyRef.current = false; setSceneStatus("loading");
     setJournalOpen(false); setRestartOpen(false); setTownNear(null);
-    try { localStorage.removeItem(COIN_SAVE); localStorage.removeItem(GROVER_SAVE); } catch { /* In-memory reset remains available. */ }
-    useProgress.getState().reset(); useMedals.getState().reset(); useGame.getState().resetRun(1); useGame.setState({ completedActs: [] });
-    useTown.getState().reset(); setCoinSaved(false); setGroverSaved(false);
-    setWorldKey((key) => key + 1); greet();
+    try { localStorage.removeItem(COIN_SAVE); localStorage.removeItem(GROVER_SAVE); localStorage.removeItem(VAULT_SAVE); } catch { /* In-memory reset remains available. */ }
+    useProgress.getState().reset(); useMedals.getState().reset(); useKnowledge.getState().reset(); useGame.getState().resetRun(1); useGame.setState({ completedActs: [] });
+    useTown.getState().reset(); setCoinSaved(false); setGroverSaved(false); setVaultSaved(false);
+    setWorldKey((key) => key + 1);
   }
   const restartOptions: RestartOption[] = [
     ...(rsaActive ? [{ label: "Restart this RSA act", description: "Clear this act’s attempt and results. Other completed acts and your medals stay saved.", restart: () => void restartRsa(false) }] : []),
     { label: "Restart Who Goes First?", description: "Clear the coin lesson, its puzzles, experiments, and completion. Start inside the house.", restart: restartCoin },
     { label: "Restart RSA from Act 1", description: "Clear RSA progress and begin the first act with the client.", restart: () => void restartRsa(true) },
     { label: "Restart Echo Chamber", description: "Clear the workshop lesson, its circuit, runs, and completion. Start inside the workshop.", restart: restartGrover },
-    { label: "Start the whole game over", description: "Clear every lesson, your medal case, and town progress. Return to the welcome at the southern entrance.", restart: restartGame },
+    { label: "Restart Operation Ghost Key", description: "Clear the vault lesson: a new mask, fresh candles, empty circuits, and no completion. Start inside Casa Ofelia.", restart: restartVault },
+    { label: "Start the whole game over", description: "Clear every lesson, your medal case, and town progress. Return to Mayor Cap’s welcome in Coin Town.", restart: restartGame },
   ];
   const restartControl = <StartOverControl options={restartOptions} disabled={!sceneReady || (rsaActive && blocked)} onOpenChange={setRestartOpen} />;
 
@@ -327,12 +389,18 @@ export function TownScreen({ initialAct, initialCoin = false, initialGrover = fa
     interactTown: (target) => {
       if (conversation || journalOpen || (rsaActive && blocked)) return;
       const location = TOWN_LOCATIONS[target];
-      if (location.kind === "coin") setConversation({ title: "Who Goes First?", text: "Game night · Beginner. Build a coin program, investigate a known seed, and make your first quantum circuit.", choices: [{ label: coinSaved || coinComplete ? "Resume in the house" : "Enter the house", action: enterCoin }, { label: "Later", action: closeConversation }] });
+      if (location.kind === "coin") setConversation({ title: "Who Goes First?", text: "Nobody’s home. A note on the door: “Game night moved to Coin Town. Take the south road. — Ale & Brayan”", choices: [{ label: "Walk north to Coin Town", action: enterCoinTown }, { label: "Later", action: closeConversation }] });
+      else if (location.kind === "path") enterCoinTown();
       else if (location.kind === "grover") setConversation({ title: "Echo Chamber", text: "Emergency · Advanced. An old drone core has locked itself with a 4-bit PIN and three tries. Build Grover’s search on the quantum core and disarm it.", choices: [{ label: groverSaved || groverComplete ? "Resume in the workshop" : "Enter the workshop", action: enterGrover }, { label: "Later", action: closeConversation }] });
-      else if (location.kind === "closed") setConversation({ title: "A future adventure", text: "This house isn’t open yet. A new quantum challenge will arrive here later.", choices: [{ label: "Keep exploring", action: closeConversation }] });
+      else if (location.kind === "vault") {
+        const early = !doneChallenges().grover && !vaultComplete;
+        setConversation({ title: "Operation Ghost Key", text: "Haunted house · Expert. Doña Ofelia’s house knocks at night. She needs her late husband’s vault opened: 25 bits, three questions.", parts: ["Haunted house · Expert. Doña Ofelia’s house knocks at night. She needs her late husband’s vault opened: 25 bits, three questions.", ...(early ? [GREETING_VAULT_EARLY] : [])],
+          choices: [{ label: vaultSaved || vaultComplete ? "Resume in Casa Ofelia" : "Knock and go in", action: enterVault }, { label: "Later", action: closeConversation }] });
+      }
       else if (location.kind === "guide") greet();
-      else setConversation({ title: "Quantum Town", text: "Coin house: west of the plaza. RSA client: on the northeastern street. Thecap’s workshop: the north-west house. One more house will open for a future lesson.", choices: [...(["coin", "rsa", "grover"] as const).map((id) => ({ label: TRACK_LABELS[id], action: () => trackDestination(id) })), { label: "Keep exploring", action: closeConversation }] });
+      else setConversation({ title: "Quantum Town", text: "Coin Town: down the south road. RSA client: on the northeastern street. Thecap’s workshop: the north-west house. Casa Ofelia: the old house north of the plaza.", choices: [...CHALLENGES.map((id) => ({ label: TRACK_LABELS[id], action: () => trackDestination(id) })), { label: "Keep exploring", action: closeConversation }] });
     },
+    travelSouth: () => { if (!conversation && !journalOpen && !(rsaActive && blocked)) enterCoinTown(); },
     interactRsa: (target) => {
       if (conversation || journalOpen || blocked && rsaActive) return;
       if (rsaActive && game.phase === "exploring" && game.pendingTravel?.at === target) { void interactAt(target); return; }
@@ -347,23 +415,26 @@ export function TownScreen({ initialAct, initialCoin = false, initialGrover = fa
 
   if (!hydrated) return <main className="relative h-dvh bg-stage-bg"><SceneLoading /></main>;
   if (town.location === "coin") return <CoinScenario onExit={leaveCoin} onRestartGame={restartGame} />;
+  if (town.location === "coinTown") return <CoinTownScreen key={worldKey} onLeave={leaveCoinTown} onEnterCoin={enterCoin}
+    restartOptions={[{ label: "Restart Who Goes First?", description: "Clear the coin lesson, its puzzles, experiments, and completion. Start inside the house.", restart: restartCoin },
+      { label: "Start the whole game over", description: "Clear every lesson, your medal case, and town progress. Return to Mayor Cap’s welcome in Coin Town.", restart: restartGame }]} />;
   if (town.location === "grover") return <GroverScenario onExit={leaveGrover} onRestartGame={restartGame} />;
+  if (town.location === "vault") return <VaultScenario onExit={leaveVault} onRestartGame={restartGame} />;
 
   const canInteract = !!townNear || !!game.near;
   const journal = <div className="space-y-4 text-sm">
     <h2 className="text-accent-amber">{t("Quantum Town journal")}</h2>
     {rsaActive && <ObjectiveList />}
     {(() => { const next = nextChallenge(); return <p className="text-accent-teal">{next ? `${t("Recommended next challenge:")} ${t(CHALLENGE_TITLES[next])}` : t("Every challenge is complete. Replay any of them; your medals stay.")}</p>; })()}
-    <p>{t("All three challenges are open. Play them in any order.")}</p>
+    <p>{t("All four challenges are open. Play them in any order.")}</p>
     <p>{t("Walk to a door or character to start a lesson.")}</p>
     {SCENARIOS.map(({ id, title, difficulty, missions }) => { const done = missions.every((mission) => completed[id]?.includes(mission)); return <div key={id} className="panel space-y-2 p-3">
-      <h3>{done ? "★ " : "◇ "}{t(title)}</h3><p className="text-stage-muted">{t(difficulty)} · {t(done ? "Completed" : id === "rsa" && rsaActive ? "Active mission" : (id === "coin" && coinSaved) || (id === "grover" && groverSaved) ? "Saved lesson" : id === "rsa" && town.checkpoint && !["won", "caught"].includes(town.checkpoint.phase) ? "Saved mission" : "Available")}</p>
+      <h3>{done ? "★ " : "◇ "}{t(title)}</h3><p className="text-stage-muted">{t(difficulty)} · {t(done ? "Completed" : id === "rsa" && rsaActive ? "Active mission" : (id === "coin" && coinSaved) || (id === "grover" && groverSaved) || (id === "vault" && vaultSaved) ? "Saved lesson" : id === "rsa" && town.checkpoint && !["won", "caught"].includes(town.checkpoint.phase) ? "Saved mission" : "Available")}</p>
       {id === "rsa" && <p className="text-xs text-stage-muted">{(completed.rsa ?? []).filter((mission) => ["1", "2", "3", "4"].includes(mission)).length} / 4 · {t("Acts complete")}</p>}
       <button className="btn-ghost" disabled={rsaActive && blocked} onClick={() => trackDestination(id)}>{t(TRACK_LABELS[id])}</button>
       <p className="text-xs text-stage-muted">{t(town.discovered.includes(VISIT_KEYS[id]) || done ? "Visited" : "Not visited yet")}</p>
     </div>; })}
     <MedalCase />
-    <p className="text-stage-muted">{t("One more house will open for a future lesson.")}</p>
     {townStorageUnavailable && <p role="status">{t("Browser storage is unavailable. Progress will last for this visit only.")}</p>}
   </div>;
 
@@ -382,7 +453,7 @@ export function TownScreen({ initialAct, initialCoin = false, initialGrover = fa
       </div>}
       {!conversation && !journalOpen && !restartOpen && !(rsaActive && game.laptopOpen) && <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center p-3 pb-24 lg:pb-4">
         {rsaActive && game.phase !== "exploring" ? <DialogBox /> : <div className={`textbox max-w-lg space-y-2 px-4 py-3 text-center transition-opacity ${game.walking ? "opacity-30" : ""}`}>
-          <p className="text-sm">{t(rsaActive && game.pendingTravel ? game.pendingTravel.objective : town.tracked ? town.tracked === "coin" ? "First challenge: Who Goes First?" : town.tracked === "rsa" ? "RSA client" : "Thecap’s workshop" : "Explore Quantum Town")}</p>
+          <p className="text-sm">{t(rsaActive && game.pendingTravel ? game.pendingTravel.objective : town.tracked ? town.tracked === "coin" ? "First challenge: Who Goes First?" : town.tracked === "rsa" ? "RSA client" : town.tracked === "grover" ? "Thecap’s workshop" : "Casa Ofelia" : "Explore Quantum Town")}</p>
           {canInteract && <p className="text-xs text-accent-amber">{t(townNear ? TOWN_LOCATIONS[townNear].prompt : game.near === "car" ? "Talk to the RSA client" : game.near === "tap" ? "Inspect the junction box" : "Talk")}{" · "}{t("Press Space or tap Talk")}</p>}
         </div>}
       </div>}
@@ -394,7 +465,7 @@ export function TownScreen({ initialAct, initialCoin = false, initialGrover = fa
           else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
         }
       }}>
-        <DialogueFrame className="max-w-4xl">{conversation.rsaAct && <div className="shrink-0"><RsaProgress act={conversation.rsaAct} /></div>}<DialogueLine speaker={conversation.title === "Professor Thecap" ? "guide" : "boss"} label={t(conversation.title)}>{t(conversation.text)}</DialogueLine><div className="flex min-h-0 flex-wrap gap-2 overflow-y-auto">{conversation.choices.map((choice) => <button key={choice.label} className="btn-ghost text-sm" onClick={() => { gameAudio.playSfx("select"); choice.action(); }}>{choice.done ? "✓ " : ""}{t(choice.label)}{choice.act && `: ${t(`Act ${choice.act}: ${getAct(choice.act).title}`)}`}</button>)}</div></DialogueFrame>
+        <DialogueFrame className="max-w-4xl">{conversation.rsaAct && <div className="shrink-0"><RsaProgress act={conversation.rsaAct} /></div>}<DialogueLine speaker={conversation.title === "Professor Thecap" ? "guide" : conversation.title === "Operation Ghost Key" ? "ofelia" : "boss"} label={t(conversation.title)}>{conversation.parts ? conversation.parts.map((part) => t(part)).join(" ") : t(conversation.text)}</DialogueLine><div className="flex min-h-0 flex-wrap gap-2 overflow-y-auto">{conversation.choices.map((choice) => <button key={choice.label} className="btn-ghost text-sm" onClick={() => { gameAudio.playSfx("select"); choice.action(); }}>{choice.done ? "✓ " : ""}{t(choice.label)}{choice.act && `: ${t(`Act ${choice.act}: ${getAct(choice.act).title}`)}`}</button>)}</div></DialogueFrame>
       </div>}
       <TouchControls canInteract={canInteract} visible={!inputLocked} />
       {rsaActive && <><LaptopScene key={`${game.act}:${missionGeneration()}`} act={game.act} restartControl={restartControl} /><GameOver key={`result:${missionGeneration()}`} act={game.act} onReturn={() => { saveAndPause(); }} onRetry={() => void beginRsa(game.act)} onNext={(act) => void beginRsa(act)} /></>}

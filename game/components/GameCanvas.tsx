@@ -3,13 +3,13 @@
 import { useEffect, useRef } from "react";
 import type { Engine } from "excalibur";
 
-import { createGame, disposeGame } from "@/engine/createGame";
+import { createGame, disposeGame, type WorldName } from "@/engine/createGame";
 
 /**
  * Owns the Excalibur canvas. Excalibur reaches for `window` and a WebGL
  * context at import time, so the page must load this with `ssr: false`.
  */
-export function GameCanvas({ onReady, onError }: { onReady: () => void | Promise<void>; onError: () => void }) {
+export function GameCanvas({ onReady, onError, world = "city" }: { onReady: () => void | Promise<void>; onError: () => void; world?: WorldName }) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const engineRef = useRef<Engine | null>(null);
 
@@ -23,7 +23,7 @@ export function GameCanvas({ onReady, onError }: { onReady: () => void | Promise
       const host = hostRef.current;
       if (!host) return null;
       try {
-        const engine = await createGame(host);
+        const engine = await createGame(host, world);
         bootEngine = engine;
         if (cancelled) return engine;
         engineRef.current = engine;
@@ -42,7 +42,7 @@ export function GameCanvas({ onReady, onError }: { onReady: () => void | Promise
         return disposeGame(engine);
       });
     };
-  }, [onReady, onError]);
+  }, [onReady, onError, world]);
 
   // Excalibur owns this subtree and measures the host for FitContainer.
   // Center the fitted canvas so any unused space is shared on both sides.

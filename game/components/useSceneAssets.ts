@@ -4,10 +4,12 @@ import { useEffect, useState } from "react";
 
 const COIN_ASSETS = ["/assets/kenney/characters.png", "/assets/kenney/portraits.png"];
 const GROVER_ASSETS = [...COIN_ASSETS, "/assets/characters/town-doctor.svg"];
+const VAULT_ASSETS = [...COIN_ASSETS, "/assets/characters/ofelia.svg"];
 
 /** SVG references and CSS portraits need to be decoded before the house can play. */
 export function useCoinSceneAssets() { return useSceneAssets(COIN_ASSETS); }
 export function useGroverSceneAssets() { return useSceneAssets(GROVER_ASSETS); }
+export function useVaultSceneAssets() { return useSceneAssets(VAULT_ASSETS); }
 
 function useSceneAssets(assets: string[]) {
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");

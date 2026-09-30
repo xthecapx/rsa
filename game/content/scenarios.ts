@@ -21,6 +21,13 @@ export const SCENARIOS = [
     worldEntry: { target: "groverDoor", mode: "interior" },
     lessons: "Search · oracle · amplitude amplification", missions: ["grover"],
   },
+  {
+    id: "vault", number: "04", title: "Operation Ghost Key", difficulty: "Expert",
+    setting: "Haunted house · Casa Ofelia", href: "/scenarios/vault",
+    description: "Doña Ofelia’s house knocks at night. Open her late husband’s 25-bit vault with three questions, and find out what the ghost really is.",
+    worldEntry: { target: "vaultDoor", mode: "interior" },
+    lessons: "Structure · phase kickback · Bernstein–Vazirani", missions: ["vault"],
+  },
 ] as const;
 
 export type ScenarioId = (typeof SCENARIOS)[number]["id"];

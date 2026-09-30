@@ -11,7 +11,11 @@ import type { Speaker } from "@/content/types";
 const SHEET = { tile: 16, margin: 1, columns: 54, rows: 12 };
 const STRIDE = SHEET.tile + SHEET.margin;
 
-const CAST: Record<Exclude<Speaker, "system" | "guide">, { col: number; row: number }> = {
+/** Speakers drawn as their own SVG sprite rather than a Kenney bust. */
+const SVG_SPRITES: Partial<Record<Speaker, string>> = {
+  guide: "town-doctor", ofelia: "ofelia", mayor: "mayor", luz: "luz", nico: "nico", tomas: "tomas", marisol: "marisol", oscar: "oscar", warden: "warden",
+};
+const CAST: Record<"ale" | "brayan" | "hacker" | "boss", { col: number; row: number }> = {
   ale: { col: 0, row: 5 },
   brayan: { col: 1, row: 6 },
   hacker: { col: 0, row: 10 },
@@ -24,7 +28,10 @@ const BORDER: Record<Speaker, string> = {
   hacker: "border-actor-hacker",
   boss: "border-actor-boss",
   guide: "border-accent-teal",
+  ofelia: "border-accent-amber",
   system: "border-stage-border",
+  mayor: "border-accent-amber", luz: "border-accent-amber", nico: "border-accent-teal", tomas: "border-accent-teal",
+  marisol: "border-accent-teal", oscar: "border-accent-amber", warden: "border-stage-border",
 };
 
 export const SPEAKER_NAME: Record<Speaker, string> = {
@@ -33,7 +40,9 @@ export const SPEAKER_NAME: Record<Speaker, string> = {
   hacker: "You",
   boss: "The client",
   guide: "Professor Thecap",
+  ofelia: "Doña Ofelia",
   system: "Notes",
+  mayor: "Mayor Cap", luz: "Luz", nico: "Nico", tomas: "Tomás", marisol: "Marisol", oscar: "Don Óscar", warden: "Beto",
 };
 
 export const SPEAKER_COLOR: Record<Speaker, string> = {
@@ -42,7 +51,10 @@ export const SPEAKER_COLOR: Record<Speaker, string> = {
   hacker: "text-actor-hacker",
   boss: "text-actor-boss",
   guide: "text-accent-teal",
+  ofelia: "text-accent-amber",
   system: "text-accent-teal",
+  mayor: "text-accent-amber", luz: "text-accent-amber", nico: "text-accent-teal", tomas: "text-accent-teal",
+  marisol: "text-accent-teal", oscar: "text-accent-amber", warden: "text-stage-muted",
 };
 
 export function Portrait({ speaker, size = 64 }: { speaker: Speaker; size?: number }) {
@@ -64,11 +76,12 @@ export function Portrait({ speaker, size = 64 }: { speaker: Speaker; size?: numb
     );
   }
 
-  if (speaker === "guide") return <div className={clsx("shrink-0 border-4 bg-stage-bg", BORDER.guide)} style={{ width: size, height: size,
-    backgroundImage: "url(/assets/characters/town-doctor.svg)", backgroundSize: "100% 100%", backgroundRepeat: "no-repeat", imageRendering: "pixelated" }}
-    role="img" aria-label={t("Professor Thecap")} />;
+  const sprite = SVG_SPRITES[speaker];
+  if (sprite) return <div className={clsx("shrink-0 border-4 bg-stage-bg", BORDER[speaker])} style={{ width: size, height: size,
+    backgroundImage: `url(/assets/characters/${sprite}.svg)`, backgroundSize: "100% 100%", backgroundRepeat: "no-repeat", imageRendering: "pixelated" }}
+    role="img" aria-label={t(SPEAKER_NAME[speaker])} />;
 
-  const { col, row } = CAST[speaker];
+  const { col, row } = CAST[speaker as keyof typeof CAST];
   return (
     <div
       className={clsx("shrink-0 border-4 bg-stage-bg", BORDER[speaker])}

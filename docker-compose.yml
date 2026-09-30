@@ -14,7 +14,9 @@ services:
       - PYTHONPATH=/app
     command: uvicorn app.main:app --host 0.0.0.0 --port 7001 --reload
 
+  # Slides. Off by default; start with `docker compose --profile slides up`.
   frontend:
+    profiles: ["slides"]
     build:
       context: ./frontend
       dockerfile: Dockerfile

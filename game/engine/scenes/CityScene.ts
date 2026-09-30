@@ -135,11 +135,13 @@ export class CityScene extends Scene {
     guide.graphics.use(images.doctor.toSprite());
     this.add(guide);
     for (const [key, location] of Object.entries(TOWN_LOCATIONS)) {
+      // The south road is an open path, marked by the signpost instead of a board.
+      if (location.kind === "path") continue;
       const at = tileCenter(location.at);
-      const mounted = location.kind === "coin" || location.kind === "grover" || location.kind === "closed";
+      const mounted = location.kind === "coin" || location.kind === "grover" || location.kind === "vault";
       const label = new TownSign(at.x - (key === "guide" ? 44 : 0), at.y + (mounted ? -9 : 8), mounted);
       this.add(label);
-      this.markerLabels.push({ actor: label, text: key === "coinDoor" ? "Coin house" : key === "groverDoor" ? "Thecap’s workshop" : key === "guide" ? GUIDE_LABEL : key === "sign" ? SIGN_LABEL : "Coming soon" });
+      this.markerLabels.push({ actor: label, text: key === "coinDoor" ? "Coin house" : key === "groverDoor" ? "Thecap’s workshop" : key === "vaultDoor" ? "Casa Ofelia" : key === "guide" ? GUIDE_LABEL : SIGN_LABEL });
     }
     const clientLabel = new TownSign(tileCenter(LANDMARKS.car.at).x + 40, tileCenter(LANDMARKS.car.at).y + 40);
     this.add(clientLabel); this.markerLabels.push({ actor: clientLabel, text: "RSA · Talk to the client" });
@@ -216,7 +218,7 @@ export class CityScene extends Scene {
       this.markerLocale = locale;
       for (const { actor, text, completed, paused } of this.markerLabels) {
         const caption = text === GUIDE_LABEL ? (this.guideNext ? `${t("Professor Thecap")}\n${t(this.guideNext)}` : t("Professor Thecap"))
-          : text === SIGN_LABEL ? `${t("Coin ← · RSA →")}\n${t("Workshop ↖")}` : t(paused ? "RSA · Resume mission" : text);
+          : text === SIGN_LABEL ? `${t("Coin Town ↓ · RSA →")}\n${t("Workshop ↖ · Casa Ofelia ↑")}` : t(paused ? "RSA · Resume mission" : text);
         actor.setCaption(`${completed ? "★ " : paused ? "Ⅱ " : ""}${caption}`, completed);
       }
       // Sign widths change with their translated captions and mission status.
@@ -389,8 +391,9 @@ export class CityScene extends Scene {
           if (label.text === "Coin house") label.completed = command.coinComplete;
           if (label.text === "RSA · Talk to the client") { label.completed = command.rsaComplete; label.paused = command.rsaPaused && !command.rsaComplete; }
           if (label.text === "Thecap’s workshop") label.completed = command.groverComplete;
+          if (label.text === "Casa Ofelia") label.completed = command.vaultComplete;
         }
-        this.guideNext = !command.coinComplete ? "Who Goes First?" : !command.rsaComplete ? "Breaking RSA" : !command.groverComplete ? "Echo Chamber" : null;
+        this.guideNext = !command.coinComplete ? "Who Goes First?" : !command.rsaComplete ? "Breaking RSA" : !command.groverComplete ? "Echo Chamber" : !command.vaultComplete ? "Operation Ghost Key" : null;
         this.markerLocale = "";
         return;
       case "track":

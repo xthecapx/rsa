@@ -9,6 +9,13 @@ export const images = {
   portraits: new ImageSource("/assets/kenney/portraits.png"),
 };
 
+/** Coin Town neighbors, drawn by tools/gen_npc_sprites.cjs. */
+export const NPC_IDS = ["mayor", "luz", "nico", "tomas", "marisol", "oscar", "warden"] as const;
+export type NpcSprite = (typeof NPC_IDS)[number];
+export const ANIMAL_KINDS = ["cat", "dog", "pigeon", "duck"] as const;
+export const animalImages = Object.fromEntries(ANIMAL_KINDS.map((kind) => [kind, new ImageSource(`/assets/characters/animal-${kind}.svg`)])) as Record<(typeof ANIMAL_KINDS)[number], ImageSource>;
+export const npcImages = Object.fromEntries(NPC_IDS.map((id) => [id, new ImageSource(`/assets/characters/${id}.svg`)])) as Record<NpcSprite, ImageSource>;
+
 /** Kenney's packed city tilemap: 37 x 28 tiles of 16px, tightly packed. */
 export const citySheet = SpriteSheet.fromImageSource({
   image: images.city,
@@ -52,7 +59,7 @@ export function citySprite(index: number) {
 }
 
 export function createLoader(): Loader {
-  const loader = new Loader(Object.values(images));
+  const loader = new Loader([...Object.values(images), ...Object.values(npcImages), ...Object.values(animalImages)]);
   loader.suppressPlayButton = true;
   loader.backgroundColor = "#0b1f26";
   // React owns the visible loader. Keep any canvas fallback on-brand too.

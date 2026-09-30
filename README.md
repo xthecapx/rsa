@@ -63,9 +63,9 @@ Docker context excludes local `node_modules` and `.next` output. For a release,
 the game changed, use `./deploy-cloudrun.sh game` to reuse the deployed backend
 instead of rebuilding its Qiskit dependencies.
 
-- Frontend: http://localhost:7013  
 - Game: http://localhost:7019  
 - Backend: http://localhost:7001/api/health  
+- Slides (optional): http://localhost:7013, started with `docker compose --profile slides up`  
 
 The ports are four-digit primes so the stack never collides with the 3000/8000
 crowd that every other dev server defaults to.

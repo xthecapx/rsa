@@ -9,10 +9,6 @@ one block at a time and, only for the full three-round search, measures once.
 
 from __future__ import annotations
 
-import base64
-import hashlib
-import hmac
-import json
 import math
 import random
 import secrets
@@ -21,7 +17,7 @@ from typing import List, Literal, Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from app.config import get_settings
+from app.api.game_token import read_payload, sign_payload
 from app.quantum.worker import QuantumTimeout, run_on_worker
 
 router = APIRouter()
@@ -33,36 +29,21 @@ ROUNDS = 3  # floor(pi/4 * sqrt(16)) rounds of Oracle -> Diffuser
 Block = Literal["oracle", "diffuser", "h", "x"]
 
 
-def _b64(data: bytes) -> str:
-    return base64.urlsafe_b64encode(data).rstrip(b"=").decode()
-
-
-def _unb64(text: str) -> bytes:
-    return base64.urlsafe_b64decode(text + "=" * (-len(text) % 4))
-
-
-def _sign(body: str) -> str:
-    key = get_settings().game_token_key.encode()
-    return _b64(hmac.new(key, body.encode(), hashlib.sha256).digest())
-
-
 def make_token(secret: int, seed: int) -> str:
-    body = _b64(json.dumps({"s": secret, "p": seed}, separators=(",", ":")).encode())
-    return f"{body}.{_sign(body)}"
+    return sign_payload({"s": secret, "p": seed})
 
 
 def read_token(token: str) -> tuple[int, int]:
     """Return (secret, shuffle seed) or raise 400 for anything not ours."""
+    data = read_payload(token)
     try:
-        body, signature = token.split(".", 1)
-        if not hmac.compare_digest(signature, _sign(body)):
-            raise ValueError("signature")
-        data = json.loads(_unb64(body))
+        if "k" in data:
+            raise ValueError("another device")
         secret, seed = int(data["s"]), int(data["p"])
         if not 0 <= secret < STATES:
             raise ValueError("secret")
         return secret, seed
-    except (ValueError, KeyError, TypeError, json.JSONDecodeError):
+    except (ValueError, KeyError, TypeError):
         raise HTTPException(status_code=400, detail="Unknown device") from None
 
 

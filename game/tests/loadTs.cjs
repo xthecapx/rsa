@@ -11,9 +11,10 @@ function loadTs(file) {
   const exports = {};
   cache.set(full, exports);
   const { outputText } = ts.transpileModule(fs.readFileSync(full, 'utf8'), {
-    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true },
   });
   const localRequire = (name) => {
+    if (name.endsWith('.json')) return require(name.startsWith('@/') ? path.join(root, name.slice(2)) : path.join(path.dirname(full), name));
     if (name.startsWith('@/')) return loadTs(path.join(root, name.slice(2)));
     if (name.startsWith('.')) return loadTs(path.join(path.dirname(full), name));
     return require(name);

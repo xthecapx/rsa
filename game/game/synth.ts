@@ -3,7 +3,8 @@
  * nothing is downloaded and every cue is shaped to the moment it marks. The
  * Kenney clips still cover UI clicks, jingles and the music loop.
  */
-export type SynthId = "step" | "door" | "wire" | "capture" | "alarm" | "chime" | "fanfare" | "tick";
+export type SynthId = "step" | "door" | "wire" | "capture" | "alarm" | "chime" | "fanfare" | "tick"
+  | "knock" | "snuff" | "toll" | "cold" | "glow";
 
 export class Synth {
   private ctx: AudioContext | null = null;
@@ -78,6 +79,31 @@ export class Synth {
       case "tick":
         this.tone(ctx, t, "sine", 1800, 1800, 0.012, 0.035);
         return;
+      case "knock":
+        // Two knuckles on old wood: a low body thump plus a dull click.
+        for (const at of [t, t + 0.19]) {
+          this.tone(ctx, at, "triangle", 120, 62, 0.11, 0.34);
+          this.noise(ctx, at, 0.05, 320, 0.22);
+        }
+        return;
+      case "snuff":
+        this.noise(ctx, t, 0.16, 2600, 0.07);
+        this.noise(ctx, t + 0.04, 0.22, 700, 0.05);
+        return;
+      case "toll":
+        // A distant clock: three strikes, each quieter, with a slow bell decay.
+        [0, 0.8, 1.6].forEach((delay, i) => {
+          const volume = 0.12 * (1 - i * 0.28);
+          this.sustain(ctx, t + delay, "sine", 196, 0.01, 0.05, 1.5, volume);
+          this.sustain(ctx, t + delay, "sine", 466, 0.01, 0.03, 0.9, volume * 0.35);
+        });
+        return;
+      case "cold":
+        this.wind(ctx, t, 1.6);
+        return;
+      case "glow":
+        [1175, 1480, 1760].forEach((hz, i) => this.tone(ctx, t + i * 0.07, "sine", hz, hz * 1.5, 0.28, 0.05));
+        return;
     }
   }
 
@@ -120,6 +146,25 @@ export class Synth {
     filter.type = "bandpass"; filter.frequency.value = frequency; filter.Q.value = 0.8;
     const gain = ctx.createGain();
     gain.gain.setValueAtTime(volume, at);
+    gain.gain.exponentialRampToValueAtTime(0.0001, at + duration);
+    source.connect(filter).connect(gain).connect(this.master);
+    source.start(at);
+    source.stop(at + duration + 0.02);
+  }
+
+  /** A draft through the house: low noise that swells and settles again. */
+  private wind(ctx: AudioContext, at: number, duration: number): void {
+    if (!this.master) return;
+    const source = ctx.createBufferSource();
+    source.buffer = this.noiseBuffer(ctx, duration);
+    const filter = ctx.createBiquadFilter();
+    filter.type = "lowpass"; filter.Q.value = 3;
+    filter.frequency.setValueAtTime(300, at);
+    filter.frequency.exponentialRampToValueAtTime(900, at + duration * 0.45);
+    filter.frequency.exponentialRampToValueAtTime(240, at + duration);
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, at);
+    gain.gain.exponentialRampToValueAtTime(0.3, at + duration * 0.45);
     gain.gain.exponentialRampToValueAtTime(0.0001, at + duration);
     source.connect(filter).connect(gain).connect(this.master);
     source.start(at);

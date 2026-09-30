@@ -411,3 +411,116 @@ html[data-boot="done"] #mitm-boot {
 .grover-core-pulse { animation: grover-core-pulse 1s ease-in-out infinite; }
 @keyframes grover-core-pulse { 50% { opacity: .55; } }
 @media (prefers-reduced-motion: reduce) { .grover-core-pulse { animation: none; } .grover-bar-slot, .grover-bar, .grover-mean { transition: none; } }
+
+/* Operation Ghost Key (Bernstein–Vazirani): candles, tumblers, notebook, BV circuit, register. */
+.vault-candles { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #d8c7a0; }
+.vault-candle { position: relative; width: 10px; height: 22px; border-radius: 2px 2px 1px 1px; background: #6d6558; }
+.vault-candle.lit { background: #efe6c8; box-shadow: 0 -8px 14px -4px #f4b942; }
+.vault-candle.lit::before { content: ""; position: absolute; left: 2px; top: -9px; width: 6px; height: 9px; border-radius: 50% 50% 40% 40%; background: #f4b942; animation: vault-flame 1.1s ease-in-out infinite; }
+.vault-rules { display: grid; gap: 6px; padding: 12px 14px; border: 1px solid #6a5a78; border-left: 3px solid #efbe67; border-radius: 6px; background: #1c1624; color: #e6dcf0; font-size: 14px; line-height: 1.5; }
+.vault-code { padding: 12px; border: 3px solid #4d535c; border-radius: 8px; background: #23262d; }
+.vault-code-title { margin-bottom: 8px; font: 700 11px/1 monospace; letter-spacing: .2em; color: #c9a45c; text-align: center; }
+.vault-dials { display: grid; grid-template-columns: repeat(25, minmax(0, 1fr)); gap: 3px; }
+.vault-dial { display: grid; justify-items: center; gap: 3px; padding: 5px 0; border: 1px solid #4d535c; border-radius: 4px; background: #15171c; color: #9aa6b2; font-family: monospace; cursor: pointer; touch-action: manipulation; transition: background .2s, box-shadow .2s; }
+.vault-dial small { font-size: 9px; color: #7d8793; }
+.vault-dial strong { font-size: 16px; line-height: 1; }
+.vault-dial.marked { border-color: #b7a9d8; background: #3a2f55; color: #fff; box-shadow: 0 0 10px #b7a9d8aa; }
+.vault-dial.known { border-color: #c9a45c; background: #3a2c1a; color: #ffe5aa; }
+.vault-dial.clue { border-style: dashed; border-color: #b7a9d8; }
+.vault-dial:disabled { cursor: default; opacity: .75; }
+.vault-question { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.vault-answer { padding: 10px 14px; border-radius: 6px; background: #2b2233; color: #ffe5aa; font-weight: 600; }
+.vault-toggle { padding: 6px 12px; border: 1px solid #6a5a78; border-radius: 16px; background: #1c1624; color: #d8c7e6; font-size: 13px; cursor: pointer; }
+.vault-toggle.on { border-color: #b7a9d8; background: #3a2f55; color: #fff; }
+.vault-guess { padding: 12px; border: 1px dashed #6a5a78; border-radius: 6px; }
+.vault-log { display: grid; gap: 4px; padding: 10px 14px; border-radius: 6px; background: #efe6d2; color: #3a2c22; font: 13px/1.4 Georgia, serif; }
+.vault-log code { font-family: monospace; overflow-wrap: anywhere; }
+.vault-quiz-question { font-size: 16px; }
+.vault-quiz { display: flex; flex-wrap: wrap; gap: 10px; }
+.vault-quiz-option { min-width: 110px; padding: 12px 18px; border: 2px solid #6a5a78; border-radius: 8px; background: #1c1624; color: #e6dcf0; font: 700 16px/1 monospace; cursor: pointer; }
+.vault-quiz-option:disabled { cursor: default; }
+.vault-quiz-option.right { border-color: #5ee0a0; background: #173e3b; color: #d9ffe9; }
+.vault-quiz-option.wrong { border-color: #ef8a8a; background: #3a1c1f; color: #ffd6d6; }
+.vault-given { border-style: solid; background: #e2dccb; color: #7a6a58; cursor: default; }
+@media (max-width: 560px) { .vault-dials { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px; } .vault-dial strong { font-size: 18px; } }
+.vault-mask { font-family: monospace; letter-spacing: .12em; color: #ffe5aa; overflow-wrap: anywhere; }
+.vault-facts { display: grid; gap: 4px; padding: 10px 14px; border: 1px solid #5a4a6a; border-radius: 6px; background: #1c1624; color: #e6dcf0; font: 13px/1.5 monospace; }
+.vault-formula { display: grid; gap: 10px; padding: 14px; border: 5px solid #5a2f3f; border-radius: 4px; background: #efe6d2; color: #3a2c22; font: 700 15px/1.4 monospace; }
+.vault-formula.solved { text-align: center; }
+.vault-formula-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.vault-clock { padding: 12px; border: 1px solid #5a4a6a; border-radius: 6px; background: #120f17; }
+.vault-clock-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.vault-clock-row > div:first-child { display: grid; gap: 2px; font-size: 12px; color: #9d8fae; }
+.vault-clock-row strong { font: 700 22px/1 monospace; color: #ffe5aa; }
+.vault-meter { height: 12px; margin-top: 6px; border: 1px solid #5a4a6a; border-radius: 6px; background: #1c1624; overflow: hidden; }
+.vault-meter span { display: block; height: 100%; background: linear-gradient(90deg, #ef8a8a, #efbe67); transition: width .6s ease; }
+.vault-manual { font: 700 14px/1 Georgia, serif; }
+.vault-spec { padding: 14px; border: 1px solid #5a4a6a; border-radius: 6px; background: #120f17; color: #ffe5aa; font: 13px/1.6 monospace; white-space: pre-wrap; }
+.vault-bv { display: grid; grid-template-columns: auto auto 76px auto; gap: 8px 10px; align-items: center; padding: 14px; overflow-x: auto; border: 1px solid #718e97; border-radius: 7px; background: #e7eeee; color: #20333a; }
+.vault-bv-label { display: grid; gap: 4px; min-width: 64px; font: 700 12px/1 monospace; }
+.vault-bv-label small { font-weight: 400; }
+.vault-bv-label.helper { color: #9a5b10; }
+.vault-bv-wire { position: relative; display: flex; align-items: center; gap: 8px; min-height: 64px; }
+.vault-bv-wire.data::before { content: ""; position: absolute; left: -10px; right: -10px; top: 50%; height: 12px; margin-top: -6px; border-block: 2px solid #607b83; background: repeating-linear-gradient(transparent 0 3px, #607b83 3px 4px); opacity: .5; }
+.vault-bv-wire.helper::before { content: ""; position: absolute; left: -10px; right: -10px; top: 50%; height: 3px; margin-top: -1px; background: #d98a1c; opacity: .7; }
+.vault-bv-oracle { grid-row: 1 / span 2; grid-column: 3; display: grid; place-items: center; align-self: stretch; padding: 8px 4px; border: 2px solid #000; border-radius: 4px; background: #1d1d22; color: #e9e2ff; font: 700 13px/1.2 monospace; text-align: center; }
+.vault-bv-oracle small { display: block; font-weight: 400; font-size: 10px; color: #b7a9d8; }
+.vault-bv-repeat { grid-column: 2 / span 3; }
+.vault-slot { min-width: 64px; min-height: 60px; }
+.vault-slot .grover-box { min-height: 50px; }
+.vault-repeat-slot { width: 100%; min-height: 44px; border-color: #c9b98a; background: #f3efe2; opacity: .75; }
+.vault-repeat-slot .grover-empty { font-size: 11px; }
+.grover-box.vault-state { border-color: #9a5b10; background: #f4c784; color: #3b2305; }
+.vault-register { display: grid; gap: 8px; padding: 12px; border: 1px solid #5a4a6a; border-radius: 6px; background: #120f17; }
+.vault-register-cells { display: grid; grid-template-columns: repeat(25, minmax(0, 1fr)); gap: 2px; }
+.vault-register-cells span { display: grid; place-items: center; min-height: 28px; border-radius: 3px; background: #1c1624; color: #9d8fae; font: 700 12px/1 monospace; transition: background .35s, color .35s, box-shadow .35s; }
+.vault-register.stage-0 .vault-register-cells span { animation: vault-pulse .9s ease-out; }
+.vault-register-cells span.minus { color: #d8c7e6; box-shadow: 0 0 8px #b7a9d866; }
+.vault-register-cells span.bit.b1 { background: #3a2c1a; color: #ffe5aa; }
+.vault-register-cells span.bit.b0 { background: #16242a; color: #8fe0cd; }
+.vault-mask-chip { max-width: 100%; overflow-wrap: anywhere; font-size: 12px; }
+.vault-door-slot { border-color: #c9a45c; }
+.vault-compare { width: 100%; border-collapse: collapse; font-size: 14px; }
+.vault-compare caption { margin-bottom: 8px; text-align: left; color: #93b1bd; }
+.vault-compare th, .vault-compare td { padding: 8px; border-bottom: 1px solid #385864; text-align: left; }
+.vault-compare tr.win td { color: #5ee0a0; font-weight: 700; }
+.vault-flame { transform-box: fill-box; transform-origin: center bottom; animation: vault-flame 1.1s ease-in-out infinite; }
+.vault-flicker { opacity: 0; animation: vault-flicker 7s steps(1) infinite; }
+@keyframes vault-flame { 50% { transform: scaleY(.8) translateY(1px); opacity: .85; } }
+@keyframes vault-flicker { 0%, 100% { opacity: 0; } 62% { opacity: .18; } 63% { opacity: 0; } 65% { opacity: .12; } 66% { opacity: 0; } }
+@keyframes vault-pulse { 0% { box-shadow: 0 0 0 #efbe67; } 40% { box-shadow: 0 0 12px #efbe67; } 100% { box-shadow: 0 0 0 #efbe67; } }
+@media (max-width: 480px) { .vault-register-cells { grid-template-columns: repeat(13, minmax(0, 1fr)); } .vault-bv { grid-template-columns: auto auto 64px auto; } }
+@media (prefers-reduced-motion: reduce) { .vault-flame, .vault-candle.lit::before, .vault-flicker, .vault-register.stage-0 .vault-register-cells span { animation: none; } .vault-meter span, .vault-register-cells span { transition: none; } }
+
+/* Coin Town qubit benches and knowledge cards. */
+.qiskit-gate.pauli-x { border-color: #1f7a4d; background: #6fd6a0; color: #0b3320; }
+.qiskit-gate.pauli-z { border-color: #8a4bb8; background: #d2a8f0; color: #331247; }
+.qubit-cases { display: grid; gap: 8px; }
+.qubit-case { padding: 10px 12px; border: 1px solid #456a70; border-radius: 6px; background: #102630; }
+.qubit-trace { font-family: ui-monospace, monospace; font-size: 14px; overflow-wrap: anywhere; }
+.qubit-ket { color: #ffe5aa; font-family: ui-monospace, monospace; }
+.qubit-arrow { color: #7a9aa6; }
+.qubit-odds { display: grid; grid-template-columns: auto 1fr 3.5em; gap: 4px 8px; align-items: center; margin-top: 6px; font: 12px/1.2 ui-monospace, monospace; }
+.qubit-bar { height: 8px; border-radius: 4px; background: #1e4450; overflow: hidden; }
+.qubit-bar > span { display: block; height: 100%; background: #2dd4bf; transition: width .25s; }
+.knowledge-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr)); gap: 6px; }
+.knowledge-card { display: flex; flex-direction: column; gap: 2px; padding: 8px; border: 1px solid #456a70; border-radius: 6px; background: #102630; font-size: 12px; line-height: 1.35; }
+.knowledge-card.learned { border-color: #2dd4bf; }
+.knowledge-card.locked { opacity: .6; }
+.knowledge-glyph { color: #f5a623; font: 700 16px/1 ui-monospace, monospace; }
+.knowledge-formula { color: #ffe5aa; font: 12px/1.4 ui-monospace, monospace; }
+.knowledge-reveal { display: flex; flex-direction: column; gap: 4px; padding: 12px; border: 2px solid #2dd4bf; border-radius: 8px; background: #0f2b2d; }
+.interference-waves { display: grid; gap: 6px; padding: 10px 12px; border: 1px solid #456a70; border-radius: 6px; background: #0b1f26; }
+.interference-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font: 12px/1.3 ui-monospace, monospace; }
+.interference-row { display: grid; grid-template-columns: 5.5rem minmax(0, 1fr); gap: 2px 10px; align-items: center; }
+.interference-label { font: 12px/1.2 ui-monospace, monospace; color: #ffe5aa; }
+.interference-svg { width: 100%; height: 56px; }
+.interference-note { grid-column: 2; font-size: 12px; color: #94b8c4; }
+.interference-note.cancel { color: #2dd4bf; }
+.ocean-waves { display: grid; gap: 6px; padding: 10px 12px; border: 1px solid #3a6f86; border-radius: 6px; background: #081824; }
+.ocean-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font: 12px/1.3 ui-monospace, monospace; }
+.ocean-row { display: grid; grid-template-columns: 5.5rem minmax(0, 1fr); gap: 4px 10px; align-items: center; }
+.ocean-label { font: 12px/1.2 ui-monospace, monospace; color: #ffe5aa; }
+.ocean-svg { width: 100%; height: 92px; border-radius: 4px; }
+.ocean-note { grid-column: 2; font-size: 12px; color: #94b8c4; }
+.ocean-note.cancel { color: #2dd4bf; }

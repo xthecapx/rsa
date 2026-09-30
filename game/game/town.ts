@@ -8,6 +8,9 @@ import { TOWN_SPAWN, type WorldFacing } from "@/content/town";
 import { isToyModulus } from "./secret";
 import { useGame, type GameState } from "./state";
 import { townMap } from "@/engine/maps/townMap";
+import { COIN_TOWN_SPAWN } from "@/content/coinTown";
+
+const COIN_TOWN_START = () => ({ position: { ...COIN_TOWN_SPAWN }, facing: "up" as WorldFacing, welcomed: false });
 
 const CHECKPOINT_KEYS = ["act", "phase", "suspicion", "nodeId", "lineIndex", "lines", "choicesVisible", "waitingFor", "feedback", "panel", "terminal", "flags", "vars", "tasks", "pendingTravel", "capture", "reportError", "completedActs", "labMemory"] as const;
 export type RsaCheckpoint = Pick<GameState, (typeof CHECKPOINT_KEYS)[number]>;
@@ -29,10 +32,13 @@ export function restoreRsa(checkpoint: RsaCheckpoint) {
 
 interface TownState {
   welcomed: boolean;
-  location: "town" | "coin" | "grover";
+  /** A new game starts in Coin Town; Quantum Town ("town") is the final town, up its north road. */
+  location: "town" | "coinTown" | "coin" | "grover" | "vault";
   position: { x: number; y: number };
   facing: WorldFacing;
-  tracked: "coin" | "rsa" | "grover" | null;
+  /** Where the player stands in Coin Town; `position` stays Quantum Town's. */
+  coinTown: { position: { x: number; y: number }; facing: WorldFacing; welcomed: boolean };
+  tracked: "coin" | "rsa" | "grover" | "vault" | null;
   discovered: string[];
   explored: number[];
   checkpoint: RsaCheckpoint | null;
@@ -53,7 +59,7 @@ const storage = createJSONStorage<TownState>(() => ({
 }));
 
 export const useTown = create<TownState>()(persist((set) => ({
-  welcomed: false, location: "town", position: { ...TOWN_SPAWN }, facing: "up", tracked: "coin",
+  welcomed: false, location: "coinTown", position: { ...TOWN_SPAWN }, facing: "up", tracked: "coin", coinTown: COIN_TOWN_START(),
   discovered: [], explored: [], checkpoint: null, rsaPosition: null, requestedAct: null, interrupted: false, rsaRunning: false,
   patch: (values) => set(values),
   discover: (id) => set((state) => ({ discovered: Array.from(new Set([...state.discovered, id])) })),
@@ -65,7 +71,7 @@ export const useTown = create<TownState>()(persist((set) => ({
     }
     return cells.size === state.explored.length ? state : { explored: [...cells] };
   }),
-  reset: () => set({ welcomed: false, location: "town", position: { ...TOWN_SPAWN }, facing: "up", tracked: "coin",
+  reset: () => set({ welcomed: false, location: "coinTown", position: { ...TOWN_SPAWN }, facing: "up", tracked: "coin", coinTown: COIN_TOWN_START(),
     discovered: [], explored: [], checkpoint: null, rsaPosition: null, requestedAct: null, interrupted: false, rsaRunning: false }),
 }), {
   name: "quantum-town-v1", version: 1, storage, skipHydration: true,
@@ -75,13 +81,16 @@ export const useTown = create<TownState>()(persist((set) => ({
     return {
       ...current, ...data, patch: current.patch, discover: current.discover, explore: current.explore, reset: current.reset,
       welcomed: data.welcomed === true,
-      location: data.location === "coin" || data.location === "grover" ? data.location : "town",
+      location: data.location === "coin" || data.location === "coinTown" || data.location === "grover" || data.location === "vault" ? data.location : "town",
+      coinTown: Number.isInteger(data.coinTown?.position?.x) && Number.isInteger(data.coinTown?.position?.y)
+        ? { position: data.coinTown!.position, facing: ["up", "down", "left", "right"].includes(data.coinTown!.facing) ? data.coinTown!.facing : "up", welcomed: data.coinTown!.welcomed === true }
+        : COIN_TOWN_START(),
       position: Number.isInteger(data.position?.x) && Number.isInteger(data.position?.y) ? data.position! : { ...TOWN_SPAWN },
       facing: ["up", "down", "left", "right"].includes(data.facing ?? "") ? data.facing! : "up",
       checkpoint: validCheckpoint(data.checkpoint ?? null) ? data.checkpoint! : null,
       discovered: Array.isArray(data.discovered) ? data.discovered.filter((id) => typeof id === "string") : [],
       explored: Array.isArray(data.explored) ? [...new Set(data.explored.filter((id) => Number.isInteger(id) && id >= 0 && id < townMap.width * townMap.height))] : [],
-      tracked: data.tracked === "rsa" || data.tracked === "coin" || data.tracked === "grover" ? data.tracked : null,
+      tracked: data.tracked === "rsa" || data.tracked === "coin" || data.tracked === "grover" || data.tracked === "vault" ? data.tracked : null,
       rsaPosition: Number.isInteger(data.rsaPosition?.x) && Number.isInteger(data.rsaPosition?.y) ? data.rsaPosition! : null,
       rsaRunning: data.rsaRunning === true, interrupted: data.interrupted === true,
       requestedAct: [1, 2, 3, 4].includes(data.requestedAct ?? 0) ? data.requestedAct! : null,

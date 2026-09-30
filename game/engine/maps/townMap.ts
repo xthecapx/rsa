@@ -86,7 +86,7 @@ for (let y = 1; y < height - 1; y++) for (let x = 1; x < width - 1; x++) {
   if (ground[y][x] === "p" && (x * 13 + y * 7) % 11 === 0) ground[y][x] = "q";
   if (ground[y][x] === "." && (x * 5 + y * 3) % 23 === 0) ground[y][x] = ",";
 }
-// The southern entrance opens the wall for the arrival path.
+// The southern entrance opens the wall for the road down to Coin Town.
 fill(23, 35, 3, 1, "p");
 
 for (const tree of TOWN_TREES) {

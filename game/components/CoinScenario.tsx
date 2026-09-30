@@ -252,7 +252,7 @@ export function CoinScenario({ onExit, onRestartGame }: { onExit?: () => void; o
   }
   const restartOptions: RestartOption[] = [
     { label: "Restart this lesson", description: "Clear the coin lesson, its puzzles, experiments, and completion. Start inside the house.", restart: restartLesson },
-    ...(onRestartGame ? [{ label: "Start the whole game over", description: "Clear both lessons and town progress. Return to the welcome at the southern entrance.", restart: onRestartGame }] : []),
+    ...(onRestartGame ? [{ label: "Start the whole game over", description: "Clear both lessons and town progress. Return to Mayor Cap’s welcome in Coin Town.", restart: onRestartGame }] : []),
   ];
   const restartControl = <StartOverControl options={restartOptions} disabled={busy || !sceneReady} onOpenChange={setRestartOpen} />;
   const objectives = <MissionObjectives tasks={COIN_STEPS.map((step, i): Task => ({
@@ -286,7 +286,7 @@ export function CoinScenario({ onExit, onRestartGame }: { onExit?: () => void; o
     {!laptopOpen && !journalOpen && !restartOpen && <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center p-3 sm:p-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
       {!atPlace ? <div className={`textbox max-w-lg px-4 py-3 text-center transition-opacity ${walking ? "opacity-20" : ""}`}>
         <p className="text-sm leading-relaxed">{t(scene.objective)}</p>
-        <p className="mt-2 text-xs text-accent-amber">{nearExit ? t("Leave the house and return to Quantum Town. Your lesson is saved.") : nearbyPlace === scene.place ? t("Use Talk to interact.") : t("Walk to the glowing marker.")}</p>
+        <p className="mt-2 text-xs text-accent-amber">{nearExit ? t("Leave the house and return to Coin Town. Your lesson is saved.") : nearbyPlace === scene.place ? t("Use Talk to interact.") : t("Walk to the glowing marker.")}</p>
         {(nearExit || nearbyPlace === scene.place) && <>
           <p className="coin-keyboard-hint mt-2 text-xs text-stage-muted">{t(nearExit ? "Press Space to return to town." : "Press Space to talk.")}</p>
           <TalkControl inline label={nearExit ? "Return to town" : "Talk"} canInteract={sceneReady && !busy}
@@ -437,8 +437,8 @@ export function CoinScenario({ onExit, onRestartGame }: { onExit?: () => void; o
               }))}
             </>}
             {session.step === "done" && <>
-              <p>{t("This lesson is complete and stays complete. Next: take your circuit skills onto the street and explore how period finding helps break toy RSA.")}</p>
-              <button className="btn-primary inline-block" onClick={leaveHouse}>{t("Return to town and meet the RSA client →")}</button>
+              <p>{t("This lesson is complete and stays complete. Next: back in Coin Town, finish learning from the neighbors and collect the town badge from Mayor Cap.")}</p>
+              <button className="btn-primary inline-block" onClick={leaveHouse}>{t("Return to Coin Town →")}</button>
               <button className="btn-ghost block" onClick={restartLesson}>{t("Replay the whole lesson")}</button>
             </>}
           </div>}

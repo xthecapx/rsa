@@ -20,8 +20,12 @@ export type EngineCommand =
   | { type: "lockInput"; locked: boolean }
   | { type: "reset" }
   | { type: "placePlayer"; at: { x: number; y: number }; facing: WorldFacing }
-  | { type: "townProgress"; coinComplete: boolean; rsaComplete: boolean; groverComplete: boolean; rsaPaused: boolean }
-  | { type: "track"; target: TownTarget | "car" | "tap" | "ale" | "brayan" | null };
+  | { type: "townProgress"; coinComplete: boolean; rsaComplete: boolean; groverComplete: boolean; vaultComplete: boolean; rsaPaused: boolean }
+  | { type: "track"; target: TownTarget | "car" | "tap" | "ale" | "brayan" | null }
+  /** Smaller towns built on WorldScene: beacon over a place, "!" over neighbors with something to teach, ★ on finished doors. */
+  | { type: "worldTrack"; target: string | null }
+  | { type: "worldMarkers"; alerts: string[]; done: string[] }
+  | { type: "worldGate"; id: string; open: boolean };
 
 export type BubbleKind = "none" | "question" | "alert" | "success";
 
@@ -32,7 +36,9 @@ export type EngineEvent =
   | { type: "position"; at: { x: number; y: number }; facing: WorldFacing }
   | { type: "interact"; target: Landmark }
   | { type: "moved"; near: Landmark | null }
-  | { type: "walking"; walking: boolean };
+  | { type: "walking"; walking: boolean }
+  | { type: "worldNear"; near: string | null }
+  | { type: "worldInteract"; target: string };
 
 type CommandEnvelope = { id: number; command: EngineCommand };
 type CommandHandler = (command: EngineCommand) => void | Promise<void>;

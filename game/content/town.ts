@@ -2,9 +2,10 @@
 export const TOWN_LOCATIONS = {
   coinDoor: { at: { x: 8, y: 12 }, stand: { x: 8, y: 13 }, title: "Who Goes First?", prompt: "Enter the coin house", kind: "coin" },
   groverDoor: { at: { x: 8, y: 5 }, stand: { x: 8, y: 6 }, title: "Echo Chamber", prompt: "Enter Thecap’s workshop", kind: "grover" },
-  futureB: { at: { x: 21, y: 5 }, stand: { x: 21, y: 6 }, title: "A future adventure", prompt: "Inspect the closed door", kind: "closed" },
+  vaultDoor: { at: { x: 21, y: 5 }, stand: { x: 21, y: 6 }, title: "Operation Ghost Key", prompt: "Knock on Doña Ofelia’s door", kind: "vault" },
   guide: { at: { x: 24, y: 28 }, stand: { x: 24, y: 29 }, title: "Professor Thecap", prompt: "Talk to Professor Thecap", kind: "guide" },
   sign: { at: { x: 24, y: 23 }, stand: { x: 24, y: 24 }, title: "Quantum Town", prompt: "Read the signpost", kind: "sign" },
+  southPath: { at: { x: 24, y: 34 }, stand: { x: 24, y: 34 }, title: "South road", prompt: "Walk south to Coin Town", kind: "path" },
 } as const;
 export type TownTarget = keyof typeof TOWN_LOCATIONS;
 export type WorldFacing = "up" | "down" | "left" | "right";

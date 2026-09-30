@@ -15,7 +15,7 @@ export interface Medal {
   hint: string;
 }
 
-export type MedalId = "quantum-coin" | "codebook" | "key-ring" | "prime-cutter" | "period-lens" | "amplifier";
+export type MedalId = "quantum-coin" | "coin-town" | "codebook" | "key-ring" | "prime-cutter" | "period-lens" | "amplifier" | "ghost-key";
 
 export const MEDALS: readonly Medal[] = [
   {
@@ -24,6 +24,13 @@ export const MEDALS: readonly Medal[] = [
     description: "You built a one-qubit circuit whose outcome nobody can predict, not even with the source code.",
     ability: "Fair Toss: produce a truly unpredictable bit with H then measure.",
     hint: "Finish Who Goes First? in the coin house.",
+  },
+  {
+    id: "coin-town", scenario: "coin", mission: "town", glyph: "✪",
+    title: "Coin Town Badge", skill: "Qubit states · |0⟩ |1⟩ |+⟩ |−⟩",
+    description: "You learned what a single qubit can be, how H and Z move it, how interference cancels amplitudes and how to read a hidden sign, then settled game night with a fair quantum coin.",
+    ability: "Qubit Sense: prepare |0⟩, |1⟩, |+⟩ or |−⟩ and read the ± basis with H before measuring.",
+    hint: "Collect all five knowledge cards in Coin Town and settle the coin toss.",
   },
   {
     id: "codebook", scenario: "rsa", mission: "1", glyph: "≡",
@@ -59,6 +66,13 @@ export const MEDALS: readonly Medal[] = [
     description: "You spread a guess over all sixteen PINs, then let the Oracle and Diffuser grow the right one in three rounds.",
     ability: "Needle Finder: find one marked item among N in about √N queries.",
     hint: "Disarm the drone core in Thecap’s workshop.",
+  },
+  {
+    id: "ghost-key", scenario: "vault", mission: "vault", glyph: "±",
+    title: "Ghost Key", skill: "Phase kickback · Bernstein–Vazirani",
+    description: "You put a helper qubit in |−⟩, turned a parity lock’s answers into phases, and read a 25-bit secret with one question.",
+    ability: "Parity Read: learn an n-bit secret s from f(x) = s·x in a single query.",
+    hint: "Open the vault in Casa Ofelia.",
   },
 ];
 

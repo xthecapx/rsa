@@ -235,7 +235,7 @@ export function GroverScenario({ onExit, onRestartGame }: { onExit?: () => void;
   }
   const restartOptions: RestartOption[] = [
     { label: "Restart this lesson", description: "Clear Echo Chamber: a new PIN, an empty circuit, and no completion. Start inside the workshop.", restart: restartLesson },
-    ...(onRestartGame ? [{ label: "Start the whole game over", description: "Clear every lesson and town progress. Return to the welcome at the southern entrance.", restart: onRestartGame }] : []),
+    ...(onRestartGame ? [{ label: "Start the whole game over", description: "Clear every lesson and town progress. Return to Mayor Cap’s welcome in Coin Town.", restart: onRestartGame }] : []),
   ];
   const restartControl = <StartOverControl options={restartOptions} disabled={busy || !sceneReady} onOpenChange={setRestartOpen} />;
   const skipped: GroverStep = session.lucky ? "overload" : "lucky";
