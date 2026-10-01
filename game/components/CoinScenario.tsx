@@ -18,7 +18,8 @@ import { useCoinSceneAssets } from "./useSceneAssets";
 import { TalkControl } from "./TouchControls";
 import { LaptopShell } from "./LaptopShell";
 import { LaptopChoiceButton, LaptopQuestion } from "./LaptopControls";
-import { ChoiceChallenge, CodePuzzle, CircuitPuzzle, CircuitSnapshot, EMPTY_CODE, EMPTY_CIRCUIT, type CodeBlock, type CodeSlots, type CircuitSlots } from "./CoinChallenges";
+import { MeasureHint } from "./MeasurementExplorer";
+import { ChoiceChallenge, CodePuzzle, CircuitPuzzle, CircuitSnapshot, coinMeasurement, EMPTY_CODE, EMPTY_CIRCUIT, type CodeBlock, type CodeSlots, type CircuitSlots } from "./CoinChallenges";
 
 type ReplayChoice = "same" | "different" | "first";
 type ReasonChoice = "seed" | "luck";
@@ -324,7 +325,8 @@ export function CoinScenario({ onExit, onRestartGame }: { onExit?: () => void; o
         <p className="my-4 text-stage-muted">{localize(index < 4 ? "0 = heads · 1 = tails. Build and inspect the seeded function." : "A real one-qubit circuit, simulated by Qiskit Aer on the backend. No quantum hardware is used.")}</p>
         {index > 0 && index < 4 && session.codeBuilt && <pre>{`import random\ncoin = random.Random(42)\n\ndef flip_coin():\n    return coin.randint(0, 1)`}</pre>}
         {index >= 4 && (session.step !== "hadamard" || session.circuitBuilt) && <>
-          <CircuitSnapshot hadamard={session.hadamard} />
+          <CircuitSnapshot hadamard={session.hadamard} measurement={session.result ? coinMeasurement(session.result) : null} />
+          {session.result && <MeasureHint />}
           <pre>{`circuit = QuantumCircuit(1, 1)\n${session.hadamard ? "circuit.h(0)\n" : "# Start without a gate\n"}circuit.measure(0, 0)`}</pre>
         </>}
         {busy && <p role="status" className="my-4 text-accent-teal">{t("Running the experiment…")}</p>}

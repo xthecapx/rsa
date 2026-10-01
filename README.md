@@ -2,8 +2,8 @@
 
 Playable quantum-computing scenarios on a road of small towns: **Who Goes
 First?** in Coin Town, **Echo Chamber** (Grover) in Foundry Town, **Operation
-Ghost Key** (Bernstein–Vazirani) in Hollow Town, and **Breaking RSA** across plaintext,
-Caesar, RSA, and Shor. See `game/README.md` for scenario
+Ghost Key** (Bernstein–Vazirani) in Hollow Town, and **Breaking RSA** in Cipher Town,
+across plaintext, Caesar, RSA, and Shor. See `game/README.md` for scenario
 structure. The separate `frontend/` presentation tool retains its depth tiers
 and IBM batch readout.
 

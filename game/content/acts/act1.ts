@@ -86,7 +86,7 @@ export const act1 = defineAct({
       ],
       choices: [
         {
-          label: "Clip a passive tap across the pair and listen to a copy.",
+          label: "Clip the sniffer across the pair and listen to a copy.",
           outcome: "advance",
           next: "installed",
         },

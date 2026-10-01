@@ -5,6 +5,8 @@ import { PuzzleDragDrop, PuzzlePiece, PuzzleSlot } from "./PuzzleDragDrop";
 import { gameAudio } from "@/game/audio";
 import { tallest, type GroverBlock, type GroverRun } from "@/lib/grover";
 import { t, useLocale } from "@/i18n";
+import type { Measurement } from "@/game/histogram";
+import { MeasureHint, MeasureInspectBadge, MeasurementExplorer } from "./MeasurementExplorer";
 
 export const PINS = Array.from({ length: 16 }, (_, i) => i.toString(2).padStart(4, "0"));
 export const TRIES = 3;
@@ -79,13 +81,16 @@ function Piece({ id }: { id: PieceId }) {
 }
 
 /** One box per block, each spanning all four qubits, with the repeat box in the middle. */
-export function GroverCircuitBuilder({ slots, onChange, tray, showLoop, showMeasure, repeat, onRepeat }: {
+export function GroverCircuitBuilder({ slots, onChange, tray, showLoop, showMeasure, repeat, onRepeat, measurement }: {
   slots: CircuitSlots; onChange: (slots: CircuitSlots) => void; tray: PieceId[];
   showLoop: boolean; showMeasure: boolean; repeat: number; onRepeat: ((repeat: number) => void) | null;
+  /** Once the core has collapsed, the M block opens what it read. */
+  measurement?: Measurement | null;
 }) {
   useLocale((state) => state.locale);
   const [selected, setSelected] = useState<PieceId | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [exploring, setExploring] = useState(false);
   function place(slot: CircuitSlot, piece = selected) {
     if (!piece) return;
     if (slot === "measure" && piece !== "m") { setMessage("Only M goes at the end: it reads all four qubits."); return; }
@@ -100,9 +105,12 @@ export function GroverCircuitBuilder({ slots, onChange, tray, showLoop, showMeas
   const slotsShown: CircuitSlot[] = ["init", ...(showLoop ? ["loop0", "loop1"] as const : []), ...(showMeasure ? ["measure"] as const : [])];
   const labels = Object.fromEntries(tray.map((id) => [id, t(PIECE_HELP[id])]));
   const targets = Object.fromEntries(slotsShown.map((slot) => [slot, t(SLOT_NAMES[slot])]));
-  const slot = (id: CircuitSlot, index: number) => <PuzzleSlot id={id} className={`grover-slot ${slots[id] ? "filled" : ""}`}
-    onSelect={() => place(id)} label={`${t(SLOT_NAMES[id])}: ${slots[id] ? t(PIECE_HELP[slots[id]]) : t("Empty")}`}>
+  const inspect = (id: CircuitSlot) => id === "measure" && !!measurement && slots.measure === "m";
+  const slot = (id: CircuitSlot, index: number) => <PuzzleSlot id={id} className={`grover-slot ${slots[id] ? "filled" : ""} ${inspect(id) ? "measure-inspect" : ""}`}
+    onSelect={() => { if (inspect(id) && !selected) { gameAudio.playSfx("select"); setExploring(true); } else place(id); }}
+    label={inspect(id) ? t("Explore what the M block measured") : `${t(SLOT_NAMES[id])}: ${slots[id] ? t(PIECE_HELP[slots[id]]) : t("Empty")}`}>
     {slots[id] ? <Piece id={slots[id]} /> : <span className="grover-empty">{index}</span>}
+    {inspect(id) && <MeasureInspectBadge />}
   </PuzzleSlot>;
   return <PuzzleDragDrop labels={labels} targets={targets} onPlace={(target, source) => place(target as CircuitSlot, source as PieceId)}
     renderPreview={(id) => <Piece id={id as PieceId} />}>
@@ -133,9 +141,19 @@ export function GroverCircuitBuilder({ slots, onChange, tray, showLoop, showMeas
       <div className="flex flex-wrap gap-2">
         <button className="btn-ghost" onClick={() => { onChange({ ...EMPTY_SLOTS }); setSelected(null); setMessage(null); }}>{t("Clear circuit")}</button>
       </div>
+      {measurement && <MeasureHint />}
       {message && <p role="status" className="text-accent-amber">{t(message)}</p>}
+      {exploring && measurement && <MeasurementExplorer measurement={measurement} title="What the M block read" onClose={() => setExploring(false)} />}
     </div>
   </PuzzleDragDrop>;
+}
+
+/** A collapsed run as a measurement: its one shot, and the odds every PIN had just before M. */
+export function groverMeasurement(run: GroverRun): Measurement | null {
+  const last = run.steps.at(-1);
+  if (!run.measured || !run.labels || !last) return null;
+  const probabilities = Object.fromEntries(run.labels.map((label, i) => [label, (last.amplitudes[i] ?? 0) ** 2]));
+  return { bits: run.measured.length, counts: { [run.measured]: 1 }, probabilities, source: "simulator", highlight: run.measured };
 }
 
 function frameLabel(step: GroverRun["steps"][number]) {

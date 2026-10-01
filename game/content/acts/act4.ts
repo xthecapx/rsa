@@ -100,7 +100,7 @@ export const act4 = defineAct({
       ],
       choices: [
         {
-          label: "Open a session to a hosted quantum backend and submit the circuit remotely.",
+          label: "Redeem the QPU voucher: open a session to a hosted quantum backend and submit the circuit remotely.",
           outcome: "advance",
           next: "decode",
           effects: [{ kind: "flag", set: "uplink" }],

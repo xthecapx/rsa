@@ -63,7 +63,7 @@ export function LaptopScene({ act, restartControl }: { act: ActNumber; restartCo
   }
 
   return (
-    <LaptopShell restartControl={restartControl} open={laptopOpen} title={tOptional(`RSA · Act ${act}`)} onClose={close}
+    <LaptopShell restartControl={restartControl} open={laptopOpen} calculator={act >= 3} title={tOptional(`RSA · Act ${act}`)} onClose={close}
       status={busyLabel || (operations ? "Finishing the current operation…" : `Suspicion: ${suspicion}%`)} closeDisabled={operations > 0 || phase === "busy"}
       memory={<div className="space-y-3"><RsaProgress act={act} showObjective /><MemoryRail /></div>}
       footer={<>

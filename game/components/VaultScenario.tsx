@@ -18,7 +18,7 @@ import { useVaultSceneAssets } from "./useSceneAssets";
 import { TalkControl } from "./TouchControls";
 import { LaptopShell } from "./LaptopShell";
 import {
-  BOARD, EMPTY_BV, EMPTY_TRAP, LEDGER, BvCircuitBuilder, CodeBoard, ComparisonCard, GroverClockRun, GroverTrapBuilder, ManualScan,
+  BOARD, EMPTY_BV, EMPTY_TRAP, LEDGER, BvCircuitBuilder, CodeBoard, vaultMeasurement, ComparisonCard, GroverClockRun, GroverTrapBuilder, ManualScan,
   MaskRegister, MidnightQuiz, StepFormula, UnlockPad, bvCircuit, bvHint, bvProblem, emptyFormula, trapHint, trapReady,
   type BoardChip, type BoardSlot, type BvSlots, type LedgerChip, type LedgerSlot, type Question, type QuizAnswer, type TrapSlots,
 } from "./VaultChallenges";
@@ -378,7 +378,8 @@ export function VaultScenario({ onExit, onRestartGame }: { onExit?: () => void; 
             </>}
             {(session.step === "bvWire" || session.step === "execute") && <>
               {session.step === "bvWire" && <p>{t("Build the one-question circuit from boxes. The Oracle is the vault itself: it stays sealed in the middle.")}</p>}
-              <BvCircuitBuilder slots={session.bv} onChange={(bv) => patch({ bv })} locked={session.step === "execute"} />
+              <BvCircuitBuilder slots={session.bv} onChange={(bv) => patch({ bv })} locked={session.step === "execute"}
+                measurement={session.step === "execute" && session.run && session.revealed ? vaultMeasurement(session.run) : null} />
               {session.step === "bvWire" && <>
                 <p className={problem ? "text-accent-amber" : "coin-callout"}>{t(bvHint(session.bv))}</p>
                 {!problem && action("Wiring checks out →", () => next("execute"))}

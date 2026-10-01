@@ -4,15 +4,19 @@ import { t, localize, useLocale } from "@/i18n";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { LanguageSwitch } from "./LanguageSwitch";
+import { Calculator, useCalculator } from "./Calculator";
 
 /** Shared laptop chrome and controls for every scenario. Contents stay mounted
  * while closed so a player never loses an experiment by lowering the lid. */
-export function LaptopShell({ open, title, status, memory, footer, children, onClose, closeDisabled = false, restartControl }: {
+export function LaptopShell({ open, title, status, memory, footer, children, onClose, closeDisabled = false, restartControl, calculator = false }: {
   open: boolean; title: string; status?: ReactNode; memory?: ReactNode;
   restartControl?: ReactNode;
   footer?: ReactNode; children: ReactNode; onClose: () => void; closeDisabled?: boolean;
+  /** Offer the whole-number calculator, for benches with sums to work out. */
+  calculator?: boolean;
 }) {
   useLocale((state) => state.locale);
+  const calculatorOpen = useCalculator((state) => state.open);
   const [mounted, setMounted] = useState(false);
   const dialog = useRef<HTMLDivElement>(null);
   const closeRef = useRef(onClose);
@@ -68,9 +72,10 @@ export function LaptopShell({ open, title, status, memory, footer, children, onC
         <div className="laptop-bezel"><div className="laptop-camera">● &nbsp; th3c4p</div>
           <div className="laptop-screen">
             <header className="laptop-toolbar"><div><h2>{localize(title)}</h2>{localize(status && <div className="laptop-status">{localize(status)}</div>)}</div>
-              <div className="flex flex-wrap items-center justify-end gap-2">{restartControl}<LanguageSwitch /><button className="btn-ghost" disabled={closeDisabled} onClick={onClose}>{t("Close laptop")}</button></div>
+              <div className="flex flex-wrap items-center justify-end gap-2">{calculator && <button type="button" className="btn-ghost" aria-pressed={calculatorOpen}
+                onClick={() => useCalculator.getState().toggle()}>🧮 {t("Calculator")}</button>}{restartControl}<LanguageSwitch /><button className="btn-ghost" disabled={closeDisabled} onClick={onClose}>{t("Close laptop")}</button></div>
             </header>
-            <div className="laptop-scroll">{localize(memory && <div className="laptop-memory">{localize(memory)}</div>)}{localize(children)}</div>
+            <div className="laptop-scroll">{calculator && calculatorOpen && <Calculator />}{localize(memory && <div className="laptop-memory">{localize(memory)}</div>)}{localize(children)}</div>
             <footer className="laptop-footer">{localize(footer ?? <p>{t("Results stay here when you close the laptop.")}</p>)}</footer>
           </div>
         </div>

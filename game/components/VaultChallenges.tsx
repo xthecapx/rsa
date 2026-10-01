@@ -8,6 +8,8 @@ import {
   BITS, CANDLES, KEYSPACE, answerLine, bruteForce, formatCount, formatPercent, groverProbability, knownBits, litCandles, optimalRounds, tumblerList,
   type Question, type VaultCircuit, type VaultReason, type VaultRun,
 } from "@/lib/vault";
+import type { Measurement } from "@/game/histogram";
+import { MeasureHint, MeasureInspectBadge, MeasurementExplorer } from "./MeasurementExplorer";
 
 const TUMBLERS = Array.from({ length: BITS }, (_, i) => i);
 const GROVER_ROUNDS = optimalRounds(KEYSPACE);
@@ -428,10 +430,15 @@ export function bvHint(s: BvSlots): string {
 }
 
 /** Boxes only, like the workshop: the Oracle is the vault itself and stays sealed. */
-export function BvCircuitBuilder({ slots, onChange, locked }: { slots: BvSlots; onChange: (slots: BvSlots) => void; locked: boolean }) {
+export function BvCircuitBuilder({ slots, onChange, locked, measurement }: {
+  slots: BvSlots; onChange: (slots: BvSlots) => void; locked: boolean;
+  /** Once the circuit has run, the M block opens what it read. */
+  measurement?: Measurement | null;
+}) {
   useLocale((state) => state.locale);
   const [selected, setSelected] = useState<BvPiece | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [exploring, setExploring] = useState(false);
   function place(slot: BvSlot, piece = selected) {
     if (!piece || locked) return;
     const state = piece === "minus" || piece === "plus" || piece === "zero";
@@ -447,9 +454,12 @@ export function BvCircuitBuilder({ slots, onChange, locked }: { slots: BvSlots; 
     onChange(next); setSelected(null); setMessage(null);
   }
   const box = (id: BvPiece) => <span className={`grover-box ${id === "h2" ? "h" : id === "minus" || id === "plus" || id === "zero" ? "vault-state" : id}`}>{t(BV_NAMES[id])}</span>;
-  const slot = (id: BvSlot, extra = "") => <PuzzleSlot id={id} className={`grover-slot vault-slot ${extra} ${slots[id] ? "filled" : ""}`} onSelect={() => place(id)}
-    label={`${t(BV_SLOTS[id])}: ${slots[id] ? t(BV_HELP[slots[id]!]) : t("Empty")}`}>
+  const inspect = (id: BvSlot) => id === "measure" && !!measurement && slots.measure === "m";
+  const slot = (id: BvSlot, extra = "") => <PuzzleSlot id={id} className={`grover-slot vault-slot ${extra} ${slots[id] ? "filled" : ""} ${inspect(id) ? "measure-inspect" : ""}`}
+    onSelect={() => { if (inspect(id) && !selected) { gameAudio.playSfx("select"); setExploring(true); } else place(id); }}
+    label={inspect(id) ? t("Explore what the M block measured") : `${t(BV_SLOTS[id])}: ${slots[id] ? t(BV_HELP[slots[id]!]) : t("Empty")}`}>
     {slots[id] ? box(slots[id]!) : <span className="grover-empty">{id === "repeat" ? t("no loop needed") : "□"}</span>}
+    {inspect(id) && <MeasureInspectBadge />}
   </PuzzleSlot>;
   return <PuzzleDragDrop labels={Object.fromEntries(BV_PIECES.map((id) => [id, t(BV_HELP[id])]))}
     targets={Object.fromEntries((Object.keys(BV_SLOTS) as BvSlot[]).map((id) => [id, t(BV_SLOTS[id])]))}
@@ -471,9 +481,16 @@ export function BvCircuitBuilder({ slots, onChange, locked }: { slots: BvSlots; 
       </div>
       <p className="text-sm text-stage-muted">{t("Each box acts on a whole wire group. The ghost is sealed: you route the wires through it, you don’t open it.")}</p>
       <button className="btn-ghost" disabled={locked} onClick={() => { onChange({ ...EMPTY_BV }); setSelected(null); setMessage(null); }}>{t("Clear circuit")}</button>
+      {measurement && <MeasureHint />}
       {message && <p role="status" className="text-accent-amber">{t(message)}</p>}
+      {exploring && measurement && <MeasurementExplorer measurement={measurement} title="What the M block read" qubitName="Tumbler" onClose={() => setExploring(false)} />}
     </div>
   </PuzzleDragDrop>;
+}
+
+/** The vault's run as a measurement: one shot, and the ideal machine is certain of the mask. */
+export function vaultMeasurement(run: VaultRun): Measurement {
+  return { bits: BITS, counts: { [run.measured]: 1 }, probabilities: { [run.measured]: 1 }, source: "simulator", highlight: run.measured };
 }
 
 const STAGE_CAPTIONS = [

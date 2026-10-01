@@ -13,13 +13,14 @@ import { useGame } from "@/game/state";
 import { api, type IbmBatchDetail, type IbmBatchSummary, type ShorAnalysis } from "@/lib/api";
 import { StepHeader } from "./LaptopControls";
 import { PuzzleDragDrop, PuzzlePiece, PuzzleSlot } from "./PuzzleDragDrop";
+import { MeasureHint, MeasureInspect } from "./MeasurementExplorer";
+import { MeasurementIcon } from "./CoinChallenges";
 
 /** Wide enough that each modulus has one base that shares a factor with it. */
 const BASES = [2, 4, 5, 7, 8, 11, 13];
 const QUBITS = [3, 4, 6, 8];
 const SHOTS = [128, 512, 1024, 2048];
 const TOTAL = 3;
-const MAX_BARS = 8;
 
 /** One completed run, kept so the boxes stay open after a reload. */
 type Run = {
@@ -318,9 +319,13 @@ export function ShorPipeline({ armed }: { armed: boolean }) {
         return !run
           ? <p className="laptop-note">{t("Waiting for a run.")}</p>
           : <>
-            <p className="pipe-fact">{t(`${run.shots} shots, ${Object.keys(run.counts).length} distinct bitstrings.`)}</p>
-            <Histogram counts={run.counts} picked={run.picked} />
-            <p className="laptop-note">{t("Each bar is one bitstring and how many shots landed on it. This is everything the QPU ever says; nothing here is a factor yet.")}</p>
+            <div className="flex items-center gap-3">
+              <MeasureInspect className="qiskit-gate measure" measurement={{ bits: Object.keys(run.counts)[0]?.length ?? run.m, counts: run.counts,
+                source: run.backend === "aer" ? "simulator" : "hardware", backend: run.qpu, highlight: run.picked }}><MeasurementIcon /></MeasureInspect>
+              <p className="pipe-fact">{t(`${run.shots} shots, ${Object.keys(run.counts).length} distinct bitstrings.`)}</p>
+            </div>
+            <MeasureHint />
+            <p className="laptop-note">{t("The counts are everything the QPU ever says; nothing here is a factor yet.")}</p>
             {run.consoleUrl && <a href={run.consoleUrl} target="_blank" rel="noreferrer" className="text-xs text-[#c084fc] underline">{t("Open this job on IBM Quantum")}</a>}
           </>;
 
@@ -472,33 +477,6 @@ function Manifest({ detail, loading }: { detail: IbmBatchDetail | null; loading:
         ))}
       </dl>
       {detail.console_url && <a href={detail.console_url} target="_blank" rel="noreferrer" className="mt-1 inline-block text-[10px] text-[#c084fc] underline">{t("Open this batch on IBM Quantum")}</a>}
-    </div>
-  );
-}
-
-/** Raw counts, tallest first. What the measure box hands over, before any interpretation. */
-function Histogram({ counts, picked }: { counts: Record<string, number>; picked: string | null }) {
-  useLocale((state) => state.locale);
-  const rows = Object.entries(counts).sort((x, y) => y[1] - x[1]);
-  const shown = rows.slice(0, MAX_BARS);
-  if (picked && !shown.some(([bits]) => bits === picked)) {
-    const hit = rows.find(([bits]) => bits === picked);
-    if (hit) shown[shown.length - 1] = hit;
-  }
-  const max = shown[0]?.[1] ?? 1;
-  return (
-    <div className="grid grid-cols-[auto_1fr_auto] items-center gap-x-2 gap-y-0.5 font-mono text-[10px]">
-      {shown.map(([bits, count]) => {
-        const winner = bits === picked;
-        return (
-          <div key={bits} className="contents">
-            <span className={clsx(winner ? "font-bold text-actor-brayan" : "text-[#9fc4d0]")}>{bits}</span>
-            <div className="h-2 bg-stage-bg"><div className={clsx("h-full", winner ? "bg-actor-brayan" : "bg-[#c084fc]/60")} style={{ width: `${(count / max) * 100}%` }} /></div>
-            <span className="text-right text-stage-muted">{count}</span>
-          </div>
-        );
-      })}
-      {rows.length > shown.length && <span className="col-span-3 text-stage-muted">{t(`Showing the top ${shown.length} of ${rows.length} bitstrings.`)}</span>}
     </div>
   );
 }

@@ -168,14 +168,14 @@ export const MAYOR = {
   coinWaiting: { speaker: "mayor", text: "The coin toss is still waiting in the house up north." },
   coinDone: { speaker: "mayor", text: "Ale and Brayan’s coin toss is settled." },
   ready: { speaker: "mayor", text: "Five cards and a fair coin. You know what a qubit can be, how H mixes it, how a sign hides inside it and how to read that sign. That’s the Coin Town badge, and the east gate will open for you." },
-  done: { speaker: "mayor", text: "The badge suits you. Foundry Town is down the east road; my cousin VP Cap runs it, and our cousin Professor Thecap keeps a workshop there. After that, the west road leads to Hollow Town and our cousin Keeper Cap. Tell them Cap sent you. Replay anything here you like; cards and medals stay." },
+  done: { speaker: "mayor", text: "The badge suits you. Foundry Town is down the east road; my cousin VP Cap runs it, and our cousin Professor Thecap keeps a workshop there. After that, the west road leads to Hollow Town and our cousin Keeper Cap, and the north road to Cipher Town and our cousin Root Cap. Tell them Cap sent you. Replay anything here you like; cards and medals stay." },
 } satisfies Record<string, Line>;
 /** "{count} of 5 knowledge cards." is composed at runtime. */
 export const CARD_COUNT = "You have {count} of 5 knowledge cards.";
 
 export const WARDEN = {
-  closed: { speaker: "warden", text: "This road goes north to Quantum Town, where the big problems are. I only open it for travellers with the Hollow Badge. Keeper Cap hands it out, down the west road." },
-  open: { speaker: "warden", text: "Badge checked. The road north to Quantum Town is open. Say hi to Professor Thecap for me." },
+  closed: { speaker: "warden", text: "This road goes north to Cipher Town, where a client is hiring hackers, and on to Quantum Town. I only open it for travellers with the Hollow Badge. Keeper Cap hands it out, down the west road." },
+  open: { speaker: "warden", text: "Badge checked. The road north to Cipher Town is open. Say hi to Root Cap for me." },
 } satisfies Record<string, Line>;
 
 /** Signposts at the ends of the crossing street. */
@@ -189,7 +189,7 @@ export const SIGNS = {
 export const COIN_TOWN_DOOR = { at: { x: 20, y: 5 }, stand: { x: 20, y: 6 } };
 /** A new game starts here, by Mayor Cap at the south end of town. */
 export const COIN_TOWN_SPAWN = { x: 20, y: 28 };
-/** The north road to Quantum Town runs up these columns to the top edge; the barrier sits on NORTH_GATE_ROW. */
+/** The north road to Cipher Town runs up these columns to the top edge; the barrier sits on NORTH_GATE_ROW. */
 export const COIN_TOWN_NORTH_ROAD = [25, 26];
 export const NORTH_GATE_ROW = 1;
 /** The crossing street runs out to both side edges on these rows: east to Foundry Town, west to Hollow Town (still closed). */
@@ -201,14 +201,14 @@ export const COIN_TOWN_WEST_SIGN = { at: { x: 3, y: 13 }, stand: { x: 3, y: 14 }
 /** Walking back from Foundry Town arrives just inside the east gate, and from Hollow Town just inside the west gate. */
 export const COIN_TOWN_FROM_EAST = { x: 37, y: 15 };
 export const COIN_TOWN_FROM_WEST = { x: 2, y: 15 };
-/** Walking back from Quantum Town arrives just inside the gate. */
+/** Walking back from Cipher Town arrives just inside the gate. */
 export const COIN_TOWN_FROM_NORTH = { x: 25, y: 2 };
 /** Quantum Town's southern entrance, where the road from Coin Town arrives; its bottom row leads back. */
 export const QUANTUM_SOUTH_GATE = { x: 24, y: 33 };
 export const QUANTUM_SOUTH_ROW = 35;
 
 /** Town life: animals wander near a home tile and never block the player. */
-export type AnimalKind = "cat" | "dog" | "pigeon" | "duck" | "bot" | "crow" | "bat";
+export type AnimalKind = "cat" | "dog" | "pigeon" | "duck" | "bot" | "crow" | "bat" | "drone";
 export interface AnimalSpec {
   kind: AnimalKind;
   home: { x: number; y: number };

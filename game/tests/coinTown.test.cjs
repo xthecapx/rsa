@@ -114,3 +114,22 @@ test('Coin Town animals start on open ground and have somewhere to wander', () =
     assert.ok(tilesNear(grid, animal.home, animal.radius, allowed).length >= 4, animal.kind);
   }
 });
+
+test('roads open strictly in town order: Coin, Foundry, Hollow, Cipher, then Quantum Town', () => {
+  const { openRoads } = loadTs(path.join(__dirname, '../game/roads.ts'));
+  const none = { coin: false, foundry: false, hollow: false, cipher: false };
+  const fresh = { pass: false, badges: none, metThecap: false, rsaActs: 0 };
+  const open = (facts) => { const r = openRoads({ ...fresh, ...facts, badges: { ...none, ...facts.badges } }); return [r.coinEast, r.coinWest, r.coinNorth, r.cipherNorth]; };
+  assert.deepEqual(open({}), [false, false, false, false]);
+  assert.deepEqual(open({ badges: { coin: true } }), [true, false, false, false]);
+  assert.deepEqual(open({ badges: { coin: true, foundry: true } }), [true, true, false, false]);
+  assert.deepEqual(open({ badges: { coin: true, foundry: true, hollow: true } }), [true, true, true, false]);
+  assert.deepEqual(open({ badges: { coin: true, foundry: true, hollow: true, cipher: true } }), [true, true, true, true]);
+  // A road behind you stays open; one ahead never opens early.
+  assert.deepEqual(open({ badges: { foundry: true } }), [true, true, false, false]);
+  // Old saves that already reached Quantum Town keep every road, and the travel pass opens them all.
+  assert.deepEqual(open({ metThecap: true }), [true, true, true, true]);
+  assert.deepEqual(open({ pass: true }), [true, true, true, true]);
+  // RSA acts from Quantum Town's old street keep Coin Town's roads, not Cipher Town's north gate.
+  assert.deepEqual(open({ rsaActs: 2 }), [true, true, true, false]);
+});

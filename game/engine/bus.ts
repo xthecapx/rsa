@@ -38,7 +38,9 @@ export type EngineEvent =
   | { type: "moved"; near: Landmark | null }
   | { type: "walking"; walking: boolean }
   | { type: "worldNear"; near: string | null }
-  | { type: "worldInteract"; target: string };
+  | { type: "worldInteract"; target: string }
+  /** The player walked into a closed gate. */
+  | { type: "worldBlocked"; gate: string };
 
 type CommandEnvelope = { id: number; command: EngineCommand };
 type CommandHandler = (command: EngineCommand) => void | Promise<void>;

@@ -13,24 +13,18 @@ import type { PointerEvent, Subscription } from "excalibur";
 
 import { TOWN_LOCATIONS, townTargetAt, type TownTarget } from "@/content/town";
 import { t, useLocale } from "@/i18n";
-import { gameAudio } from "@/game/audio";
 
-import { Bubble, Packet, ParkedCar, TapGlow, Wire, createParkedCar } from "../actors/Props";
 import { Character } from "../actors/Character";
+import { RsaStreet, isStreetCommand } from "../actors/RsaStreet";
 import { TownSign } from "../actors/TownSign";
-import type { CastMember } from "../actors/Character";
 import { bus } from "../bus";
 import type { EngineCommand, Landmark } from "../bus";
 import {
   LANDMARKS,
-  PARKING_BAYS,
   PLAYER_SPAWN,
-  assignClientCar,
   buildSolidGrid,
   findPath,
   isWalkable,
-  landmarkAt,
-  landmarkCenter,
   street,
   tileCenter,
 } from "../maps/street";
@@ -62,13 +56,7 @@ const NEIGHBOURS: GridPos[] = [
 export class CityScene extends Scene {
   private solid = buildSolidGrid();
   private player!: Character;
-  private cast = {} as Record<CastMember, Character>;
-  private packet!: Packet;
-  private bubbles = {} as Record<CastMember, Bubble>;
-  private tapGlow!: TapGlow;
-  private parkedCars: ParkedCar[] = [];
-  private clientCar!: ParkedCar;
-  private clientCarFound = false;
+  private rsaStreet!: RsaStreet;
   // Stay locked through asset loading and the opening story setup.
   private inputLocked = true;
   private lastNear: Landmark | null = null;
@@ -87,41 +75,20 @@ export class CityScene extends Scene {
   private guideNext: string | null = "Who Goes First?";
   private markerLabels: { actor: TownSign; text: string; completed?: boolean; paused?: boolean }[] = [];
   private markerLocale = "";
-  private alive = false;
   private beacon!: Actor;
   private tracked: TownTarget | Landmark | null = null;
 
   override onInitialize(engine: Engine): void {
-    this.alive = true;
     engine.backgroundColor = Color.fromHex("#0b1f26");
 
     this.add(this.buildLayer("rows", "legend", 0));
     this.add(this.buildLayer("overlay", "overlayLegend", 1));
 
-    this.parkedCars = PARKING_BAYS.map((bay) =>
-      createParkedCar({ ...bay, paint: "slate" }),
-    );
-    for (const car of this.parkedCars) this.add(car);
-    this.configureClientCar();
-
-    this.tapGlow = new TapGlow(landmarkCenter("tap"));
-    this.add(this.tapGlow);
-
     this.player = new Character("hacker", PLAYER_SPAWN, "up");
-    this.cast.hacker = this.player;
-    this.cast.ale = new Character("ale", LANDMARKS.ale.at, "down");
-    this.cast.brayan = new Character("brayan", LANDMARKS.brayan.at, "down");
-    for (const member of Object.values(this.cast)) this.add(member);
-
-    for (const member of ["hacker", "ale", "brayan"] as CastMember[]) {
-      const bubble = new Bubble();
-      this.bubbles[member] = bubble;
-      this.add(bubble);
-    }
-
-    this.packet = new Packet();
-    this.packet.graphics.visible = false;
-    this.add(this.packet);
+    this.rsaStreet = new RsaStreet(this, this.player);
+    this.rsaStreet.mountGround();
+    this.add(this.player);
+    this.rsaStreet.mountPeople();
 
     const worldWidth = street.width * TILE_SIZE;
     const worldHeight = street.height * TILE_SIZE;
@@ -129,8 +96,6 @@ export class CityScene extends Scene {
     this.camera.strategy.limitCameraBounds(
       new BoundingBox(0, 0, worldWidth, worldHeight),
     );
-    // The tapped line runs above the sidewalk from Ale's window, past the junction box, to Brayan's.
-    this.add(new Wire([LANDMARKS.ale.at, { x: LANDMARKS.tap.at.x - 4, y: LANDMARKS.tap.at.y }, LANDMARKS.tap.at, { x: LANDMARKS.tap.at.x + 3, y: LANDMARKS.tap.at.y }, LANDMARKS.brayan.at]));
     const guide = new Actor({ name: "professor-thecap", pos: vec(tileCenter(TOWN_LOCATIONS.guide.at).x, tileCenter(TOWN_LOCATIONS.guide.at).y), width: TILE_SIZE, height: TILE_SIZE, z: 10 });
     guide.graphics.use(images.doctor.toSprite());
     this.add(guide);
@@ -145,7 +110,6 @@ export class CityScene extends Scene {
     }
     const clientLabel = new TownSign(tileCenter(LANDMARKS.car.at).x + 40, tileCenter(LANDMARKS.car.at).y + 40);
     this.add(clientLabel); this.markerLabels.push({ actor: clientLabel, text: "RSA · Talk to the client" });
-    this.clientCar.setHighlighted(true);
     this.beacon = new Actor({ z: 5 });
     this.beacon.graphics.use(new Circle({ radius: 10, color: Color.Transparent, strokeColor: Color.fromHex("#efbe67"), lineWidth: 2 }));
     this.beacon.graphics.visible = false;
@@ -160,24 +124,13 @@ export class CityScene extends Scene {
   }
 
   override onDeactivate(): void {
-    this.alive = false;
     this.pointerSub?.close();
     this.pointerSub = null;
     this.player.stop();
-    this.packet.hide();
+    this.rsaStreet.deactivate();
     clearTouchInput();
     bus.setCommandHandler(null);
     bus.drain();
-  }
-
-  /** Assign the stable client bay when a world instance starts. */
-  private configureClientCar(): void {
-    this.clientCar?.setHighlighted(false);
-    this.clientCarFound = false;
-    this.lastNear = null;
-    const { clientIndex, paints } = assignClientCar();
-    this.parkedCars.forEach((car, i) => car.setPaint(paints[i]));
-    this.clientCar = this.parkedCars[clientIndex];
   }
 
   private buildLayer(
@@ -218,7 +171,7 @@ export class CityScene extends Scene {
       this.markerLocale = locale;
       for (const { actor, text, completed, paused } of this.markerLabels) {
         const caption = text === GUIDE_LABEL ? (this.guideNext ? `${t("Professor Thecap")}\n${t(this.guideNext)}` : t("Professor Thecap"))
-          : text === SIGN_LABEL ? `${t("Coin Town ↓ · RSA →")}\n${t("Workshop ↖ · Casa Ofelia ↑")}` : t(paused ? "RSA · Resume mission" : text);
+          : text === SIGN_LABEL ? `${t("Cipher Town ↓ · RSA →")}\n${t("Workshop ↖ · Casa Ofelia ↑")}` : t(paused ? "RSA · Resume mission" : text);
         actor.setCaption(`${completed ? "★ " : paused ? "Ⅱ " : ""}${caption}`, completed);
       }
       // Sign widths change with their translated captions and mission status.
@@ -241,13 +194,9 @@ export class CityScene extends Scene {
     const townNear = townTargetAt(this.player.grid);
     if (townNear !== this.lastTownNear) { this.lastTownNear = townNear; bus.emit({ type: "townMoved", near: townNear }); }
 
-    const near = landmarkAt(this.player.grid);
+    const near = this.rsaStreet.near(this.player.grid);
     if (near !== this.lastNear) {
       this.lastNear = near;
-      if (near === "car" && !this.clientCarFound) {
-        this.clientCarFound = true;
-        this.clientCar.setHighlighted(true);
-      }
       bus.emit({ type: "moved", near });
     }
 
@@ -345,15 +294,8 @@ export class CityScene extends Scene {
     for (const location of Object.values(TOWN_LOCATIONS)) {
       if (Math.abs(tapped.x - location.at.x) <= 1 && Math.abs(tapped.y - location.at.y) <= 1) return { ...location.stand };
     }
-    for (const key of Object.keys(LANDMARKS) as Landmark[]) {
-      const { at, size } = LANDMARKS[key];
-      const inside =
-        tapped.x >= at.x &&
-        tapped.x < at.x + size.w &&
-        tapped.y >= at.y &&
-        tapped.y < at.y + size.h;
-      if (inside) return LANDMARKS[key].stand;
-    }
+    const landmark = this.rsaStreet.standFor(tapped);
+    if (landmark) return landmark;
 
     const options = NEIGHBOURS.map((delta) => ({
       x: tapped.x + delta.x,
@@ -369,6 +311,7 @@ export class CityScene extends Scene {
   }
 
   private async handle(command: EngineCommand): Promise<void> {
+    if (isStreetCommand(command)) return this.rsaStreet.handle(command, (goal) => findPath(this.solid, this.player.grid, goal));
     switch (command.type) {
       case "lockInput":
         this.inputLocked = command.locked;
@@ -402,80 +345,12 @@ export class CityScene extends Scene {
         return;
       case "reset":
         this.player.stop();
-        this.packet.hide();
-        this.tapGlow.setActive(false);
-        this.clientCar.setHighlighted(true);
+        this.rsaStreet.reset();
         this.needsSpaceRelease = false;
         this.lastWalking = false;
         this.walkIdleMs = 0;
         clearTouchInput();
-        for (const bubble of Object.values(this.bubbles)) bubble.hide();
-        return;
-
-      case "face": {
-        this.player.faceTowards(LANDMARKS[command.target].at);
-        return;
-      }
-
-      case "walkTo": {
-        const goal = LANDMARKS[command.target].stand;
-        const route = findPath(this.solid, this.player.grid, goal);
-        if (route?.length) await this.player.follow(route);
-        this.player.faceTowards(LANDMARKS[command.target].at);
-        return;
-      }
-
-      case "bubble": {
-        const actor = this.cast[command.actor];
-        this.bubbles[command.actor].showAbove(actor.pos, command.face);
-        return;
-      }
-
-      case "tapGlow":
-        this.tapGlow.setActive(command.on);
-        return;
-
-      case "packet":
-        await this.runPacket(command);
         return;
     }
   }
-
-  private async runPacket(
-    command: Extract<EngineCommand, { type: "packet" }>,
-  ): Promise<void> {
-    const from = LANDMARKS[command.from].at;
-    const to = LANDMARKS[command.to].at;
-    const tap = LANDMARKS.tap.at;
-    const wireY = tileCenter(from).y + TILE_SIZE * 0.15;
-
-    const point = (pos: GridPos) => vec(tileCenter(pos).x, wireY);
-
-    this.packet.show(command.style, point(from));
-    gameAudio.playSynth("wire");
-    const legDuration = 900;
-
-    if (command.intercept) {
-      await this.packet.travelTo(point(tap), legDuration);
-      if (!this.alive) return;
-      this.tapGlow.setActive(true);
-      gameAudio.playSynth("capture");
-      this.bubbles.hacker.showAbove(this.player.pos, "success");
-      await wait(520);
-      if (!this.alive) return;
-      this.bubbles.hacker.hide();
-      await this.packet.travelTo(point(to), legDuration);
-    } else {
-      await this.packet.travelTo(point(to), legDuration * 1.6);
-    }
-
-    if (!this.alive) return;
-    await wait(220);
-    if (!this.alive) return;
-    this.packet.hide();
-  }
-}
-
-function wait(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
 }

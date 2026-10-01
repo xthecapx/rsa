@@ -10,7 +10,8 @@ export class TownSign extends Actor {
     this.graphics.anchor = vec(0.5, 1);
   }
 
-  setCaption(caption: string, completed = false): void {
+  /** `locked` paints the board red, for a gate that is still closed. */
+  setCaption(caption: string, completed = false, locked = false): void {
     const text = new Text({ text: caption, color: Color.fromHex(completed ? "#b8edce" : "#ffedbf"),
       font: new Font({ family: "monospace", size: 6, unit: FontUnit.Px }) });
     const width = Math.max(36, Math.ceil(text.width) + 12);
@@ -19,7 +20,7 @@ export class TownSign extends Actor {
     this.boardHeight = height;
     this.graphics.use(new GraphicsGroup({ members: [
       ...(!this.mounted ? [{ graphic: new Rectangle({ width: 4, height: height + 12, color: Color.fromHex("#634431") }), offset: vec(width / 2 - 2, 0) }] : []),
-      { graphic: new Rectangle({ width, height, color: Color.fromHex("#483323"), strokeColor: Color.fromHex("#bf9664"), lineWidth: 1 }), offset: vec(0, 0) },
+      { graphic: new Rectangle({ width, height, color: Color.fromHex(locked ? "#7f1d1d" : "#483323"), strokeColor: Color.fromHex(locked ? "#fca5a5" : "#bf9664"), lineWidth: 1 }), offset: vec(0, 0) },
       { graphic: new Rectangle({ width: width - 4, height: 1, color: Color.fromHex("#896442") }), offset: vec(2, height - 3) },
       { graphic: text, offset: vec(6, 4) },
     ] }));

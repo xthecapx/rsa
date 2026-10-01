@@ -5,7 +5,9 @@ each lesson needs from the one before. Explore with arrows/WASD, mouse clicks, o
 taps; press Space or tap Talk beside a door, person, or sign.
 
 ```
-                 [Quantum Town]   hub: every challenge has a replay door; RSA lives here for now
+                 [Quantum Town]   hub: every challenge has a replay door or street
+                       │ north road (Cipher Badge)
+                 [Cipher Town]    Breaking RSA, played outdoors on Ale and Brayan's street
                        │ north road (Hollow Badge)
 [Hollow Town] ── [Coin Town] ── [Foundry Town]
  west road         start          east road (Coin Town badge)
@@ -24,11 +26,22 @@ taps; press Space or tap Talk beside a door, person, or sign.
   lock, one question) on benches whose last wire is a helper; Casa Ofelia holds
   **Operation Ghost Key**. Cards plus the lesson earn the Hollow Badge, which opens
   Coin Town's north road.
+- **Cipher Town**: Root Cap, a neon hacker district built around Ale and Brayan's
+  street (stamped at the same `RSA_OFFSET` as in Quantum Town, so the acts run
+  unchanged). Five neighbors teach the defender's side on crypto benches (encoding
+  is no lock, key space, clock math, the RSA padlock, a number's rhythm). The client
+  at the parked car runs **Breaking RSA** entirely outdoors and pays credits: an
+  advance, then a fee per act, once. Chispa's stall sells each act's gear (sniffer,
+  shift wheel, factor kit, QPU voucher) and the client won't start a job without
+  it; Cero's bounty board pays for repeatable generated locks. Cards plus all four
+  acts earn the Cipher Badge, which opens the north road.
 - **Quantum Town**: Professor Thecap. Keeps a door for every lesson, including a
-  replay door to the same workshop and Casa Ofelia saves, and hosts **Breaking RSA**.
+  replay door to the same workshop and Casa Ofelia saves, and a replay street for
+  the RSA acts that shares Cipher Town's checkpoint (no gear check).
 
 Cards are never required for a lesson, only for the town badge. Saves that
-already reached Quantum Town keep the north road open.
+already reached Quantum Town keep the north roads open, and saves that finished
+RSA acts before Cipher Town existed own those acts' gear.
 
 The house door and Return to town control preserve the coin session. RSA can be
 paused and resumed from its client; checkpoint data includes story progress,

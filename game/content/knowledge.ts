@@ -1,5 +1,6 @@
 import type { BenchCase, Gate } from "@/game/qubit";
 import type { RegOp, RegPiece, RegTarget } from "@/game/register";
+import type { CryptoSlot } from "@/game/crypto";
 import type { Speaker } from "./types";
 
 /**
@@ -10,11 +11,13 @@ import type { Speaker } from "./types";
 export type CoinKnowledgeId = "bits" | "four-states" | "phase" | "interference" | "basis";
 export type FoundryKnowledgeId = "register" | "spread" | "stamp" | "mirror" | "rounds";
 export type HollowKnowledgeId = "control" | "flipproof" | "kickback" | "parity" | "onequestion";
-export type KnowledgeId = CoinKnowledgeId | FoundryKnowledgeId | HollowKnowledgeId;
+export type CipherKnowledgeId = "encoding" | "keyspace" | "clock" | "padlock" | "rhythm";
+export type KnowledgeId = CoinKnowledgeId | FoundryKnowledgeId | HollowKnowledgeId | CipherKnowledgeId;
 export const COIN_KNOWLEDGE_IDS: CoinKnowledgeId[] = ["bits", "four-states", "phase", "interference", "basis"];
 export const FOUNDRY_KNOWLEDGE_IDS: FoundryKnowledgeId[] = ["register", "spread", "stamp", "mirror", "rounds"];
 export const HOLLOW_KNOWLEDGE_IDS: HollowKnowledgeId[] = ["control", "flipproof", "kickback", "parity", "onequestion"];
-export const ALL_KNOWLEDGE_IDS: KnowledgeId[] = [...COIN_KNOWLEDGE_IDS, ...FOUNDRY_KNOWLEDGE_IDS, ...HOLLOW_KNOWLEDGE_IDS];
+export const CIPHER_KNOWLEDGE_IDS: CipherKnowledgeId[] = ["encoding", "keyspace", "clock", "padlock", "rhythm"];
+export const ALL_KNOWLEDGE_IDS: KnowledgeId[] = [...COIN_KNOWLEDGE_IDS, ...FOUNDRY_KNOWLEDGE_IDS, ...HOLLOW_KNOWLEDGE_IDS, ...CIPHER_KNOWLEDGE_IDS];
 
 export interface KnowledgeCard {
   id: KnowledgeId;
@@ -83,7 +86,32 @@ export interface RoundsStep {
   answer: number;
   feedback: string;
 }
-export type ActivityStep = BenchStep | QuestionStep | RegisterStep | RoundsStep;
+/** The picture beside a crypto bench: the A1Z26 table, a Caesar wheel, a clock face, or the powers of a number. */
+export type CryptoAid =
+  | { kind: "table" }
+  | { kind: "wheel"; key: number }
+  | { kind: "clock"; n: number }
+  | { kind: "powers"; base: number; n: number; upTo: number };
+/** Drag number and letter tiles into labelled slots; tiles never run out. */
+export interface CryptoStep {
+  kind: "crypto"; title: string; text: string;
+  aid?: CryptoAid;
+  slots: CryptoSlot[];
+  tray: string[];
+  feedback: string;
+  /** Values for `{placeholders}` in the text and feedback, filled in after translation. */
+  vars?: Record<string, string | number>;
+}
+/** Turn a Caesar wheel until the ciphertext reads as a word. */
+export interface DialStep {
+  kind: "dial"; title: string; text: string;
+  cipher: string;
+  /** The shift that decodes it (checked by the tests). */
+  key: number;
+  feedback: string;
+  vars?: Record<string, string | number>;
+}
+export type ActivityStep = BenchStep | QuestionStep | RegisterStep | RoundsStep | CryptoStep | DialStep;
 
 /** A neighbor who teaches one card. Towns without a card (greeters, wardens) leave `knowledge` out. */
 export interface TownNpc<Id extends string = string> {
@@ -101,5 +129,6 @@ export interface TownNpc<Id extends string = string> {
 
 /** Decor sprites drawn by tools/gen_npc_sprites.cjs; tall props are two tiles, top over base. */
 export type PropSprite = "stack-top" | "stack-base" | "silo-top" | "silo-base" | "belt" | "press-top" | "press-base" | "crane-top" | "crane-base" | "sign"
-  | "grave" | "cross" | "deadtree-top" | "deadtree-base" | "pumpkin" | "lantern" | "crypt-top" | "crypt-base" | "bell-top" | "bell-base" | "candles";
+  | "grave" | "cross" | "deadtree-top" | "deadtree-base" | "pumpkin" | "lantern" | "crypt-top" | "crypt-base" | "bell-top" | "bell-base" | "candles"
+  | "rack" | "antenna-top" | "antenna-base" | "dish" | "neon" | "reel" | "crt" | "arcade" | "djbooth" | "vending" | "phonebooth" | "stall" | "board" | "lockers" | "keykiosk" | "mural" | "gate-bar" | "gate-lock";
 export interface PropSpec { sprite: PropSprite; at: { x: number; y: number } }

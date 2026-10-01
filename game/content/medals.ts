@@ -15,7 +15,7 @@ export interface Medal {
   hint: string;
 }
 
-export type MedalId = "quantum-coin" | "coin-town" | "codebook" | "key-ring" | "prime-cutter" | "period-lens" | "amplifier" | "foundry-town" | "ghost-key" | "hollow-town";
+export type MedalId = "quantum-coin" | "coin-town" | "codebook" | "key-ring" | "prime-cutter" | "period-lens" | "amplifier" | "foundry-town" | "ghost-key" | "hollow-town" | "cipher-town";
 
 export const MEDALS: readonly Medal[] = [
   {
@@ -87,6 +87,13 @@ export const MEDALS: readonly Medal[] = [
     description: "You learned how a CNOT flips only when its control is 1, why a flip only hands |−⟩ a minus sign, how that minus kicks back onto the control, what parity the ghost answers and how one question reads it all, then opened Anselmo’s vault.",
     ability: "Kickback: turn an Oracle’s answer into a phase with a |−⟩ helper, and read it with H.",
     hint: "Collect all five Hollow cards and open the vault in Casa Ofelia.",
+  },
+  {
+    id: "cipher-town", scenario: "rsa", mission: "town", glyph: "🔐",
+    title: "Cipher Badge", skill: "Public-key crypto",
+    description: "You learned that an encoding is no lock, why a key needs a huge key space, how clock math wraps, how a public padlock hides a private key and how a number’s rhythm splits it, then finished all four of the client’s jobs.",
+    ability: "Padlock Sense: build an RSA key from two primes, and know that whoever splits N, or hears its rhythm, opens it.",
+    hint: "Collect all five Cipher cards and finish the client’s four jobs in Cipher Town.",
   },
 ];
 

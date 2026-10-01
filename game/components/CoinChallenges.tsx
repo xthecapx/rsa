@@ -4,6 +4,9 @@ import { useState } from "react";
 import { PuzzleDragDrop, PuzzlePiece, PuzzleSlot } from "./PuzzleDragDrop";
 import { LaptopChoiceButton, LaptopQuestion } from "./LaptopControls";
 import { t, useLocale } from "@/i18n";
+import type { CoinResult } from "@/lib/coin";
+import type { Measurement } from "@/game/histogram";
+import { MeasureInspect } from "./MeasurementExplorer";
 
 export type CodeBlock = "seed" | "reset" | "return";
 export type CodeSlot = "setup" | "body";
@@ -80,7 +83,7 @@ export function CodePuzzle({ slots, order, onChange, onSolved }: {
   </PuzzleDragDrop>;
 }
 
-function MeasurementIcon() {
+export function MeasurementIcon() {
   return <svg viewBox="0 0 36 36" width="34" height="34" aria-hidden="true" focusable="false">
     <path d="M5 25a13 13 0 0 1 26 0" fill="none" stroke="currentColor" strokeWidth="2.5" />
     <path d="m18 24 8-11" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
@@ -88,19 +91,24 @@ function MeasurementIcon() {
   </svg>;
 }
 
-export function CircuitSnapshot({ hadamard }: { hadamard: boolean }) {
+export function CircuitSnapshot({ hadamard, measurement = null }: { hadamard: boolean; measurement?: Measurement | null }) {
   useLocale((state) => state.locale);
   return <div className="qiskit-circuit" role="img" aria-label={t(hadamard ? "Prepare zero, Hadamard gate, measure" : "Prepare zero, measure")}>
     <div className="qiskit-register-labels"><span>q₀ <small>|0⟩</small></span><span>c₀</span></div>
     <div className="qiskit-tracks">
       <div className={`qiskit-quantum-wire ${hadamard ? "" : "single"}`}>
         {hadamard && <span className="qiskit-gate hadamard">H</span>}
-        <span className="qiskit-gate measure"><MeasurementIcon /></span>
+        <MeasureInspect measurement={measurement} className="qiskit-gate measure"><MeasurementIcon /></MeasureInspect>
       </div>
       <div className="qiskit-classical-wire" />
       <span className={`qiskit-measure-link ${hadamard ? "second" : "middle"}`} aria-hidden="true" />
     </div>
   </div>;
+}
+
+/** A coin batch as a measurement: Aer's shot counts, and the odds an ideal machine gives. */
+export function coinMeasurement(result: CoinResult): Measurement {
+  return { bits: 1, counts: { ...result.counts }, probabilities: result.hadamard ? { "0": 0.5, "1": 0.5 } : { "0": 1, "1": 0 }, source: "simulator", backend: result.backend };
 }
 
 export function CircuitPuzzle({ slots, onChange, onSolved }: { slots: CircuitSlots; onChange: (slots: CircuitSlots) => void; onSolved: () => void }) {

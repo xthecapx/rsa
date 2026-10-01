@@ -558,3 +558,65 @@ html[data-boot="done"] #mitm-boot {
 .reg-target { display: grid; place-items: center; width: 30px; height: 30px; border: 2px solid #1c2e33; border-radius: 50%; background: #f5efe0; color: #1c2e33; font-size: 26px; line-height: 1; }
 .reg-out { align-self: center; justify-self: start; padding-left: 6px; font: 700 15px/1 ui-monospace, monospace; color: #1f7a4d; }
 .qiskit-gate.reg-fixed { opacity: 0.85; outline: 2px dashed #607b83; outline-offset: 2px; }
+.crypto-table { display: grid; grid-template-columns: repeat(13, minmax(0, 1fr)); gap: 2px; font: 12px/1.2 ui-monospace, monospace; }
+.crypto-table span { display: flex; flex-direction: column; align-items: center; padding: 2px 0; border: 1px solid #2b4a52; border-radius: 4px; background: #0b1f26; color: #94b8c4; }
+.crypto-table b { color: #ffe5aa; }
+.crypto-clock { position: relative; width: 150px; height: 150px; margin: 0 auto; border: 2px solid #456a70; border-radius: 50%; background: #0b1f26; font: 700 13px/1 ui-monospace, monospace; }
+.crypto-clock span { position: absolute; transform: translate(-50%, -50%); color: #ffe5aa; }
+.crypto-clock em { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-style: normal; color: #2dd4bf; }
+.crypto-powers { display: flex; flex-wrap: wrap; gap: 4px 14px; font: 13px/1.4 ui-monospace, monospace; color: #ffe5aa; }
+.crypto-tile { font: 700 15px/1 ui-monospace, monospace; }
+.crypto-slots { display: grid; gap: 6px; }
+.crypto-row { display: grid; grid-template-columns: minmax(0, 1fr) auto 4.5rem; align-items: center; gap: 8px; font: 14px/1.3 ui-monospace, monospace; }
+.crypto-ask { color: #ffe5aa; overflow-wrap: anywhere; }
+.crypto-slot { min-height: 34px; border: 2px dashed #607b83; border-radius: 6px; background: #0b1f26; font: 700 15px/1 ui-monospace, monospace; color: #94b8c4; }
+.crypto-slot.filled { border-style: solid; color: #f5efe0; }
+.crypto-slot.right { border-color: #2dd4bf; color: #2dd4bf; }
+.crypto-slot.wrong { border-color: #f87171; color: #f87171; }
+.crypto-dial { display: grid; gap: 4px; font: 14px/1.4 ui-monospace, monospace; }
+.crypto-word { letter-spacing: 0.2em; color: #ffe5aa; }
+.crypto-word.right { color: #2dd4bf; }
+.shop-item { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 4px 10px; align-items: center; padding: 10px; border: 1px solid #456a70; border-radius: 8px; background: #18343c; }
+.shop-item.owned { border-color: #2dd4bf; }
+.shop-glyph { font-size: 22px; }
+.measure-inspect, .measure-inspect * { cursor: zoom-in; }
+.measure-inspect { position: relative; }
+.measure-inspect-badge { position: absolute; right: -6px; top: -8px; display: grid; place-items: center; width: 22px; height: 22px; border: 2px solid #1c2e33; border-radius: 50%; background: #f2c983; font-size: 11px; line-height: 1; animation: measure-pulse 1.6s ease-in-out infinite; }
+@keyframes measure-pulse { 50% { transform: scale(1.15); } }
+@media (prefers-reduced-motion: reduce) { .measure-inspect-badge { animation: none; } }
+.measure-explorer { position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; padding: 12px; background: rgb(0 0 0 / 0.55); }
+.measure-card { width: min(760px, 100%); max-height: calc(100dvh - 24px); overflow-y: auto; padding: 16px; border: 2px solid #456a70; border-radius: 10px; background: #0f2329; display: grid; gap: 12px; }
+.measure-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+.measure-head h3 { color: #f2c983; font-weight: 700; }
+.measure-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+.measure-tab { padding: 4px 10px; border: 1px solid #456a70; border-radius: 999px; font-size: 13px; color: #94b8c4; }
+.measure-tab.active { border-color: #2dd4bf; color: #2dd4bf; background: #12343a; }
+.measure-rows { display: grid; gap: 6px; }
+.measure-rows li { display: grid; grid-template-columns: minmax(0, auto) minmax(80px, 1fr) 5.5rem; gap: 8px; align-items: center; }
+.measure-rows li.highlight .measure-bits { color: #2dd4bf; }
+.measure-rows li.other .measure-bits { font-family: inherit; font-size: 12px; color: #94b8c4; }
+.measure-bits { font: 700 13px/1.3 ui-monospace, monospace; color: #ffe5aa; overflow-wrap: anywhere; }
+.measure-bar { position: relative; height: 14px; border-radius: 3px; background: #0b1f26; border: 1px solid #2b4a52; }
+.measure-bar > span { position: absolute; inset: 0 auto 0 0; border-radius: 2px; background: #f2c983; }
+.measure-rows li.highlight .measure-bar > span { background: #2dd4bf; }
+.measure-bar i { position: absolute; top: -3px; bottom: -3px; width: 2px; margin-left: -1px; background: #f5efe0; }
+.measure-share { font: 12px/1.2 ui-monospace, monospace; text-align: right; color: #f5efe0; }
+.measure-share small { color: #94b8c4; }
+.measure-qubits { display: grid; gap: 2px; }
+.measure-qubits > span { display: flex; flex-direction: column; align-items: center; gap: 2px; font: 10px/1 ui-monospace, monospace; color: #94b8c4; }
+.measure-column { position: relative; width: 100%; max-width: 18px; height: 70px; border-radius: 2px; background: #0b1f26; border: 1px solid #2b4a52; }
+.measure-column > span { position: absolute; inset: auto 0 0 0; background: #f2c983; }
+.measure-qubits b { font-size: 12px; color: #f5efe0; }
+.measure-qubits b.one { color: #f2c983; }
+.measure-raw { max-height: 240px; overflow: auto; padding: 10px; border-radius: 6px; background: #071318; font: 12px/1.4 ui-monospace, monospace; color: #cde7ec; }
+@media (max-width: 520px) { .measure-rows li { grid-template-columns: 1fr 4.5rem; } .measure-rows li .measure-bar { grid-column: 1 / -1; grid-row: 2; } }
+.calculator { display: grid; gap: 6px; margin-bottom: 12px; padding: 10px; border: 2px solid #2dd4bf; border-radius: 8px; background: #0f2b2d; }
+.calculator-head { display: flex; justify-content: space-between; align-items: center; color: #2dd4bf; }
+.calculator-input { width: 100%; padding: 6px 10px; border: 1px solid #456a70; border-radius: 6px; background: #071318; font: 700 16px/1.3 ui-monospace, monospace; color: #ffe5aa; }
+.calculator-result { min-height: 1.5em; font: 15px/1.3 ui-monospace, monospace; color: #f5efe0; overflow-wrap: anywhere; }
+.calculator-result b { color: #2dd4bf; }
+.calculator-keys { display: grid; grid-template-columns: repeat(auto-fill, minmax(46px, 1fr)); gap: 4px; }
+.calculator-keys button { min-height: 30px; padding: 2px; font: 700 14px/1 ui-monospace, monospace; }
+.crypto-calc { margin-left: 8px; padding: 0 6px; border: 1px solid #456a70; border-radius: 6px; font-size: 13px; line-height: 1.6; vertical-align: middle; }
+.crypto-calc:hover { border-color: #2dd4bf; }
+.gate-note { border-color: #f87171 !important; }

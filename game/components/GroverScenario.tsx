@@ -18,7 +18,7 @@ import { useGroverSceneAssets } from "./useSceneAssets";
 import { TalkControl } from "./TouchControls";
 import { LaptopShell } from "./LaptopShell";
 import {
-  ALL_PIECES, CHIPS, EMPTY_FORMULA, EMPTY_SLOTS, TRIES, DisarmPad, GroverCircuitBuilder, Keypad, QuantumEqualizer, RoundsFormula, SearchGrid,
+  ALL_PIECES, CHIPS, EMPTY_FORMULA, EMPTY_SLOTS, TRIES, DisarmPad, GroverCircuitBuilder, groverMeasurement, Keypad, QuantumEqualizer, RoundsFormula, SearchGrid,
   blockOf, isSearch, loopOf, type ChipId, type CircuitSlots, type FormulaSlots, type PieceId,
 } from "./GroverChallenges";
 
@@ -340,7 +340,8 @@ export function GroverScenario({ onExit, onRestartGame }: { onExit?: () => void;
               <GroverCircuitBuilder slots={session.slots} onChange={(slots) => patch({ slots })}
                 tray={trayFor(session.step, session.variants.pieces)} showLoop={session.step !== "init"} showMeasure={session.step === "measure"}
                 repeat={session.step === "loop" ? 1 : session.repeat}
-                onRepeat={session.step === "tuneRun" || session.step === "measure" ? (repeat) => patch({ repeat }) : null} />
+                onRepeat={session.step === "tuneRun" || session.step === "measure" ? (repeat) => patch({ repeat }) : null}
+                measurement={session.step === "measure" && session.lastRun ? groverMeasurement(session.lastRun) : null} />
               <QuantumEqualizer run={session.lastRun} runKey={session.runKey} animate={true} />
 
               {session.step === "init" && session.lastRun && (session.lastRun.steps.at(-1)!.block === "h"

@@ -5,7 +5,7 @@ export const TOWN_LOCATIONS = {
   vaultDoor: { at: { x: 21, y: 5 }, stand: { x: 21, y: 6 }, title: "Operation Ghost Key", prompt: "Knock on Doña Ofelia’s door", kind: "vault" },
   guide: { at: { x: 24, y: 28 }, stand: { x: 24, y: 29 }, title: "Professor Thecap", prompt: "Talk to Professor Thecap", kind: "guide" },
   sign: { at: { x: 24, y: 23 }, stand: { x: 24, y: 24 }, title: "Quantum Town", prompt: "Read the signpost", kind: "sign" },
-  southPath: { at: { x: 24, y: 34 }, stand: { x: 24, y: 34 }, title: "South road", prompt: "Walk south to Coin Town", kind: "path" },
+  southPath: { at: { x: 24, y: 34 }, stand: { x: 24, y: 34 }, title: "South road", prompt: "Walk south to Cipher Town", kind: "path" },
 } as const;
 export type TownTarget = keyof typeof TOWN_LOCATIONS;
 export type WorldFacing = "up" | "down" | "left" | "right";

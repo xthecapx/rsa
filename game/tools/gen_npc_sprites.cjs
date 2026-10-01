@@ -121,6 +121,47 @@ const NPCS = {
     palette: { o: "#0f172a", h: "#1e3a8a", H: "#172554", s: "#e0a878", e: "#0f172a", c: "#1e3a8a", C: "#172554", p: "#1e293b", b: "#0b0f14", a: "#fde047", A: "#b45309" },
     rows: { 2: "....HHHHHHH.....", 3: "...HHHHHHHHH....", 10: "...soccccccosa..", 11: "....occcccco.A.." },
   },
+  // Cipher Town.
+  rootcap: {
+    // The sysadmin: a black cap worn backwards, a teal hoodie, a headset mic.
+    palette: { o: "#0b1220", h: "#111827", H: "#0f766e", s: "#d9a577", e: "#0b1220", c: "#0d9488", C: "#115e59", p: "#1f2937", b: "#0b0f14", a: "#22d3ee" },
+    rows: { 2: "....HHHHHHHH....", 3: "...hhhhhhhhhH...", 6: "....hsessesha...", 7: "....osssssso.a..", 10: "...socaccacos...", 11: "....occcccco...." },
+  },
+  lupe: {
+    // Graffiti artist: a pink beanie, paint-flecked overalls and a spray can.
+    palette: { o: "#1a1022", h: "#ec4899", H: "#be185d", s: "#c98c5a", e: "#1a1022", c: "#a3e635", C: "#4d7c0f", p: "#1e3a8a", b: "#111827", y: "#facc15", k: "#f8fafc" },
+    rows: { 2: ".....HHHHHH.....", 3: "....hhhhhhhh....", 10: "...socycckcos.k.", 11: "....occkcyco..k.", 12: "....oCCCCCCo...." },
+  },
+  tadeo: {
+    // Locksmith: a grey beard, a leather apron and a ring of keys.
+    palette: { o: "#151515", h: "#9ca3af", s: "#e0a878", e: "#151515", c: "#7c4a22", C: "#5b3416", p: "#374151", b: "#111827", g: "#d1d5db", y: "#facc15" },
+    rows: { 7: "....ohhhhhho....", 8: ".....ohhhho.....", 10: "...soccccccosy..", 11: "....occcccco.y.." },
+  },
+  nina: {
+    // Arcade owner: violet bob, a bomber jacket with a star and a token in hand.
+    palette: { o: "#1a1022", h: "#8b5cf6", H: "#6d28d9", s: "#f1c9a3", e: "#1a1022", c: "#1e293b", C: "#0f172a", p: "#334155", b: "#0f172a", y: "#fde047", a: "#f472b6" },
+    rows: { 3: "...ohhhhhhhho...", 4: "...hhhhhhhhhh...", 5: "...hhssssssh....", 7: "...hosssssso....", 10: "...socyccacosy..", 11: "....occcccco...." },
+  },
+  paloma: {
+    // Courier: a yellow helmet, a courier bag across the chest and a padlock.
+    palette: { o: "#141414", h: "#facc15", H: "#ca8a04", s: "#b77a4a", e: "#141414", c: "#ef4444", C: "#991b1b", p: "#1e293b", b: "#0f172a", k: "#57534e", g: "#cbd5e1" },
+    rows: { 2: ".....HHHHHH.....", 3: "....hhhhhhhh....", 9: "....okccccco....", 10: "...soCkccccosg..", 11: "....occkccco.g.." },
+  },
+  dante: {
+    // Street DJ: big headphones, shades and a gold chain.
+    palette: { o: "#0f0f0f", h: "#1c1917", s: "#8d5a3b", e: "#0f0f0f", c: "#f97316", C: "#c2410c", p: "#1f2937", b: "#111827", g: "#22d3ee", G: "#0f0f0f", y: "#facc15" },
+    rows: { 4: "...ghhhhhhhhg...", 5: "...ghssssssg....", 6: "....GGGssGGG....", 9: "....oyccccyo....", 10: "...socyyyycos...", 11: "....occcccco...." },
+  },
+  chispa: {
+    // Gear stall keeper: green visor, an orange tool vest and a soldering iron.
+    palette: { o: "#141414", h: "#3f2a1d", H: "#16a34a", s: "#e8b98f", e: "#141414", c: "#f97316", C: "#c2410c", p: "#374151", b: "#111827", r: "#ef4444", g: "#9ca3af" },
+    rows: { 3: "...HHHHHHHHH....", 10: "...socgccgcos.g.", 11: "....occcccco.r.." },
+  },
+  cero: {
+    // Rival hacker: a black hood pulled up and a green-lit face.
+    palette: { o: "#050505", h: "#18181b", H: "#27272a", s: "#86efac", e: "#052e16", c: "#18181b", C: "#09090b", p: "#27272a", b: "#09090b", g: "#22c55e" },
+    rows: { 2: ".....HHHHHH.....", 3: "....HhhhhhhH....", 4: "...HhhhhhhhhH...", 5: "...Hhssssssh....", 6: "...Hhsessesh....", 10: "...socgccgcos...", 11: "....occcccco...." },
+  },
 };
 
 /** Side-view animals, facing right; the scene mirrors them to walk left. Rows not listed are empty. */
@@ -154,6 +195,11 @@ const ANIMALS = {
     // Hangs in the air: the scene lifts it off the ground.
     palette: { k: "#27213a", K: "#4c3f6b", e: "#f87171" },
     rows: { 6: "..k....kk....k..", 7: "..kk..kkkk..kk..", 8: "..kKkkkkkkkkKk..", 9: "....kKkekkekKk..", 10: ".....kKkkkkKk...", 11: "......kk..kk...." },
+  },
+  drone: {
+    // A hobby quadcopter: the scene lifts it off the ground.
+    palette: { k: "#1f2937", g: "#9ca3af", r: "#ef4444", c: "#22d3ee" },
+    rows: { 6: "..ggg......ggg..", 7: "...k........k...", 8: "...kkkkkkkkkk...", 9: ".....kgggrk.....", 10: ".....kcckkk.....", 11: "....k......k...." },
   },
 };
 
@@ -201,10 +247,48 @@ const PROPS = {
     rows: { 6: ".......kk.......", 7: "......kwwk......", 8: ".....kwwwwk.....", 9: "....kwwwwwwk....", 10: "...kwwwwwwwwk...", 11: "..kkkkkkkkkkkk..", 12: "..kggGggggGggk..", 13: "..kggGggggGggk..", 14: "..kggGggggGggk..", 15: "..kggGggggGggk.." } },
   "crypt-base": { palette: { g: "#9ca3af", G: "#6b7280", k: "#374151", w: "#d1d5db", K: "#111827" },
     rows: { 0: "..kggGggggGggk..", 1: "..kggGkkkkGggk..", 2: "..kggGkKKkGggk..", 3: "..kggGkKKkGggk..", 4: "..kggGkKKkGggk..", 5: "..kggGkKKkGggk..", 6: "..kggGkKKkGggk..", 7: "..kggGkKKkGggk..", 8: "..kggGkKKkGggk..", 9: "..kggGkKKkGggk..", 10: "..kkkkkkkkkkkk..", 11: ".kwwwwwwwwwwwwk.", 12: ".kkkkkkkkkkkkkk." } },
-  "bell-top": { palette: { t: "#7c4a22", T: "#4a2e14", y: "#d4a017", Y: "#a16207" },
+  "bell-top": { palette: { t: "#7c4a22", T: "#4a2e14", y: "#d4a017", Y: "#a16207", r: "#e7d7b1" },
     rows: { 1: "..TTTTTTTTTTTT..", 2: "..tttttttttttt..", 3: "..t....TT....t..", 4: "..t...yyyy...t..", 5: "..t..yyyyyY..t..", 6: "..t..yyyyyY..t..", 7: "..t.yyyyyyYY.t..", 8: "..t.YYYYYYYY.t..", 9: "..t....yy....t..", 10: "..t.....r....t..", 11: "..t.....r....t..", 12: "..t.....r....t..", 13: "..t.....r....t..", 14: "..t.....r....t..", 15: "..t.....r....t.." } },
   "bell-base": { palette: { t: "#7c4a22", T: "#4a2e14", r: "#e7d7b1" },
     rows: { 0: "..t.....r....t..", 1: "..t.....r....t..", 2: "..t.....r....t..", 3: "..t.....r....t..", 4: "..t.....r....t..", 5: "..t.....r....t..", 6: "..t.....r....t..", 7: "..t.....r....t..", 8: "..t.....r....t..", 9: "..t.....r....t..", 10: "..t.....r....t..", 11: "..t.....r....t..", 12: ".ttt.........ttt", 13: ".TTT.........TTT" } },
+  // Locked road gates, in every town: a striped boom on posts, the middle one with a padlock.
+  "gate-bar": { palette: { r: "#dc2626", w: "#f8fafc", k: "#1f2937", g: "#6b7280" },
+    rows: { 3: "kk............kk", 4: "kg............gk", 5: "kgkkkkkkkkkkkkgk", 6: "kgrrwwrrwwrrwwgk", 7: "kgrrwwrrwwrrwwgk", 8: "kgwwrrwwrrwwrrgk", 9: "kgwwrrwwrrwwrrgk", 10: "kgkkkkkkkkkkkkgk", 11: "kg............gk", 12: "kg............gk", 13: "kg............gk", 14: "kkk..........kkk" } },
+  "gate-lock": { palette: { r: "#dc2626", w: "#f8fafc", k: "#1f2937", g: "#6b7280", y: "#facc15", Y: "#a16207" },
+    rows: { 1: "kk....kkkk....kk", 2: "kg...kk..kk...gk", 3: "kg...k....k...gk", 4: "kg..kkkkkkkk..gk", 5: "kgkkkyyyyyykkkgk", 6: "kgrrkyyYYyykwwgk", 7: "kgrrkyyYYyykwwgk", 8: "kgwwkyyyyyykrrgk", 9: "kgwwkkkkkkkkrrgk", 10: "kgkkkkkkkkkkkkgk", 11: "kg............gk", 12: "kg............gk", 13: "kg............gk", 14: "kkk..........kkk" } },
+  // Cipher Town.
+  "rack": { palette: { k: "#0f172a", g: "#334155", G: "#1e293b", c: "#22d3ee", r: "#f43f5e", y: "#a3e635" },
+    rows: { 0: "...kkkkkkkkkk...", 1: "...kggggggggk...", 2: "...kGcGyGGGGk...", 3: "...kggggggggk...", 4: "...kGGrGcGGGk...", 5: "...kggggggggk...", 6: "...kGyGGGcGGk...", 7: "...kggggggggk...", 8: "...kGGcGrGGGk...", 9: "...kggggggggk...", 10: "...kGcGGGyGGk...", 11: "...kggggggggk...", 12: "...kGGGrGcGGk...", 13: "...kkkkkkkkkk...", 14: "...k........k..." } },
+  "antenna-top": { palette: { g: "#94a3b8", k: "#334155", r: "#ef4444" },
+    rows: { 1: ".......rr.......", 2: ".......kk.......", 3: "....g..kk..g....", 4: ".....g.kk.g.....", 5: "......gkkg......", 6: "...gggkkkkggg...", 7: ".......kk.......", 8: "......kkkk......", 9: "......k..k......", 10: ".....kk..kk.....", 11: ".....k.kk.k.....", 12: "....kk....kk....", 13: "....k.kkkk.k....", 14: "...kk......kk...", 15: "...k.kkkkkk.k..." } },
+  "antenna-base": { palette: { k: "#334155", g: "#475569" },
+    rows: { 0: "...k........k...", 1: "..kk.kkkkkk.kk..", 2: "..k..........k..", 3: "..k.kkkkkkkk.k..", 4: ".kk..........kk.", 5: ".k.kkkkkkkkkk.k.", 6: ".k............k.", 7: "gggggggggggggggg", 8: "gkkkkkkkkkkkkkkg" } },
+  "dish": { palette: { w: "#e2e8f0", W: "#94a3b8", k: "#334155", r: "#ef4444" },
+    rows: { 2: "......wwww......", 3: "....wwwwwwWW....", 4: "...wwwwwwwWWW...", 5: "..wwwwwkwwWWWW..", 6: "..wwwwkrkwWWWW..", 7: "..wwwwwkwwWWWW..", 8: "...wwwwwwWWWW...", 9: "....wwwwWWWW....", 10: "......kkkk......", 11: ".......kk.......", 12: ".......kk.......", 13: ".....kkkkkk.....", 14: "....kkkkkkkk...." } },
+  "neon": { palette: { k: "#111827", m: "#f0abfc", M: "#d946ef", c: "#67e8f9" },
+    rows: { 1: ".kkkkkkkkkkkkkk.", 2: ".kMMMMMMMMMMMMk.", 3: ".kMmmmmMMcccMMk.", 4: ".kMmMMMMMcMcMMk.", 5: ".kMmMMMMMcccMMk.", 6: ".kMmmmmMMcMMMMk.", 7: ".kMMMMMMMMMMMMk.", 8: ".kkkkkkkkkkkkkk.", 9: "...k........k...", 10: "...k........k...", 11: "...k........k...", 12: "...k........k...", 13: "..kkk......kkk.." } },
+  "reel": { palette: { w: "#a16207", W: "#713f12", k: "#1f2937", c: "#0ea5e9" },
+    rows: { 4: "....WWWWWWWW....", 5: "...WwwwwwwwwW...", 6: "...WccccccccW...", 7: "...WccccccccW..." , 8: "...WccccccccW...", 9: "...WccccccccW...", 10: "...WwwwwwwwwW...", 11: "....WWWWWWWW....", 12: "....k......k....", 13: "...kkk....kkk..." } },
+  "crt": { palette: { g: "#d6d3d1", G: "#a8a29e", k: "#292524", s: "#16a34a", S: "#4ade80" },
+    rows: { 4: "..gggggggggggg..", 5: "..gkkkkkkkkkkG..", 6: "..gksSssSssskG..", 7: "..gkSssSSssskG..", 8: "..gksssSsSsskG..", 9: "..gkssSsssSskG..", 10: "..gkkkkkkkkkkG..", 11: "..gggggggggggG..", 12: "...GGGGGGGGGG...", 13: "....gggggggg...." } },
+  "arcade": { palette: { k: "#0f172a", p: "#7c3aed", P: "#5b21b6", c: "#22d3ee", y: "#facc15", r: "#ef4444" },
+    rows: { 0: "...kkkkkkkkkk...", 1: "...kyyyyyyyyk...", 2: "...kpppppppPk...", 3: "...kpkkkkkkPk...", 4: "...kpkccrckPk...", 5: "...kpkcrcckPk...", 6: "...kpkkkkkkPk...", 7: "..kpppppppppPk..", 8: "..kpprpyppppPk..", 9: "...kppppppppk...", 10: "...kpPPPPPPPk...", 11: "...kppppppPPk...", 12: "...kppppppPPk...", 13: "...kppppppPPk...", 14: "...kkkkkkkkkk..." } },
+  "djbooth": { palette: { k: "#111827", g: "#374151", c: "#22d3ee", m: "#d946ef", y: "#facc15", w: "#e5e7eb" },
+    rows: { 4: "..kkkk....kkkk..", 5: ".kwkkwk..kwkkwk.", 6: ".kkwwkk..kkwwkk.", 7: "kkkkkkkkkkkkkkkk", 8: "kggggggggggggggk", 9: "kgcmcmcmcmcmcmgk", 10: "kggggggggggggggk", 11: "kgyggggggggggygk", 12: "kggggggggggggggk", 13: "kkkkkkkkkkkkkkkk" } },
+  "vending": { palette: { r: "#dc2626", R: "#991b1b", k: "#1f2937", w: "#e0f2fe", y: "#facc15", c: "#22d3ee" },
+    rows: { 0: "...rrrrrrrrrr...", 1: "...rwwwwwwrRr...", 2: "...rwycwycrRr...", 3: "...rwwwwwwrRr...", 4: "...rwcywcyrRr...", 5: "...rwwwwwwrRr...", 6: "...rwycwycrRr...", 7: "...rwwwwwwrRr...", 8: "...rrrrrrrrRr...", 9: "...rkkkkkkrRr...", 10: "...rrrrrrrrRr...", 11: "...rrrrrrrrRr...", 12: "...RRRRRRRRRR...", 13: "...k........k..." } },
+  "phonebooth": { palette: { b: "#1d4ed8", B: "#1e3a8a", w: "#bfdbfe", k: "#0f172a", y: "#fde047" },
+    rows: { 0: "...BBBBBBBBBB...", 1: "...ByyyyyyyyB...", 2: "...BBBBBBBBBB...", 3: "...bwwwbwwwwb...", 4: "...bwwwbwkwwb...", 5: "...bwwwbwkkwb...", 6: "...bbbbbwwwwb...", 7: "...bwwwbwwwwb...", 8: "...bwwwbwwwwb...", 9: "...bbbbbbbbbb...", 10: "...bwwwbwwwwb...", 11: "...bwwwbwwwwb...", 12: "...bwwwbwwwwb...", 13: "...BBBBBBBBBB..." } },
+  "stall": { palette: { o: "#f97316", w: "#fef3c7", k: "#292524", t: "#7c4a22", T: "#4a2e14", g: "#9ca3af", c: "#22d3ee", r: "#ef4444" },
+    rows: { 1: "oowwoowwoowwooww", 2: "oowwoowwoowwooww", 3: ".o.w.o.w.o.w.o.w", 4: ".t............t.", 5: ".t............t.", 6: ".t............t.", 7: ".t..gc..rg..c.t.", 8: "tttttttttttttttt", 9: "TtttttttttttttTT", 10: "Tt............tT", 11: "Tt............tT", 12: "Tt............tT", 13: "TT............TT" } },
+  "board": { palette: { t: "#7c4a22", T: "#4a2e14", c: "#d6b48a", w: "#f8fafc", g: "#22c55e", r: "#ef4444" },
+    rows: { 1: "TTTTTTTTTTTTTTTT", 2: "TccccccccccccccT", 3: "TcwwwccwwwcwwwcT", 4: "TcwgwccwrwcwgwcT", 5: "TcwwwccwwwcwwwcT", 6: "TccccccccccccccT", 7: "TcwwwwcwwwwwwccT", 8: "TcwrwwcwgwwwwccT", 9: "TcwwwwcwwwwwwccT", 10: "TTTTTTTTTTTTTTTT", 11: "..t..........t..", 12: "..t..........t..", 13: "..t..........t..", 14: ".TTT........TTT." } },
+  "lockers": { palette: { g: "#64748b", G: "#334155", k: "#0f172a", y: "#facc15", w: "#cbd5e1" },
+    rows: { 0: "kkkkkkkkkkkkkkkk", 1: "kgggggkgggggkggk", 2: "kgwwwgkgwwwgkgwk", 3: "kgggggkgggggkggk", 4: "kggyggkggyggkgyk", 5: "kgggggkgggggkggk", 6: "kkkkkkkkkkkkkkkk", 7: "kgggggkgggggkggk", 8: "kgwwwgkgwwwgkgwk", 9: "kgggggkgggggkggk", 10: "kggyggkggyggkgyk", 11: "kgggggkgggggkggk", 12: "kkkkkkkkkkkkkkkk", 13: "kG............Gk" } },
+  "keykiosk": { palette: { r: "#b91c1c", R: "#7f1d1d", w: "#fef3c7", k: "#292524", y: "#facc15", g: "#9ca3af" },
+    rows: { 1: "..rrrrrrrrrrrr..", 2: "..rwwwwwwwwwwr..", 3: "..rwkwkwkwkwwr..", 4: "..rrrrrrrrrrrr..", 5: "..R..........R..", 6: "..R.y..g..y..R..", 7: "..R.y..g..y..R..", 8: "..RRRRRRRRRRRR..", 9: "..RrrrrrrrrrrR..", 10: "..Rr..yy....rR..", 11: "..Rr.yyyy...rR..", 12: "..RrrrrrrrrrrR..", 13: "..RRRRRRRRRRRR.." } },
+  "mural": { palette: { k: "#1f2937", m: "#d946ef", c: "#22d3ee", y: "#facc15", g: "#a3e635", w: "#475569" },
+    rows: { 0: "wwwwwwwwwwwwwwww", 1: "wwwmmwwwwwccwwww", 2: "wwmmmmwwwccccwww", 3: "wmmwwmmwccwwccww", 4: "wwwwwmmwwwwwccww", 5: "wwwwmmwwyyyccwww", 6: "wwwmmwwyywwccwww", 7: "wwmmwwyywwccwwgw", 8: "wmmmmmyyyycccggw", 9: "wwwwwwwwwwwwwggw", 10: "wgggwwcwwmwwwwww", 11: "wwwwwwwwwwwwwwww", 12: "kkkkkkkkkkkkkkkk" } },
 };
 
 function svg(rows, palette) {

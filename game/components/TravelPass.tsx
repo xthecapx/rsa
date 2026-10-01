@@ -4,15 +4,17 @@ import { useEffect, useState } from "react";
 import { COIN_TOWN_SPAWN, QUANTUM_SOUTH_GATE } from "@/content/coinTown";
 import { FOUNDRY_SPAWN } from "@/content/foundry";
 import { HOLLOW_SPAWN } from "@/content/hollow";
+import { CIPHER_SPAWN } from "@/content/cipher";
 import { useTown } from "@/game/town";
 import { useTravelPass } from "@/game/travelPass";
 import { t, useLocale } from "@/i18n";
 
-type Stop = "coinTown" | "foundry" | "hollow" | "town";
+type Stop = "coinTown" | "foundry" | "hollow" | "cipher" | "town";
 const STOPS: { id: Stop; label: string }[] = [
   { id: "coinTown", label: "Coin Town" },
   { id: "foundry", label: "Foundry Town" },
   { id: "hollow", label: "Hollow Town" },
+  { id: "cipher", label: "Cipher Town" },
   { id: "town", label: "Quantum Town" },
 ];
 
@@ -22,6 +24,7 @@ function travel(to: Stop) {
   if (to === "coinTown") town.patch({ location: "coinTown", coinTown: { ...town.coinTown, position: { ...COIN_TOWN_SPAWN }, facing: "up" } });
   else if (to === "foundry") town.patch({ location: "foundry", foundry: { ...town.foundry, position: { ...FOUNDRY_SPAWN }, facing: "right" } });
   else if (to === "hollow") town.patch({ location: "hollow", hollow: { ...town.hollow, position: { ...HOLLOW_SPAWN }, facing: "left" } });
+  else if (to === "cipher") town.patch({ location: "cipher", cipher: { ...town.cipher, position: { ...CIPHER_SPAWN }, facing: "up" } });
   else town.patch({ location: "town", position: { ...QUANTUM_SOUTH_GATE }, facing: "up" });
   window.location.reload();
 }

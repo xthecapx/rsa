@@ -176,7 +176,7 @@ export const KEEPER = {
   vaultWaiting: { speaker: "keepercap", text: "Casa Ofelia is still knocking." },
   vaultDone: { speaker: "keepercap", text: "Casa Ofelia is quiet at last. Doña Ofelia sleeps with the candles lit." },
   ready: { speaker: "keepercap", text: "Five cards and a quiet house. You can build a controlled flip, park a helper in |−⟩, catch the kickback, count the parity and ask the one question. That’s Bernstein–Vazirani, and that’s the Hollow Badge." },
-  done: { speaker: "keepercap", text: "The badge is yours. The east road runs back to Coin Town, and Beto opens the north road there for Hollow Badge holders. Replay anything here; cards and medals stay." },
+  done: { speaker: "keepercap", text: "The badge is yours. The east road runs back to Coin Town, and Beto opens the north road there for Hollow Badge holders: Cipher Town, where our cousin Root Cap keeps the network up. Replay anything here; cards and medals stay." },
 } satisfies Record<string, Line>;
 export const CARD_COUNT = "You have {count} of 5 Hollow cards.";
 

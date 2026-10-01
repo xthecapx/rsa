@@ -6,16 +6,20 @@ import { COIN_TOWN_ANIMALS, COIN_TOWN_DOOR, COIN_TOWN_EAST_SIGN, COIN_TOWN_NORTH
   EAST_GATE_COL, NORTH_GATE_ROW, WEST_GATE_COL, type AnimalSpec } from "@/content/coinTown";
 import { FOUNDRY_ANIMALS, FOUNDRY_BELT, FOUNDRY_DOOR, FOUNDRY_NPCS, FOUNDRY_PROPS, FOUNDRY_SMOKE, FOUNDRY_SPAWN } from "@/content/foundry";
 import { HOLLOW_ANIMALS, HOLLOW_DOOR, HOLLOW_FOG, HOLLOW_NPCS, HOLLOW_PROPS, HOLLOW_SPAWN } from "@/content/hollow";
+import { CIPHER_ANIMALS, CIPHER_BOARD, CIPHER_NORTH_GATE_ROW, CIPHER_NORTH_ROAD, CIPHER_NPCS, CIPHER_PROPS, CIPHER_SPAWN } from "@/content/cipher";
+import { cipherMap } from "../maps/cipherMap";
 import type { PropSpec, PropSprite } from "@/content/knowledge";
 import { foundryMap } from "../maps/foundryMap";
 import { hollowMap } from "../maps/hollowMap";
 import { Wanderer } from "../actors/Wanderer";
 import { coinTownMap } from "../maps/coinTownMap";
 import { Character } from "../actors/Character";
+import { RsaStreet, isStreetCommand } from "../actors/RsaStreet";
 import { TownSign } from "../actors/TownSign";
 import { bus } from "../bus";
 import type { EngineCommand } from "../bus";
-import { tileCenter, type GridPos } from "../maps/street";
+import { LANDMARKS, tileCenter, type GridPos } from "../maps/street";
+import type { Landmark } from "../bus";
 import { citySprite, npcImages, propImages, type NpcSprite } from "../resources";
 import { TILE_SIZE } from "../tiles";
 import { clearTouchInput, consumeTouchInteract } from "../touchInput";
@@ -28,8 +32,8 @@ export interface WorldDef {
   npcs: { id: NpcSprite; at: GridPos; label: string }[];
   doors: { id: string; at: GridPos; stand: GridPos; label: string }[];
   animals?: AnimalSpec[];
-  /** Barriers React can lift, e.g. the road to the next town. Closed until told otherwise. */
-  gates?: { id: string; tiles: GridPos[] }[];
+  /** Barriers React can lift, e.g. the road to the next town. Closed until told otherwise; `lock` names what opens it. */
+  gates?: { id: string; tiles: GridPos[]; lock?: string }[];
   /** Decor drawn over the terrain; every prop blocks its tile. */
   props?: PropSpec[];
   /** A conveyor row that crates ride along, from one tile column to another. */
@@ -38,8 +42,10 @@ export interface WorldDef {
   smoke?: GridPos[];
   /** Tiles that low mist drifts across. */
   fog?: GridPos[];
-  /** Dim the town to night; these props glow warm and flicker. */
-  night?: { glow: PropSprite[] };
+  /** Dim the town to night; these props glow and flicker, warm unless a color is given. */
+  night?: { glow: PropSprite[]; colors?: Partial<Record<PropSprite, [number, number, number]>> };
+  /** Ale and Brayan's street is stamped at RSA_OFFSET: mount the cars, the tapped wire and the cast. */
+  street?: boolean;
 }
 
 const MOVE_KEYS: { keys: Keys[]; delta: GridPos }[] = [
@@ -62,6 +68,7 @@ export function worldGrid(def: WorldDef): WorldGrid {
     !!def.map.legend[tile]?.solid || !!def.map.overlayLegend[def.map.overlay[y][x]]?.solid));
   for (const npc of def.npcs) grid[npc.at.y][npc.at.x] = true;
   for (const prop of def.props ?? []) grid[prop.at.y][prop.at.x] = true;
+  if (def.street) RsaStreet.block(grid);
   return grid;
 }
 
@@ -72,9 +79,10 @@ export function worldTargetAt(def: WorldDef, pos: GridPos): string | null {
 }
 
 /**
- * A tile town with neighbors and doors and no scripted street scenes. React
- * owns every conversation; the scene only walks, reports who is near and
- * draws markers. Quantum Town keeps its own CityScene for the RSA mission.
+ * A tile town with neighbors and doors. React owns every conversation; the
+ * scene only walks, reports who is near and draws markers. A town whose map
+ * carries Ale and Brayan's street also mounts it, so the RSA acts can play
+ * there; Quantum Town keeps its own CityScene for its replay street.
  */
 export class WorldScene extends Scene {
   private grid: WorldGrid;
@@ -94,11 +102,13 @@ export class WorldScene extends Scene {
   /** Neighbors stay on their tile; they only breathe and glance around. */
   private idlers: { actor: Actor; sprite: Sprite; seed: number; glance: number }[] = [];
   private clock = 0;
-  private gates = new Map<string, { tiles: GridPos[]; bars: Actor[] }>();
+  private gates = new Map<string, { tiles: GridPos[]; bars: Actor[]; sign: TownSign | null; lock?: string; open: boolean }>();
+  private lastBlocked = { gate: "", at: 0 };
   private crates: Actor[] = [];
   private puffs: { actor: Actor; from: GridPos; offset: number }[] = [];
   private wisps: { actor: Actor; from: GridPos; offset: number }[] = [];
   private glows: { actor: Actor; seed: number }[] = [];
+  private street: RsaStreet | null = null;
 
   constructor(private readonly def: WorldDef) {
     super();
@@ -109,6 +119,14 @@ export class WorldScene extends Scene {
     engine.backgroundColor = Color.fromHex("#0b1f26");
     this.add(this.layer("rows", 0));
     this.add(this.layer("overlay", 1));
+    this.player = new Character("hacker", this.def.spawn, "up");
+    if (this.def.street) {
+      this.street = new RsaStreet(this, this.player); this.street.mountGround();
+      // The client’s car gets a name board below it, clear of the tile the player talks from, so the town can mark the next job.
+      const car = tileCenter(LANDMARKS.car.at);
+      const sign = new TownSign(car.x + 8, car.y + 34, false);
+      this.add(sign); this.signs.push({ actor: sign, id: "car", text: "The client", done: false, alert: false });
+    }
     for (const npc of this.def.npcs) {
       const at = tileCenter(npc.at);
       const actor = new Actor({ name: npc.id, pos: vec(at.x, at.y), width: TILE_SIZE, height: TILE_SIZE, z: 10 });
@@ -126,15 +144,26 @@ export class WorldScene extends Scene {
       this.add(sign); this.signs.push({ actor: sign, id: door.id, text: door.label, done: false, alert: false });
     }
     for (const gate of this.def.gates ?? []) {
-      const bars = gate.tiles.map((tile) => {
+      // A striped boom across the road, padlocked in the middle, and a red board saying what opens it.
+      const middle = Math.floor(gate.tiles.length / 2);
+      const bars = gate.tiles.map((tile, i) => {
         const at = tileCenter(tile);
-        const bar = new Actor({ pos: vec(at.x, at.y), width: TILE_SIZE, height: TILE_SIZE, z: 2 });
-        bar.graphics.use(citySprite(645));
+        const bar = new Actor({ pos: vec(at.x, at.y), width: TILE_SIZE, height: TILE_SIZE, z: 3 });
+        bar.graphics.use(propImages[i === middle ? "gate-lock" : "gate-bar"].toSprite());
         this.add(bar);
         this.grid[tile.y][tile.x] = true;
         return bar;
       });
-      this.gates.set(gate.id, { tiles: gate.tiles, bars });
+      let sign: TownSign | null = null;
+      if (gate.lock) {
+        // Keep the board inside the map: below a gate on the top row, inward from one on a side edge.
+        const tile = gate.tiles[middle], at = tileCenter(tile);
+        const inward = tile.x < 4 ? 44 : tile.x > this.def.map.width - 5 ? -44 : 0;
+        sign = new TownSign(at.x + inward, tile.y <= 2 ? at.y + 30 : at.y - 9, true);
+        sign.z = 31;
+        this.add(sign);
+      }
+      this.gates.set(gate.id, { tiles: gate.tiles, bars, sign, lock: gate.lock, open: false });
     }
     for (const prop of this.def.props ?? []) {
       const at = tileCenter(prop.at);
@@ -171,7 +200,8 @@ export class WorldScene extends Scene {
         if (!this.def.night.glow.includes(prop.sprite)) continue;
         const at = tileCenter(prop.at);
         const glow = new Actor({ pos: vec(at.x, at.y - 4), z: 13 });
-        glow.graphics.use(new Circle({ radius: 14, color: Color.fromRGB(253, 186, 72, 0.13) }));
+        const [r, g, b] = this.def.night.colors?.[prop.sprite] ?? [253, 186, 72];
+        glow.graphics.use(new Circle({ radius: 14, color: Color.fromRGB(r, g, b, 0.13) }));
         this.add(glow); this.glows.push({ actor: glow, seed: this.glows.length * 2.3 });
       }
       // Name boards and the tracking ring stay readable above the night.
@@ -179,8 +209,8 @@ export class WorldScene extends Scene {
     }
     const ground = (pos: GridPos) => this.def.map.rows[pos.y]?.[pos.x] ?? "";
     for (const spec of this.def.animals ?? []) { const animal = new Wanderer(spec, this.grid, ground); this.animals.push(animal); this.add(animal); }
-    this.player = new Character("hacker", this.def.spawn, "up");
     this.add(this.player);
+    this.street?.mountPeople();
     this.beacon = new Actor({ z: this.def.night ? 30 : 5 });
     this.beacon.graphics.use(new Circle({ radius: 10, color: Color.Transparent, strokeColor: Color.fromHex("#efbe67"), lineWidth: 2 }));
     this.beacon.graphics.visible = false;
@@ -195,6 +225,7 @@ export class WorldScene extends Scene {
   override onDeactivate(): void {
     this.pointerSub?.close(); this.pointerSub = null;
     this.player.stop(); clearTouchInput();
+    this.street?.deactivate();
     bus.setCommandHandler(null); bus.drain();
   }
 
@@ -216,6 +247,7 @@ export class WorldScene extends Scene {
     if (locale !== this.locale) {
       this.locale = locale;
       for (const sign of this.signs) sign.actor.setCaption(`${sign.alert ? "! " : sign.done ? "★ " : ""}${t(sign.text)}`, sign.done && !sign.alert);
+      for (const gate of this.gates.values()) if (gate.sign && gate.lock) gate.sign.setCaption(`${t("Locked")} · ${t(gate.lock)}`, false, true);
     }
     if (!this.player.isMoving) {
       const position = `${this.player.grid.x},${this.player.grid.y},${this.player.facing}`;
@@ -226,7 +258,7 @@ export class WorldScene extends Scene {
     }
     if (this.tracked) { this.beacon.pos = vec(tileCenter(this.tracked).x, tileCenter(this.tracked).y); this.beacon.graphics.opacity = 0.75; }
     if (this.inputLocked) return;
-    const near = worldTargetAt(this.def, this.player.grid);
+    const near: string | null = worldTargetAt(this.def, this.player.grid) ?? this.street?.near(this.player.grid) ?? null;
     if (near !== this.lastNear) { this.lastNear = near; bus.emit({ type: "worldNear", near }); }
     if (this.needsSpaceRelease && !engine.input.keyboard.isHeld(Keys.Space)) this.needsSpaceRelease = false;
     const talked = (!this.needsSpaceRelease && engine.input.keyboard.wasPressed(Keys.Space)) || consumeTouchInteract();
@@ -242,7 +274,7 @@ export class WorldScene extends Scene {
     for (const { keys, delta } of MOVE_KEYS) {
       if (!keys.some((key) => engine.input.keyboard.isHeld(key))) continue;
       const next = { x: this.player.grid.x + delta.x, y: this.player.grid.y + delta.y };
-      if (walkable(this.grid, next)) this.player.stepTowards(next); else this.player.faceTowards(next);
+      if (walkable(this.grid, next)) this.player.stepTowards(next); else { this.player.faceTowards(next); this.bumped(next); }
       break;
     }
   }
@@ -300,10 +332,23 @@ export class WorldScene extends Scene {
     if ("isPrimary" in event.nativeEvent && event.nativeEvent.isPrimary === false) return;
     if ("touches" in event.nativeEvent && (event.nativeEvent as TouchEvent).touches.length > 1) return;
     const tapped = { x: Math.floor(event.coordinates.worldPos.x / TILE_SIZE), y: Math.floor(event.coordinates.worldPos.y / TILE_SIZE) };
+    if (this.bumped(tapped)) return;
     const goal = this.reachable(tapped);
     if (!goal) return;
     const route = findRoute(this.grid, this.player.grid, goal);
     if (route?.length) void this.player.follow(route);
+  }
+
+  /** Walking into, or tapping, a closed gate tells React which one, at most every second and a half. */
+  private bumped(at: GridPos): boolean {
+    for (const [id, gate] of this.gates) {
+      if (gate.open || !gate.tiles.some((tile) => tile.x === at.x && tile.y === at.y)) continue;
+      const now = performance.now();
+      if (this.lastBlocked.gate !== id || now - this.lastBlocked.at > 1500) bus.emit({ type: "worldBlocked", gate: id });
+      this.lastBlocked = { gate: id, at: now };
+      return true;
+    }
+    return false;
   }
 
   /** Tapping a neighbor or a door walks to the tile beside it. */
@@ -311,6 +356,8 @@ export class WorldScene extends Scene {
     if (walkable(this.grid, tapped)) return tapped;
     const door = this.def.doors.find(({ at }) => Math.abs(at.x - tapped.x) <= 1 && Math.abs(at.y - tapped.y) <= 1);
     if (door) return door.stand;
+    const landmark = this.street?.standFor(tapped);
+    if (landmark) return landmark;
     const options = [{ x: 0, y: 1 }, { x: 0, y: -1 }, { x: 1, y: 0 }, { x: -1, y: 0 }]
       .map((d) => ({ x: tapped.x + d.x, y: tapped.y + d.y })).filter((pos) => walkable(this.grid, pos));
     if (!options.length) return null;
@@ -321,6 +368,7 @@ export class WorldScene extends Scene {
   private standFor(id: string): GridPos | null {
     const door = this.def.doors.find((d) => d.id === id);
     if (door) return door.stand;
+    if (this.street && id in LANDMARKS) return LANDMARKS[id as Landmark].stand;
     const npc = this.def.npcs.find((n) => n.id === id);
     if (!npc) return null;
     return [{ x: 0, y: 1 }, { x: -1, y: 0 }, { x: 1, y: 0 }, { x: 0, y: -1 }]
@@ -328,6 +376,7 @@ export class WorldScene extends Scene {
   }
 
   private async handle(command: EngineCommand): Promise<void> {
+    if (this.street && isStreetCommand(command)) return this.street.handle(command, (goal) => findRoute(this.grid, this.player.grid, goal));
     switch (command.type) {
       case "lockInput":
         this.inputLocked = command.locked;
@@ -343,6 +392,11 @@ export class WorldScene extends Scene {
         this.lastNear = null; this.lastPosition = "";
         return;
       }
+      case "reset":
+        this.player.stop(); this.street?.reset();
+        this.needsSpaceRelease = false; this.lastWalking = false; this.walkIdleMs = 0;
+        clearTouchInput();
+        return;
       case "worldTrack":
         this.tracked = command.target ? this.standFor(command.target) : null;
         this.beacon.graphics.visible = !!this.tracked;
@@ -354,7 +408,9 @@ export class WorldScene extends Scene {
       case "worldGate": {
         const gate = this.gates.get(command.id);
         if (!gate) return;
+        gate.open = command.open;
         gate.bars.forEach((bar) => { bar.graphics.visible = !command.open; });
+        if (gate.sign) gate.sign.graphics.visible = !command.open;
         for (const tile of gate.tiles) this.grid[tile.y][tile.x] = !command.open;
         return;
       }
@@ -370,8 +426,9 @@ export const COIN_TOWN_WORLD: WorldDef = {
   doors: [{ id: "coinDoor", ...COIN_TOWN_DOOR, label: "Coin house" },
     { id: "eastSign", ...COIN_TOWN_EAST_SIGN, label: "Foundry Town →" }, { id: "westSign", ...COIN_TOWN_WEST_SIGN, label: "← Hollow Town" }],
   animals: COIN_TOWN_ANIMALS,
-  gates: [{ id: "north", tiles: COIN_TOWN_NORTH_ROAD.map((x) => ({ x, y: NORTH_GATE_ROW })) },
-    { id: "east", tiles: COIN_TOWN_SIDE_ROAD.map((y) => ({ x: EAST_GATE_COL, y })) }, { id: "west", tiles: COIN_TOWN_SIDE_ROAD.map((y) => ({ x: WEST_GATE_COL, y })) }],
+  gates: [{ id: "north", tiles: COIN_TOWN_NORTH_ROAD.map((x) => ({ x, y: NORTH_GATE_ROW })), lock: "Hollow Badge" },
+    { id: "east", tiles: COIN_TOWN_SIDE_ROAD.map((y) => ({ x: EAST_GATE_COL, y })), lock: "Coin Town badge" },
+    { id: "west", tiles: COIN_TOWN_SIDE_ROAD.map((y) => ({ x: WEST_GATE_COL, y })), lock: "Foundry Badge" }],
   props: [{ sprite: "sign", at: COIN_TOWN_EAST_SIGN.at }, { sprite: "sign", at: COIN_TOWN_WEST_SIGN.at }],
 };
 
@@ -402,4 +459,22 @@ export const HOLLOW_WORLD: WorldDef = {
 
 export class HollowScene extends WorldScene {
   constructor() { super(HOLLOW_WORLD); }
+}
+
+export const CIPHER_WORLD: WorldDef = {
+  map: cipherMap, spawn: CIPHER_SPAWN,
+  npcs: CIPHER_NPCS.map((npc) => ({ id: npc.id, at: npc.at, label: npc.title })),
+  doors: [{ id: "bountyBoard", ...CIPHER_BOARD, label: "Bounty board" }],
+  animals: CIPHER_ANIMALS,
+  gates: [{ id: "north", tiles: CIPHER_NORTH_ROAD.map((x) => ({ x, y: CIPHER_NORTH_GATE_ROW })), lock: "Cipher Badge" }],
+  props: CIPHER_PROPS,
+  night: {
+    glow: ["neon", "arcade", "djbooth", "vending", "crt", "rack", "phonebooth", "stall"],
+    colors: { neon: [217, 70, 239], arcade: [139, 92, 246], djbooth: [34, 211, 238], vending: [248, 113, 113], crt: [74, 222, 128], rack: [34, 211, 238], phonebooth: [96, 165, 250] },
+  },
+  street: true,
+};
+
+export class CipherScene extends WorldScene {
+  constructor() { super(CIPHER_WORLD); }
 }
