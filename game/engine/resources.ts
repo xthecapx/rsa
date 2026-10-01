@@ -10,11 +10,13 @@ export const images = {
 };
 
 /** Town neighbors, drawn by tools/gen_npc_sprites.cjs. */
-export const NPC_IDS = ["mayor", "luz", "nico", "tomas", "marisol", "oscar", "warden", "vpcap", "rosa", "paco", "ines", "joaquin", "vera"] as const;
+export const NPC_IDS = ["mayor", "luz", "nico", "tomas", "marisol", "oscar", "warden", "vpcap", "rosa", "paco", "ines", "joaquin", "vera",
+  "keepercap", "fausto", "candela", "rocio", "ramiro", "aurelio"] as const;
 export type NpcSprite = (typeof NPC_IDS)[number];
-export const ANIMAL_KINDS = ["cat", "dog", "pigeon", "duck", "bot"] as const;
+export const ANIMAL_KINDS = ["cat", "dog", "pigeon", "duck", "bot", "crow", "bat"] as const;
 export const animalImages = Object.fromEntries(ANIMAL_KINDS.map((kind) => [kind, new ImageSource(`/assets/characters/animal-${kind}.svg`)])) as Record<(typeof ANIMAL_KINDS)[number], ImageSource>;
-export const PROP_SPRITES = ["stack-top", "stack-base", "silo-top", "silo-base", "belt", "crate", "press-top", "press-base", "crane-top", "crane-base", "sign"] as const;
+export const PROP_SPRITES = ["stack-top", "stack-base", "silo-top", "silo-base", "belt", "crate", "press-top", "press-base", "crane-top", "crane-base", "sign",
+  "grave", "cross", "deadtree-top", "deadtree-base", "pumpkin", "lantern", "crypt-top", "crypt-base", "bell-top", "bell-base", "candles"] as const;
 export const propImages = Object.fromEntries(PROP_SPRITES.map((name) => [name, new ImageSource(`/assets/characters/prop-${name}.svg`)])) as Record<(typeof PROP_SPRITES)[number], ImageSource>;
 export const npcImages = Object.fromEntries(NPC_IDS.map((id) => [id, new ImageSource(`/assets/characters/${id}.svg`)])) as Record<NpcSprite, ImageSource>;
 

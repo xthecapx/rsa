@@ -44,7 +44,7 @@ export function FoundryScreen({ onWest, onEnterWorkshop, restartOptions }: {
     badge: { medal: "foundry-town", award: () => useProgress.getState().complete("grover", "town"), journal: "Earn the Foundry Badge", collect: "Collect your badge from VP Cap" },
     afterBadge: () => null,
     objectiveFor: () => null,
-    idle: "The Foundry Badge is yours. The west road leads back to Coin Town, and its north road is open.",
+    idle: "The Foundry Badge is yours. The west road leads back to Coin Town, and from there the west road to Hollow Town is open.",
     others: {},
     nearLabels: {},
     gates: {},

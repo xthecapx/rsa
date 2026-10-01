@@ -168,13 +168,13 @@ export const MAYOR = {
   coinWaiting: { speaker: "mayor", text: "The coin toss is still waiting in the house up north." },
   coinDone: { speaker: "mayor", text: "Ale and Brayan’s coin toss is settled." },
   ready: { speaker: "mayor", text: "Five cards and a fair coin. You know what a qubit can be, how H mixes it, how a sign hides inside it and how to read that sign. That’s the Coin Town badge, and the east gate will open for you." },
-  done: { speaker: "mayor", text: "The badge suits you. Foundry Town is down the east road; my cousin VP Cap runs it, and our cousin Professor Thecap keeps a workshop there. Tell them Cap sent you. Replay anything here you like; cards and medals stay." },
+  done: { speaker: "mayor", text: "The badge suits you. Foundry Town is down the east road; my cousin VP Cap runs it, and our cousin Professor Thecap keeps a workshop there. After that, the west road leads to Hollow Town and our cousin Keeper Cap. Tell them Cap sent you. Replay anything here you like; cards and medals stay." },
 } satisfies Record<string, Line>;
 /** "{count} of 5 knowledge cards." is composed at runtime. */
 export const CARD_COUNT = "You have {count} of 5 knowledge cards.";
 
 export const WARDEN = {
-  closed: { speaker: "warden", text: "This road goes north to Quantum Town, where the big problems are. I only open it for travellers with the Foundry Badge. VP Cap hands it out, down the east road." },
+  closed: { speaker: "warden", text: "This road goes north to Quantum Town, where the big problems are. I only open it for travellers with the Hollow Badge. Keeper Cap hands it out, down the west road." },
   open: { speaker: "warden", text: "Badge checked. The road north to Quantum Town is open. Say hi to Professor Thecap for me." },
 } satisfies Record<string, Line>;
 
@@ -182,7 +182,8 @@ export const WARDEN = {
 export const SIGNS = {
   eastClosed: { speaker: "system", text: "East road · Foundry Town. The gate opens for holders of the Coin Town badge. Mayor Cap hands it out, by the entrance." },
   eastOpen: { speaker: "system", text: "East road · Foundry Town. VP Cap’s factories and Professor Thecap’s workshop. The gate is open." },
-  west: { speaker: "system", text: "West road · Hollow Town. The road is still being built. Doña Ofelia’s troubles will wait for you there." },
+  westClosed: { speaker: "system", text: "West road · Hollow Town. The gate opens for holders of the Foundry Badge. VP Cap hands it out, down the east road." },
+  westOpen: { speaker: "system", text: "West road · Hollow Town. Keeper Cap’s old cemetery and Doña Ofelia’s knocking house. The gate is open." },
 } satisfies Record<string, Line>;
 
 export const COIN_TOWN_DOOR = { at: { x: 20, y: 5 }, stand: { x: 20, y: 6 } };
@@ -197,8 +198,9 @@ export const EAST_GATE_COL = 38;
 export const WEST_GATE_COL = 1;
 export const COIN_TOWN_EAST_SIGN = { at: { x: 36, y: 13 }, stand: { x: 36, y: 14 } };
 export const COIN_TOWN_WEST_SIGN = { at: { x: 3, y: 13 }, stand: { x: 3, y: 14 } };
-/** Walking back from Foundry Town arrives just inside the east gate. */
+/** Walking back from Foundry Town arrives just inside the east gate, and from Hollow Town just inside the west gate. */
 export const COIN_TOWN_FROM_EAST = { x: 37, y: 15 };
+export const COIN_TOWN_FROM_WEST = { x: 2, y: 15 };
 /** Walking back from Quantum Town arrives just inside the gate. */
 export const COIN_TOWN_FROM_NORTH = { x: 25, y: 2 };
 /** Quantum Town's southern entrance, where the road from Coin Town arrives; its bottom row leads back. */
@@ -206,7 +208,7 @@ export const QUANTUM_SOUTH_GATE = { x: 24, y: 33 };
 export const QUANTUM_SOUTH_ROW = 35;
 
 /** Town life: animals wander near a home tile and never block the player. */
-export type AnimalKind = "cat" | "dog" | "pigeon" | "duck" | "bot";
+export type AnimalKind = "cat" | "dog" | "pigeon" | "duck" | "bot" | "crow" | "bat";
 export interface AnimalSpec {
   kind: AnimalKind;
   home: { x: number; y: number };

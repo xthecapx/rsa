@@ -9,10 +9,12 @@ import type { Speaker } from "./types";
  */
 export type CoinKnowledgeId = "bits" | "four-states" | "phase" | "interference" | "basis";
 export type FoundryKnowledgeId = "register" | "spread" | "stamp" | "mirror" | "rounds";
-export type KnowledgeId = CoinKnowledgeId | FoundryKnowledgeId;
+export type HollowKnowledgeId = "control" | "flipproof" | "kickback" | "parity" | "onequestion";
+export type KnowledgeId = CoinKnowledgeId | FoundryKnowledgeId | HollowKnowledgeId;
 export const COIN_KNOWLEDGE_IDS: CoinKnowledgeId[] = ["bits", "four-states", "phase", "interference", "basis"];
 export const FOUNDRY_KNOWLEDGE_IDS: FoundryKnowledgeId[] = ["register", "spread", "stamp", "mirror", "rounds"];
-export const ALL_KNOWLEDGE_IDS: KnowledgeId[] = [...COIN_KNOWLEDGE_IDS, ...FOUNDRY_KNOWLEDGE_IDS];
+export const HOLLOW_KNOWLEDGE_IDS: HollowKnowledgeId[] = ["control", "flipproof", "kickback", "parity", "onequestion"];
+export const ALL_KNOWLEDGE_IDS: KnowledgeId[] = [...COIN_KNOWLEDGE_IDS, ...FOUNDRY_KNOWLEDGE_IDS, ...HOLLOW_KNOWLEDGE_IDS];
 
 export interface KnowledgeCard {
   id: KnowledgeId;
@@ -44,6 +46,8 @@ export interface QuestionBars {
   mean?: boolean;
   /** Once answered correctly, also draw the register after these pieces. */
   after?: RegOp[];
+  /** Captions for the before and after pictures. */
+  titles?: [string, string];
 }
 export interface QuestionStep {
   kind: "question"; title: string; text: string;
@@ -62,6 +66,10 @@ export interface RegisterStep {
   /** Columns of the circuit, and the pieces the tray offers. */
   slots: number; tray: RegPiece[];
   target: RegTarget;
+  /** The last wire is the helper: CNOT pieces flip it, and each wire's state is shown at the output. */
+  helper?: boolean;
+  /** Boxes already bolted to the bench after the player's slots, e.g. the ghost answering. */
+  fixed?: RegOp[];
   /** Plain words for the goal, shown under the bars. */
   goal: string;
   fill?: boolean;
@@ -90,3 +98,8 @@ export interface TownNpc<Id extends string = string> {
   outro: Line[];
   repeat: Line[];
 }
+
+/** Decor sprites drawn by tools/gen_npc_sprites.cjs; tall props are two tiles, top over base. */
+export type PropSprite = "stack-top" | "stack-base" | "silo-top" | "silo-base" | "belt" | "press-top" | "press-base" | "crane-top" | "crane-base" | "sign"
+  | "grave" | "cross" | "deadtree-top" | "deadtree-base" | "pumpkin" | "lantern" | "crypt-top" | "crypt-base" | "bell-top" | "bell-base" | "candles";
+export interface PropSpec { sprite: PropSprite; at: { x: number; y: number } }

@@ -6,21 +6,26 @@ taps; press Space or tap Talk beside a door, person, or sign.
 
 ```
                  [Quantum Town]   hub: every challenge has a replay door; RSA lives here for now
-                       │ north road (Foundry Badge)
+                       │ north road (Hollow Badge)
 [Hollow Town] ── [Coin Town] ── [Foundry Town]
- west, closed      start          east road (Coin Town badge)
+ west road         start          east road (Coin Town badge)
+ (Foundry Badge)
 ```
 
 - **Coin Town** (start): Mayor Cap. Five neighbors teach one-qubit ideas as
   knowledge cards; the coin house holds **Who Goes First?**. Cards plus the coin
   lesson earn the Coin Town badge, which opens the east road.
 - **Foundry Town**: VP Cap. Five factory hands teach Grover's pieces on register
-  benches (registers, even spread, the oracle stamp, the Diffuser, round counts);
+  benches (registers, even spread, the Oracle, the Diffuser, round counts);
   Thecap's workshop holds **Echo Chamber**. Cards plus the lesson earn the Foundry
-  Badge, which opens Coin Town's north road.
-- **Hollow Town**: placeholder for **Operation Ghost Key**; its road is gated.
+  Badge, which opens Coin Town's west road.
+- **Hollow Town**: Keeper Cap, at night in an old cemetery. Five neighbors teach
+  what the vault adds (the CNOT, the flip-proof |−⟩, phase kickback, the parity
+  lock, one question) on benches whose last wire is a helper; Casa Ofelia holds
+  **Operation Ghost Key**. Cards plus the lesson earn the Hollow Badge, which opens
+  Coin Town's north road.
 - **Quantum Town**: Professor Thecap. Keeps a door for every lesson, including a
-  replay door to the same workshop save, and hosts **Breaking RSA**.
+  replay door to the same workshop and Casa Ofelia saves, and hosts **Breaking RSA**.
 
 Cards are never required for a lesson, only for the town badge. Saves that
 already reached Quantum Town keep the north road open.

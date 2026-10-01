@@ -1,11 +1,14 @@
-import { Actor, BoundingBox, Circle, Color, Engine, Keys, Scene, TileMap, vec, type Sprite } from "excalibur";
+import { Actor, BoundingBox, Circle, Color, Engine, Keys, Rectangle, Scene, TileMap, vec, type Sprite } from "excalibur";
 import type { PointerEvent, Subscription } from "excalibur";
 
 import { useLocale, t } from "@/i18n";
 import { COIN_TOWN_ANIMALS, COIN_TOWN_DOOR, COIN_TOWN_EAST_SIGN, COIN_TOWN_NORTH_ROAD, COIN_TOWN_NPCS, COIN_TOWN_SIDE_ROAD, COIN_TOWN_SPAWN, COIN_TOWN_WEST_SIGN,
   EAST_GATE_COL, NORTH_GATE_ROW, WEST_GATE_COL, type AnimalSpec } from "@/content/coinTown";
-import { FOUNDRY_ANIMALS, FOUNDRY_BELT, FOUNDRY_DOOR, FOUNDRY_NPCS, FOUNDRY_PROPS, FOUNDRY_SMOKE, FOUNDRY_SPAWN, type PropSprite } from "@/content/foundry";
+import { FOUNDRY_ANIMALS, FOUNDRY_BELT, FOUNDRY_DOOR, FOUNDRY_NPCS, FOUNDRY_PROPS, FOUNDRY_SMOKE, FOUNDRY_SPAWN } from "@/content/foundry";
+import { HOLLOW_ANIMALS, HOLLOW_DOOR, HOLLOW_FOG, HOLLOW_NPCS, HOLLOW_PROPS, HOLLOW_SPAWN } from "@/content/hollow";
+import type { PropSpec, PropSprite } from "@/content/knowledge";
 import { foundryMap } from "../maps/foundryMap";
+import { hollowMap } from "../maps/hollowMap";
 import { Wanderer } from "../actors/Wanderer";
 import { coinTownMap } from "../maps/coinTownMap";
 import { Character } from "../actors/Character";
@@ -28,11 +31,15 @@ export interface WorldDef {
   /** Barriers React can lift, e.g. the road to the next town. Closed until told otherwise. */
   gates?: { id: string; tiles: GridPos[] }[];
   /** Decor drawn over the terrain; every prop blocks its tile. */
-  props?: { sprite: PropSprite; at: GridPos }[];
+  props?: PropSpec[];
   /** A conveyor row that crates ride along, from one tile column to another. */
   belt?: { y: number; from: number; to: number };
   /** Tiles that smoke rises from. */
   smoke?: GridPos[];
+  /** Tiles that low mist drifts across. */
+  fog?: GridPos[];
+  /** Dim the town to night; these props glow warm and flicker. */
+  night?: { glow: PropSprite[] };
 }
 
 const MOVE_KEYS: { keys: Keys[]; delta: GridPos }[] = [
@@ -46,6 +53,8 @@ const WALK_SETTLE_MS = 220;
 const CRATE_GAP = 3, BELT_SPEED = 0.6;
 /** Puffs per stack, and seconds for one puff to rise and fade. */
 const PUFFS = 3, PUFF_SECONDS = 3.6;
+/** Mist wisps per tile, and seconds for one to drift across and fade. */
+const WISPS = 2, WISP_SECONDS = 7;
 
 /** Build the solid grid once from both tile layers plus the people standing on it. */
 export function worldGrid(def: WorldDef): WorldGrid {
@@ -88,6 +97,8 @@ export class WorldScene extends Scene {
   private gates = new Map<string, { tiles: GridPos[]; bars: Actor[] }>();
   private crates: Actor[] = [];
   private puffs: { actor: Actor; from: GridPos; offset: number }[] = [];
+  private wisps: { actor: Actor; from: GridPos; offset: number }[] = [];
+  private glows: { actor: Actor; seed: number }[] = [];
 
   constructor(private readonly def: WorldDef) {
     super();
@@ -145,11 +156,32 @@ export class WorldScene extends Scene {
       actor.graphics.use(new Circle({ radius: 3, color: Color.fromHex("#cbd5e1") }));
       this.add(actor); this.puffs.push({ actor, from, offset: i / PUFFS });
     }
+    for (const from of this.def.fog ?? []) for (let i = 0; i < WISPS; i++) {
+      const actor = new Actor({ z: 14 });
+      actor.graphics.use(new Circle({ radius: 6, color: Color.fromHex("#dbe4f0") }));
+      actor.scale = vec(2.6, 0.55);
+      this.add(actor); this.wisps.push({ actor, from, offset: i / WISPS });
+    }
+    if (this.def.night) {
+      // A dark-blue veil over the whole town, with warm light pooled around lanterns and candles.
+      const veil = new Actor({ pos: vec(0, 0), anchor: vec(0, 0), z: 12 });
+      veil.graphics.use(new Rectangle({ width: this.def.map.width * TILE_SIZE, height: this.def.map.height * TILE_SIZE, color: Color.fromRGB(14, 18, 48, 0.42) }));
+      this.add(veil);
+      for (const prop of this.def.props ?? []) {
+        if (!this.def.night.glow.includes(prop.sprite)) continue;
+        const at = tileCenter(prop.at);
+        const glow = new Actor({ pos: vec(at.x, at.y - 4), z: 13 });
+        glow.graphics.use(new Circle({ radius: 14, color: Color.fromRGB(253, 186, 72, 0.13) }));
+        this.add(glow); this.glows.push({ actor: glow, seed: this.glows.length * 2.3 });
+      }
+      // Name boards and the tracking ring stay readable above the night.
+      for (const sign of this.signs) sign.actor.z = 30;
+    }
     const ground = (pos: GridPos) => this.def.map.rows[pos.y]?.[pos.x] ?? "";
     for (const spec of this.def.animals ?? []) { const animal = new Wanderer(spec, this.grid, ground); this.animals.push(animal); this.add(animal); }
     this.player = new Character("hacker", this.def.spawn, "up");
     this.add(this.player);
-    this.beacon = new Actor({ z: 5 });
+    this.beacon = new Actor({ z: this.def.night ? 30 : 5 });
     this.beacon.graphics.use(new Circle({ radius: 10, color: Color.Transparent, strokeColor: Color.fromHex("#efbe67"), lineWidth: 2 }));
     this.beacon.graphics.visible = false;
     this.add(this.beacon);
@@ -233,6 +265,13 @@ export class WorldScene extends Scene {
       puff.actor.scale = vec(0.7 + life * 1.1, 0.7 + life * 1.1);
       puff.actor.graphics.opacity = 0.55 * (1 - life);
     }
+    for (const wisp of this.wisps) {
+      const life = ((this.clock / 1000) / WISP_SECONDS + wisp.offset) % 1;
+      const at = tileCenter(wisp.from);
+      wisp.actor.pos = vec(at.x - 14 + life * 28, at.y + 4 - life * 3);
+      wisp.actor.graphics.opacity = 0.2 * Math.sin(life * Math.PI);
+    }
+    for (const glow of this.glows) glow.actor.graphics.opacity = 0.85 + 0.15 * Math.sin(this.clock / 170 + glow.seed) * Math.sin(this.clock / 410 + glow.seed);
     for (const animal of this.animals) animal.tick(elapsed, this.player.grid);
     for (const idler of this.idlers) {
       // A one-pixel lift now and then reads as breathing without making the town jittery.
@@ -350,4 +389,17 @@ export const FOUNDRY_WORLD: WorldDef = {
 
 export class FoundryScene extends WorldScene {
   constructor() { super(FOUNDRY_WORLD); }
+}
+
+export const HOLLOW_WORLD: WorldDef = {
+  map: hollowMap, spawn: HOLLOW_SPAWN,
+  npcs: HOLLOW_NPCS.map((npc) => ({ id: npc.id, at: npc.at, label: npc.title })),
+  doors: [{ id: "vaultDoor", ...HOLLOW_DOOR, label: "Casa Ofelia" }],
+  animals: HOLLOW_ANIMALS,
+  props: HOLLOW_PROPS, fog: HOLLOW_FOG,
+  night: { glow: ["lantern", "candles", "pumpkin"] },
+};
+
+export class HollowScene extends WorldScene {
+  constructor() { super(HOLLOW_WORLD); }
 }

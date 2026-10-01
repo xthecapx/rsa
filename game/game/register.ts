@@ -1,11 +1,17 @@
 /**
- * Small-register math for the Foundry Town benches: two or three qubits, real
- * amplitudes, and only the pieces Grover's search is built from. Basis states
- * are written with qubit 1 on the left, so "10" means qubit 1 is |1⟩.
+ * Small-register math for the Foundry and Hollow Town benches: two or three
+ * qubits, real amplitudes, and only the pieces Grover's search and the vault's
+ * one-question trick are built from. Basis states are written with qubit 1 on
+ * the left, so "10" means qubit 1 is |1⟩. The last wire doubles as the helper:
+ * CNOTs and the ghost always flip it.
  */
-export type RegOp = "H" | "X1" | "X2" | "X3" | `oracle:${string}` | "D";
-/** What a bench tray offers: "X" is placed on one wire, which makes it X1, X2 or X3. */
-export type RegPiece = "X" | Exclude<RegOp, "X1" | "X2" | "X3">;
+type Wire = 1 | 2 | 3;
+export type RegOp = "H" | "D" | `X${Wire}` | `Z${Wire}` | `h${Wire}` | `CX${Wire}` | `oracle:${string}` | `ghost:${string}`;
+/** Pieces placed on a single wire: X, Z, H on one qubit, or a CNOT controlled by that wire. */
+export type WirePiece = "X" | "Z" | "h" | "CX";
+export const WIRE_PIECES: WirePiece[] = ["X", "Z", "h", "CX"];
+/** What a bench tray offers: wire pieces, or a box that covers every wire. */
+export type RegPiece = WirePiece | "H" | "D" | `oracle:${string}` | `ghost:${string}`;
 export type Register = number[];
 
 const EPS = 1e-9;
@@ -36,8 +42,18 @@ export function applyReg(amps: Register, op: RegOp): Register {
     const marked = parseInt(op.slice(7), 2);
     return amps.map((a, i) => (i === marked ? clean(-a) : a));
   }
-  const bit = 1 << (qubits - Number(op.slice(1)));
-  return amps.map((_, i) => amps[i ^ bit]);
+  // The ghost answers s·x mod 2 about the data wires by flipping the helper, the last wire.
+  if (op.startsWith("ghost:")) {
+    const secret = parseInt(op.slice(6), 2);
+    return amps.map((_, i) => amps[popcount((i >> 1) & secret) % 2 ? i ^ 1 : i]);
+  }
+  const wire = Number(op.replace(/^\D+/, ""));
+  const bit = 1 << (qubits - wire);
+  if (op.startsWith("X")) return amps.map((_, i) => amps[i ^ bit]);
+  if (op.startsWith("Z")) return amps.map((a, i) => (i & bit ? clean(-a) : a));
+  if (op.startsWith("h")) return amps.map((a, i) => clean(Math.SQRT1_2 * (i & bit ? amps[i ^ bit] - a : a + amps[i ^ bit])));
+  // CNOT: the helper flips only where the control wire is 1.
+  return amps.map((_, i) => amps[i & bit ? i ^ 1 : i]);
 }
 
 /** The register after each piece; the first entry is the start. */
@@ -53,7 +69,9 @@ export type RegTarget =
   | { basis: string }
   /** Exact amplitudes, up to a global sign. */
   | { amplitudes: number[] }
-  | { marked: string; atLeast: number };
+  | { marked: string; atLeast: number }
+  /** The first wires read this string for certain, whatever the helper does. */
+  | { reads: string };
 
 /** Equal up to a global sign, which no measurement can detect. */
 export function sameRegister(p: Register, q: Register): boolean {
@@ -64,11 +82,39 @@ export function sameRegister(p: Register, q: Register): boolean {
 export function meetsTarget(amps: Register, target: RegTarget): boolean {
   if ("basis" in target) return Math.abs(Math.abs(amps[parseInt(target.basis, 2)]) - 1) < 1e-6;
   if ("amplitudes" in target) return sameRegister(amps, target.amplitudes);
+  if ("reads" in target) return readsOdds(amps, target.reads) >= 0.999;
   return probsReg(amps)[parseInt(target.marked, 2)] >= target.atLeast - 1e-9;
 }
 
 export function solvesReg(step: { qubits: number; start: string; target: RegTarget }, ops: RegOp[]): boolean {
   return meetsTarget(traceReg(startRegister(step.qubits, step.start), ops).at(-1)!, step.target);
+}
+
+/** Chance that the first wires read `bits`, summed over the wires after them. */
+export function readsOdds(amps: Register, bits: string): number {
+  const rest = Math.log2(amps.length) - bits.length;
+  const want = parseInt(bits, 2);
+  return probsReg(amps).reduce((sum, p, i) => sum + (i >> rest === want ? p : 0), 0);
+}
+
+export type WireState = "0" | "1" | "+" | "-";
+const WIRE_AMPS: Record<WireState, [number, number]> = { "0": [1, 0], "1": [0, 1], "+": [Math.SQRT1_2, Math.SQRT1_2], "-": [Math.SQRT1_2, -Math.SQRT1_2] };
+export const WIRE_KET: Record<WireState, string> = { "0": "|0⟩", "1": "|1⟩", "+": "|+⟩", "-": "|−⟩" };
+
+/** One named state per wire, qubit 1 first, e.g. product("+", "-") is |+⟩|−⟩. */
+export function product(...wires: WireState[]): Register {
+  return Array.from({ length: 2 ** wires.length }, (_, i) => wires.reduce((amp, state, q) => amp * WIRE_AMPS[state][(i >> (wires.length - 1 - q)) & 1], 1)).map(clean);
+}
+
+/** The state of each wire when the register is a plain product of |0⟩, |1⟩, |+⟩ and |−⟩ (up to a global sign), else null. */
+export function wireStates(amps: Register): WireState[] | null {
+  const qubits = Math.log2(amps.length);
+  const names = Object.keys(WIRE_AMPS) as WireState[];
+  for (let code = 0; code < 4 ** qubits; code++) {
+    const wires = Array.from({ length: qubits }, (_, q) => names[Math.floor(code / 4 ** q) % 4]);
+    if (sameRegister(amps, product(...wires))) return wires;
+  }
+  return null;
 }
 
 /** Probability of reading the marked state after `rounds` Oracle + Diffuser rounds. */

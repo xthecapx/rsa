@@ -18,6 +18,7 @@ export const VAULT_SCENES: Record<VaultStep, Scene> = {
     title: "A house that knocks", place: "vault", objective: "Talk to Doña Ofelia by the vault.",
     lines: [
       { speaker: "ofelia", text: "You’re the one who quieted Anselmo’s drone? Good. Then you can quiet his vault." },
+      { speaker: "ofelia", text: "Keeper Cap says you’ve been asking the neighbors questions. Keep asking. The vault only answers questions too." },
       { speaker: "ofelia", text: "Every night it knocks. Anselmo’s vault answers questions, but only three a night. Then the candles die and the house goes cold." },
       { speaker: "ofelia", text: "Twenty-five tumblers. His last letter is in there. Help me open it." },
     ],
@@ -79,13 +80,14 @@ export const VAULT_SCENES: Record<VaultStep, Scene> = {
     lines: [
       { speaker: "ofelia", text: "Explain it to me with one tumbler. I’m old, not slow." },
       { speaker: "system", text: "The ghost is the vault’s Oracle, and it only ever flips the helper qubit. Follow what that does to a tumbler’s qubit." },
+      { speaker: "system", text: "This is Rocío’s kickback: aim a flip at a |−⟩ helper and the minus sign travels back to the qubit that controlled it." },
     ],
   },
   bvWire: {
     title: "Open the black box", place: "desk", objective: "Build the one-question circuit from boxes.",
     lines: [
       { speaker: "system", text: "Remember the sealed Oracle in the workshop? It had a helper qubit hidden inside. This time you prepare the helper yourself." },
-      { speaker: "system", text: "Put the helper in |−⟩ and the Oracle’s answer, the ghost’s knock, becomes a phase. Then read the phases with H." },
+      { speaker: "system", text: "Put the helper in |−⟩, Candela’s flip-proof candle, and the Oracle’s answer, the ghost’s knock, becomes a phase. Then read the phases with H." },
     ],
   },
   execute: {

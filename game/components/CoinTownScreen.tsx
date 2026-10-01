@@ -27,23 +27,28 @@ const PLACES: MinimapPlace[] = [
 ];
 const SIDE_ROW = COIN_TOWN_SIDE_ROAD[1] + 0.9;
 
-export function CoinTownScreen({ onLeave, onEast, onEnterCoin, restartOptions }: {
+export function CoinTownScreen({ onLeave, onEast, onWest, onEnterCoin, restartOptions }: {
   /** North road to Quantum Town. */
   onLeave: () => void;
   /** East road to Foundry Town. */
   onEast: () => void;
+  /** West road to Hollow Town. */
+  onWest: () => void;
   onEnterCoin: () => void; restartOptions: RestartOption[];
 }) {
   const completed = useProgress((state) => state.completed);
   const coinBadge = useMedals((state) => !!state.earned["coin-town"]);
   const foundryBadge = useMedals((state) => !!state.earned["foundry-town"]);
+  const hollowBadge = useMedals((state) => !!state.earned["hollow-town"]);
   const metThecap = useTown((state) => state.welcomed);
   /** The temporary travel pass opens every built road, for checking towns. */
   const pass = useTravelPass((state) => state.active);
   const coinComplete = !!completed.coin?.includes("coin");
-  /** Quantum Town is the last town: the Foundry Badge opens its road. Saves that already played there keep their way in. */
-  const northOpen = pass || foundryBadge || metThecap || !!completed.rsa?.length || !!completed.vault?.length;
-  const eastOpen = coinBadge || foundryBadge || northOpen;
+  /** The roads open in challenge order: Coin Town's badge opens the east road, the Foundry Badge the west road, the Hollow Badge the north road.
+   * Saves that already played in Quantum Town keep their way in. */
+  const northOpen = pass || hollowBadge || metThecap || !!completed.rsa?.length || !!completed.vault?.length;
+  const westOpen = foundryBadge || hollowBadge || northOpen;
+  const eastOpen = coinBadge || westOpen;
 
   const config: TownConfig = {
     world: "coinTown", slot: "coinTown",
@@ -62,30 +67,31 @@ export function CoinTownScreen({ onLeave, onEast, onEnterCoin, restartOptions }:
     },
     route: ROUTE,
     badge: { medal: "coin-town", award: () => useProgress.getState().complete("coin", "town"), journal: "Earn the Coin Town badge", collect: "Collect your badge from Mayor Cap" },
-    afterBadge: () => (northOpen ? "warden" : "eastSign"),
-    objectiveFor: (target) => (target === "warden" ? "Take the north road to Quantum Town" : target === "eastSign" ? "Take the east road to Foundry Town" : null),
+    afterBadge: () => (northOpen ? "warden" : westOpen ? "westSign" : "eastSign"),
+    objectiveFor: (target) => (target === "warden" ? "Take the north road to Quantum Town" : target === "eastSign" ? "Take the east road to Foundry Town" : target === "westSign" ? "Take the west road to Hollow Town" : null),
     idle: "Coin Town is yours. The east road leads to Foundry Town.",
     others: {
       warden: () => ({ title: "Beto", lines: [northOpen ? WARDEN.open : WARDEN.closed] }),
       eastSign: () => ({ title: "Foundry Town", lines: [eastOpen ? SIGNS.eastOpen : SIGNS.eastClosed] }),
-      westSign: () => ({ title: "Hollow Town", lines: [SIGNS.west] }),
+      westSign: () => ({ title: "Hollow Town", lines: [westOpen ? SIGNS.westOpen : SIGNS.westClosed] }),
     },
     nearLabels: { eastSign: "Read the signpost", westSign: "Read the signpost" },
-    gates: { north: northOpen, east: eastOpen, west: false },
+    gates: { north: northOpen, east: eastOpen, west: westOpen },
     exits: [
       { test: (at) => at.y === 0 && COIN_TOWN_NORTH_ROAD.includes(at.x), go: onLeave },
       { test: (at) => at.x === coinTownMap.width - 1, go: onEast },
+      { test: (at) => at.x === 0, go: onWest },
     ],
     journal: {
       title: "Coin Town journal", intro: "Learn from the neighbors, settle the coin toss, then see Mayor Cap for the town badge.",
-      roads: [{ label: "Take the east road to Foundry Town", open: eastOpen }, { label: "Take the north road to Quantum Town", open: northOpen }],
+      roads: [{ label: "Take the east road to Foundry Town", open: eastOpen }, { label: "Take the west road to Hollow Town", open: westOpen }, { label: "Take the north road to Quantum Town", open: northOpen }],
     },
     restart: { label: "Restart Coin Town", description: "Forget the five knowledge cards and meet Mayor Cap again. Your medals and the coin lesson stay.", restart: () => {} },
     minimap: (props) => <WorldMinimap {...props} map={coinTownMap} places={PLACES}
       roads={[
         { at: { x: COIN_TOWN_NORTH_ROAD[0] + 1, y: -0.4 }, glyph: "↑", title: "North road to Quantum Town" },
         { at: { x: coinTownMap.width + 0.8, y: SIDE_ROW }, glyph: "→", title: "East road to Foundry Town" },
-        { at: { x: -0.8, y: SIDE_ROW }, glyph: "←", title: "West road to Hollow Town (closed)" },
+        { at: { x: -0.8, y: SIDE_ROW }, glyph: "←", title: "West road to Hollow Town" },
       ]}
       ariaLabel="Coin Town map: C is the coin house, M is Mayor Cap, 1 to 5 are the neighbors with knowledge cards, and the arrows are the roads north to Quantum Town, east to Foundry Town and west to Hollow Town."
       legend={[`C · ${t("Coin house")}　M · ${t("Mayor Cap")}　B · ${t("Beto")}`, TEACHERS.map((npc, i) => `${i + 1} · ${t(npc.title)}`).join("　")]} />,

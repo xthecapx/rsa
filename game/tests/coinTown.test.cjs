@@ -5,7 +5,7 @@ const { loadTs } = require('./loadTs.cjs');
 const catalog = require('../i18n/es.json');
 const { STATES, apply, trace, sameState, probabilities, ketName, expand, solves } = loadTs(path.join(__dirname, '../game/qubit.ts'));
 const { COIN_TOWN_ANIMALS, COIN_TOWN_NPCS, KNOWLEDGE, KNOWLEDGE_IDS, MAYOR, WARDEN, SIGNS, CARD_COUNT, COIN_TOWN_SPAWN, COIN_TOWN_DOOR, COIN_TOWN_NORTH_ROAD, NORTH_GATE_ROW, COIN_TOWN_FROM_NORTH,
-  COIN_TOWN_SIDE_ROAD, EAST_GATE_COL, WEST_GATE_COL, COIN_TOWN_EAST_SIGN, COIN_TOWN_WEST_SIGN, COIN_TOWN_FROM_EAST, QUANTUM_SOUTH_GATE, QUANTUM_SOUTH_ROW } = loadTs(path.join(__dirname, '../content/coinTown.ts'));
+  COIN_TOWN_SIDE_ROAD, EAST_GATE_COL, WEST_GATE_COL, COIN_TOWN_EAST_SIGN, COIN_TOWN_WEST_SIGN, COIN_TOWN_FROM_EAST, COIN_TOWN_FROM_WEST, QUANTUM_SOUTH_GATE, QUANTUM_SOUTH_ROW } = loadTs(path.join(__dirname, '../content/coinTown.ts'));
 const { coinTownMap } = loadTs(path.join(__dirname, '../engine/maps/coinTownMap.ts'));
 const { townMap } = loadTs(path.join(__dirname, '../engine/maps/townMap.ts'));
 const { findRoute, tilesNear } = loadTs(path.join(__dirname, '../engine/maps/grid.ts'));
@@ -95,6 +95,7 @@ test('Coin Town: every neighbor, the coin house and all three roads are reachabl
   assert.equal(findRoute(gated, COIN_TOWN_SPAWN, { x: 0, y: COIN_TOWN_SIDE_ROAD[1] }), null);
   assert.ok(findRoute(grid, COIN_TOWN_FROM_NORTH, COIN_TOWN_SPAWN));
   assert.ok(findRoute(grid, COIN_TOWN_FROM_EAST, COIN_TOWN_SPAWN));
+  assert.ok(findRoute(grid, COIN_TOWN_FROM_WEST, COIN_TOWN_SPAWN));
 });
 
 test('Quantum Town: the south road from Coin Town arrives inside the wall, and its bottom row leads back', () => {

@@ -228,7 +228,7 @@ export function GroverScenario({ onExit, onRestartGame }: { onExit?: () => void;
     if (inFlight.current || !hydrated) return;
     const start = fresh();
     try { localStorage.setItem(GROVER_SAVE_KEY, JSON.stringify(start)); } catch { setStorageNote(true); }
-    useProgress.getState().reset("grover");
+    useProgress.getState().reset("grover", "grover");
     setLaptopOpen(false); setActivePlace(null); setNearbyPlace(null); setNearExit(false); setMessage(null);
     setRoomKey((key) => key + 1); setSession(start); setError(null);
     gameAudio.playSfx("confirm");

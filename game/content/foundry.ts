@@ -1,4 +1,4 @@
-import { FOUNDRY_KNOWLEDGE_IDS, type FoundryKnowledgeId, type KnowledgeCard, type Line, type RegisterStep, type TownNpc } from "./knowledge";
+import { FOUNDRY_KNOWLEDGE_IDS, type FoundryKnowledgeId, type PropSpec, type KnowledgeCard, type Line, type RegisterStep, type TownNpc } from "./knowledge";
 import type { RegPiece, RegTarget } from "@/game/register";
 import type { AnimalSpec } from "./coinTown";
 
@@ -111,7 +111,7 @@ export const FOUNDRY_NPCS: FoundryNpc[] = [
       { speaker: "joaquin", text: "A bar above the average ends up just as far below it, and a bar below ends up just as far above. The formula is 2·mean − a." },
     ],
     steps: [
-      { kind: "question", title: "Work the press", text: "After Inés’s Oracle the bars are amplitudes, not chances: +½, +½, +½ and −½. The dashed line is their average, +¼. The press mirrors each bar across that line: new = 2 · ¼ − old. What does the marked −½ become?", bars: { qubits: 2, start: "00", ops: ["H", "oracle:11"], mean: true, after: ["D"] }, options: [
+      { kind: "question", title: "Work the press", text: "After Inés’s Oracle the bars are amplitudes, not chances: +½, +½, +½ and −½. The dashed line is their average, +¼. The press mirrors each bar across that line: new = 2 · ¼ − old. What does the marked −½ become?", bars: { qubits: 2, start: "00", ops: ["H", "oracle:11"], mean: true, after: ["D"], titles: ["Before the press", "After the press"] }, options: [
         { label: "1", correct: true },
         { label: "½", wrong: "2 · ¼ − (−½) = ½ + ½ = 1. Remember to subtract a negative." },
         { label: "0", wrong: "0 is what the unmarked bars become: 2 · ¼ − ½ = 0." },
@@ -158,7 +158,7 @@ export const VP = {
   workshopWaiting: { speaker: "vpcap", text: "The drone core in Thecap’s workshop is still armed." },
   workshopDone: { speaker: "vpcap", text: "Thecap says the drone core is disarmed. Nice work." },
   ready: { speaker: "vpcap", text: "Five cards and a disarmed core. You can spread a register, mark the answer with the Oracle, lift it with the Diffuser and stop at the top. That’s Grover’s search, and that’s the Foundry Badge." },
-  done: { speaker: "vpcap", text: "The badge is yours. The west road runs back to Coin Town, and the north road there now opens for you. Replay anything here; cards and medals stay." },
+  done: { speaker: "vpcap", text: "The badge is yours. The west road runs back to Coin Town, and Coin Town’s own west road now opens for you: Hollow Town, where our cousin Keeper Cap keeps the old cemetery. Replay anything here; cards and medals stay." },
 } satisfies Record<string, Line>;
 export const CARD_COUNT = "You have {count} of 5 Foundry cards.";
 
@@ -175,8 +175,8 @@ export const FOUNDRY_ANIMALS: AnimalSpec[] = [
 ];
 
 /** Decor: tall props are two tiles, top over base. Every prop blocks its tile. */
-export type PropSprite = "stack-top" | "stack-base" | "silo-top" | "silo-base" | "belt" | "press-top" | "press-base" | "crane-top" | "crane-base" | "sign";
-export const FOUNDRY_PROPS: { sprite: PropSprite; at: { x: number; y: number } }[] = [
+export type { PropSprite } from "./knowledge";
+export const FOUNDRY_PROPS: PropSpec[] = [
   { sprite: "stack-top", at: { x: 26, y: 3 } }, { sprite: "stack-base", at: { x: 26, y: 4 } },
   { sprite: "stack-top", at: { x: 38, y: 3 } }, { sprite: "stack-base", at: { x: 38, y: 4 } },
   ...[3, 5, 7].flatMap((x) => [{ sprite: "silo-top" as const, at: { x, y: 19 } }, { sprite: "silo-base" as const, at: { x, y: 20 } }]),

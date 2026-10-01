@@ -15,7 +15,7 @@ export interface Medal {
   hint: string;
 }
 
-export type MedalId = "quantum-coin" | "coin-town" | "codebook" | "key-ring" | "prime-cutter" | "period-lens" | "amplifier" | "foundry-town" | "ghost-key";
+export type MedalId = "quantum-coin" | "coin-town" | "codebook" | "key-ring" | "prime-cutter" | "period-lens" | "amplifier" | "foundry-town" | "ghost-key" | "hollow-town";
 
 export const MEDALS: readonly Medal[] = [
   {
@@ -80,6 +80,13 @@ export const MEDALS: readonly Medal[] = [
     description: "You put a helper qubit in |−⟩, turned a parity lock’s answers into phases, and read a 25-bit secret with one question.",
     ability: "Parity Read: learn an n-bit secret s from f(x) = s·x in a single query.",
     hint: "Open the vault in Casa Ofelia.",
+  },
+  {
+    id: "hollow-town", scenario: "vault", mission: "town", glyph: "🕯",
+    title: "Hollow Badge", skill: "Phase kickback",
+    description: "You learned how a CNOT flips only when its control is 1, why a flip only hands |−⟩ a minus sign, how that minus kicks back onto the control, what parity the ghost answers and how one question reads it all, then opened Anselmo’s vault.",
+    ability: "Kickback: turn an Oracle’s answer into a phase with a |−⟩ helper, and read it with H.",
+    hint: "Collect all five Hollow cards and open the vault in Casa Ofelia.",
   },
 ];
 

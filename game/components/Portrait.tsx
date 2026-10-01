@@ -15,6 +15,7 @@ const STRIDE = SHEET.tile + SHEET.margin;
 const SVG_SPRITES: Partial<Record<Speaker, string>> = {
   guide: "town-doctor", ofelia: "ofelia", mayor: "mayor", luz: "luz", nico: "nico", tomas: "tomas", marisol: "marisol", oscar: "oscar", warden: "warden",
   vpcap: "vpcap", rosa: "rosa", paco: "paco", ines: "ines", joaquin: "joaquin", vera: "vera",
+  keepercap: "keepercap", fausto: "fausto", candela: "candela", rocio: "rocio", ramiro: "ramiro", aurelio: "aurelio",
 };
 const CAST: Record<"ale" | "brayan" | "hacker" | "boss", { col: number; row: number }> = {
   ale: { col: 0, row: 5 },
@@ -34,6 +35,7 @@ const BORDER: Record<Speaker, string> = {
   mayor: "border-accent-amber", luz: "border-accent-amber", nico: "border-accent-teal", tomas: "border-accent-teal",
   marisol: "border-accent-teal", oscar: "border-accent-amber", warden: "border-stage-border",
   vpcap: "border-accent-amber", rosa: "border-accent-teal", paco: "border-accent-amber", ines: "border-accent-teal", joaquin: "border-accent-amber", vera: "border-accent-teal",
+  keepercap: "border-accent-amber", fausto: "border-accent-teal", candela: "border-accent-amber", rocio: "border-accent-teal", ramiro: "border-stage-border", aurelio: "border-accent-amber",
 };
 
 export const SPEAKER_NAME: Record<Speaker, string> = {
@@ -46,6 +48,7 @@ export const SPEAKER_NAME: Record<Speaker, string> = {
   system: "Notes",
   mayor: "Mayor Cap", luz: "Luz", nico: "Nico", tomas: "Tomás", marisol: "Marisol", oscar: "Don Óscar", warden: "Beto",
   vpcap: "VP Cap", rosa: "Rosa", paco: "Paco", ines: "Inés", joaquin: "Joaquín", vera: "Vera",
+  keepercap: "Keeper Cap", fausto: "Fausto", candela: "Candela", rocio: "Rocío", ramiro: "Ramiro", aurelio: "Aurelio",
 };
 
 export const SPEAKER_COLOR: Record<Speaker, string> = {
@@ -59,6 +62,7 @@ export const SPEAKER_COLOR: Record<Speaker, string> = {
   mayor: "text-accent-amber", luz: "text-accent-amber", nico: "text-accent-teal", tomas: "text-accent-teal",
   marisol: "text-accent-teal", oscar: "text-accent-amber", warden: "text-stage-muted",
   vpcap: "text-accent-amber", rosa: "text-accent-teal", paco: "text-accent-amber", ines: "text-accent-teal", joaquin: "text-accent-amber", vera: "text-accent-teal",
+  keepercap: "text-accent-amber", fausto: "text-accent-teal", candela: "text-accent-amber", rocio: "text-accent-teal", ramiro: "text-stage-muted", aurelio: "text-accent-amber",
 };
 
 export function Portrait({ speaker, size = 64 }: { speaker: Speaker; size?: number }) {

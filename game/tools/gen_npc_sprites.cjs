@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Draw the town neighbors, the animals wandering the towns and Foundry Town's props as 16x16 front-facing SVG sprites in
+ * Draw the town neighbors, the animals wandering the towns and the towns' props as 16x16 front-facing SVG sprites in
  * public/assets/characters/, in the same pixel idiom as tools/gen_characters.py.
  * NPCs never walk, so one frame per character is enough; the same file is the
  * world sprite and the dialogue portrait.
@@ -91,6 +91,36 @@ const NPCS = {
     palette: { o: "#171717", h: "#facc15", H: "#ca8a04", s: "#e8b98f", e: "#171717", c: "#f97316", C: "#c2410c", p: "#1e293b", b: "#0f172a", a: "#e5e7eb", t: "#6b3e1f" },
     rows: { 2: ".....HHHHHH.....", 3: "....hhhhhhhh....", 4: "...HhhhhhhhhH...", 5: "...thssssssht...", 10: "...socaccacos...", 11: "....occaacco...." },
   },
+  keepercap: {
+    // Hollow Town's cemetery keeper: grey flat cap, long green coat, a lantern in hand.
+    palette: { o: "#141414", h: "#6b7280", H: "#374151", s: "#d9a577", e: "#141414", c: "#166534", C: "#14532d", p: "#1f2937", b: "#0b0f14", a: "#fbbf24" },
+    rows: { 2: "....HHHHHHHH....", 3: "...HhhhhhhhhH...", 10: "...soccccccosa..", 11: "....occcccco.a..", 13: "....oCCCCCCo....", 14: "....oCCooCCo...." },
+  },
+  fausto: {
+    // Bell ringer: a brown hood and robe, the bell rope at the belt.
+    palette: { o: "#1a120b", h: "#6b4226", s: "#d69a6a", e: "#1a120b", c: "#7c4a22", C: "#5b3416", p: "#5b3416", b: "#1a120b", a: "#e7d7b1" },
+    rows: { 2: ".....hhhhhh.....", 3: "....hhhhhhhh....", 4: "...hhhhhhhhhh...", 5: "...hhssssssh....", 11: "....occaccco....", 12: "....oCCaCCCo...." },
+  },
+  candela: {
+    // Candle maker: golden hair, cream apron, a lit candle in hand.
+    palette: { o: "#1c140d", h: "#d97706", s: "#f1c9a3", e: "#1c140d", c: "#fef3c7", C: "#fcd34d", p: "#78350f", b: "#1c140d", w: "#f8fafc", y: "#fde047" },
+    rows: { 9: "....occcccco..y.", 10: "...soccccccosw..", 11: "....occcccco.w.." },
+  },
+  rocio: {
+    // Fortune teller: a purple headscarf hung with gold coins.
+    palette: { o: "#1a1022", h: "#1f1235", H: "#7e22ce", s: "#c98c5a", e: "#1a1022", c: "#9333ea", C: "#6b21a8", p: "#581c87", b: "#1a1022", a: "#facc15" },
+    rows: { 2: "....HHHHHHHH....", 3: "...HaHaHaHaHH...", 4: "...hhhhhhhhhh...", 12: "....oCaCCaCo...." },
+  },
+  ramiro: {
+    // Gravedigger: a brown cap, grey work shirt and a shovel.
+    palette: { o: "#151515", h: "#57534e", H: "#44403c", s: "#b77a4a", e: "#151515", c: "#6b7280", C: "#4b5563", p: "#3f3f46", b: "#18181b", k: "#7c4a22", g: "#9ca3af" },
+    rows: { 2: ".....HHHHHH.....", 3: "....hhhhhhhHH...", 8: ".....osssso..k..", 9: "....occcccco.k..", 10: "...soccccccosk..", 11: "....occcccco.k..", 12: "....oCCCCCCo.gg." },
+  },
+  aurelio: {
+    // Night watchman: a peaked navy cap and coat, and a lantern.
+    palette: { o: "#0f172a", h: "#1e3a8a", H: "#172554", s: "#e0a878", e: "#0f172a", c: "#1e3a8a", C: "#172554", p: "#1e293b", b: "#0b0f14", a: "#fde047", A: "#b45309" },
+    rows: { 2: "....HHHHHHH.....", 3: "...HHHHHHHHH....", 10: "...soccccccosa..", 11: "....occcccco.A.." },
+  },
 };
 
 /** Side-view animals, facing right; the scene mirrors them to walk left. Rows not listed are empty. */
@@ -115,6 +145,15 @@ const ANIMALS = {
     // Foundry delivery robot: a crate on wheels with one blinking eye.
     palette: { g: "#cbd5e1", G: "#64748b", e: "#22d3ee", k: "#1f2937", y: "#facc15", a: "#94a3b8" },
     rows: { 5: ".........a......", 6: "........aaa.....", 7: "....GGGGGGGG....", 8: "....GggggggG....", 9: "....GggggeeG....", 10: "....GgyggggG....", 11: "....GggggggG....", 12: "....GGGGGGGG....", 13: "....k.kk.kk.k...", 14: "...kkk....kkk..." },
+  },
+  crow: {
+    palette: { k: "#1f1d24", K: "#3b3845", e: "#f5c451", y: "#d4a017" },
+    rows: { 10: "..........kk....", 11: ".........keky...", 12: "...kkkkkkKK.....", 13: "..kKKKKkkk......", 14: "....kkkk........", 15: ".....y..y......." },
+  },
+  bat: {
+    // Hangs in the air: the scene lifts it off the ground.
+    palette: { k: "#27213a", K: "#4c3f6b", e: "#f87171" },
+    rows: { 6: "..k....kk....k..", 7: "..kk..kkkk..kk..", 8: "..kKkkkkkkkkKk..", 9: "....kKkekkekKk..", 10: ".....kKkkkkKk...", 11: "......kk..kk...." },
   },
 };
 
@@ -143,6 +182,29 @@ const PROPS = {
     rows: { 0: "..........kyYk..", 1: "..........kYyk..", 2: "..........kyYk..", 3: "..........kYyk..", 4: "..........kyYk..", 5: "..........kYyk..", 6: "..........kyYk..", 7: "..........kYyk..", 8: "..........kyYk..", 9: "........gggggggg", 10: "........gkkkkkkg", 11: "........gggggggg" } },
   sign: { palette: { w: "#b7793f", W: "#7c4a22", k: "#3b2412", t: "#fef3c7" },
     rows: { 2: "..kkkkkkkkkkkk..", 3: "..kwwwwwwwwwwk..", 4: "..kwtttwtttwwk..", 5: "..kwwwwwwwwwWk..", 6: "..kwttwtttwwWk..", 7: "..kwwwwwwwwWWk..", 8: "..kkkkkkkkkkkk..", 9: ".......kW.......", 10: ".......kW.......", 11: ".......kW.......", 12: ".......kW.......", 13: ".......kW.......", 14: "......kkWW......" } },
+  // Hollow Town.
+  "grave": { palette: { g: "#9ca3af", G: "#6b7280", k: "#374151", m: "#4d7c0f", d: "#3f2a1d" },
+    rows: { 3: ".....kkkkkk.....", 4: "....kggggggk....", 5: "....kggGGggk....", 6: "....kgGGGGgk....", 7: "....kggGGggk....", 8: "....kggGGggk....", 9: "....kggggggk....", 10: "....kgggggGk....", 11: "....kmgggmGk....", 12: "...ddddddddddd..", 13: "..dddddddddddd.." } },
+  "cross": { palette: { w: "#9ca3af", W: "#6b7280", k: "#374151", d: "#3f2a1d" },
+    rows: { 2: ".......kk.......", 3: ".......wW.......", 4: ".......wW.......", 5: "....kkkwWkkk....", 6: "....wwwwWWWW....", 7: "....kkkwWkkk....", 8: ".......wW.......", 9: ".......wW.......", 10: ".......wW.......", 11: ".......wW.......", 12: "......kwWk......", 13: "....dddddddd...." } },
+  "deadtree-top": { palette: { b: "#4b3a2f", B: "#2e231c" },
+    rows: { 2: "..b.......b..b..", 3: "...b..b..b..b...", 4: "b...b.b.b..b....", 5: ".b...bbbb.b.....", 6: "..b...bBb.b...b.", 7: "...bb.bBbb...bb.", 8: ".....bbBb...b...", 9: "b.....bBbbbb....", 10: ".bb...bBb.......", 11: "...bbbbBb.......", 12: "......bBb.......", 13: "......bBb.......", 14: "......bBb.......", 15: "......bBb......." } },
+  "deadtree-base": { palette: { b: "#4b3a2f", B: "#2e231c", d: "#3f2a1d" },
+    rows: { 0: "......bBb.......", 1: "......bBb.......", 2: "......bBb.......", 3: "......bBb.......", 4: "......bBb.......", 5: "......bBb.......", 6: "......bBb.......", 7: "......bBb.......", 8: "......bBb.......", 9: "......bBb.......", 10: ".....bbBbb......", 11: "....bb.B.bb.....", 12: "...ddddddddd...." } },
+  "pumpkin": { palette: { o: "#f97316", O: "#c2410c", g: "#15803d", y: "#fde047" },
+    rows: { 6: ".......g........", 7: ".....OoogooO....", 8: "...OoooOoooOo...", 9: "..OooyoOoyooOo..", 10: "..OoooooOoooOo..", 11: "..OoyyyyyyyoOo..", 12: "..OoooOooooOoo..", 13: "...OoooOoooOo...", 14: ".....OOOOOO....." } },
+  "lantern": { palette: { k: "#1f2937", y: "#fde047", Y: "#f59e0b", g: "#4b5563" },
+    rows: { 1: ".......kk.......", 2: "......kkkk......", 3: ".....kyyyyk.....", 4: ".....kyYYyk.....", 5: ".....kyYYyk.....", 6: ".....kyyyyk.....", 7: "......kkkk......", 8: ".......gg.......", 9: ".......gg.......", 10: ".......gg.......", 11: ".......gg.......", 12: ".......gg.......", 13: ".......gg.......", 14: ".....gggggg....." } },
+  "candles": { palette: { w: "#fef3c7", y: "#fde047", o: "#f97316", t: "#7c4a22", T: "#4a2e14" },
+    rows: { 3: "........y.......", 4: "...y....o...y...", 5: "...o...ww...o...", 6: "...w...ww...w...", 7: "..ww...ww..ww...", 8: "..ww...ww..ww...", 9: ".tttttttttttttt.", 10: ".TTTTTTTTTTTTTT.", 11: ".T............T.", 12: ".T............T.", 13: ".T............T." } },
+  "crypt-top": { palette: { g: "#9ca3af", G: "#6b7280", k: "#374151", w: "#d1d5db" },
+    rows: { 6: ".......kk.......", 7: "......kwwk......", 8: ".....kwwwwk.....", 9: "....kwwwwwwk....", 10: "...kwwwwwwwwk...", 11: "..kkkkkkkkkkkk..", 12: "..kggGggggGggk..", 13: "..kggGggggGggk..", 14: "..kggGggggGggk..", 15: "..kggGggggGggk.." } },
+  "crypt-base": { palette: { g: "#9ca3af", G: "#6b7280", k: "#374151", w: "#d1d5db", K: "#111827" },
+    rows: { 0: "..kggGggggGggk..", 1: "..kggGkkkkGggk..", 2: "..kggGkKKkGggk..", 3: "..kggGkKKkGggk..", 4: "..kggGkKKkGggk..", 5: "..kggGkKKkGggk..", 6: "..kggGkKKkGggk..", 7: "..kggGkKKkGggk..", 8: "..kggGkKKkGggk..", 9: "..kggGkKKkGggk..", 10: "..kkkkkkkkkkkk..", 11: ".kwwwwwwwwwwwwk.", 12: ".kkkkkkkkkkkkkk." } },
+  "bell-top": { palette: { t: "#7c4a22", T: "#4a2e14", y: "#d4a017", Y: "#a16207" },
+    rows: { 1: "..TTTTTTTTTTTT..", 2: "..tttttttttttt..", 3: "..t....TT....t..", 4: "..t...yyyy...t..", 5: "..t..yyyyyY..t..", 6: "..t..yyyyyY..t..", 7: "..t.yyyyyyYY.t..", 8: "..t.YYYYYYYY.t..", 9: "..t....yy....t..", 10: "..t.....r....t..", 11: "..t.....r....t..", 12: "..t.....r....t..", 13: "..t.....r....t..", 14: "..t.....r....t..", 15: "..t.....r....t.." } },
+  "bell-base": { palette: { t: "#7c4a22", T: "#4a2e14", r: "#e7d7b1" },
+    rows: { 0: "..t.....r....t..", 1: "..t.....r....t..", 2: "..t.....r....t..", 3: "..t.....r....t..", 4: "..t.....r....t..", 5: "..t.....r....t..", 6: "..t.....r....t..", 7: "..t.....r....t..", 8: "..t.....r....t..", 9: "..t.....r....t..", 10: "..t.....r....t..", 11: "..t.....r....t..", 12: ".ttt.........ttt", 13: ".TTT.........TTT" } },
 };
 
 function svg(rows, palette) {

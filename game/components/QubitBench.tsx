@@ -103,8 +103,8 @@ export function BenchQuestion({ step, onSolved }: { step: QuestionStep; onSolved
     {step.bars && (() => {
       const before = traceReg(startRegister(step.bars.qubits, step.bars.start), step.bars.ops).at(-1)!;
       return <div className="mb-3 space-y-2">
-        <AmplitudeBars amps={before} mean={step.bars.mean} title={step.bars.after ? "Before the press" : undefined} />
-        {step.bars.after && option?.correct && <AmplitudeBars amps={traceReg(before, step.bars.after).at(-1)!} title="After the press" legend={false} />}
+        <AmplitudeBars amps={before} mean={step.bars.mean} title={step.bars.after ? step.bars.titles?.[0] ?? "Before" : undefined} />
+        {step.bars.after && option?.correct && <AmplitudeBars amps={traceReg(before, step.bars.after).at(-1)!} title={step.bars.titles?.[1] ?? "After"} legend={false} />}
       </div>;
     })()}
     <div className="coin-choices">{step.options.map((choice, i) => <LaptopChoiceButton key={choice.label} selected={picked === i}

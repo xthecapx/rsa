@@ -3,12 +3,13 @@
 import { useEffect, useState } from "react";
 import { COIN_TOWN_SPAWN, QUANTUM_SOUTH_GATE } from "@/content/coinTown";
 import { FOUNDRY_SPAWN } from "@/content/foundry";
+import { HOLLOW_SPAWN } from "@/content/hollow";
 import { useTown } from "@/game/town";
 import { useTravelPass } from "@/game/travelPass";
 import { t, useLocale } from "@/i18n";
 
-type Stop = "coinTown" | "foundry" | "town";
-const STOPS: { id: Stop | "hollow"; label: string }[] = [
+type Stop = "coinTown" | "foundry" | "hollow" | "town";
+const STOPS: { id: Stop; label: string }[] = [
   { id: "coinTown", label: "Coin Town" },
   { id: "foundry", label: "Foundry Town" },
   { id: "hollow", label: "Hollow Town" },
@@ -20,6 +21,7 @@ function travel(to: Stop) {
   const town = useTown.getState();
   if (to === "coinTown") town.patch({ location: "coinTown", coinTown: { ...town.coinTown, position: { ...COIN_TOWN_SPAWN }, facing: "up" } });
   else if (to === "foundry") town.patch({ location: "foundry", foundry: { ...town.foundry, position: { ...FOUNDRY_SPAWN }, facing: "right" } });
+  else if (to === "hollow") town.patch({ location: "hollow", hollow: { ...town.hollow, position: { ...HOLLOW_SPAWN }, facing: "left" } });
   else town.patch({ location: "town", position: { ...QUANTUM_SOUTH_GATE }, facing: "up" });
   window.location.reload();
 }
@@ -40,10 +42,8 @@ export function TravelPass() {
       {open && <div className="mt-2 space-y-2">
         <p className="max-w-xs text-stage-muted">{t("Every built road is open. Jump to any town; progress, cards and medals are not changed. The pass ends when you close this tab.")}</p>
         <div className="flex flex-wrap gap-1">
-          {STOPS.map((stop) => stop.id === "hollow"
-            ? <button key={stop.id} type="button" className="btn-ghost text-xs" disabled title={t("Not built yet")}>{t(stop.label)} · {t("soon")}</button>
-            : <button key={stop.id} type="button" className="btn-ghost text-xs" aria-current={location === stop.id ? "location" : undefined}
-              disabled={location === stop.id} onClick={() => travel(stop.id as Stop)}>{location === stop.id ? "● " : ""}{t(stop.label)}</button>)}
+          {STOPS.map((stop) => <button key={stop.id} type="button" className="btn-ghost text-xs" aria-current={location === stop.id ? "location" : undefined}
+            disabled={location === stop.id} onClick={() => travel(stop.id)}>{location === stop.id ? "● " : ""}{t(stop.label)}</button>)}
         </div>
         <button type="button" className="btn-ghost text-xs" onClick={() => { end(); setOpen(false); }}>{t("End the pass")}</button>
       </div>}

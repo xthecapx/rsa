@@ -246,7 +246,7 @@ export function VaultScenario({ onExit, onRestartGame }: { onExit?: () => void; 
     if (inFlight.current || !hydrated) return;
     const start = fresh();
     try { localStorage.setItem(VAULT_SAVE_KEY, JSON.stringify(start)); } catch { setStorageNote(true); }
-    useProgress.getState().reset("vault");
+    useProgress.getState().reset("vault", "vault");
     setLaptopOpen(false); setActivePlace(null); setNearbyPlace(null); setNearExit(false); setMessage(null);
     setRoomKey((key) => key + 1); setSession(start); setError(null);
     gameAudio.playSfx("confirm");
@@ -291,7 +291,7 @@ export function VaultScenario({ onExit, onRestartGame }: { onExit?: () => void; 
     {!laptopOpen && !journalOpen && !restartOpen && <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center p-3 sm:p-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
       {!atPlace ? <div className={`textbox max-w-lg px-4 py-3 text-center transition-opacity ${walking ? "opacity-20" : ""}`}>
         <p className="text-sm leading-relaxed">{t(scene.objective)}</p>
-        <p className="mt-2 text-xs text-accent-amber">{nearExit ? t("Leave Casa Ofelia and return to Quantum Town. Your lesson is saved.") : nearbyPlace === scene.place ? t("Use Talk to interact.") : t("Walk to the glowing marker.")}</p>
+        <p className="mt-2 text-xs text-accent-amber">{nearExit ? t("Leave Casa Ofelia and return to town. Your lesson is saved.") : nearbyPlace === scene.place ? t("Use Talk to interact.") : t("Walk to the glowing marker.")}</p>
         {(nearExit || nearbyPlace === scene.place) && <>
           <p className="coin-keyboard-hint mt-2 text-xs text-stage-muted">{t(nearExit ? "Press Space to return to town." : "Press Space to talk.")}</p>
           <TalkControl inline label={nearExit ? "Return to town" : "Talk"} canInteract={sceneReady && !busy}
