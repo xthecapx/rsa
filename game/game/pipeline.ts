@@ -61,7 +61,7 @@ export function wireFeedback(source: BoxId, target: BoxId): string {
     case "classical-in>classical-out":
       return "Handing the problem straight to another classical PC is trial division. The QPU has to sit in between.";
     case "qpu-setup>measure":
-      return "A job is a request. The circuit has to run before a register exists to measure.";
+      return "A job is a request. Run its circuit before measuring the resulting register.";
     case "qpu-setup>classical-out":
       return "A classical PC cannot read a job. It needs measurement counts.";
     case "shor>classical-out":

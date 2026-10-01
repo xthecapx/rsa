@@ -39,11 +39,11 @@ export function Calculator() {
       <strong>🧮 {t("Calculator")}</strong>
       <button type="button" className="btn-ghost text-xs" onClick={() => toggle(false)}>{t("Hide")}</button>
     </div>
-    <input ref={field} className="calculator-input" value={input} inputMode="numeric" spellCheck={false} aria-label={t("Sum")}
+    <input ref={field} className="calculator-input" value={input} inputMode="numeric" spellCheck={false} aria-label={t("Expression")}
       placeholder="4^3 mod 7" onChange={(event) => setInput(event.target.value)}
       onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); gameAudio.playSfx("select"); } }} />
     <p className="calculator-result" role="status" aria-live="polite">
-      {result === null ? <span className="text-stage-muted">{t("Type or tap a sum")}</span>
+      {result === null ? <span className="text-stage-muted">{t("Type or tap an expression")}</span>
         : "value" in result ? <>= <b>{result.value.toString()}</b></> : <span className="text-accent-amber">{t(result.error)}</span>}
     </p>
     <div className="calculator-keys">
@@ -51,6 +51,6 @@ export function Calculator() {
       <button type="button" className="btn-ghost" onClick={() => { gameAudio.playSfx("click"); setInput(input.slice(0, -1)); }} aria-label={t("Delete")}>⌫</button>
       <button type="button" className="btn-ghost" onClick={() => { gameAudio.playSfx("click"); setInput(""); }}>C</button>
     </div>
-    <p className="text-[11px] text-stage-muted">{t("mod and ^ go first: 4^3 mod 7 is 64 mod 7.")}</p>
+    <p className="text-[11px] text-stage-muted">{t("Powers go before mod: 4^3 mod 7 means 64 mod 7.")}</p>
   </section>;
 }

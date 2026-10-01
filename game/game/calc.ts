@@ -46,7 +46,7 @@ function apply(op: string, a: bigint, b: bigint): bigint {
     case "÷": if (b === ZERO) throw new Error("Can’t divide by 0"); return a / b;
     case "mod": if (b === ZERO) throw new Error("mod 0 has no meaning"); return ((a % b) + b) % b;
     default:
-      if (b < ZERO) throw new Error("Negative powers aren’t whole numbers");
+      if (b < ZERO) throw new Error("This calculator only supports nonnegative exponents");
       if (b > MAX_EXPONENT) throw new Error("That power is too big to show");
       return a ** b;
   }
@@ -56,7 +56,7 @@ function apply(op: string, a: bigint, b: bigint): bigint {
 export function calculate(input: string): CalcResult {
   try {
     const tokens = tokenize(input);
-    if (!tokens.length) return { error: "Type or tap a sum" };
+    if (!tokens.length) return { error: "Type or tap an expression" };
     let at = 0;
     const peek = () => tokens[at];
     const expression = (min: number): bigint => {
@@ -71,7 +71,7 @@ export function calculate(input: string): CalcResult {
     };
     const operand = (): bigint => {
       const token = tokens[at++];
-      if (!token) throw new Error("The sum ends too early");
+      if (!token) throw new Error("The expression is incomplete");
       if (token.kind === "num") return token.value;
       if (token.kind === "op" && token.op === "-") return -operand();
       if (token.kind === "open") { const value = expression(1); if (tokens[at++]?.kind !== "close") throw new Error("A bracket is missing"); return value; }

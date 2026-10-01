@@ -218,15 +218,15 @@ export function RsaWorkbench({ armed }: { armed: boolean }) {
       {step <= 5 && <PuzzleDragDrop labels={labels} targets={slots} onPlace={place} renderPreview={(source) => <span className="font-mono">{labels[source]}</span>}>
         {step === 1 && <>
           <StepHeader step={1} total={TOTAL} title={t("Split N into its two primes")} />
-          <p className="laptop-note">{t("Only one pair of primes multiplies to N. Drag two pieces into the slots.")}</p>
+          <p className="laptop-note">{t("Only one pair of primes has product N. Drag those two numbers into the slots.")}</p>
           <p className="rsa-eq">{N} = {slot("p", scratch.primes[0])} × {slot("q", scratch.primes[1])}</p>
           {tray}
           {scratch.misses >= 2 && <p className="laptop-note">{t(`Hint: N = ${N} is odd, so 2 is out. Divide ${N} by 3, then 5, then 7 and see which leaves no remainder.`)}</p>}
         </>}
 
         {step === 2 && p !== null && q !== null && <>
-          <StepHeader step={2} total={TOTAL} title={t("Count the keys: φ(N)")} />
-          <p className="laptop-note">{t("φ(N) counts the numbers below N that share no factor with it. For two primes that is simply (p − 1) × (q − 1). Drag p − 1 and q − 1 into the brackets, then their product.")}</p>
+          <StepHeader step={2} total={TOTAL} title={t("Count the coprime numbers: φ(N)")} />
+          <p className="laptop-note">{t("φ(N) counts the positive integers below N that share no factor with it except 1. For two distinct primes, φ(N) = (p − 1) × (q − 1). Drag p − 1 and q − 1 into the brackets, then their product.")}</p>
           <p className="rsa-eq">φ({N}) = ({slot("a", scratch.phiParts[0])} ) × ({slot("b", scratch.phiParts[1])} ) = {slot("phi", scratch.phiParts[2])}</p>
           {tray}
           {scratch.misses >= 2 && <p className="laptop-note">{t(`Hint: ${p} − 1 = ${p - 1} and ${q} − 1 = ${q - 1}. Their product is the piece you want in the last slot.`)}</p>}

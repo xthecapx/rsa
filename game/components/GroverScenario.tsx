@@ -317,9 +317,9 @@ export function GroverScenario({ onExit, onRestartGame }: { onExit?: () => void;
               {session.tried.length > 0 && <p className="text-accent-amber">{t("No. The lock gives no hint about how close you were.")}</p>}
             </>}
             {session.step === "overload" && <>
-              <p className="coin-callout grover-alert" role="alert">⚠ {t("Unstructured search space too large for classical trial-and-error under emergency constraints. Switch to Quantum Core.")}</p>
+              <p className="coin-callout grover-alert" role="alert">⚠ {t("Three tries are not enough to reliably find one PIN among sixteen. Switch to the quantum core.")}</p>
               <SearchGrid tried={session.tried} />
-              <p>{t("Three questions by hand found the PIN with probability 3/16 = 18.75%.")}</p>
+              <p>{t("Three distinct classical guesses had a 3/16 = 18.75% chance of finding the PIN.")}</p>
               {action("Route to the laptop →", () => next("init"))}
             </>}
             {session.step === "lucky" && <>

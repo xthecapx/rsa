@@ -17,7 +17,7 @@ export const KNOWLEDGE_IDS = HOLLOW_KNOWLEDGE_IDS;
 export const KNOWLEDGE: Record<HollowKnowledgeId, KnowledgeCard> = {
   control: {
     id: "control", glyph: "●⊕", title: "Controlled flip",
-    text: "A CNOT has a control and a target. It flips the target only when the control is |1⟩, and it never changes the control’s reading.",
+    text: "A CNOT has a control qubit and a target qubit. It flips the target when the control is |1⟩ and preserves the control’s value in the 0/1 basis.",
     formula: "CNOT|1⟩|0⟩ = |1⟩|1⟩ · CNOT|0⟩|0⟩ = |0⟩|0⟩", hint: "The vault’s ghost is a controlled flip: it flips a helper qubit only when it should.",
   },
   flipproof: {
@@ -32,7 +32,7 @@ export const KNOWLEDGE: Record<HollowKnowledgeId, KnowledgeCard> = {
   },
   parity: {
     id: "parity", glyph: "⊕Σ", title: "The parity lock",
-    text: "The vault never asks “is this the key?”. It counts the tumblers where both the secret s and your question x are 1: an odd count knocks, an even count stays silent.",
+    text: "The vault does not check whether your question is the key. It counts the positions where both the secret s and your question x are 1: an odd count gives a knock; an even count gives silence.",
     formula: "answer = s·x mod 2", hint: "One question by hand gives one bit, so 25 tumblers take 25 questions.",
   },
   onequestion: {
@@ -95,7 +95,7 @@ export const HOLLOW_NPCS: HollowNpc[] = [
   {
     id: "rocio", title: "Rocío", description: "Fortune teller · by the crypt", at: { x: 24, y: 21 }, knowledge: "kickback",
     intro: [
-      { speaker: "rocio", text: "Come in, come in. I’m Rocío. People think the spirits answer. They don’t. The spirit you push, pushes back." },
+      { speaker: "rocio", text: "Come in, come in. I’m Rocío. People think the spirits answer. They don’t. The spirit you push pushes back." },
       { speaker: "rocio", text: "Aim Fausto’s CNOT at Candela’s |−⟩ candle. The candle only bows, so where does the minus go? Back up the rope, onto the control. We call it phase kickback." },
     ],
     steps: [
@@ -112,13 +112,13 @@ export const HOLLOW_NPCS: HollowNpc[] = [
         { reads: "1" }, "q₁ reads 1 every time.",
         "H, H, CNOT, then H on q₁: |−⟩ becomes |1⟩. The helper was never measured, and still q₁ carries the answer.", { fill: true }),
     ],
-    outro: [{ speaker: "rocio", text: "The spirit you push, pushes back. Ramiro, the gravedigger, can tell you what Anselmo’s ghost really answers. It isn’t what Ofelia thinks." }],
+    outro: [{ speaker: "rocio", text: "The spirit you push pushes back. Ramiro, the gravedigger, can tell you what Anselmo’s ghost really answers. It isn’t what Ofelia thinks." }],
     repeat: [{ speaker: "rocio", text: "Push on |−⟩ and the minus comes back up the rope." }],
   },
   {
     id: "ramiro", title: "Ramiro", description: "Gravedigger · the old graves", at: { x: 19, y: 9 }, knowledge: "parity",
     intro: [
-      { speaker: "ramiro", text: "Ramiro. I dig, I count, I don’t scare. Anselmo built locks, and I buried him with his manual, so I know how his vault thinks." },
+      { speaker: "ramiro", text: "Ramiro. I dig, I count, and I don’t scare easily. Anselmo built locks. I read his manual before we laid him to rest, so I know how his vault thinks." },
       { speaker: "ramiro", text: "The vault never asks “is this the key?”. It looks at the tumblers you mark and the secret ones, counts where both are 1, and knocks only if the count is odd." },
     ],
     steps: [
@@ -172,11 +172,11 @@ export function hollowNpc(id: HollowNpcId): HollowNpc {
 export const KEEPER = {
   welcome: { speaker: "keepercap", text: "Mind the mist! I’m Cap, keeper of this cemetery. My cousin VP Cap sent word that the one who disarmed the drone was coming west. Here nobody searches for answers: we listen for them." },
   ofelia: { speaker: "keepercap", text: "Up the hill is Casa Ofelia. Every night since her husband Anselmo passed, the house knocks. Doña Ofelia thinks it’s his ghost; my cousin Thecap thinks it’s his vault. Either way she needs you." },
-  guide: { speaker: "keepercap", text: "Fausto rings the chapel bell, Candela makes candles, Rocío reads fortunes by the crypt, Ramiro keeps the graves and Aurelio walks the lantern row. You don’t need them for the vault, but the Hollow Badge needs everything." },
+  guide: { speaker: "keepercap", text: "Fausto rings the chapel bell, Candela makes candles, Rocío reads fortunes by the crypt, Ramiro keeps the graves and Aurelio walks the lantern row. You can try the vault challenge right away. To earn the Hollow Badge, open the vault and collect all five knowledge cards." },
   vaultWaiting: { speaker: "keepercap", text: "Casa Ofelia is still knocking." },
   vaultDone: { speaker: "keepercap", text: "Casa Ofelia is quiet at last. Doña Ofelia sleeps with the candles lit." },
   ready: { speaker: "keepercap", text: "Five cards and a quiet house. You can build a controlled flip, park a helper in |−⟩, catch the kickback, count the parity and ask the one question. That’s Bernstein–Vazirani, and that’s the Hollow Badge." },
-  done: { speaker: "keepercap", text: "The badge is yours. The east road runs back to Coin Town, and Beto opens the north road there for Hollow Badge holders: Cipher Town, where our cousin Root Cap keeps the network up. Replay anything here; cards and medals stay." },
+  done: { speaker: "keepercap", text: "The badge is yours. Take the east road back to Coin Town. Show Beto your Hollow Badge to open its north road to Cipher Town, where Root Cap keeps the network running. Replay anything here; you keep your cards and medals." },
 } satisfies Record<string, Line>;
 export const CARD_COUNT = "You have {count} of 5 Hollow cards.";
 

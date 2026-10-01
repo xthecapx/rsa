@@ -144,7 +144,7 @@ export const act1 = defineAct({
       lines: [
         {
           speaker: "system",
-          text: "The packet crosses the tap and carries on to Brayan, unchanged and unread by anyone who was supposed to notice.",
+          text: "The packet passes through the tap and reaches Brayan unchanged. Your copy goes unnoticed.",
         },
         {
           speaker: "hacker",
@@ -214,7 +214,7 @@ export const act1 = defineAct({
         },
         {
           speaker: "system",
-          text: "Act 1 clear. An encoding is public by definition -- everyone has to agree on it for it to work. Ale is about to reach for the oldest fix there is.",
+          text: "Act 1 complete. Encoding changes how a message is written; it does not protect it with a secret key. Ale is about to try a very old cipher.",
         },
       ],
       ending: "win",

@@ -10,7 +10,7 @@ export const act3 = defineAct({
   title: "RSA",
   subtitle: "The key is public, the factors are not",
   brief:
-    "Brayan publishes a key anyone may copy and keeps a second one secret. Capture both and find out why watching the key is not the same as holding it.",
+    "Brayan publishes one key and keeps another secret. Capture the public key and the encrypted message, then find out why the public key cannot unlock it.",
 
   entry: "prologue",
   caught: "caught",
@@ -38,7 +38,7 @@ export const act3 = defineAct({
         },
         {
           speaker: "ale",
-          text: "One warning. It is arithmetic on numbers smaller than the key, so I can only send you one letter at a time.",
+          text: "One catch: each message number must be smaller than N. With this tiny modulus, we’re sending just one letter at a time.",
         },
       ],
       next: "briefing",
@@ -155,7 +155,7 @@ export const act3 = defineAct({
         },
         {
           speaker: "system",
-          text: "Do it by hand on the laptop: pick the two primes, compute phi(N), find d, then multiply c by itself d times mod N. Every number you need is on the screen. Real moduli have hundreds of digits precisely so nobody can.",
+          text: "Work through it on the laptop: find the two primes, compute phi(N), find d, then calculate c^d mod N to decrypt. Every number you need is on the screen. Real RSA moduli have hundreds of digits to make factoring impractical.",
         },
       ],
       waitsFor: "workbench",
@@ -213,7 +213,7 @@ export const act3 = defineAct({
         },
         {
           speaker: "system",
-          text: "Act 3 clear. You factored N = {modulus} in a few taps. The same attack on a 2048-bit modulus needs about {projectedYears} years. RSA is not broken by cleverness -- it is broken by a faster way to factor.",
+          text: "Act 3 complete. You factored N = {modulus} in a few taps. The game’s estimate for this trial-division method on a 2048-bit modulus is about {projectedYears} years. Other factoring methods are faster, but this tiny example shows why N must be large.",
         },
       ],
       ending: "win",

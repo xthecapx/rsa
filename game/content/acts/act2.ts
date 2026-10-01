@@ -8,7 +8,7 @@ import { defineAct } from "../defineAct";
 export const act2 = defineAct({
   act: 2,
   title: "Caesar",
-  subtitle: "Twenty five keys is not a key space",
+  subtitle: "Twenty-five keys won’t keep a secret",
   brief:
     "Ale now shifts every letter by a secret amount. Capture the ciphertext and find out how long twenty-five keys hold up.",
 
@@ -51,7 +51,7 @@ export const act2 = defineAct({
           speaker: "boss",
           text: "They changed something. My man on the exchange says the traffic is letters now, and it is nonsense.",
         },
-        { speaker: "hacker", text: "A cipher. They shift each letter by a number they agreed offline." },
+        { speaker: "hacker", text: "A cipher. They shift each letter by a number of places they agreed on in person." },
         { speaker: "boss", text: "So you cannot read it." },
         {
           speaker: "hacker",
@@ -201,11 +201,11 @@ export const act2 = defineAct({
         { speaker: "boss", text: "\"{message}\". They think that cost them something." },
         {
           speaker: "hacker",
-          text: "A secret key only helps if guessing it is expensive. Twenty-five guesses is not expensive.",
+          text: "A secret key only helps if guessing it is costly. Twenty-five guesses won’t slow anyone down.",
         },
         {
           speaker: "system",
-          text: "Act 2 clear. What they need is a key space too large to walk through one key at a time. Brayan is about to suggest something with two keys instead of one.",
+          text: "Act 2 complete. They need too many possible keys to try one by one. Brayan is about to suggest a system with two keys instead of one.",
         },
       ],
       ending: "win",

@@ -21,8 +21,8 @@ export const MEDALS: readonly Medal[] = [
   {
     id: "quantum-coin", scenario: "coin", mission: "coin", glyph: "◐",
     title: "Quantum Coin", skill: "Superposition",
-    description: "You built a one-qubit circuit whose outcome nobody can predict, not even with the source code.",
-    ability: "Fair Toss: produce a truly unpredictable bit with H then measure.",
+    description: "You built and simulated a one-qubit circuit that gives 0 or 1 with equal probability. On ideal quantum hardware, the circuit tells you the odds, not the next result.",
+    ability: "Fair Toss: prepare |0⟩, apply H, then measure for an equal chance of 0 or 1.",
     hint: "Finish Who Goes First? in the coin house.",
   },
   {
@@ -56,14 +56,14 @@ export const MEDALS: readonly Medal[] = [
   {
     id: "period-lens", scenario: "rsa", mission: "4", glyph: "◎",
     title: "Quantum Solver", skill: "Shor’s algorithm",
-    description: "You wired a classical program around a quantum processor: the Shor box found the period, and your laptop turned it into factors, a key and the message.",
+    description: "You connected classical processing to a quantum circuit. Your laptop used the circuit’s measurements to find a period, then recovered the factors, key, and message.",
     ability: "Quantum Solve: hand the hard step to a QPU, then finish the job on a classical machine.",
     hint: "Clear Act 4: Shor with the RSA client.",
   },
   {
     id: "amplifier", scenario: "grover", mission: "grover", glyph: "▲",
     title: "Amplitude Amplifier", skill: "Grover search",
-    description: "You spread a guess over all sixteen PINs, then let the Oracle and Diffuser grow the right one in three rounds.",
+    description: "You prepared all sixteen PINs in superposition, then used three Oracle and Diffuser rounds to make the right PIN much more likely.",
     ability: "Needle Finder: find one marked item among N in about √N queries.",
     hint: "Disarm the drone core in Thecap’s workshop.",
   },

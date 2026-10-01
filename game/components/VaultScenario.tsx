@@ -356,7 +356,7 @@ export function VaultScenario({ onExit, onRestartGame }: { onExit?: () => void; 
               <GroverClockRun finished={session.groverDone} runKey={session.groverRunKey} disabled={busy}
                 onRun={() => patch({ groverRunKey: session.groverRunKey + 1 })} onFinished={() => patch({ groverDone: true, candles: CANDLES })} />
               {session.groverDone && <>
-                <p>{t("Grover is √N: a huge win for sixteen PINs, but √(33 million) is still thousands of questions. Squaring down isn’t enough here.")}</p>
+                <p>{t("Grover needs about √N queries: a big improvement for sixteen PINs, but thousands of queries for 33 million possibilities. That still exceeds our three-candle limit.")}</p>
                 {action("Midnight: the lock re-keys →", () => { gameAudio.playSynth("cold"); gameAudio.playSynth("toll"); void newNight("diagnostics"); })}
               </>}
             </>}
@@ -392,7 +392,7 @@ export function VaultScenario({ onExit, onRestartGame }: { onExit?: () => void; 
                     {t("Execute (1 Query)")}</button>}
                   {session.run && session.revealed && action("Take the mask to the vault →", () => next("unlock"))}
                 </div>
-                {session.run && <p className="text-sm text-stage-muted">{t("Candles used: 1 of 3. The whole mask resolved in one clock cycle.")}</p>}
+                {session.run && <p className="text-sm text-stage-muted">{t("Candles used: 1 of 3. The entire secret code was recovered with one query.")}</p>}
               </>}
             </>}
             {session.step === "unlock" && session.run && <>
@@ -403,7 +403,7 @@ export function VaultScenario({ onExit, onRestartGame }: { onExit?: () => void; 
               <div className="coin-achievement" aria-live="polite"><span>{t("OPERATION GHOST KEY")}</span><h2>{t("The vault is open!")}</h2>
                 <p>{t("Mask")} <strong className="grover-pin break-all">{session.run?.measured}</strong></p></div>
               <ComparisonCard />
-              <p className="coin-callout">{t("Unstructured search is quadratically bounded (Grover). Algebraic structure unlocks exponential acceleration (Bernstein–Vazirani).")}</p>
+              <p className="coin-callout">{t("Grover uses about √N queries to search N possibilities. This parity lock has a different rule: Bernstein–Vazirani learns its n-bit secret with one quantum query instead of n classical queries.")}</p>
               <p>{t("There was no ghost. The only invisible thing in the house was the phase.")}</p>
               <MedalReveal id="ghost-key" />
               <button className="btn-primary inline-block" onClick={leaveHouse}>{t("Return to town →")}</button>

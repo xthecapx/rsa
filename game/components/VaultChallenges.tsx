@@ -356,7 +356,7 @@ export function GroverClockRun({ finished, runKey, onRun, onFinished, disabled }
       <div className="vault-meter" role="img" aria-label={`${t("Target probability")}: ${formatPercent(p, 3)}`}><span style={{ width: `${width}%` }} /></div>
       <p className="text-xs text-stage-muted">{t("Log scale: each step to the right is ten times more likely.")}</p>
     </div>
-    {done ? <p className="coin-callout grover-alert" role="alert">⚠ {t("Buffer Depleted. Target probability after 3 iterations: < 0.0002%. Grover quadratic speedup is insufficient for large unstructured keys under single-digit query limits.")}</p>
+    {done ? <p className="coin-callout grover-alert" role="alert">⚠ {t("No candles left. After 3 rounds, the chance of finding the key is below 0.0002%. Grover’s speedup cannot make three queries enough for this many possibilities.")}</p>
       : <button className="btn-primary" disabled={disabled || running} onClick={onRun}>{t(running ? "Running…" : "Run ×4,549")}</button>}
   </div>;
 }
@@ -378,13 +378,13 @@ export function ManualScan({ scanned, onScan, parityHint }: { scanned: boolean; 
     </div>
   </PuzzleDragDrop>;
   return <div className="space-y-3">
-    <pre className="vault-spec">{`VAULT-7 · GHOST KEY LOCK
-ORACLE:  f(x) = s · x  mod 2
-         s = 25-bit mask (secret)
-         x = the tumblers you mark`}</pre>
+    <pre className="vault-spec">{`${t("VAULT-7 · GHOST KEY LOCK")}
+${t("Oracle")}:  f(x) = s · x  mod 2
+         ${t("s = 25-bit secret code")}
+         ${t("x = the tumblers you mark")}`}</pre>
     <p>{t("The lock never asks “is x the key?”. It answers the parity of the tumblers where both s and x are 1: an odd count knocks, an even count stays silent.")}</p>
     {parityHint && <p className="coin-callout">{t("Your several-tumbler question got one knock. A match lock only knocks for the exact key — this lock was never a match lock. Grover’s premise was wrong too.")}</p>}
-    <p className="coin-callout">{t("Stop amplifying amplitudes through iteration. Exploit phase interference with a single query.")}</p>
+    <p className="coin-callout">{t("Use the lock’s parity rule: turn its answer into a phase, then read the secret with one query.")}</p>
   </div>;
 }
 

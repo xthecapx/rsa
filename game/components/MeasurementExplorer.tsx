@@ -73,7 +73,7 @@ export function MeasurementExplorer({ measurement, title, qubitName = "Qubit", o
       </div>}
 
       {tab === "qubits" && <div className="space-y-2" role="tabpanel">
-        <p className="text-xs text-stage-muted">{t("How often each qubit read 1, over every shot. On noisy hardware the full string may never repeat, but each qubit’s majority still points at the answer.")}</p>
+        <p className="text-xs text-stage-muted">{t("How often each qubit read 1 across all shots. With moderate noise, a majority vote for each qubit may help recover the answer even when the full string rarely appears.")}</p>
         <div className="measure-qubits" style={{ gridTemplateColumns: `repeat(${Math.min(measurement.bits, 25)}, minmax(0, 1fr))` }}>
           {ones.map((p, i) => <span key={i} title={`${t(qubitName)} ${i + 1}: ${percent(p)} 1`}>
             <span className="measure-column" aria-hidden="true"><span style={{ height: `${p * 100}%` }} /></span>
@@ -85,8 +85,8 @@ export function MeasurementExplorer({ measurement, title, qubitName = "Qubit", o
       </div>}
 
       {tab === "raw" && <div className="space-y-2" role="tabpanel">
-        <p className="text-xs text-stage-muted">{t("The counts exactly as a backend returns them: bitstring → shots.")}</p>
-        <pre className="measure-raw">{`{\n${raw.slice(0, 64).map(([bits, count]) => `  "${bits}": ${count}`).join(",\n")}${raw.length > 64 ? `,\n  … ${raw.length - 64} more` : ""}\n}`}</pre>
+        <p className="text-xs text-stage-muted">{t("The counts exactly as the service returns them: bitstring → number of shots.")}</p>
+        <pre className="measure-raw">{`{\n${raw.slice(0, 64).map(([bits, count]) => `  "${bits}": ${count}`).join(",\n")}${raw.length > 64 ? `,\n  … ${t(`${raw.length - 64} more`)}` : ""}\n}`}</pre>
       </div>}
     </div>
   </div>;
@@ -94,7 +94,7 @@ export function MeasurementExplorer({ measurement, title, qubitName = "Qubit", o
 
 function note(measurement: Measurement, shots: number, top: string | null): ReactNode {
   if (measurement.source === "hardware") return t("Real hardware is noisy: shots spread over strings close to the answer. Read the tallest bars, or the qubit-by-qubit vote.");
-  if (shots <= 1) return <>{t("The circuit ran once, so there is one shot. An ideal machine gives this string every time; a real backend would run it many times and noise would add a few stray strings.")}{top && <> <code className="measure-bits">{groupBits(top)}</code></>}</>;
+  if (shots <= 1) return <>{t("This circuit ran once, so there is one shot. For this circuit, an ideal device gives the same string every time. Real hardware may give other strings because of noise; repeated runs help us compare the results.")}{top && <> <code className="measure-bits">{groupBits(top)}</code></>}</>;
   return t("An ideal simulator: no noise, only the spread the circuit itself makes.");
 }
 

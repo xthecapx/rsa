@@ -41,10 +41,10 @@ export const VAULT_SCENES: Record<VaultStep, Scene> = {
     ],
   },
   lucky: {
-    title: "A lucky guess", place: "vault", objective: "The lock re-keyed. Solve it properly, with the laptop.",
+    title: "A lucky guess", place: "vault", objective: "The lock has reset its code. Use the laptop to find a reliable method.",
     lines: [
       { speaker: "ofelia", text: "You’re lucky! But luck isn’t a method." },
-      { speaker: "system", text: "The door slams before it opens. The lock re-keys." },
+      { speaker: "system", text: "The door starts to open, then slams shut. The lock resets its code." },
       { speaker: "ofelia", text: "Let’s do it properly, with the laptop." },
     ],
   },
@@ -108,7 +108,7 @@ export const VAULT_SCENES: Record<VaultStep, Scene> = {
     lines: [
       { speaker: "ofelia", text: "…It’s his handwriting." },
       { speaker: "ofelia", text: "So there never was a ghost." },
-      { speaker: "system", text: "Only one thing in that house was invisible: the phase. Twenty-five questions by hand, about 4,549 with Grover, one with Bernstein–Vazirani." },
+      { speaker: "system", text: "The hidden phase was our ghost. Learning this parity code takes twenty-five classical questions, or one with Bernstein–Vazirani. Grover would need about 4,549 queries for a different lock that only checks a complete key." },
       { speaker: "ofelia", text: "Two candles left. I’ll keep them for Anselmo." },
     ],
   },

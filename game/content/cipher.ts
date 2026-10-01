@@ -22,12 +22,12 @@ export const KNOWLEDGE: Record<CipherKnowledgeId, KnowledgeCard> = {
   },
   keyspace: {
     id: "keyspace", glyph: "⚿", title: "Key and key space",
-    text: "A cipher mixes the message with a key. Caesar shifts every letter by the key, so key 3 turns CAT into FDW. A lock is only as strong as its number of keys, and Caesar has just 25.",
+    text: "A cipher uses a key to transform a message. Caesar shifts each letter by that key: key 3 turns CAT into FDW. Its 25 nonzero shifts are easy to try. A large key space helps only if the cipher also resists shortcuts.",
     formula: "CAT +3 → FDW · 25 keys", hint: "The client’s second job is a Caesar shift. Sweep the wheel.",
   },
   clock: {
     id: "clock", glyph: "⟳", title: "Clock math",
-    text: "On a clock with N marks, counting past N wraps back to 0. That’s mod N: 17 mod 12 = 5. Powers wrap too, and they always fall into a loop.",
+    text: "On a clock with N marks, the marks run from 0 to N−1, then wrap back to 0. That’s mod N: 17 mod 12 = 5. Powers wrap too and eventually repeat.",
     formula: "17 mod 12 = 5 · 4¹ 4² 4³ mod 7 = 4 2 1", hint: "RSA locks and unlocks with powers on a clock, and Shor listens for the loop.",
   },
   padlock: {
@@ -37,8 +37,8 @@ export const KNOWLEDGE: Record<CipherKnowledgeId, KnowledgeCard> = {
   },
   rhythm: {
     id: "rhythm", glyph: "♫", title: "Hidden rhythm",
-    text: "The powers aˣ mod N loop with a period r. When r is even, N’s primes hide in gcd(a^(r/2) ± 1, N). Finding r is the hard part, and it’s the part a quantum computer does.",
-    formula: "7ˣ mod 15: 1 7 4 13 1 → r = 4 · gcd(48, 15) = 3 · gcd(50, 15) = 5", hint: "The client’s last job: Shor’s algorithm finds r on a QPU, and your laptop does the rest.",
+    text: "For a coprime to N, the powers aˣ mod N repeat with period r. If r is even and a^(r/2) is not −1 mod N, gcd(a^(r/2) ± 1, N) gives factors. Shor uses quantum measurements to help find r.",
+    formula: "7ˣ mod 15: 1 7 4 13 1 → r = 4 · gcd(48, 15) = 3 · gcd(50, 15) = 5", hint: "The client’s last job: your laptop uses quantum measurements to find r, then recovers the factors and message.",
   },
 };
 
@@ -70,7 +70,7 @@ export const CIPHER_NPCS: CipherNpc[] = [
         { label: "Only Brayan: he has the secret", wrong: "There’s no secret: the table is the same for everyone." },
         { label: "Anyone who knows the A1Z26 table", correct: true },
         { label: "Nobody: it’s only numbers", wrong: "Numbers are just letters in another costume. You read 3 1 16 a moment ago." },
-      ], "Right: an encoding is public by definition. To hide a message you need a key, and keys are Tadeo’s trade."),
+      ], "Right: this encoding uses a public table, so it cannot keep a message secret. Encryption uses a key, and keys are Tadeo’s trade."),
     ],
     outro: [
       { speaker: "lupe", text: "See? Numbers are just letters in a costume. Ale and Brayan think their numbers are secret. They aren’t." },
@@ -81,7 +81,7 @@ export const CIPHER_NPCS: CipherNpc[] = [
   {
     id: "tadeo", title: "Tadeo", description: "Locksmith · key kiosk", at: { x: 42, y: 23 }, knowledge: "keyspace",
     intro: [
-      { speaker: "tadeo", text: "Name’s Tadeo. I cut keys. A lock is nothing without a key, and a key is nothing if there are only a few of them." },
+      { speaker: "tadeo", text: "Name’s Tadeo. I cut keys. A lock won’t keep a secret if someone can try every possible key in seconds." },
       { speaker: "tadeo", text: "This brass wheel is Caesar’s lock: shift every letter forward by the key. Let’s lock a word, then pick one." },
     ],
     steps: [
@@ -96,7 +96,7 @@ export const CIPHER_NPCS: CipherNpc[] = [
       ], "25 keys: a laptop tries them all in a blink. A strong lock needs so many keys that trying them all takes longer than the age of the universe."),
     ],
     outro: [
-      { speaker: "tadeo", text: "That’s the whole trade: a lock is as strong as its key space, and Caesar’s is tiny." },
+      { speaker: "tadeo", text: "That’s Caesar’s weakness: its key space is tiny. A strong cipher needs both many possible keys and no easy shortcut." },
       { speaker: "tadeo", text: "10 credits for the hand. Nina at the arcade has a counter that wraps around; she says big keys live on a clock." },
     ],
     repeat: [{ speaker: "tadeo", text: "Twenty-five keys on the Caesar wheel. That’s the whole problem." }],
@@ -141,7 +141,7 @@ export const CIPHER_NPCS: CipherNpc[] = [
         { label: "N", wrong: "N is printed on the padlock; everyone needs it to lock." },
         { label: "d, and the primes p and q that rebuild it", correct: true },
         { label: "e", wrong: "e is public too: it’s how strangers close the lock." },
-      ], "Keep d, and p and q, which rebuild it. A 600-digit N is too big to split, so that padlock is safe. A small N isn’t."),
+      ], "Keep d secret, along with p and q, which can rebuild it. A tiny N is easy to factor. Real RSA uses large moduli and additional safeguards; key size alone does not guarantee security."),
     ],
     outro: [
       { speaker: "paloma", text: "Now you can make a padlock and know exactly where it’s weak: whoever splits N rebuilds d." },
@@ -185,7 +185,7 @@ export function cipherNpc(id: CipherNpcId): CipherNpc {
 export const ROOT = {
   welcome: { speaker: "rootcap", text: "Hey, watch the cables! I’m Cap, root admin of Cipher Town: I keep the network up and the lights blinking. My cousin Keeper Cap said someone who talks to ghosts was coming north." },
   client: { speaker: "rootcap", text: "There’s a client parked on the street up north, hiring someone to read Ale and Brayan’s messages. Learn how the locks are built before you sell yourself as someone who picks them." },
-  guide: { speaker: "rootcap", text: "Lupe paints the mural, Tadeo cuts keys, Nina runs the arcade, Paloma delivers parcels and Dante spins records in the plaza. Chispa sells gear and Cero posts bounties. You don’t need the neighbors for the client’s jobs, but the Cipher Badge needs everything." },
+  guide: { speaker: "rootcap", text: "Lupe paints the mural, Tadeo cuts keys, Nina runs the arcade, Paloma delivers parcels and Dante spins records in the plaza. Chispa sells gear and Cero posts bounties. You can take the client’s jobs without visiting the neighbors. To earn the Cipher Badge, finish all four jobs and collect all five knowledge cards." },
   actsWaiting: { speaker: "rootcap", text: "The client’s jobs aren’t finished: four messages, four locks." },
   actsDone: { speaker: "rootcap", text: "All four messages, from plain numbers to RSA. Ale and Brayan are already shopping for a better lock." },
   ready: { speaker: "rootcap", text: "Five cards and four jobs. Encoding isn’t secrecy, a key needs a huge key space, locks live on clocks, a public padlock hides a private key, and a quantum computer hears the rhythm that splits N. That’s public-key crypto, and that’s the Cipher Badge." },
@@ -208,7 +208,7 @@ export const GEAR: Gear[] = [
   { id: "factorkit", act: 3, price: 40, glyph: "÷", title: "Factor kit", text: "Clock-math tools for splitting a small N and rebuilding d.",
     objective: "Buy a factor kit at Chispa’s stall", need: "They’ve moved to a padlock. You’ll want Chispa’s factor kit: 40 credits." },
   { id: "voucher", act: 4, price: 60, glyph: "⚛", title: "QPU voucher", text: "Prepaid time on a hosted quantum computer.",
-    objective: "Buy a QPU voucher at Chispa’s stall", need: "Nobody factors this by hand. Buy a QPU voucher from Chispa, 60 credits, and we’ll talk." },
+    objective: "Buy a QPU voucher at Chispa’s stall", need: "This job uses Shor’s quantum approach. Buy a QPU voucher from Chispa for 60 credits, and we’ll talk." },
 ];
 /** The objective once the gear is in hand. */
 export const JOB_OBJECTIVES: Record<ActNumber, string> = {

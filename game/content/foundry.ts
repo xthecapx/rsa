@@ -13,13 +13,13 @@ export const KNOWLEDGE_IDS = FOUNDRY_KNOWLEDGE_IDS;
 export const KNOWLEDGE: Record<FoundryKnowledgeId, KnowledgeCard> = {
   register: {
     id: "register", glyph: "▦", title: "Registers",
-    text: "Two qubits have four basis states, |00⟩, |01⟩, |10⟩ and |11⟩. Every extra qubit doubles the count: n qubits hold 2ⁿ states.",
+    text: "Two qubits have four basis states: |00⟩, |01⟩, |10⟩ and |11⟩. Each extra qubit doubles the count: n qubits have 2ⁿ basis states.",
     formula: "2 qubits → 4 states · 4 qubits → 16", hint: "The drone core’s four switches are a four-qubit register.",
   },
   spread: {
     id: "spread", glyph: "≡", title: "Even spread",
     text: "One H box on every qubit spreads the register evenly: each of the N states gets amplitude 1/√N, so each reads with probability 1/N.",
-    formula: "H⊗H|00⟩ = ½(|00⟩ + |01⟩ + |10⟩ + |11⟩)", hint: "Grover starts by asking every PIN at once.",
+    formula: "H⊗H|00⟩ = ½(|00⟩ + |01⟩ + |10⟩ + |11⟩)", hint: "Grover starts by preparing a superposition of all possible PINs.",
   },
   stamp: {
     id: "stamp", glyph: "O", title: "The Oracle",
@@ -50,7 +50,7 @@ export const FOUNDRY_NPCS: FoundryNpc[] = [
     id: "rosa", title: "Rosa", description: "Switchboard operator · control room", at: { x: 9, y: 10 }, knowledge: "register",
     intro: [
       { speaker: "rosa", text: "Control room, Rosa speaking. Every line on my board is a qubit, and two lines together make a register." },
-      { speaker: "rosa", text: "One qubit has two states. Two qubits have four: |00⟩, |01⟩, |10⟩ and |11⟩. The first digit is line 1, the second is line 2." },
+      { speaker: "rosa", text: "One qubit has two basis states. Two qubits have four: |00⟩, |01⟩, |10⟩ and |11⟩. The first digit is line 1; the second is line 2." },
     ],
     steps: [
       register("Patch line 1", "Both wires start at |00⟩. Patch the board so it reads |10⟩.", 2, "00", 1, ["X"], { basis: "10" },
@@ -116,7 +116,7 @@ export const FOUNDRY_NPCS: FoundryNpc[] = [
         { label: "½", wrong: "2 · ¼ − (−½) = ½ + ½ = 1. Remember to subtract a negative." },
         { label: "0", wrong: "0 is what the unmarked bars become: 2 · ¼ − ½ = 0." },
       ], feedback: "Right. The marked bar sat ¾ below the average, so the press puts it ¾ above: ¼ + ¾ = 1. Each unmarked bar sat ¼ above, so it lands ¼ below… at 0. Now |11⟩ reads 100% of the time." },
-      register("One full round", "Start at |00⟩. Build one Grover round, H, then the Oracle, then the Diffuser, that makes |11⟩ certain.", 2, "00", 3, ["H", "oracle:11", "D", "X"], { marked: "11", atLeast: 0.999 },
+      register("One full round", "Start at |00⟩. Prepare the register with H, then run one Grover round: the Oracle followed by the Diffuser. Make |11⟩ certain.", 2, "00", 3, ["H", "oracle:11", "D", "X"], { marked: "11", atLeast: 0.999 },
         "Read |11⟩ with probability 100%.", "H spreads, the Oracle marks |11⟩, and the Diffuser lifts it to 1. With four states, one round is exactly enough.", true),
     ],
     outro: [{ speaker: "joaquin", text: "Oracle, then Diffuser. That’s one round of Grover. Thecap’s drone core needs more rounds than that; Vera at the dock knows how many." }],
@@ -125,7 +125,7 @@ export const FOUNDRY_NPCS: FoundryNpc[] = [
   {
     id: "vera", title: "Vera", description: "Crane operator · loading dock", at: { x: 33, y: 26 }, knowledge: "rounds",
     intro: [
-      { speaker: "vera", text: "Vera, crane. Every Grover round swings the load a little closer to the answer. Swing too far and it goes right past." },
+      { speaker: "vera", text: "I’m Vera, the crane operator. Each Grover round swings the load toward the answer — until you overshoot. Then it swings away again." },
       { speaker: "vera", text: "Eight crates on three lines this time. Try different round counts and stop where the crate the Oracle marked is tallest." },
     ],
     steps: [
@@ -154,11 +154,11 @@ export function foundryNpc(id: FoundryNpcId): FoundryNpc {
 export const VP = {
   welcome: { speaker: "vpcap", text: "Welcome to Foundry Town! I’m Cap, VP of engineering. My cousin the mayor said a sharp one was coming up the east road. Here we don’t build one qubit, we build registers." },
   thecap: { speaker: "vpcap", text: "My other cousin, Professor Thecap, rents the big workshop up the lane. An old drone core armed itself in there. Sixteen PINs, three tries. Learn from the crew, then help him disarm it." },
-  guide: { speaker: "vpcap", text: "Rosa runs the control room, Paco the silo yard, Inés the Oracle on the conveyor line, Joaquín the Diffuser press and Vera the crane at the dock. You don’t need them for the drone, but the Foundry Badge needs everything." },
+  guide: { speaker: "vpcap", text: "Rosa runs the control room, Paco the silo yard, Inés the Oracle on the conveyor line, Joaquín the Diffuser press and Vera the crane at the dock. You can try the drone challenge right away. To earn the Foundry Badge, disarm the core and collect all five knowledge cards." },
   workshopWaiting: { speaker: "vpcap", text: "The drone core in Thecap’s workshop is still armed." },
   workshopDone: { speaker: "vpcap", text: "Thecap says the drone core is disarmed. Nice work." },
   ready: { speaker: "vpcap", text: "Five cards and a disarmed core. You can spread a register, mark the answer with the Oracle, lift it with the Diffuser and stop at the top. That’s Grover’s search, and that’s the Foundry Badge." },
-  done: { speaker: "vpcap", text: "The badge is yours. The west road runs back to Coin Town, and Coin Town’s own west road now opens for you: Hollow Town, where our cousin Keeper Cap keeps the old cemetery. Replay anything here; cards and medals stay." },
+  done: { speaker: "vpcap", text: "The badge is yours. Take the west road back to Coin Town. From there, its west road is now open to Hollow Town, where Keeper Cap looks after the old cemetery. Replay anything here; you keep your cards and medals." },
 } satisfies Record<string, Line>;
 export const CARD_COUNT = "You have {count} of 5 Foundry cards.";
 

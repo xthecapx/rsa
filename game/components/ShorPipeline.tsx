@@ -278,7 +278,7 @@ export function ShorPipeline({ armed }: { armed: boolean }) {
           <p className={clsx("pipe-fact", badBase ? "text-actor-hacker" : "text-accent-teal")}>
             gcd({a}, {N}) = {g}. {badBase
               ? t(`${g} already divides ${N}: N = ${g} × ${N / g}. No QPU needed, so the run is blocked. Pick a base that shares nothing with N.`)
-              : t("Coprime, so trial division learns nothing. The QPU has real work to do.")}
+              : t("Coprime: gcd(a, N) gives no factor. You can proceed to quantum period finding.")}
           </p>
         </>;
 
@@ -299,7 +299,7 @@ export function ShorPipeline({ armed }: { armed: boolean }) {
           <Row label={t("Counting qubits m")}>
             {QUBITS.map((m) => <Toggle key={m} active={scratch.m === m} disabled={locked || busy} onClick={() => clearRun({ m })}>{m}</Toggle>)}
           </Row>
-          <p className="laptop-note">{t("More qubits read the phase on a finer ruler. The period lands exactly only when it divides 2^m; otherwise you get the nearest fraction.")}</p>
+          <p className="laptop-note">{t("More counting qubits give a finer scale for reading the phase. If the period divides 2^m, the peaks land exactly on that scale; otherwise, samples fall around the expected phases.")}</p>
           <Row label={t("Shots")}>
             {SHOTS.map((shots) => <Toggle key={shots} active={scratch.shots === shots} disabled={locked || busy} onClick={() => clearRun({ shots })}>{shots}</Toggle>)}
           </Row>
@@ -310,7 +310,7 @@ export function ShorPipeline({ armed }: { armed: boolean }) {
 
       case "shor":
         return <>
-          <p className="laptop-note">{t("You never open this box. Inside are the controlled multiplications by a mod N and the inverse Fourier transform from the earlier lessons. The job goes in, a quantum state comes out.")}</p>
+          <p className="laptop-note">{t("This box contains controlled multiplications by a mod N and an inverse quantum Fourier transform, which helps reveal the period. You don’t need to build its internal gates here: the job goes in and a quantum state comes out.")}</p>
           {run && run.qubits !== null && <p className="pipe-fact">{t(`${run.qubits} qubits in total: ${run.m} counting, ${run.qubits - run.m} holding the value. Circuit depth ${run.depth ?? "?"}.`)}</p>}
           {run && run.qubits === null && <p className="pipe-fact">{t(`Ran on ${run.qpu}.`)}{run.usage !== null && ` ${t(`${run.usage} s of QPU time.`)}`}</p>}
         </>;
@@ -349,7 +349,7 @@ export function ShorPipeline({ armed }: { armed: boolean }) {
                   <div>{e} × {d} mod {phi} = 1 → d = {d}</div>
                   <div>m = {c}^{d} mod {N} = {modPow(c, d, N)} → “{charOf(modPow(c, d, N))}”</div>
                 </div>
-                <p className="laptop-note">{t("Act 3 was this by hand. Here the laptop does it in one go: the QPU gave r, and everything after r is classical.")}</p>
+                <p className="laptop-note">{t("You worked through this in Act 3. Here the laptop does the arithmetic: it finds r from the quantum measurements, then uses classical calculations to decrypt the message.")}</p>
               </>
               : <p className="laptop-note text-actor-hacker">{t("No shot gave a usable period. Shor is probabilistic: add shots or change a, then run again.")}</p>}
           </>;

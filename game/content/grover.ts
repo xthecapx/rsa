@@ -16,7 +16,7 @@ export const GROVER_SCENES: Record<GroverStep, Scene> = {
     title: "An armed drone core", place: "core", objective: "Talk to Professor Thecap at the workbench.",
     lines: [
       { speaker: "guide", text: "You came! This drone core woke up mid-repair and armed itself. Four switches, sixteen PINs. It answers only yes or no — no ‘warmer’, no ‘colder’." },
-      { speaker: "guide", text: "Three wrong answers and it locks forever. Try your luck on the keypad." },
+      { speaker: "guide", text: "Three wrong answers lock the keypad. Try your luck." },
     ],
   },
   classical: {
@@ -28,29 +28,29 @@ export const GROVER_SCENES: Record<GroverStep, Scene> = {
   overload: {
     title: "Lockdown", place: "core", objective: "The keypad is locked. Route the problem to the laptop.",
     lines: [
-      { speaker: "system", text: "Unstructured search space too large for classical trial-and-error under emergency constraints. Switch to Quantum Core." },
-      { speaker: "guide", text: "Three tries out of sixteen was never going to be enough. My laptop talks to the quantum core — let’s ask all sixteen at once." },
+      { speaker: "system", text: "Three tries are not enough to reliably find one PIN among sixteen. Switch to the quantum core." },
+      { speaker: "guide", text: "Three tries gave us a chance, but no guarantee. My laptop connects to the quantum core. Let’s put all sixteen PINs in superposition and use interference to favor the right one." },
     ],
   },
   lucky: {
-    title: "A lucky guess", place: "core", objective: "The core armed a backup cipher. Solve it with quantum.",
+    title: "A lucky guess", place: "core", objective: "The core has activated a backup lock. Try Grover’s search on the laptop.",
     lines: [
       { speaker: "guide", text: "You’re lucky! But luck isn’t a method." },
-      { speaker: "system", text: "Backup cipher engaged. New PIN armed." },
-      { speaker: "guide", text: "See? Solve it with quantum — that works every time." },
+      { speaker: "system", text: "Backup lock activated. New PIN set." },
+      { speaker: "guide", text: "See? We need better odds than a lucky guess. Let’s try Grover’s search." },
     ],
   },
   init: {
-    title: "Ask every PIN at once", place: "desk", objective: "At the laptop, put the H box on the four-qubit register and run it.",
+    title: "Prepare all sixteen possibilities", place: "desk", objective: "At the laptop, put the H box on the four-qubit register and run it.",
     lines: [
-      { speaker: "guide", text: "Remember the fair coin? One H made one qubit heads and tails. One H box on four qubits makes all sixteen PINs at once, each at 1/16." },
+      { speaker: "guide", text: "Remember the fair coin? H put one qubit in a superposition. Applying H to all four qubits prepares all sixteen PINs with equal amplitudes. Each has a 1/16 chance when measured." },
     ],
   },
   loop: {
     title: "Flip, then reflect", place: "desk", objective: "Put the Oracle and the Diffuser in the repeat box and run one round.",
     lines: [
       { speaker: "guide", text: "The Oracle is sealed; it knows the PIN and flips the sign of the right answer — nothing else. You can’t see the sign by measuring." },
-      { speaker: "guide", text: "The Diffuser turns that hidden flip into a taller bar: it reflects every bar about the average." },
+      { speaker: "guide", text: "The Diffuser reflects the signed amplitudes about their average, making the marked answer’s bar taller." },
     ],
   },
   tune: {
@@ -60,7 +60,7 @@ export const GROVER_SCENES: Record<GroverStep, Scene> = {
     ],
   },
   tuneRun: {
-    title: "Tune the repeat box", place: "desk", objective: "Change the repeat count and run the search until the tallest bar peaks.",
+    title: "Tune the repeat box", place: "desk", objective: "Adjust the number of rounds and run the search until the marked answer’s probability is highest.",
     lines: [
       { speaker: "guide", text: "Three rounds means three questions to the lock — the same budget you just burned by hand. Try other counts too and watch the tallest bar." },
     ],
@@ -68,7 +68,7 @@ export const GROVER_SCENES: Record<GroverStep, Scene> = {
   measure: {
     title: "Collapse", place: "desk", objective: "Add the measurement to the circuit and collapse it once.",
     lines: [
-      { speaker: "guide", text: "Measuring collapses all sixteen into one. Once. Make it count." },
+      { speaker: "guide", text: "Measuring gives us one PIN. Three rounds make the right one about 96% likely. One shot — make it count." },
     ],
   },
   disarm: {

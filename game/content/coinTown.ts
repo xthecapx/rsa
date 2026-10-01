@@ -14,9 +14,9 @@ export const KNOWLEDGE_IDS = COIN_KNOWLEDGE_IDS;
 
 export const KNOWLEDGE: Record<CoinKnowledgeId, KnowledgeCard> = {
   bits: {
-    id: "bits", glyph: "01", title: "Bits of a qubit",
+    id: "bits", glyph: "01", title: "A qubit’s basis states",
     text: "A qubit has two basis states, |0⟩ and |1⟩. Measuring |0⟩ always reads 0 and |1⟩ always reads 1. The X gate swaps them.",
-    formula: "X|0⟩ = |1⟩ · X|1⟩ = |0⟩", hint: "Every circuit starts from |0⟩ and |1⟩.",
+    formula: "X|0⟩ = |1⟩ · X|1⟩ = |0⟩", hint: "In these lessons, each qubit starts in |0⟩ unless another state is shown.",
   },
   "four-states": {
     id: "four-states", glyph: "✣", title: "Four directions",
@@ -30,7 +30,7 @@ export const KNOWLEDGE: Record<CoinKnowledgeId, KnowledgeCard> = {
   },
   interference: {
     id: "interference", glyph: "≈", title: "Echoes cancel",
-    text: "Amplitudes add and cancel like ripples. Apply H twice and the |1⟩ parts cancel: you get your start state back with certainty.",
+    text: "Amplitudes add and cancel like ripples. Starting from |0⟩, apply H twice: the |1⟩ parts cancel and you return to |0⟩ with certainty.",
     formula: "H·H = I · H|+⟩ = |0⟩", hint: "Grover’s diffuser grows the right answer with interference.",
   },
   basis: {
@@ -58,13 +58,13 @@ export const COIN_TOWN_NPCS: CoinTownNpc[] = [
         "X|0⟩ = |1⟩. The lamp is on, and measuring it will read 1 every time."),
       bench("Two switches", "This lamp starts on, in |1⟩. Fill both slots and leave it on.", [{ start: "1", target: "1" }], 2, ["X"],
         "X·X|1⟩ = |1⟩. Flipping twice puts the lamp back: X undoes itself.", true),
-      { kind: "question", title: "Read the lamp", text: "A lamp is in |0⟩. You measure it ten times. What do you read?", options: [
+      { kind: "question", title: "Read the lamp", text: "Prepare the lamp in |0⟩ before each of ten measurements. What do you read?", options: [
         { label: "0 every time", correct: true },
         { label: "About half 0 and half 1", wrong: "That’s what a coin in superposition does. |0⟩ is not a superposition: it always reads 0." },
         { label: "1 every time", wrong: "Only |1⟩ reads 1 every time. Apply X first to get there." },
       ], feedback: "Right. |0⟩ and |1⟩ behave like ordinary bits when you measure them." },
     ],
-    outro: [{ speaker: "luz", text: "That’s all a classical bit can do: 0, 1 and flip. The rest of this town is about what else a qubit can do." }],
+    outro: [{ speaker: "luz", text: "A classical bit can be 0 or 1, and a switch flips it between them. The rest of this town shows what else a qubit can do." }],
     repeat: [{ speaker: "luz", text: "The lamps are all lit. Nico at the weathervane says a qubit can point sideways. Go and see." }],
   },
   {
@@ -75,7 +75,7 @@ export const COIN_TOWN_NPCS: CoinTownNpc[] = [
     ],
     steps: [
       bench("Point east", "Start at north, |0⟩. Make |+⟩.", [{ start: "0", target: "+" }], 1, ["X", "Z", "H"],
-        "H|0⟩ = (|0⟩ + |1⟩)/√2 = |+⟩. Half north, half south: that’s superposition."),
+        "H|0⟩ = (|0⟩ + |1⟩)/√2 = |+⟩. Equal amplitudes for north and south: that’s superposition."),
       bench("Point west", "Start at north again. Make |−⟩ with two gates.", [{ start: "0", target: "-" }], 2, ["X", "Z", "H"],
         "Two roads lead west: X then H gives H|1⟩ = |−⟩, and H then Z flips the sign of |+⟩. Same state either way.", true),
       { kind: "question", title: "Measure the vane", text: "The vane points east, |+⟩. You measure it. What do you read?", options: [
@@ -98,7 +98,7 @@ export const COIN_TOWN_NPCS: CoinTownNpc[] = [
         "Z(|0⟩ + |1⟩)/√2 = (|0⟩ − |1⟩)/√2 = |−⟩. Only the sign changed."),
       bench("Wash it off", "Start with |−⟩. Get |+⟩ back with one gate.", [{ start: "-", target: "+" }], 1, ["X", "Z", "H"],
         "Z again removes the minus: Z undoes itself, just like X."),
-      { kind: "question", title: "Count the signs", text: "You measure |+⟩ a hundred times, then |−⟩ a hundred times. What do the counts look like?", options: [
+      { kind: "question", title: "Count the signs", text: "Prepare and measure |+⟩ a hundred times, then do the same with |−⟩. What do the counts look like?", options: [
         { label: "About 50/50 for both", correct: true },
         { label: "|+⟩ gives 0s and |−⟩ gives 1s", wrong: "Tempting! But both states give each outcome with probability ½. A plain measurement can’t see the sign." },
         { label: "|−⟩ gives no results", wrong: "A minus sign never removes outcomes: (−1/√2)² is still ½." },
@@ -124,7 +124,7 @@ export const COIN_TOWN_NPCS: CoinTownNpc[] = [
       { ...bench("Back from the west", "Start at |−⟩. Get back to |1⟩ with one gate.", [{ start: "-", target: "1" }], 1, ["X", "Z", "H"],
         "H|−⟩ = |1⟩. H undoes itself, so it undoes whatever it made."), waves: true },
     ],
-    outro: [{ speaker: "marisol", text: "Grover’s search uses this trick. It makes the wrong answers cancel and the right one grow." }],
+    outro: [{ speaker: "marisol", text: "Grover’s search uses interference to reduce the chances of wrong answers and increase the chance of the right one." }],
     repeat: [{ speaker: "marisol", text: "The fountain is calm again. Calm is just ripples cancelling." }],
   },
   {
@@ -164,11 +164,11 @@ export function coinTownNpc(id: CoinTownNpcId): CoinTownNpc {
 /** Mayor Cap's lines, picked from the player's progress. Every town is welcomed by a Cap; Professor Thecap in Quantum Town is her cousin. */
 export const MAYOR = {
   welcome: { speaker: "mayor", text: "Welcome to Coin Town! I’m Cap, the mayor. Everyone here knows one small piece of how a qubit works. Learn from five neighbors, settle Ale and Brayan’s coin toss in the house up north, and the town badge is yours. The badge also opens the east road to Foundry Town." },
-  guide: { speaker: "mayor", text: "Luz is by the lamps, Don Óscar at his lens shop, Tomás at the east house, Nico at the weathervane and Marisol at the fountain. You don’t need them for the coin toss, but the badge needs everything." },
+  guide: { speaker: "mayor", text: "Luz is by the lamps, Don Óscar at his lens shop, Tomás at the east house, Nico at the weathervane and Marisol at the fountain. You can play the coin lesson right away. To earn the badge, finish the lesson and collect all five knowledge cards." },
   coinWaiting: { speaker: "mayor", text: "The coin toss is still waiting in the house up north." },
   coinDone: { speaker: "mayor", text: "Ale and Brayan’s coin toss is settled." },
   ready: { speaker: "mayor", text: "Five cards and a fair coin. You know what a qubit can be, how H mixes it, how a sign hides inside it and how to read that sign. That’s the Coin Town badge, and the east gate will open for you." },
-  done: { speaker: "mayor", text: "The badge suits you. Foundry Town is down the east road; my cousin VP Cap runs it, and our cousin Professor Thecap keeps a workshop there. After that, the west road leads to Hollow Town and our cousin Keeper Cap, and the north road to Cipher Town and our cousin Root Cap. Tell them Cap sent you. Replay anything here you like; cards and medals stay." },
+  done: { speaker: "mayor", text: "The badge suits you. Take the east road to Foundry Town. My cousin VP Cap runs it, and Professor Thecap has a workshop there. Then return here: our west road leads to Keeper Cap in Hollow Town, and our north road to Root Cap in Cipher Town. Tell them Cap sent you. Replay anything you like; you keep your cards and medals." },
 } satisfies Record<string, Line>;
 /** "{count} of 5 knowledge cards." is composed at runtime. */
 export const CARD_COUNT = "You have {count} of 5 knowledge cards.";

@@ -10,7 +10,7 @@ export const SCENARIOS = [
   {
     id: "grover", number: "02", title: "Echo Chamber", difficulty: "Intermediate",
     setting: "Emergency · Thecap’s workshop, Foundry Town", href: "/scenarios/grover",
-    description: "A drone core armed itself with a 4-bit PIN and three tries. Build Grover’s search and find the PIN with one measurement.",
+    description: "A drone core has armed itself. Its 4-bit PIN gives you sixteen possibilities and only three tries. Build Grover’s search to make the right PIN much more likely.",
     worldEntry: { target: "groverDoor", mode: "interior" },
     lessons: "Search · oracle · amplitude amplification", missions: ["grover"],
   },

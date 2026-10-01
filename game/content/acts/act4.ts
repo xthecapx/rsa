@@ -10,7 +10,7 @@ export const act4 = defineAct({
   title: "Shor",
   subtitle: "Borrowed hardware, different scaling",
   brief:
-    "Factoring is what keeps RSA standing. Reach a real quantum backend over the network and watch period finding do the same job a different way.",
+    "The difficulty of factoring helps protect RSA. Use a quantum circuit to explore how period finding offers another route to the factors.",
 
   entry: "prologue",
   caught: "caught",
@@ -83,11 +83,11 @@ export const act4 = defineAct({
       lines: [
         {
           speaker: "system",
-          text: "The public key and the ciphertext both cross the tap. Everything the attack needs is now on your laptop, except the ability to factor N in reasonable time.",
+          text: "The public key and ciphertext cross the tap. Your laptop has the inputs for Shor’s algorithm. This N is small enough to factor by hand; we’ll use it to explore the quantum approach.",
         },
         {
           speaker: "hacker",
-          text: "Nothing in this bag can factor that in useful time. The different machine I need is a superconducting processor in a refrigerator at fifteen millikelvin, and it is not mine.",
+          text: "My laptop could factor this tiny number. But to try Shor’s quantum step, I need a QPU. The one we can access is a superconducting processor kept colder than outer space.",
         },
       ],
       next: "uplink",
@@ -134,11 +134,11 @@ export const act4 = defineAct({
         },
         {
           speaker: "system",
-          text: "Pick a number a and multiply by it repeatedly, keeping only the remainder after division by N. Like a hand circling a clock, the remainders return to 1. The number of steps is the period r.",
+          text: "Start at 1 and choose a number a that shares no factor with N. Multiply by a repeatedly, keeping the remainder mod N each time. The number of steps until you first return to 1 is the period r.",
         },
         {
           speaker: "hacker",
-          text: "The QPU finds r. My laptop turns r into the factors, the private key and the plaintext. That is the entire division of labour.",
+          text: "The QPU returns measurements that help my laptop find r. The laptop checks the candidate period, finds factors, and recovers the private key and plaintext. That’s how we share the work.",
         },
         {
           speaker: "system",
@@ -146,7 +146,7 @@ export const act4 = defineAct({
         },
         {
           speaker: "system",
-          text: "On the QPU setup you choose the counting qubits m and the shots. Think of m as marks on a ruler: more marks read the period finer. Each shot is one sample, so more shots make the real peaks stand out.",
+          text: "In the QPU setup, choose the number of counting qubits m and the number of shots. More counting qubits give a finer scale for reading the phase. Each shot is one sample; more samples help reveal the peaks.",
         },
         {
           speaker: "system",
@@ -218,7 +218,7 @@ export const act4 = defineAct({
         },
         {
           speaker: "system",
-          text: "Act 4 clear. Breaking that gap needs millions of noisy qubits working as thousands of reliable ones. Post-quantum cryptography is being adopted now because recorded traffic may outlive today's machines.",
+          text: "Act 4 complete. Attacking real RSA at this scale requires reliable qubits and extensive error correction. Post-quantum cryptography prepares for the risk that messages recorded today could be decrypted by future machines.",
         },
       ],
       ending: "win",
