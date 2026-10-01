@@ -3,8 +3,8 @@
 Playable quantum-computing scenarios on a road of small towns: **Who Goes
 First?** in Coin Town, **Echo Chamber** (Grover) in Foundry Town, **Operation
 Ghost Key** (Bernstein–Vazirani) in Hollow Town, and **Breaking RSA** in Cipher Town,
-across plaintext, Caesar, RSA, and Shor. See `game/README.md` for scenario
-structure. The separate `frontend/` presentation tool retains its depth tiers
+across plaintext, Caesar, RSA, and Shor. See [AGENTS.md](AGENTS.md) for the current
+game structure and development context. The separate `frontend/` presentation tool retains its depth tiers
 and IBM batch readout.
 
 ## Live (Cloud Run)
@@ -77,15 +77,45 @@ installed copy and reinstall it editable in the container.
 
 ## Local (no Docker)
 
+Start each service in a separate terminal, beginning at the repository root.
+
 ```bash
 # Backend
 cd backend && python3 -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 uvicorn app.main:app --reload --port 7001
+```
 
-# Frontend
+```bash
+# Game (with the backend running)
+cd game && npm install
+BACKEND_URL=http://localhost:7001 npm run dev
+```
+
+```bash
+# Presentation (optional)
 cd frontend && npm install && npm run dev
 ```
+
+## Game controls and installation
+
+Walk with arrows/WASD, click, or tap. Press Space or tap Talk near a person,
+door, or sign. The shared laptop holds experiments; closing it preserves results.
+EN / ES switches language without resetting progress. Start over can reset a
+lesson, RSA act, or the whole game; language and sound settings are retained.
+
+The game can be installed as a PWA over HTTPS or localhost. Use a production
+build to test installation, with the backend running:
+
+```bash
+cd game
+BACKEND_URL=http://localhost:7001 npm run build
+BACKEND_URL=http://localhost:7001 npm start
+```
+
+Open http://localhost:7019 and use the browser's install action. The app requests
+landscape orientation and uses a network-only service worker, so it requires a
+connection. Development and production servers share port 7019; run one at a time.
 
 ## IBM QPU (thesis, from QWARD)
 
