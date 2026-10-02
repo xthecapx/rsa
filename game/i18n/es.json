@@ -2452,5 +2452,6 @@
   "Move up": "Mover hacia arriba",
   "Move down": "Mover hacia abajo",
   "Move left": "Mover a la izquierda",
-  "Move right": "Mover a la derecha"
+  "Move right": "Mover a la derecha",
+  "Drag the stick to walk. Release it to stop.": "Arrastra la palanca para caminar. Suéltala para detenerte."
 }

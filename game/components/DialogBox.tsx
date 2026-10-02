@@ -123,11 +123,11 @@ export function DialogBox() {
     return (
       <div className="pointer-events-none w-full max-w-4xl">
         <div className="textbox flex gap-3 p-3 sm:gap-4 sm:p-4">
-          <div className="hidden sm:block">
+          <div className="dialogue-portrait-desktop hidden shrink-0 sm:block">
             <Portrait speaker="system" size={72} />
           </div>
-          <div className="sm:hidden">
-            <Portrait speaker="system" size={48} />
+          <div className="dialogue-portrait-mobile shrink-0 sm:hidden">
+            <Portrait speaker="system" size={40} />
           </div>
           <div className="min-w-0 flex-1">
             <div className="mb-2 text-[10px] uppercase tracking-widest text-stage-muted">{t("System")}</div>

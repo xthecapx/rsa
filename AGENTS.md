@@ -118,11 +118,13 @@ game. Full reset clears exploration and progress but retains language and sound.
 Legacy scenario and act URLs resolve entry hints and normalize to `/`; opening
 an act link must not silently discard an existing attempt.
 
-Keep keyboard, mouse, and touch controls equivalent. Outdoor towns show a four-way
-movement pad on touch devices. Hold to walk; release, pointer cancellation,
+Keep keyboard, mouse, and touch controls equivalent. Outdoor towns show a
+circular thumbstick on touch devices and a round Talk button on the right. Talk responds on touch press
+to support a second finger while the stick is held, without duplicating a click.
+Drag past the dead zone to
+walk in a cardinal direction; release, pointer cancellation,
 rotation, leaving the tab, or opening an overlay clears held movement. Block
-builders support drag,
-tap a block then a slot, and keyboard selection. Shared laptop contents survive
+builders support drag, tap a block then a slot, and keyboard selection. Shared laptop contents survive
 closing; language changes preserve circuits, puzzle answers, and results. Objectives
 start collapsed and become a sheet on small screens. Loading failures need a
 translated retry action and inactive gameplay controls until initialization ends.
@@ -203,7 +205,8 @@ content area so players remain visible near map edges in either orientation.
 Dialog text scrolls separately from its action row; every story step needs a
 visible button. Preserve tap-to-place as well as drag
 and keyboard input in puzzle builders. Check short landscape screens with browser
-bars visible and report fields with the keyboard open. Mobile prose is two pixels
+bars visible and report fields with the keyboard open. Mobile dialog portraits stay visible at 40px in both orientations. Mobile prose
+is two pixels
 smaller. Existing small labels and code keep their sizes; form inputs stay 16px
 to avoid focus zoom. Minimap panels start collapsed on touch devices, remain
 scrollable when expanded, and preserve the player’s toggle when rotating. Wide

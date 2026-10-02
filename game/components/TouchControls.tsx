@@ -1,10 +1,11 @@
 "use client";
 import { t, useLocale } from "@/i18n";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import clsx from "clsx";
+import { MovementStick } from "./MovementStick";
 
-import { clearTouchInput, holdTouchDirection, releaseTouchDirection, queueTouchInteract, type TouchDirection } from "@/engine/touchInput";
+import { clearTouchInput, queueTouchInteract } from "@/engine/touchInput";
 
 /**
  * Hold a direction to walk using the same tile movement as the keyboard.
@@ -33,27 +34,7 @@ export function TouchControls({
   }, [visible]);
 
   return <>
-    {visible && <div className="movement-pad" role="group" aria-label={t("Movement controls")}>
-      {(["up", "left", "down", "right"] as TouchDirection[]).map((direction) => <button
-        key={direction} type="button" className={`movement-pad-${direction}`} aria-label={t({ up: "Move up", down: "Move down", left: "Move left", right: "Move right" }[direction])}
-        onPointerDown={(event) => {
-          if (event.button !== 0) return;
-          event.preventDefault(); event.stopPropagation();
-          event.currentTarget.setPointerCapture(event.pointerId);
-          holdTouchDirection(event.pointerId, direction);
-        }}
-        onPointerUp={(event) => { event.stopPropagation(); releaseTouchDirection(event.pointerId); }}
-        onPointerCancel={(event) => releaseTouchDirection(event.pointerId)}
-        onLostPointerCapture={(event) => releaseTouchDirection(event.pointerId)}
-        onKeyDown={(event) => {
-          event.stopPropagation();
-          if (event.key === " " || event.key === "Enter") { event.preventDefault(); holdTouchDirection(-1, direction); }
-        }}
-        onKeyUp={(event) => { event.stopPropagation(); releaseTouchDirection(-1); }}
-        onBlur={() => releaseTouchDirection(-1)}
-        onClick={(event) => event.stopPropagation()}
-      ><span aria-hidden="true">{{ up: "▲", down: "▼", left: "◀", right: "▶" }[direction]}</span></button>)}
-    </div>}
+    {visible && <MovementStick />}
     <TalkControl canInteract={canInteract} visible={visible} onTalk={queueTouchInteract} />
   </>;
 }
@@ -62,6 +43,7 @@ export function TalkControl({ canInteract, visible, onTalk, label = "Talk", inli
   canInteract: boolean; visible: boolean; onTalk: () => void; label?: string; inline?: boolean;
 }) {
   useLocale((state) => state.locale);
+  const touchPress = useRef(false);
   if (!visible) return null;
 
   return (
@@ -70,22 +52,37 @@ export function TalkControl({ canInteract, visible, onTalk, label = "Talk", inli
         type="button"
         aria-label={t(label)}
         disabled={!canInteract}
-        onPointerDown={(event) => event.stopPropagation()}
-        onKeyDown={(event) => event.stopPropagation()}
+        onPointerDown={(event) => {
+          event.stopPropagation();
+          touchPress.current = false;
+          // A second finger doesn't produce a compatibility click while the
+          // first is holding the stick. Touch actions fire on the press.
+          if (event.pointerType === "touch" && canInteract) {
+            event.preventDefault();
+            touchPress.current = true;
+            onTalk();
+          }
+        }}
+        onKeyDown={(event) => { event.stopPropagation(); touchPress.current = false; }}
         onKeyUp={(event) => event.stopPropagation()}
         onClick={(event) => {
           event.stopPropagation();
+          if (touchPress.current && event.detail !== 0) { touchPress.current = false; return; }
+          touchPress.current = false;
           if (!canInteract) return;
           onTalk();
         }}
         className={clsx(
           "pointer-events-auto flex min-h-12 touch-manipulation select-none items-center justify-center rounded-md border-2 px-5 py-3 text-sm",
-          inline ? "w-full" : "min-w-24",
+          inline ? "w-full" : "talk-control min-w-24",
           canInteract
             ? "border-accent-amber bg-accent-amber/25 text-accent-amber active:bg-accent-amber/45"
             : "border-stage-border bg-stage-surface/70 text-stage-muted opacity-50",
         )}
-      >{t(label)}</button>
+      >{!inline && <svg className="talk-glyph" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <path d="M7 5h18a4 4 0 0 1 4 4v11a4 4 0 0 1-4 4h-9l-7 5v-5H7a4 4 0 0 1-4-4V9a4 4 0 0 1 4-4Z" fill="currentColor" />
+        <circle cx="10" cy="14" r="1.7" fill="#102630" /><circle cx="16" cy="14" r="1.7" fill="#102630" /><circle cx="22" cy="14" r="1.7" fill="#102630" />
+      </svg>}<span>{t(label)}</span></button>
     </div>
   );
 }

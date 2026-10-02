@@ -24,8 +24,8 @@ export function DialogueContinue({ settled, onContinue }: { settled: boolean; on
 export function DialogueLine({ speaker, label, children }: { speaker: Speaker; label?: string; children: ReactNode }) {
   useLocale((s) => s.locale);
   return <div className="dialogue-line flex min-h-0 gap-3 sm:gap-4">
-    <div className="hidden sm:block"><Portrait speaker={speaker} size={72} /></div>
-    <div className="sm:hidden"><Portrait speaker={speaker} size={40} /></div>
+    <div className="dialogue-portrait-desktop hidden shrink-0 sm:block"><Portrait speaker={speaker} size={72} /></div>
+    <div className="dialogue-portrait-mobile shrink-0 sm:hidden"><Portrait speaker={speaker} size={40} /></div>
     <div className="min-w-0 flex-1">
       <div className={clsx("mb-1.5 text-xs uppercase tracking-widest sm:mb-2", SPEAKER_COLOR[speaker])}>{label ?? t(SPEAKER_NAME[speaker])}</div>
       <p className="text-sm leading-relaxed text-[#e8f4f8] sm:text-base">{children}</p>
