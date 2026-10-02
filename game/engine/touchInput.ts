@@ -5,6 +5,22 @@
  */
 
 let interactQueued = false;
+export type TouchDirection = "up" | "down" | "left" | "right";
+const directions = new Map<number, TouchDirection>();
+
+/** Latest held finger wins; releasing another finger cannot stop it. */
+export function holdTouchDirection(pointer: number, direction: TouchDirection): void {
+  directions.delete(pointer);
+  directions.set(pointer, direction);
+}
+
+export function releaseTouchDirection(pointer: number): void {
+  directions.delete(pointer);
+}
+
+export function touchDirection(): TouchDirection | null {
+  return [...directions.values()].at(-1) ?? null;
+}
 
 export function queueTouchInteract(): void {
   interactQueued = true;
@@ -19,4 +35,5 @@ export function consumeTouchInteract(): boolean {
 
 export function clearTouchInput(): void {
   interactQueued = false;
+  directions.clear();
 }

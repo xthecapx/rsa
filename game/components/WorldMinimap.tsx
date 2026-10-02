@@ -17,7 +17,9 @@ export function WorldMinimap({ map, places, roads, ariaLabel, legend, position, 
   legend: string[];
 }) {
   useLocale((state) => state.locale);
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(() =>
+    typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches,
+  );
   const mapId = useId();
   const [terrain] = useState(() => terrainPaths(map.rows));
   const { width, height } = map;
@@ -33,8 +35,8 @@ export function WorldMinimap({ map, places, roads, ariaLabel, legend, position, 
   }, [seen, width, height]);
   const visible = (at: { x: number; y: number }) => seen.has(Math.min(Math.max(Math.round(at.y), 0), height - 1) * 100 + Math.min(Math.max(Math.round(at.x), 0), width - 1));
   const rotation = { up: 0, right: 90, down: 180, left: 270 }[facing];
-  return <aside className="town-minimap panel w-44 bg-stage-bg/95 p-2 sm:w-56" aria-label={t("Town minimap")}>
-    <button type="button" className="flex w-full items-center justify-between gap-2 text-xs text-accent-teal" aria-expanded={!collapsed} aria-controls={mapId}
+  return <aside className={`town-minimap panel bg-stage-bg/95 p-2 ${collapsed ? "w-36" : "w-44 sm:w-56"}`} aria-label={t("Town minimap")}>
+    <button type="button" className="minimap-toggle flex w-full items-center justify-between gap-2 text-xs text-accent-teal" aria-expanded={!collapsed} aria-controls={mapId}
       title={t(collapsed ? "Show minimap" : "Hide minimap")} onClick={() => setCollapsed((value) => !value)}>
       <span>{t("Town minimap")}</span><span aria-hidden="true">{collapsed ? "+" : "−"}</span>
     </button>

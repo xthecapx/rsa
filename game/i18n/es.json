@@ -2447,5 +2447,10 @@
   "VAULT-7 · GHOST KEY LOCK": "VAULT-7 · CERRADURA LLAVE FANTASMA",
   "s = 25-bit secret code": "s = código secreto de 25 bits",
   "x = the tumblers you mark": "x = los cilindros que marcas",
-  "{count} more": "{count} más"
+  "{count} more": "{count} más",
+  "Movement controls": "Controles de movimiento",
+  "Move up": "Mover hacia arriba",
+  "Move down": "Mover hacia abajo",
+  "Move left": "Mover a la izquierda",
+  "Move right": "Mover a la derecha"
 }

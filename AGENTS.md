@@ -118,7 +118,10 @@ game. Full reset clears exploration and progress but retains language and sound.
 Legacy scenario and act URLs resolve entry hints and normalize to `/`; opening
 an act link must not silently discard an existing attempt.
 
-Keep keyboard, mouse, and touch controls equivalent. Block builders support drag,
+Keep keyboard, mouse, and touch controls equivalent. Outdoor towns show a four-way
+movement pad on touch devices. Hold to walk; release, pointer cancellation,
+rotation, leaving the tab, or opening an overlay clears held movement. Block
+builders support drag,
 tap a block then a slot, and keyboard selection. Shared laptop contents survive
 closing; language changes preserve circuits, puzzle answers, and results. Objectives
 start collapsed and become a sheet on small screens. Loading failures need a
@@ -172,7 +175,8 @@ sprites, PWA icons, and map previews have generator scripts in `game/tools/`.
 Audio unlocks on a user gesture; mute persists. Computation audio has one owner
 per successful run and must not overlap or replay on checkpoint restoration.
 
-The PWA is installable and requests landscape orientation. Its service worker is
+The PWA is installable and supports portrait and landscape without an orientation
+lock or rotation notice. Its service worker is
 network-only. Builds generate `NEXT_PUBLIC_PWA_BUILD_ID`; `PWA_BUILD_ID` can override
 it. New workers clear old `mitm-shell-*` caches and reload clients. Development
 unregisters leftover workers. Preserve this behavior when changing asset delivery.
@@ -192,7 +196,15 @@ or backend operation.
 
 Mobile overlays and the engine container share the visible viewport, including
 keyboard resize and pan. Use the shared viewport variables instead of independent
-window-height calculations. Dialog text scrolls separately from its action row;
-every story step needs a visible button. Preserve tap-to-place as well as drag
+window-height calculations. Excalibur positions the touch canvas in
+FitContainerAndZoom; keep its host out of flex centering to avoid doubling the
+crop offset. The shared camera in `game/engine/camera.ts` clamps to the visible
+content area so players remain visible near map edges in either orientation.
+Dialog text scrolls separately from its action row; every story step needs a
+visible button. Preserve tap-to-place as well as drag
 and keyboard input in puzzle builders. Check short landscape screens with browser
-bars visible and report fields with the keyboard open.
+bars visible and report fields with the keyboard open. Mobile prose is two pixels
+smaller. Existing small labels and code keep their sizes; form inputs stay 16px
+to avoid focus zoom. Minimap panels start collapsed on touch devices, remain
+scrollable when expanded, and preserve the player’s toggle when rotating. Wide
+laptop circuits scroll horizontally and also support tapping a piece then its slot.

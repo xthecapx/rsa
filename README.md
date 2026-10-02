@@ -99,7 +99,8 @@ cd frontend && npm install && npm run dev
 
 ## Game controls and installation
 
-Walk with arrows/WASD, click, or tap. Press Space or tap Talk near a person,
+Walk with arrows/WASD, the on-screen pad, or a click/tap on the map.
+Press Space or tap Talk near a person,
 door, or sign. The shared laptop holds experiments; closing it preserves results.
 EN / ES switches language without resetting progress. Start over can reset a
 lesson, RSA act, or the whole game; language and sound settings are retained.
@@ -113,9 +114,10 @@ BACKEND_URL=http://localhost:7001 npm run build
 BACKEND_URL=http://localhost:7001 npm start
 ```
 
-Open http://localhost:7019 and use the browser's install action. The app requests
-landscape orientation and uses a network-only service worker, so it requires a
-connection. Development and production servers share port 7019; run one at a time.
+Open http://localhost:7019 and use the browser's install action. The app supports
+portrait and landscape orientations and uses a network-only service worker, so
+it requires a connection. Development and production servers share port 7019; run
+one at a time.
 
 ## IBM QPU (thesis, from QWARD)
 

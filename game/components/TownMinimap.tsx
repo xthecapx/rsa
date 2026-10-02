@@ -34,7 +34,9 @@ export function TownMinimap() {
   useLocale((state) => state.locale);
   const { position, facing, tracked, discovered, explored } = useTown();
   const completed = useProgress((state) => state.completed);
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(() =>
+    typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches,
+  );
   const mapId = useId();
   const fog = useMemo(() => {
     const visible = new Set(explored);
@@ -56,8 +58,8 @@ export function TownMinimap() {
   const vaultDone = !!completed.vault?.includes("vault");
   const visitedCount = places.filter((place) => discovered.includes(place.id) || (place.scenario === "coin" && coinDone) || (place.scenario === "rsa" && rsaDone) || (place.scenario === "grover" && groverDone) || (place.scenario === "vault" && vaultDone)).length;
 
-  return <aside className="town-minimap panel w-44 bg-stage-bg/95 p-2 sm:w-56" aria-label={t("Town minimap")}>
-    <button type="button" className="flex w-full items-center justify-between gap-2 text-xs text-accent-teal" aria-expanded={!collapsed} aria-controls={mapId}
+  return <aside className={`town-minimap panel bg-stage-bg/95 p-2 ${collapsed ? "w-36" : "w-44 sm:w-56"}`} aria-label={t("Town minimap")}>
+    <button type="button" className="minimap-toggle flex w-full items-center justify-between gap-2 text-xs text-accent-teal" aria-expanded={!collapsed} aria-controls={mapId}
       title={t(collapsed ? "Show minimap" : "Hide minimap")} onClick={() => setCollapsed((value) => !value)}>
       <span>{t("Town minimap")}</span><span aria-hidden="true">{collapsed ? "+" : "−"}</span>
     </button>

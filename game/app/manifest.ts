@@ -9,7 +9,7 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: "/",
     scope: "/",
     display: "standalone",
-    orientation: "landscape",
+    orientation: "any",
     background_color: "#0b1f26",
     theme_color: "#0b1f26",
     categories: ["games", "education"],

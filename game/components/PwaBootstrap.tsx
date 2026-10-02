@@ -1,33 +1,10 @@
 "use client";
-import { t, useLocale } from "@/i18n";
 
 import { useEffect } from "react";
 
 const BUILD_ID = process.env.NEXT_PUBLIC_PWA_BUILD_ID ?? "dev";
 const RELOAD_FLAG = "mitm-pwa-reloaded";
 const DEV_SW_CLEARED = "mitm-pwa-dev-sw-cleared";
-
-function isStandaloneDisplay(): boolean {
-  if (typeof window === "undefined") return false;
-  const media = window.matchMedia("(display-mode: standalone)").matches;
-  const iosStandalone =
-    "standalone" in navigator &&
-    Boolean((navigator as Navigator & { standalone?: boolean }).standalone);
-  return media || iosStandalone;
-}
-
-async function lockLandscape(): Promise<void> {
-  const orientation = screen.orientation as ScreenOrientation & {
-    lock?: (orientation: string) => Promise<void>;
-  };
-  if (!orientation || typeof orientation.lock !== "function") return;
-  try {
-    await orientation.lock("landscape");
-  } catch {
-    // Browsers only allow this in fullscreen / installed PWAs, and iOS
-    // Safari ignores it — OrientationNotice covers the fallback.
-  }
-}
 
 async function clearDevServiceWorkers(): Promise<void> {
   const hadController = Boolean(navigator.serviceWorker.controller);
@@ -70,15 +47,14 @@ function watchForUpdates(registration: ServiceWorkerRegistration): void {
 }
 
 /**
- * Registers the service worker (needed for installability) and asks the
- * platform to keep the installed app in landscape.
+ * Registers the service worker (needed for installability). The player can
+ * rotate freely between portrait and landscape.
  *
  * Each production build embeds a unique NEXT_PUBLIC_PWA_BUILD_ID. The worker
  * is registered as `/sw.js?v=<id>`, so a new deploy installs a new worker and
  * drops every previous mitm-shell-* cache on activate.
  */
 export function PwaBootstrap() {
-  useLocale((state) => state.locale);
   useEffect(() => {
     if (!("serviceWorker" in navigator)) return;
 
@@ -137,25 +113,6 @@ export function PwaBootstrap() {
         onControllerChange,
       );
       for (const dispose of focusListeners) dispose();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!isStandaloneDisplay()) return;
-
-    void lockLandscape();
-
-    const onChange = () => {
-      if (window.matchMedia("(orientation: portrait)").matches) {
-        void lockLandscape();
-      }
-    };
-
-    window.addEventListener("orientationchange", onChange);
-    screen.orientation?.addEventListener?.("change", onChange);
-    return () => {
-      window.removeEventListener("orientationchange", onChange);
-      screen.orientation?.removeEventListener?.("change", onChange);
     };
   }, []);
 

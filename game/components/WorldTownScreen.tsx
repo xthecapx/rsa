@@ -329,7 +329,7 @@ export function WorldTownScreen({ config, restartOptions }: { config: TownConfig
         {mission?.active && mission.dialog ? <DialogBox /> : blocked && config.gateNotes?.[blocked] ? <div className="textbox gate-note max-w-lg space-y-1 px-4 py-3 text-center" role="status">
           <p className="text-xs font-bold uppercase tracking-widest text-[#fca5a5]">🔒 {t("Locked")}</p>
           <p className="text-sm">{t(config.gateNotes[blocked].text)}</p>
-        </div> : <div className={`textbox max-w-lg space-y-2 px-4 py-3 text-center transition-opacity ${walking ? "opacity-30" : ""}`}>
+        </div> : <div className={`map-hint textbox max-w-lg space-y-2 px-4 py-3 text-center transition-opacity ${walking ? "opacity-30" : ""}`}>
           <p className="text-sm">{t(objective ?? config.idle)}</p>
           {nearLabel && <p className="text-xs text-accent-amber">{t(nearLabel)}{" · "}{t("Press Space or tap Talk")}</p>}
         </div>}

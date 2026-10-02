@@ -1,4 +1,4 @@
-import { Actor, BoundingBox, Circle, Color, Engine, Keys, Rectangle, Scene, TileMap, vec, type Sprite } from "excalibur";
+import { Actor, Circle, Color, Engine, Keys, Rectangle, Scene, TileMap, vec, type Sprite } from "excalibur";
 import type { PointerEvent, Subscription } from "excalibur";
 
 import { useLocale, t } from "@/i18n";
@@ -22,7 +22,8 @@ import { LANDMARKS, tileCenter, type GridPos } from "../maps/street";
 import type { Landmark } from "../bus";
 import { citySprite, npcImages, propImages, type NpcSprite } from "../resources";
 import { TILE_SIZE } from "../tiles";
-import { clearTouchInput, consumeTouchInteract } from "../touchInput";
+import { followPlayer } from "../camera";
+import { clearTouchInput, consumeTouchInteract, touchDirection, type TouchDirection } from "../touchInput";
 import { findRoute, walkable, type WorldGrid } from "../maps/grid";
 
 /** Everything a small town needs: terrain, where people stand and which doors open. */
@@ -48,11 +49,11 @@ export interface WorldDef {
   street?: boolean;
 }
 
-const MOVE_KEYS: { keys: Keys[]; delta: GridPos }[] = [
-  { keys: [Keys.ArrowUp, Keys.W], delta: { x: 0, y: -1 } },
-  { keys: [Keys.ArrowDown, Keys.S], delta: { x: 0, y: 1 } },
-  { keys: [Keys.ArrowLeft, Keys.A], delta: { x: -1, y: 0 } },
-  { keys: [Keys.ArrowRight, Keys.D], delta: { x: 1, y: 0 } },
+const MOVE_KEYS: { keys: Keys[]; direction: TouchDirection; delta: GridPos }[] = [
+  { keys: [Keys.ArrowUp, Keys.W], direction: "up", delta: { x: 0, y: -1 } },
+  { keys: [Keys.ArrowDown, Keys.S], direction: "down", delta: { x: 0, y: 1 } },
+  { keys: [Keys.ArrowLeft, Keys.A], direction: "left", delta: { x: -1, y: 0 } },
+  { keys: [Keys.ArrowRight, Keys.D], direction: "right", delta: { x: 1, y: 0 } },
 ];
 const WALK_SETTLE_MS = 220;
 /** Crates ride the belt this many tiles apart, at this many tiles per second. */
@@ -215,8 +216,7 @@ export class WorldScene extends Scene {
     this.beacon.graphics.use(new Circle({ radius: 10, color: Color.Transparent, strokeColor: Color.fromHex("#efbe67"), lineWidth: 2 }));
     this.beacon.graphics.visible = false;
     this.add(this.beacon);
-    this.camera.strategy.lockToActor(this.player);
-    this.camera.strategy.limitCameraBounds(new BoundingBox(0, 0, this.def.map.width * TILE_SIZE, this.def.map.height * TILE_SIZE));
+    followPlayer(this.camera, this.player, { width: this.def.map.width * TILE_SIZE, height: this.def.map.height * TILE_SIZE });
     this.pointerSub = engine.input.pointers.on("down", (event) => this.onPointerDown(event));
     bus.setCommandHandler((command) => this.handle(command));
     bus.emit({ type: "ready" });
@@ -269,10 +269,12 @@ export class WorldScene extends Scene {
       bus.emit({ type: "worldInteract", target: near });
       return;
     }
-    if (MOVE_KEYS.some(({ keys }) => keys.some((key) => engine.input.keyboard.isHeld(key)))) this.player.clearRoute();
+    const direction = touchDirection();
+    if (direction || MOVE_KEYS.some(({ keys }) => keys.some((key) => engine.input.keyboard.isHeld(key)))) this.player.clearRoute();
     if (this.player.isMoving) return;
-    for (const { keys, delta } of MOVE_KEYS) {
-      if (!keys.some((key) => engine.input.keyboard.isHeld(key))) continue;
+    for (const { keys, direction: moveDirection, delta } of MOVE_KEYS) {
+      const padHeld = direction === moveDirection;
+      if (!padHeld && !keys.some((key) => engine.input.keyboard.isHeld(key))) continue;
       const next = { x: this.player.grid.x + delta.x, y: this.player.grid.y + delta.y };
       if (walkable(this.grid, next)) this.player.stepTowards(next); else { this.player.faceTowards(next); this.bumped(next); }
       break;

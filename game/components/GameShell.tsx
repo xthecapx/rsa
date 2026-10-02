@@ -7,7 +7,6 @@ import { t, useLocale } from "@/i18n";
 import { LanguageSwitch } from "./LanguageSwitch";
 import { MuteButton } from "./MuteButton";
 import { SceneLoading } from "./SceneLoading";
-import { OrientationNotice } from "./OrientationNotice";
 
 /** Every scenario occupies the same game screen; only its world and tools change. */
 export function GameShell({ title, subtitle, backHref, backLabel, sidebar, objectives, children, laptopOpen, laptopReady, onOpenLaptop, sceneReady = true, sceneFailed = false, onBack, backDisabled = false, onObjectivesOpen, restartControl, missionProgress }: {
@@ -57,6 +56,5 @@ export function GameShell({ title, subtitle, backHref, backLabel, sidebar, objec
         {objectives}
       </div>
     </div>}
-    <OrientationNotice />
   </main>;
 }

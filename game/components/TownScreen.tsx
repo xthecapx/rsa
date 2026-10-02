@@ -448,7 +448,7 @@ export function TownScreen({ initialAct, initialCoin = false, initialGrover = fa
         {rsaActive && <div className="pointer-events-none"><SuspicionMeter /></div>}
       </div>}
       {!conversation && !journalOpen && !restartOpen && !(rsaActive && game.laptopOpen) && <div className={`pointer-events-none absolute inset-x-0 bottom-0 flex justify-center p-3 ${rsaActive && game.phase !== "exploring" ? "z-20 pb-3" : "pb-24 lg:pb-4"}`}>
-        {rsaActive && game.phase !== "exploring" ? <DialogBox /> : <div className={`textbox max-w-lg space-y-2 px-4 py-3 text-center transition-opacity ${game.walking ? "opacity-30" : ""}`}>
+        {rsaActive && game.phase !== "exploring" ? <DialogBox /> : <div className={`map-hint textbox max-w-lg space-y-2 px-4 py-3 text-center transition-opacity ${game.walking ? "opacity-30" : ""}`}>
           <p className="text-sm">{t(rsaActive && game.pendingTravel ? game.pendingTravel.objective : town.tracked ? town.tracked === "coin" ? "First challenge: Who Goes First?" : town.tracked === "rsa" ? "RSA client" : town.tracked === "grover" ? "Thecap’s workshop" : "Casa Ofelia" : "Explore Quantum Town")}</p>
           {canInteract && <p className="text-xs text-accent-amber">{t(townNear ? TOWN_LOCATIONS[townNear].prompt : game.near === "car" ? "Talk to the RSA client" : game.near === "tap" ? "Inspect the junction box" : "Talk")}{" · "}{t("Press Space or tap Talk")}</p>}
         </div>}

@@ -662,3 +662,52 @@ html[data-compact-viewport="true"] .laptop-footer { padding: 4px 8px; font-size:
 .crypto-calc { margin-left: 8px; padding: 0 6px; border: 1px solid #456a70; border-radius: 6px; font-size: 13px; line-height: 1.6; vertical-align: middle; }
 .crypto-calc:hover { border-color: #2dd4bf; }
 .gate-note { border-color: #f87171 !important; }
+
+/* Mobile prose is two pixels smaller; keep small labels/code and input sizes legible. */
+@media (pointer: coarse) {
+  .game-shell, .laptop-overlay { font-size: 13px; }
+  .game-shell > header h1 { font-size: 13px; }
+  .laptop-toolbar h2, .game-shell .game-dialogue li button { font-size: 12px; }
+  .dialogue-line p, html[data-compact-viewport="true"] .dialogue-line p { font-size: 12px; line-height: 1.65; }
+  .game-dialogue .text-sm, .laptop-scroll .text-sm { font-size: 12px; }
+  .game-dialogue .text-base, .laptop-scroll .text-base { font-size: 14px; }
+  .laptop-question, .laptop-choice { font-size: 13px; }
+  .laptop-note, .vault-rules { font-size: 12px; }
+  .dialogue-actions button, .laptop-scroll .btn-primary, .laptop-scroll .btn-ghost { font-size: 12px; }
+  .game-shell .game-dialogue input, .laptop-scroll input, .laptop-scroll select, .laptop-scroll textarea { font-size: 16px; }
+}
+@media (pointer: coarse) and (min-width: 640px) {
+  .dialogue-line p { font-size: 14px; }
+}
+.movement-pad { display: none; position: absolute; bottom: max(12px, env(safe-area-inset-bottom)); left: max(12px, env(safe-area-inset-left)); z-index: 10; grid-template: repeat(3, 44px) / repeat(3, 44px); gap: 4px; touch-action: none; }
+.movement-pad button { display: grid; place-items: center; border: 2px solid #688c91; border-radius: 8px; background: #102630e8; color: #e8f4f8; font: 18px/1 sans-serif; user-select: none; -webkit-touch-callout: none; touch-action: none; }
+.movement-pad button:active { background: #405039; border-color: #efbe67; }
+.movement-pad button:focus-visible { outline: 3px solid #efbe67; outline-offset: 1px; }
+.movement-pad-up { grid-area: 1 / 2; }
+.movement-pad-left { grid-area: 2 / 1; }
+.movement-pad-right { grid-area: 2 / 3; }
+.movement-pad-down { grid-area: 3 / 2; }
+@media (pointer: coarse) { .movement-pad { display: grid; } }
+@media (max-width: 600px) {
+  .game-shell > header { flex-wrap: wrap; gap: 4px; }
+  .game-shell > header > div:last-child { width: 100%; flex-wrap: wrap; justify-content: space-between; gap: 4px; }
+}
+
+@media (pointer: coarse) {
+  .map-hint .text-sm { font-size: 12px; }
+}
+@media (pointer: coarse) and (max-width: 600px) and (orientation: portrait) {
+  .map-hint { transform: translateY(-64px); }
+}
+
+/* Excalibur positions its zoomed canvas; flex centering would double the crop. */
+@media (pointer: coarse) { .game-canvas-host { display: block; } }
+
+/* The map starts folded on touch devices; an opened map stays scrollable. */
+@media (pointer: coarse) {
+  .town-minimap { max-height: min(calc(var(--game-viewport-height) - 110px), calc(var(--game-viewport-height) * .7)); overflow-y: auto; overscroll-behavior: contain; }
+  .minimap-toggle { min-height: 44px; }
+}
+@media (pointer: coarse) and (max-width: 600px) and (orientation: portrait) {
+  .town-minimap { max-height: max(100px, calc(var(--game-viewport-height) - 300px)); }
+}

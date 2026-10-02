@@ -1,7 +1,6 @@
 import {
   Actor,
   Circle,
-  BoundingBox,
   Color,
   Engine,
   Keys,
@@ -31,13 +30,14 @@ import {
 import type { GridPos } from "../maps/street";
 import { citySprite, images } from "../resources";
 import { TILE_SIZE } from "../tiles";
-import { clearTouchInput, consumeTouchInteract } from "../touchInput";
+import { followPlayer } from "../camera";
+import { clearTouchInput, consumeTouchInteract, touchDirection, type TouchDirection } from "../touchInput";
 
-const MOVE_KEYS: { keys: Keys[]; delta: GridPos }[] = [
-  { keys: [Keys.ArrowUp, Keys.W], delta: { x: 0, y: -1 } },
-  { keys: [Keys.ArrowDown, Keys.S], delta: { x: 0, y: 1 } },
-  { keys: [Keys.ArrowLeft, Keys.A], delta: { x: -1, y: 0 } },
-  { keys: [Keys.ArrowRight, Keys.D], delta: { x: 1, y: 0 } },
+const MOVE_KEYS: { keys: Keys[]; direction: TouchDirection; delta: GridPos }[] = [
+  { keys: [Keys.ArrowUp, Keys.W], direction: "up", delta: { x: 0, y: -1 } },
+  { keys: [Keys.ArrowDown, Keys.S], direction: "down", delta: { x: 0, y: 1 } },
+  { keys: [Keys.ArrowLeft, Keys.A], direction: "left", delta: { x: -1, y: 0 } },
+  { keys: [Keys.ArrowRight, Keys.D], direction: "right", delta: { x: 1, y: 0 } },
 ];
 
 /** How long the player has to stand still before they count as stopped. */
@@ -92,10 +92,7 @@ export class CityScene extends Scene {
 
     const worldWidth = street.width * TILE_SIZE;
     const worldHeight = street.height * TILE_SIZE;
-    this.camera.strategy.lockToActor(this.player);
-    this.camera.strategy.limitCameraBounds(
-      new BoundingBox(0, 0, worldWidth, worldHeight),
-    );
+    followPlayer(this.camera, this.player, { width: worldWidth, height: worldHeight });
     const guide = new Actor({ name: "professor-thecap", pos: vec(tileCenter(TOWN_LOCATIONS.guide.at).x, tileCenter(TOWN_LOCATIONS.guide.at).y), width: TILE_SIZE, height: TILE_SIZE, z: 10 });
     guide.graphics.use(images.doctor.toSprite());
     this.add(guide);
@@ -219,13 +216,15 @@ export class CityScene extends Scene {
       return;
     }
 
-    // Keyboard input takes over after the current tile, without snapping the
+    // Keyboard or pad input takes over after the current tile, without snapping the
     // character or waiting for the entire clicked route to finish.
-    if (MOVE_KEYS.some(({ keys }) => keys.some((key) => engine.input.keyboard.isHeld(key)))) this.player.clearRoute();
+    const direction = touchDirection();
+    if (direction || MOVE_KEYS.some(({ keys }) => keys.some((key) => engine.input.keyboard.isHeld(key)))) this.player.clearRoute();
     if (this.player.isMoving) return;
 
-    for (const { keys, delta } of MOVE_KEYS) {
-      if (!keys.some((key) => engine.input.keyboard.isHeld(key))) continue;
+    for (const { keys, direction: moveDirection, delta } of MOVE_KEYS) {
+      const padHeld = direction === moveDirection;
+      if (!padHeld && !keys.some((key) => engine.input.keyboard.isHeld(key))) continue;
       const next = { x: this.player.grid.x + delta.x, y: this.player.grid.y + delta.y };
       if (isWalkable(this.solid, next)) {
         this.player.stepTowards(next);

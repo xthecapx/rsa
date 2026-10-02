@@ -45,6 +45,7 @@ export function GameCanvas({ onReady, onError, world = "city" }: { onReady: () =
   }, [onReady, onError, world]);
 
   // Excalibur owns this subtree and measures the host for FitContainer.
-  // Center the fitted canvas so any unused space is shared on both sides.
+  // CSS centers desktop FitContainer. On touch devices Excalibur positions
+  // FitContainerAndZoom itself, so the host must not add another offset.
   return <div ref={hostRef} className="game-canvas-host absolute inset-0" />;
 }
