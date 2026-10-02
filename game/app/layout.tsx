@@ -5,6 +5,7 @@ import { PwaBootstrap } from "@/components/PwaBootstrap";
 import { SplashScreen } from "@/components/SplashScreen";
 import "./globals.css";
 import { LanguageProvider } from "@/components/LanguageProvider";
+import { ViewportBootstrap } from "@/components/ViewportBootstrap";
 
 const pressStart = Press_Start_2P({
   subsets: ["latin"],
@@ -61,6 +62,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${pressStart.variable} ${dmSans.variable}`} data-boot="1">
       <body suppressHydrationWarning>
+        <ViewportBootstrap />
         {/*
           Opaque cover in the first HTML paint so the title cannot flash
           before SplashScreen hydrates. Hidden via html[data-boot=done] —

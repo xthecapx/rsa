@@ -36,7 +36,7 @@ export function MeasurementExplorer({ measurement, title, qubitName = "Qubit", o
   const tabButton = (id: Tab, label: string) => <button type="button" role="tab" aria-selected={tab === id} className={`measure-tab ${tab === id ? "active" : ""}`}
     onClick={() => { gameAudio.playSfx("select"); setTab(id); }}>{t(label)}</button>;
 
-  return <div className="measure-explorer" role="dialog" aria-modal="true" aria-label={t(title)} ref={panel}>
+  return <div className="measure-explorer viewport-overlay" role="dialog" aria-modal="true" aria-label={t(title)} ref={panel}>
     <div className="measure-card">
       <header className="measure-head">
         <div>

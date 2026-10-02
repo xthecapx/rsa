@@ -13,7 +13,7 @@ import { StartOverControl, type RestartOption } from "./StartOverControl";
 import { CoinHouse } from "./CoinHouse";
 import { GameShell } from "./GameShell";
 import { MissionObjectives } from "./ObjectiveList";
-import { DialogueFrame, DialogueLine, useDialogueText } from "./DialoguePresentation";
+import { DialogueContinue, DialogueFrame, DialogueLine, useDialogueText } from "./DialoguePresentation";
 import { useCoinSceneAssets } from "./useSceneAssets";
 import { TalkControl } from "./TouchControls";
 import { LaptopShell } from "./LaptopShell";
@@ -294,17 +294,18 @@ export function CoinScenario({ onExit, onRestartGame }: { onExit?: () => void; o
             visible={true} onTalk={() => { if (nearExit) leaveHouse(); else interact(scene.place); }} />
         </>}
       </div> : <div className="pointer-events-auto w-full max-w-4xl">
-        <DialogueFrame role={!finishedDialog ? "button" : undefined} tabIndex={!finishedDialog ? 0 : undefined}
+        <DialogueFrame
+          pageKey={`${session.step}:${session.line}`}
           onClick={() => { if (!finishedDialog) interact(scene.place); }}
-          onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); interact(scene.place); } }}>
+          actions={!finishedDialog
+            ? <DialogueContinue settled={dialogue.settled} onContinue={() => interact(scene.place)} />
+            : <button className="btn-primary self-start text-sm" onClick={() => interact(scene.place)}>
+              {t(session.step === "welcome" ? "Let’s write the function →" : "Open laptop")}
+            </button>}>
           {!finishedDialog && line ? <>
             <DialogueLine speaker={line.speaker}>{dialogue.typed}{!dialogue.settled && <span className="animate-pulse">|</span>}</DialogueLine>
-            <p className="text-xs text-stage-muted">{dialogue.settled ? t("Space to continue") : t("Space to skip")}{" · "}{t("Tap to continue")}</p>
           </> : <>
             <DialogueLine speaker="hacker">{t(session.step === "done" ? "Achievement unlocked: Quantum Coin. Your first circuit is ready." : "Your turn. Open the laptop to complete this step.")}</DialogueLine>
-            <button className="btn-primary self-start text-sm" onClick={() => interact(scene.place)}>
-              {t(session.step === "welcome" ? "Let’s write the function →" : "Open laptop")}
-            </button>
           </>}
         </DialogueFrame>
       </div>}

@@ -50,7 +50,7 @@ export function OrientationNotice() {
   if (!forced || !portrait || (dismissed && !standalone)) return null;
 
   return (
-    <div className="fixed inset-0 z-40 flex flex-col items-center justify-center gap-6 bg-stage-bg p-8 text-center">
+    <div className="viewport-overlay z-40 flex flex-col items-center justify-center gap-6 bg-stage-bg p-8 text-center">
       <div className="text-[40px] leading-none" aria-hidden>
         ⟳
       </div>

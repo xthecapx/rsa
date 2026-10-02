@@ -443,11 +443,11 @@ export function TownScreen({ initialAct, initialCoin = false, initialGrover = fa
     onOpenLaptop={() => { if (rsaActive && !conversation) useGame.getState().setLaptopOpen(true); else if (!rsaActive) setConversation({ title: "Your laptop", text: "Your laptop tools unlock during a mission. Visit the coin house or talk to the RSA client to begin.", choices: [{ label: "Keep exploring", action: closeConversation }] }); }}>
     <GameCanvas onReady={onReady} onError={onError} />
     {sceneReady && <>
-      {!game.laptopOpen && !conversation && !journalOpen && !restartOpen && <div className="absolute right-3 top-3 z-10 flex max-w-[calc(100%-1.5rem)] flex-col items-end gap-2">
+      {!inputLocked && <div className="absolute right-3 top-3 z-10 flex max-w-[calc(100%-1.5rem)] flex-col items-end gap-2">
         <TownMinimap />
         {rsaActive && <div className="pointer-events-none"><SuspicionMeter /></div>}
       </div>}
-      {!conversation && !journalOpen && !restartOpen && !(rsaActive && game.laptopOpen) && <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center p-3 pb-24 lg:pb-4">
+      {!conversation && !journalOpen && !restartOpen && !(rsaActive && game.laptopOpen) && <div className={`pointer-events-none absolute inset-x-0 bottom-0 flex justify-center p-3 ${rsaActive && game.phase !== "exploring" ? "z-20 pb-3" : "pb-24 lg:pb-4"}`}>
         {rsaActive && game.phase !== "exploring" ? <DialogBox /> : <div className={`textbox max-w-lg space-y-2 px-4 py-3 text-center transition-opacity ${game.walking ? "opacity-30" : ""}`}>
           <p className="text-sm">{t(rsaActive && game.pendingTravel ? game.pendingTravel.objective : town.tracked ? town.tracked === "coin" ? "First challenge: Who Goes First?" : town.tracked === "rsa" ? "RSA client" : town.tracked === "grover" ? "Thecap’s workshop" : "Casa Ofelia" : "Explore Quantum Town")}</p>
           {canInteract && <p className="text-xs text-accent-amber">{t(townNear ? TOWN_LOCATIONS[townNear].prompt : game.near === "car" ? "Talk to the RSA client" : game.near === "tap" ? "Inspect the junction box" : "Talk")}{" · "}{t("Press Space or tap Talk")}</p>}
@@ -461,7 +461,18 @@ export function TownScreen({ initialAct, initialCoin = false, initialGrover = fa
           else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
         }
       }}>
-        <DialogueFrame className="max-w-4xl">{conversation.rsaAct && <div className="shrink-0"><RsaProgress act={conversation.rsaAct} /></div>}<DialogueLine speaker={conversation.title === "Professor Thecap" ? "guide" : conversation.title === "Operation Ghost Key" ? "ofelia" : "boss"} label={t(conversation.title)}>{conversation.parts ? conversation.parts.map((part) => t(part)).join(" ") : t(conversation.text)}</DialogueLine><div className="flex min-h-0 flex-wrap gap-2 overflow-y-auto">{conversation.choices.map((choice) => <button key={choice.label} className="btn-ghost text-sm" onClick={() => { gameAudio.playSfx("select"); choice.action(); }}>{choice.done ? "✓ " : ""}{t(choice.label)}{choice.act && `: ${t(`Act ${choice.act}: ${getAct(choice.act).title}`)}`}</button>)}</div></DialogueFrame>
+        <DialogueFrame className="max-w-4xl" pageKey={conversation.text}
+          actions={<div className="flex min-h-0 flex-wrap gap-2 overflow-y-auto">
+            {conversation.choices.map((choice) => <button key={choice.label} className="btn-ghost text-sm"
+              onClick={() => { gameAudio.playSfx("select"); choice.action(); }}>
+              {choice.done ? "✓ " : ""}{t(choice.label)}{choice.act && `: ${t(`Act ${choice.act}: ${getAct(choice.act).title}`)}`}
+            </button>)}
+          </div>}>
+          {conversation.rsaAct && <div className="shrink-0"><RsaProgress act={conversation.rsaAct} /></div>}
+          <DialogueLine speaker={conversation.title === "Professor Thecap" ? "guide" : conversation.title === "Operation Ghost Key" ? "ofelia" : "boss"} label={t(conversation.title)}>
+            {conversation.parts ? conversation.parts.map((part) => t(part)).join(" ") : t(conversation.text)}
+          </DialogueLine>
+        </DialogueFrame>
       </div>}
       <TouchControls canInteract={canInteract} visible={!inputLocked} />
       {mission.layer(restartControl)}

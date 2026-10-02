@@ -87,6 +87,7 @@ Paths below are relative to the repository root.
 | API clients and implementations | `game/lib/`, `backend/app/api/routes/`, `backend/app/quantum/` |
 | Translation | `game/i18n/{index,translate}.ts`, `game/i18n/es.json` |
 | Sound and PWA | `game/game/{audio,synth}.ts`, `game/public/sw.js`, `game/components/PwaBootstrap.tsx` |
+| Visible viewport and mobile layout | `game/game/viewport.ts`, `game/components/ViewportBootstrap.tsx`, `game/app/globals.css` |
 
 Excalibur owns outdoor pixels and animation; React owns text and tools. They
 coordinate through the Zustand game store and typed command bus. Preserve one
@@ -188,3 +189,10 @@ For UI, prose, or save changes, smoke-test the affected lesson in both languages
 keyboard and touch interactions, laptop reopen, and refresh/resume. Check that a
 language switch preserves results and that restoring a save never repeats a toss
 or backend operation.
+
+Mobile overlays and the engine container share the visible viewport, including
+keyboard resize and pan. Use the shared viewport variables instead of independent
+window-height calculations. Dialog text scrolls separately from its action row;
+every story step needs a visible button. Preserve tap-to-place as well as drag
+and keyboard input in puzzle builders. Check short landscape screens with browser
+bars visible and report fields with the keyboard open.

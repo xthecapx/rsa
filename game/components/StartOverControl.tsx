@@ -24,8 +24,8 @@ export function StartOverControl({ options, disabled = false, onOpenChange }: {
     <button ref={trigger} type="button" aria-label={t("Start over")} className="btn-ghost text-xs" disabled={disabled}
       title={disabled ? t("Finishing the current operation…") : t("Start over")}
       onClick={() => { setOpen(true); onOpenChange(true); }}><span aria-hidden="true">↺</span><span className="ml-1 hidden sm:inline">{t("Start over")}</span></button>
-    {open && createPortal(<div className="fixed inset-0 z-[100] grid place-items-center bg-black/70 p-3" onPointerDown={(event) => event.stopPropagation()}>
-      <div ref={dialog} className="textbox max-h-[85dvh] w-full max-w-lg space-y-4 overflow-y-auto p-5" role="dialog" aria-modal="true" aria-labelledby={titleId}
+    {open && createPortal(<div className="viewport-overlay z-[100] grid place-items-center bg-black/70 p-3" onPointerDown={(event) => event.stopPropagation()}>
+      <div ref={dialog} className="textbox max-h-full w-full max-w-lg space-y-4 overflow-y-auto p-5" role="dialog" aria-modal="true" aria-labelledby={titleId}
         onKeyDown={(event) => {
           event.stopPropagation();
           if (event.key === "Escape") { event.preventDefault(); close(); }

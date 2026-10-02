@@ -7,6 +7,12 @@ import { t, useLocale } from "@/i18n";
 
 const sensors = [
   PointerSensor.configure({
+    // Reserve the grip for touch dragging; the rest of a block still scrolls
+    // the laptop or selects a piece with a tap. Keyboard uses the whole button.
+    preventActivation: (event, source) => {
+      if (event.pointerType === "touch" && !(event.target instanceof Element && event.target.closest(".puzzle-drag-grip"))) return true;
+      return PointerSensor.defaults.preventActivation?.(event, source) ?? false;
+    },
     activationConstraints: (event) => event.pointerType === "touch"
       ? [new PointerActivationConstraints.Delay({ value: 250, tolerance: 5 })]
       : [new PointerActivationConstraints.Distance({ value: 5 })],
@@ -59,7 +65,7 @@ export function PuzzleDragDrop({ labels, targets, onPlace, renderPreview, childr
         } else setAnnouncement(t("Drag canceled. The puzzle is unchanged."));
       }}>
       <div data-puzzle-dragging={dragging}>
-        <p className="puzzle-drag-help">{t("Drag a piece into a slot, or tap the piece and then the slot. On a phone, hold briefly before dragging.")}</p>
+        <p className="puzzle-drag-help">{t("Drag a piece into a slot, or tap the piece and then the slot. On a phone, hold the grip briefly before dragging; swipe elsewhere to scroll.")}</p>
         <p id={instructionsId} className="sr-only">{t("Press Space to pick up, arrows to move, and Space to drop. Escape cancels. Enter selects a piece or places it in a focused slot.")}</p>
         <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">{announcement}</div>
         {children}

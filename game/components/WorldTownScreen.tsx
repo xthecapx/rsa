@@ -321,11 +321,11 @@ export function WorldTownScreen({ config, restartOptions }: { config: TownConfig
       : say("Your laptop", [{ speaker: "system", text: "Neighbors lend you their benches here. Talk to anyone whose name board starts with !." }], [{ label: "Keep exploring", action: close }])}>
     {hydrated && <GameCanvas world={config.world} onReady={onReady} onError={onError} />}
     {sceneReady && <>
-      {!talk && !activity && !journalOpen && !restartOpen && !panel && !missionTalk && !missionShell?.laptopOpen && <div className="absolute right-3 top-3 z-10 flex max-w-[calc(100%-1.5rem)] flex-col items-end gap-2">
+      {!inputLocked && <div className="absolute right-3 top-3 z-10 flex max-w-[calc(100%-1.5rem)] flex-col items-end gap-2">
         {config.minimap({ position: saved.position, facing: saved.facing, explored: saved.explored, done, pending: [...alerts, ...(challenge.complete ? [] : [challenge.door])], tracked })}
         {config.hud}
       </div>}
-      {!talk && !activity && !journalOpen && !restartOpen && !panel && !missionTalk && !missionShell?.laptopOpen && <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center p-3 pb-24 lg:pb-4">
+      {!talk && !activity && !journalOpen && !restartOpen && !panel && !missionTalk && !missionShell?.laptopOpen && <div className={`pointer-events-none absolute inset-x-0 bottom-0 flex justify-center p-3 ${mission?.active && mission.dialog ? "z-20 pb-3" : "pb-24 lg:pb-4"}`}>
         {mission?.active && mission.dialog ? <DialogBox /> : blocked && config.gateNotes?.[blocked] ? <div className="textbox gate-note max-w-lg space-y-1 px-4 py-3 text-center" role="status">
           <p className="text-xs font-bold uppercase tracking-widest text-[#fca5a5]">🔒 {t("Locked")}</p>
           <p className="text-sm">{t(config.gateNotes[blocked].text)}</p>
@@ -336,28 +336,28 @@ export function WorldTownScreen({ config, restartOptions }: { config: TownConfig
       </div>}
       {missionTalk && <div className="absolute inset-0 z-20 flex items-end justify-center bg-black/30 p-3 sm:p-5" role="dialog" aria-modal="true" aria-label={t(missionTalk.title)} ref={talkRef}
         onKeyDown={(event) => { event.stopPropagation(); if (event.key === "Escape") { event.preventDefault(); mission!.closeTalk(); } }}>
-        <DialogueFrame className="max-w-4xl">
+        <DialogueFrame className="max-w-4xl" pageKey={missionTalk.text}
+          actions={<div className="flex min-h-0 flex-wrap gap-2 overflow-y-auto">{missionTalk.choices.map((choice) => <button key={choice.label} className="btn-ghost text-sm" onClick={() => { gameAudio.playSfx("select"); choice.action(); }}>
+            {choice.done ? "✓ " : ""}{t(choice.label)}</button>)}</div>}>
           {missionTalk.rsaAct && <div className="shrink-0"><RsaProgress act={missionTalk.rsaAct} /></div>}
           <DialogueLine speaker={missionTalk.speaker ?? "boss"} label={t(missionTalk.title)}>{missionTalk.parts ? missionTalk.parts.map((part) => t(part)).join(" ") : t(missionTalk.text)}</DialogueLine>
-          <div className="flex min-h-0 flex-wrap gap-2 overflow-y-auto">{missionTalk.choices.map((choice) => <button key={choice.label} className="btn-ghost text-sm" onClick={() => { gameAudio.playSfx("select"); choice.action(); }}>
-            {choice.done ? "✓ " : ""}{t(choice.label)}</button>)}</div>
         </DialogueFrame>
       </div>}
       {panel && config.panels?.[panel]?.(() => setPanel(null))}
       {talk && line && <div className="absolute inset-0 z-20 flex items-end justify-center bg-black/30 p-3 sm:p-5" role="dialog" aria-modal="true" aria-label={t(talk.title)} ref={talkRef}
         onKeyDown={(event) => { event.stopPropagation(); if (event.key === "Escape") { event.preventDefault(); close(); } }}>
-        <DialogueFrame className="max-w-4xl">
+        <DialogueFrame className="max-w-4xl" pageKey={`${talk.title}:${talk.index}`}
+          actions={<div className="flex min-h-0 flex-wrap gap-2 overflow-y-auto">
+            {talk.index < talk.lines.length - 1
+              ? <button className="btn-ghost text-sm" onClick={() => setTalk({ ...talk, index: talk.index + 1 })}>{t("Next")}</button>
+              : talk.choices.map((choice) => <button key={choice.label} className="btn-ghost text-sm" onClick={() => { gameAudio.playSfx("select"); if (talk.card) useKnowledge.getState().dismiss(); choice.action(); }}>{t(choice.label)}</button>)}
+          </div>}>
           <DialogueLine speaker={line.speaker} label={line.speaker === "system" ? t(talk.title) : undefined}>{t(line.text)}</DialogueLine>
           {talk.index === talk.lines.length - 1 && talk.card && <div className="knowledge-reveal" role="status">
             <span className="text-xs uppercase tracking-widest text-accent-teal">{t(useKnowledge.getState().fresh === talk.card ? "NEW KNOWLEDGE CARD" : "KNOWLEDGE CARD")}</span>
             <ul><KnowledgeCardView card={config.cards[talk.card]} /></ul>
           </div>}
           {talk.index === talk.lines.length - 1 && talk.medal && <MedalReveal id={talk.medal} />}
-          <div className="flex min-h-0 flex-wrap gap-2 overflow-y-auto">
-            {talk.index < talk.lines.length - 1
-              ? <button className="btn-ghost text-sm" onClick={() => setTalk({ ...talk, index: talk.index + 1 })}>{t("Next")}</button>
-              : talk.choices.map((choice) => <button key={choice.label} className="btn-ghost text-sm" onClick={() => { gameAudio.playSfx("select"); if (talk.card) useKnowledge.getState().dismiss(); choice.action(); }}>{t(choice.label)}</button>)}
-          </div>
         </DialogueFrame>
       </div>}
       <TouchControls canInteract={!!near} visible={!inputLocked} />

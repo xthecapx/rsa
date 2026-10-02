@@ -14,12 +14,30 @@
   --actor-brayan: #a3e635;
   --text-primary: #e8f4f8;
   --text-secondary: #94b8c4;
+  --game-viewport-width: 100vw;
+  --game-viewport-height: 100vh;
+  --game-viewport-top: 0px;
+  --game-viewport-left: 0px;
+}
+
+@supports (height: 100dvh) {
+  :root { --game-viewport-height: 100dvh; }
+}
+
+/* Overlays and the engine host use the same visible rectangle, even with a keyboard. */
+.viewport-overlay {
+  position: fixed;
+  inset: auto;
+  top: var(--game-viewport-top);
+  left: var(--game-viewport-left);
+  width: var(--game-viewport-width);
+  height: var(--game-viewport-height);
 }
 
 html,
 body {
   height: 100%;
-  height: 100dvh;
+  height: var(--game-viewport-height);
   background: var(--stage-bg);
   color: var(--text-primary);
 }
@@ -110,7 +128,7 @@ html[data-boot="done"] #mitm-boot {
 
 /* Scenario shell and the coin lesson use readable dialogue around pixel art. */
 .scenario-page, .coin-page {
-  height: 100dvh;
+  height: var(--game-viewport-height);
   overflow-y: auto;
   font-family: var(--font-dm-sans), sans-serif;
   font-size: 16px;
@@ -180,12 +198,12 @@ html[data-boot="done"] #mitm-boot {
 .language-switch button { padding: 5px 7px; color: #c0d6dc; border-radius: 3px; }
 .language-switch button[aria-pressed="true"] { background: #315b61; color: #fff; }
 .language-switch button:focus-visible { outline: 2px solid #f5c56d; outline-offset: 2px; }
-.laptop-overlay { --laptop-gap: 16px; position: fixed; inset: 0; height: 100dvh; z-index: 80; display: grid; grid-template: minmax(0, 1fr) / minmax(0, 1fr); place-items: center; overflow: hidden; padding: max(var(--laptop-gap), env(safe-area-inset-top)) max(var(--laptop-gap), env(safe-area-inset-right)) max(var(--laptop-gap), env(safe-area-inset-bottom)) max(var(--laptop-gap), env(safe-area-inset-left)); background: #050e12ee; font: 15px/1.6 var(--font-dm-sans), sans-serif; }
+.laptop-overlay { --laptop-gap: 16px; z-index: 80; display: grid; grid-template: minmax(0, 1fr) / minmax(0, 1fr); place-items: center; overflow: hidden; padding: max(var(--laptop-gap), env(safe-area-inset-top)) max(var(--laptop-gap), env(safe-area-inset-right)) max(var(--laptop-gap), env(safe-area-inset-bottom)) max(var(--laptop-gap), env(safe-area-inset-left)); background: #050e12ee; font: 15px/1.6 var(--font-dm-sans), sans-serif; }
 .laptop-overlay[hidden] { display: none; }
-.shared-laptop { width: 100%; max-width: 900px; min-width: 0; min-height: 0; max-height: 100%; display: flex; flex-direction: column; outline: none; }
-.laptop-bezel { display: flex; min-height: 0; flex-direction: column; border: 2px solid #3d4a52; border-radius: 16px 16px 0 0; background: #8b949a; padding: 12px; box-shadow: 0 20px 60px #0008; }
+.shared-laptop { width: 100%; height: 100%; max-width: 900px; min-width: 0; min-height: 0; max-height: 760px; display: flex; flex-direction: column; outline: none; }
+.laptop-bezel { display: flex; flex: 1; min-height: 0; flex-direction: column; border: 2px solid #3d4a52; border-radius: 16px 16px 0 0; background: #8b949a; padding: 12px; box-shadow: 0 20px 60px #0008; }
 .laptop-camera { flex-shrink: 0; text-align: center; font: 10px/1.8 monospace; letter-spacing: .2em; color: #293740; margin-bottom: 6px; }
-.laptop-screen { min-height: 0; display: flex; flex-direction: column; border: 2px solid #1a2228; background: #0a1a20; border-radius: 4px; overflow: hidden; }
+.laptop-screen { flex: 1; min-height: 0; display: flex; flex-direction: column; border: 2px solid #1a2228; background: #0a1a20; border-radius: 4px; overflow: hidden; }
 .laptop-toolbar { flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; background: #0d222a; border-bottom: 1px solid #35515a; }
 .laptop-toolbar h2 { font-size: 14px; color: #90e0cd; font-weight: bold; }
 .laptop-toolbar button { font-size: 12px; }
@@ -227,14 +245,22 @@ html[data-boot="done"] #mitm-boot {
 .game-canvas-host { display: flex; align-items: center; justify-content: center; overflow: hidden; }
 .game-canvas-host > canvas { flex: none; cursor: crosshair; }
 .game-shell { font-family: var(--font-dm-sans), sans-serif; font-size: 15px; line-height: 1.5; }
+.game-shell { padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+.objectives-sheet { max-height: calc(var(--game-viewport-height) * .7); }
 .game-shell > header { background: #102630; min-height: 56px; }
 .game-shell > header h1 { font-size: 15px; font-weight: 700; }
 .game-shell > header a, .game-shell > header span { font-size: 12px; }
-.game-shell .game-dialogue { border-radius: 6px; background-color: #122a33f5; box-shadow: 0 8px 30px #0005; }
-.game-shell .game-dialogue > div:last-child { font-size: 12px; }
+.game-dialogue { display: flex; flex-direction: column; gap: 12px; width: 100%; min-height: 0; max-height: min(calc(var(--game-viewport-height) * .75), calc(var(--game-viewport-height) - 100px), 36rem); overflow: hidden; padding: 12px; border-radius: 6px; background-color: #122a33f5; box-shadow: 0 8px 30px #0005; }
+.dialogue-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; overflow-wrap: anywhere; }
+.dialogue-body > * + * { margin-top: 12px; }
+.dialogue-body:focus-visible { outline: 2px solid #efbe67; outline-offset: -2px; }
+.dialogue-actions { flex: 0 1 auto; min-height: 49px; max-height: calc(var(--game-viewport-height) * .4); overflow-y: auto; overscroll-behavior: contain; padding-top: 4px; border-top: 1px solid #45616a; }
+.dialogue-actions button, .dialogue-continue { min-height: 44px; touch-action: manipulation; }
+.dialogue-continue { display: flex; align-items: center; justify-content: center; gap: 12px; margin-left: auto; min-width: 120px; }
+.dialogue-actions button:focus-visible { outline: 3px solid #efbe67; outline-offset: -3px; }
 .game-shell .game-dialogue li button { font-size: 14px; line-height: 1.55; border-radius: 4px; }
 .game-shell .game-dialogue li button:focus-visible { outline: 3px solid #efbe67; outline-offset: 2px; border-color: #efbe67; }
-.game-shell .game-dialogue input { font-size: 15px; }
+.game-shell .game-dialogue input, .laptop-scroll input, .laptop-scroll select, .laptop-scroll textarea { font-size: 16px; }
 .game-shell .btn-primary, .game-shell .btn-ghost { border-radius: 4px; }
 .game-shell aside { background: #0d222b; }
 .coin-world { position: absolute; inset: 0; padding: 40px 0 48px; background: #0b1f26; }
@@ -247,7 +273,7 @@ html[data-boot="done"] #mitm-boot {
 .puzzle-drag-help { margin-bottom: 10px; color: #a7bbc0; font-size: 12px; line-height: 1.5; }
 .puzzle-drag-piece { display: inline-flex; align-items: center; gap: 10px; min-height: 48px; max-width: 100%; overflow-wrap: anywhere; cursor: grab; user-select: none; -webkit-touch-callout: none; }
 .puzzle-drag-piece.is-dragging { opacity: .35; }
-.puzzle-drag-grip { margin-left: auto; flex: none; color: #90e0cd; font: 22px/1 sans-serif; }
+.puzzle-drag-grip { margin-left: auto; flex: none; display: grid; place-items: center; min-width: 44px; min-height: 44px; touch-action: none; color: #90e0cd; font: 22px/1 sans-serif; }
 .puzzle-drag-piece:focus-visible, .puzzle-drop-slot:focus-visible { outline: 3px solid #efbe67; outline-offset: 3px; }
 .puzzle-drop-slot.is-over { outline: 3px solid #efbe67; outline-offset: 3px; background: #47605a; box-shadow: 0 0 0 6px #efbe6725; }
 .puzzle-drop-slot.is-over .qiskit-empty { border-color: #b67b17; background: #fff0c8; }
@@ -296,8 +322,24 @@ html[data-boot="done"] #mitm-boot {
 @media (max-height: 550px) and (orientation: landscape) {
   .game-shell > header { min-height: 44px; padding-top: 4px; padding-bottom: 4px; }
   .coin-world { padding: 12px 64px 48px; }
-  .game-shell .game-dialogue { max-height: 48dvh; overflow-y: auto; }
 }
+
+/* VisualViewport can shrink without changing CSS media queries (mobile keyboard). */
+html[data-compact-viewport="true"] .game-shell > header { min-height: 44px; padding-top: 4px; padding-bottom: 4px; }
+html[data-compact-viewport="true"] .game-shell > header > div:last-child > span { display: none; }
+html[data-compact-viewport="true"] .game-dialogue { gap: 6px; padding: 8px; }
+html[data-compact-viewport="true"] .dialogue-line > div:first-child { display: none; }
+html[data-compact-viewport="true"] .dialogue-line p { font-size: 14px; }
+html[data-compact-viewport="true"] .laptop-overlay { --laptop-gap: 4px; }
+html[data-compact-viewport="true"] .laptop-bezel { padding: 4px; }
+html[data-compact-viewport="true"] .laptop-camera,
+html[data-compact-viewport="true"] .laptop-deck,
+html[data-compact-viewport="true"] .laptop-status { display: none; }
+html[data-compact-viewport="true"] .laptop-toolbar { gap: 6px; padding: 4px 8px; flex-wrap: wrap; }
+html[data-compact-viewport="true"] .laptop-toolbar > div:last-child { gap: 4px; }
+html[data-compact-viewport="true"] .laptop-toolbar button { min-height: 40px; }
+html[data-compact-viewport="true"] .laptop-scroll { padding: 10px; }
+html[data-compact-viewport="true"] .laptop-footer { padding: 4px 8px; font-size: 12px; }
 
 /* Medal case: knowledge badges kept across replays. */
 .medal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 8px; list-style: none; margin: 0; padding: 0; }
@@ -584,8 +626,8 @@ html[data-boot="done"] #mitm-boot {
 .measure-inspect-badge { position: absolute; right: -6px; top: -8px; display: grid; place-items: center; width: 22px; height: 22px; border: 2px solid #1c2e33; border-radius: 50%; background: #f2c983; font-size: 11px; line-height: 1; animation: measure-pulse 1.6s ease-in-out infinite; }
 @keyframes measure-pulse { 50% { transform: scale(1.15); } }
 @media (prefers-reduced-motion: reduce) { .measure-inspect-badge { animation: none; } }
-.measure-explorer { position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; padding: 12px; background: rgb(0 0 0 / 0.55); }
-.measure-card { width: min(760px, 100%); max-height: calc(100dvh - 24px); overflow-y: auto; padding: 16px; border: 2px solid #456a70; border-radius: 10px; background: #0f2329; display: grid; gap: 12px; }
+.measure-explorer { z-index: 60; display: flex; align-items: center; justify-content: center; padding: 12px; background: rgb(0 0 0 / 0.55); }
+.measure-card { width: min(760px, 100%); max-height: calc(var(--game-viewport-height) - 24px); overflow-y: auto; padding: 16px; border: 2px solid #456a70; border-radius: 10px; background: #0f2329; display: grid; gap: 12px; }
 .measure-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
 .measure-head h3 { color: #f2c983; font-weight: 700; }
 .measure-tabs { display: flex; flex-wrap: wrap; gap: 6px; }

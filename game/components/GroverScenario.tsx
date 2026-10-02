@@ -13,7 +13,7 @@ import { StartOverControl, type RestartOption } from "./StartOverControl";
 import { GroverHouse } from "./GroverHouse";
 import { GameShell } from "./GameShell";
 import { MissionObjectives } from "./ObjectiveList";
-import { DialogueFrame, DialogueLine, useDialogueText } from "./DialoguePresentation";
+import { DialogueContinue, DialogueFrame, DialogueLine, useDialogueText } from "./DialoguePresentation";
 import { useGroverSceneAssets } from "./useSceneAssets";
 import { TalkControl } from "./TouchControls";
 import { LaptopShell } from "./LaptopShell";
@@ -282,17 +282,18 @@ export function GroverScenario({ onExit, onRestartGame }: { onExit?: () => void;
             visible={true} onTalk={() => { if (nearExit) leaveHouse(); else interact(scene.place); }} />
         </>}
       </div> : <div className="pointer-events-auto w-full max-w-4xl">
-        <DialogueFrame role={!finishedDialog ? "button" : undefined} tabIndex={!finishedDialog ? 0 : undefined}
+        <DialogueFrame
+          pageKey={`${session.step}:${session.line}`}
           onClick={() => { if (!finishedDialog) interact(scene.place); }}
-          onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); interact(scene.place); } }}>
+          actions={!finishedDialog
+            ? <DialogueContinue settled={dialogue.settled} onContinue={() => interact(scene.place)} />
+            : <button className="btn-primary self-start text-sm" onClick={() => interact(scene.place)}>
+              {t(session.step === "welcome" ? "Try the keypad →" : "Open panel")}
+            </button>}>
           {!finishedDialog && line ? <>
             <DialogueLine speaker={line.speaker}>{dialogue.typed}{!dialogue.settled && <span className="animate-pulse">|</span>}</DialogueLine>
-            <p className="text-xs text-stage-muted">{dialogue.settled ? t("Space to continue") : t("Space to skip")}{" · "}{t("Tap to continue")}</p>
           </> : <>
             <DialogueLine speaker="guide">{t(session.step === "done" ? "The core is safe. Take your medal — you earned it the quantum way." : session.step === "welcome" ? "The keypad is yours. Three tries." : "Your turn. Open the panel to complete this step.")}</DialogueLine>
-            <button className="btn-primary self-start text-sm" onClick={() => interact(scene.place)}>
-              {t(session.step === "welcome" ? "Try the keypad →" : "Open panel")}
-            </button>
           </>}
         </DialogueFrame>
       </div>}

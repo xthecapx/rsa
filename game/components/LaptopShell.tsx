@@ -67,7 +67,7 @@ export function LaptopShell({ open, title, status, memory, footer, children, onC
   }, [mounted, open]);
   if (!mounted) return null;
   return createPortal(
-    <div className="laptop-overlay" hidden={!open}>
+    <div className="laptop-overlay viewport-overlay" hidden={!open}>
       <div className="shared-laptop" role="dialog" aria-modal="true" aria-label={t("Laptop")} tabIndex={-1} ref={dialog}>
         <div className="laptop-bezel"><div className="laptop-camera">● &nbsp; th3c4p</div>
           <div className="laptop-screen">

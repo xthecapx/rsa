@@ -68,7 +68,11 @@ function Shop({ close }: { close: () => void }) {
   const [line, setLine] = useState(CHISPA.hello);
   return <div className="absolute inset-0 z-20 flex items-end justify-center bg-black/30 p-3 sm:p-5" role="dialog" aria-modal="true" aria-label={t("Chispa’s gear stall")}
     onKeyDown={(event) => { event.stopPropagation(); if (event.key === "Escape") { event.preventDefault(); close(); } }}>
-    <DialogueFrame className="max-w-4xl">
+    <DialogueFrame className="max-w-4xl"
+      actions={<div className="flex flex-wrap items-center gap-3">
+        <span className="text-xs text-accent-amber">◈ {credits} {t("credits")}</span>
+        <button className="btn-ghost text-sm" autoFocus onClick={close}>{t("Keep exploring")}</button>
+      </div>}>
       <DialogueLine speaker="chispa" label={t("Chispa")}>{t(line.text)}</DialogueLine>
       <div className="grid min-h-0 gap-2 overflow-y-auto sm:grid-cols-2">
         {GEAR.map((item) => {
@@ -82,10 +86,6 @@ function Shop({ close }: { close: () => void }) {
               }}>{t("Buy")} · ◈ {item.price}</button>}
           </div>;
         })}
-      </div>
-      <div className="flex flex-wrap items-center gap-3">
-        <span className="text-xs text-accent-amber">◈ {credits} {t("credits")}</span>
-        <button className="btn-ghost text-sm" autoFocus onClick={close}>{t("Keep exploring")}</button>
       </div>
     </DialogueFrame>
   </div>;

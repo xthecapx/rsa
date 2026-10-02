@@ -22,7 +22,7 @@ export function GameShell({ title, subtitle, backHref, backLabel, sidebar, objec
   useLocale((s) => s.locale);
   const [objectivesOpen, setObjectivesOpen] = useState(false);
   function toggleObjectives(open: boolean) { setObjectivesOpen(open); onObjectivesOpen?.(open); }
-  return <main className="game-shell flex h-dvh max-h-dvh w-screen flex-col overflow-hidden bg-stage-bg">
+  return <main className="game-shell viewport-overlay flex flex-col overflow-hidden bg-stage-bg">
     <header className="flex shrink-0 items-center justify-between gap-2 border-b-2 border-stage-border px-3 py-2 sm:px-4">
       <div className="flex min-w-0 items-baseline gap-2 sm:gap-3">
         {onBack ? <button className="shrink-0 text-[10px] text-stage-muted hover:text-accent-teal disabled:opacity-40" disabled={backDisabled} title={backDisabled ? t("Finishing the current operation…") : undefined} onClick={onBack}>{backLabel}</button> : <Link href={backHref} className="shrink-0 text-[10px] text-stage-muted hover:text-accent-teal">{backLabel}</Link>}
@@ -50,9 +50,9 @@ export function GameShell({ title, subtitle, backHref, backLabel, sidebar, objec
       </section>
       {sceneReady && objectivesOpen && <aside className="hidden w-72 shrink-0 flex-col gap-3 overflow-y-auto border-l-2 border-stage-border p-3 lg:flex">{sidebar}</aside>}
     </div>
-    {sceneReady && objectivesOpen && <div role="dialog" aria-modal="true" aria-label={t("Objectives")} onKeyDown={(event) => { event.stopPropagation(); if (event.key === "Escape") toggleObjectives(false); }} className="fixed inset-0 z-50 flex flex-col justify-end bg-black/55 lg:hidden">
+    {sceneReady && objectivesOpen && <div role="dialog" aria-modal="true" aria-label={t("Objectives")} onKeyDown={(event) => { event.stopPropagation(); if (event.key === "Escape") toggleObjectives(false); }} className="viewport-overlay z-50 flex flex-col justify-end bg-black/55 lg:hidden">
       <button aria-label={t("Close job sheet")} className="min-h-0 flex-1" onClick={() => toggleObjectives(false)} />
-      <div className="max-h-[70dvh] overflow-y-auto border-t-2 border-stage-border bg-stage-bg p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+      <div className="objectives-sheet overflow-y-auto border-t-2 border-stage-border bg-stage-bg p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
         <div className="mb-2 flex justify-end"><button autoFocus className="btn-ghost text-xs" onClick={() => toggleObjectives(false)}>{t("Close")}</button></div>
         {objectives}
       </div>

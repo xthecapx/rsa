@@ -7,13 +7,23 @@ import type { Speaker } from "@/content/types";
 import { Portrait, SPEAKER_COLOR, SPEAKER_NAME } from "./Portrait";
 import { t, useLocale } from "@/i18n";
 
-export function DialogueFrame({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
-  return <div {...props} className={clsx("game-dialogue textbox flex max-h-[min(70dvh,36rem)] w-full flex-col gap-3 overflow-hidden p-3 sm:max-h-[min(75dvh,40rem)] sm:gap-4 sm:p-4", className)} />;
+export function DialogueFrame({ className, children, actions, pageKey, ...props }: HTMLAttributes<HTMLDivElement> & { actions?: ReactNode; pageKey?: string }) {
+  return <div {...props} className={clsx("game-dialogue textbox", className)}>
+    <div key={pageKey} className="dialogue-body" tabIndex={0}>{children}</div>
+    {actions && <div className="dialogue-actions" onClick={(event) => event.stopPropagation()}>{actions}</div>}
+  </div>;
+}
+
+export function DialogueContinue({ settled, onContinue }: { settled: boolean; onContinue: () => void }) {
+  useLocale((s) => s.locale);
+  return <button type="button" className="btn-primary dialogue-continue" onClick={onContinue}>
+    {t(settled ? "Continue" : "Show text")} <span aria-hidden="true">▸</span>
+  </button>;
 }
 
 export function DialogueLine({ speaker, label, children }: { speaker: Speaker; label?: string; children: ReactNode }) {
   useLocale((s) => s.locale);
-  return <div className="flex min-h-0 shrink-0 gap-3 sm:gap-4">
+  return <div className="dialogue-line flex min-h-0 gap-3 sm:gap-4">
     <div className="hidden sm:block"><Portrait speaker={speaker} size={72} /></div>
     <div className="sm:hidden"><Portrait speaker={speaker} size={40} /></div>
     <div className="min-w-0 flex-1">

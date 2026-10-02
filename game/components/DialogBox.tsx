@@ -2,10 +2,9 @@
 import { t, localize, useLocale } from "@/i18n";
 
 import { useEffect, useRef, useState } from "react";
-import clsx from "clsx";
 
 import { Portrait } from "./Portrait";
-import { DialogueFrame, DialogueLine, useDialogueText } from "./DialoguePresentation";
+import { DialogueContinue, DialogueFrame, DialogueLine, useDialogueText } from "./DialoguePresentation";
 import { advance, choose, submitReport, visibleChoices } from "@/game/dialog";
 import { gameAudio } from "@/game/audio";
 import { useGame } from "@/game/state";
@@ -151,18 +150,12 @@ export function DialogBox() {
   return (
     <div className="pointer-events-auto w-full max-w-4xl">
       <DialogueFrame
-        role={canTapContinue ? "button" : undefined}
-        tabIndex={canTapContinue ? 0 : undefined}
+        pageKey={fullText}
         onClick={() => {
           if (!canTapContinue) return;
           continueLine();
         }}
-      >
-        <DialogueLine speaker={speaker} label={feedback ? t("Think again") : undefined}>
-          {typed}{!settled && <span className="animate-pulse">|</span>}
-        </DialogueLine>
-
-        {showChoices ? (
+        actions={showChoices ? (
           <ul className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain pb-1">
             {choices.map((choice, index) => (
               <li key={choice.label} className="shrink-0">
@@ -189,12 +182,7 @@ export function DialogBox() {
             onClick={(event) => event.stopPropagation()}
             className="shrink-0 space-y-2"
           >
-            {localize(recovered && (
-              <p className="text-[10px] text-stage-muted">{t("Your notes read")}{localize(" ")}
-                <span className="font-mono text-actor-brayan">{localize(recovered)}</span>.
-              </p>
-            ))}
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch">
+            <div className="flex items-stretch gap-2">
               <input
                 ref={reportField}
                 value={answer}
@@ -202,7 +190,7 @@ export function DialogBox() {
                 placeholder={t("Say what crossed the wire")}
                 autoComplete="off"
                 spellCheck={false}
-                className="min-w-0 flex-1 border-2 border-stage-border bg-stage-bg px-2.5 py-2 font-mono text-[13px] uppercase tracking-widest text-[#e8f4f8] outline-none focus:border-accent-amber"
+                className="min-w-0 flex-1 border-2 border-stage-border bg-stage-bg px-2.5 py-2 font-mono text-base uppercase tracking-widest text-[#e8f4f8] outline-none focus:border-accent-amber"
               />
               <button
                 type="submit"
@@ -212,34 +200,15 @@ export function DialogBox() {
                 {localize(sending ? "Saying it…" : "Tell him")}
               </button>
             </div>
-            {localize(reportError && (
-              <p className="text-[11px] leading-relaxed text-actor-hacker">
-                {localize(reportError)}
-              </p>
-            ))}
           </form>
-        ) : (
-          <div
-            className={clsx(
-              "shrink-0 text-right text-[10px]",
-              waitingOnWorkbench ? "text-accent-amber" : "text-stage-muted",
-            )}
-          >
-            {!settled ? (
-              <>
-                <span className="lg:hidden">{t("Tap to skip")}</span>
-                <span className="hidden lg:inline">{t("Space to skip")}</span>
-              </>
-            ) : waitingOnWorkbench ? (
-              <span>{t("Laptop unlocked — work the steps on screen")}</span>
-            ) : (
-              <>
-                <span className="lg:hidden">{t("Tap to continue")}</span>
-                <span className="hidden lg:inline">{t("Space to continue")}</span>
-              </>
-            )}
-          </div>
-        )}
+        ) : waitingOnWorkbench ? (
+          <button type="button" className="btn-primary dialogue-continue" onClick={() => setLaptopOpen(true)}>{t("Open laptop")}</button>
+        ) : <DialogueContinue settled={settled} onContinue={continueLine} />}>
+        <DialogueLine speaker={speaker} label={feedback ? t("Think again") : undefined}>
+          {typed}{!settled && <span className="animate-pulse">|</span>}
+        </DialogueLine>
+        {waitingOnReport && recovered && <p className="text-xs text-stage-muted">{t("Your notes read")} <span className="font-mono text-actor-brayan">{recovered}</span>.</p>}
+        {waitingOnReport && reportError && <p role="alert" className="text-sm text-actor-hacker">{localize(reportError)}</p>}
       </DialogueFrame>
     </div>
   );
