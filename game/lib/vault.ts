@@ -16,6 +16,11 @@ export interface VaultCircuit {
 }
 
 export interface VaultRun {
+  counts?: Record<string, number>;
+  shots?: number;
+  backend?: string;
+  source?: "simulator" | "hardware";
+  kind?: "ideal" | "noise" | "hardware";
   frames: { block: "prep" | "oracle" | "out"; phases?: ("+" | "-")[]; bits?: string }[];
   measured: string;
   queries: number;

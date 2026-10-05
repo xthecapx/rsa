@@ -26,3 +26,28 @@ test('the embedded transport avoids HTTP and preserves service error details', a
     setServiceTransport(null);
   }
 });
+
+test('server preference is captured per quantum request and leaves recorded hardware alone', async () => {
+  const { useSimulator } = loadTs(path.join(__dirname, '../game/simulator.ts'));
+  const requests = [];
+  try {
+    runtimeInfo.target = 'web';
+    setServiceTransport(async (path, init) => {
+      requests.push({ path, choice: new Headers(init.headers).get('X-Quantum-Simulator') });
+      return new Response('{}');
+    });
+    useSimulator.getState().select('noise');
+    await serviceFetch('/api/register/circuit', { method: 'POST', body: '{}' });
+    useSimulator.getState().select('ideal');
+    await serviceFetch('/api/grover/run', { method: 'POST', body: '{}' });
+    await serviceFetch('/api/ibm/cached', {});
+    runtimeInfo.target = 'qollab';
+    useSimulator.getState().select('noise');
+    await serviceFetch('/api/coin/simulate', { method: 'POST', body: '{}' });
+    assert.deepEqual(requests.map((r) => r.choice), ['noise', 'ideal', null, null]);
+  } finally {
+    runtimeInfo.target = 'web';
+    useSimulator.getState().select('ideal');
+    setServiceTransport(null);
+  }
+});

@@ -1,3 +1,5 @@
+import { useSimulator } from "@/game/simulator";
+
 /** The HTTP game and the embedded Qollab game share the same service contracts. */
 export type ServiceTransport = (path: string, init?: RequestInit) => Promise<Response>;
 
@@ -9,6 +11,11 @@ export function setServiceTransport(next: ServiceTransport | null): void {
 }
 
 export function serviceFetch(path: string, init?: RequestInit): Promise<Response> {
+  if (runtimeInfo.target === "web" && /^(?:\/api\/(?:coin\/(?:simulate|circuit)|register\/circuit|grover\/run|vault\/run|shor\/simulate))$/.test(path)) {
+    const headers = new Headers(init?.headers);
+    headers.set("X-Quantum-Simulator", useSimulator.getState().choice);
+    init = { ...init, headers };
+  }
   return transport ? transport(path, init) : fetch(path, init);
 }
 

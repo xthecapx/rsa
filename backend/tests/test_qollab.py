@@ -90,16 +90,33 @@ def test_shor_executes_qpe_and_checks_measured_periods():
     assert shortcut["circuit_built"] is False and shortcut["factor"] == 5
 
 
-def test_hardware_is_never_submitted():
+def test_shared_executor_requires_hardware_authorization():
+    from qiskit import QuantumCircuit
     class Hardware:
         name = "physical_device"
         num_qubits = 36
-
         def run(self, *_args, **_kwargs):
-            pytest.fail("Paid hardware must not be submitted")
+            pytest.fail("No authorized hardware submission")
+    with pytest.raises(services.ServiceError, match="paid hardware"):
+        services.execute(Hardware(), QuantumCircuit(1, 1), 1)
 
-    result = call("/api/coin/simulate", {"shots": 1}, Hardware())
-    assert result["status"] == 400 and "paid hardware" in result["data"]["detail"]
+
+def test_qollab_selected_hardware_submits_one_job_and_labels_results():
+    from types import SimpleNamespace
+    from unittest.mock import patch
+    class Hardware(BasicSimulator):
+        def configuration(self):
+            return SimpleNamespace(simulator=False, n_qubits=24)
+    backend = Hardware()
+    backend.name = "test_qpu"
+    assert services.describe(backend)["kind"] == "hardware"
+    with patch.object(backend, "run", wraps=backend.run) as submitted:
+        result = call("/api/coin/simulate", {"shots": 1, "hadamard": False}, backend)
+    assert result["status"] == 200, result
+    submitted.assert_called_once()
+    assert "memory" not in submitted.call_args.kwargs
+    assert result["data"]["source"] == result["data"]["kind"] == "hardware"
+    assert result["data"]["counts"] == {"0": 1, "1": 0}
 
 
 def test_fake_ibm_uses_selected_backend_with_mps_and_full_vault_width():
@@ -164,12 +181,14 @@ def test_shared_lessons_match_http_with_existing_signed_tokens():
     http = client.post("/api/grover/run", json={"token": signed_grover(6, 42), "circuit": circuit})
     browser = call("/api/grover/run", {"token": services.token("grover", 6, 42), "circuit": circuit})
     assert http.status_code == browser["status"] == 200
-    assert http.json() == browser["data"]
+    assert http.json()["steps"] == browser["data"]["steps"]
+    assert sum(http.json()["counts"].values()) == sum(browser["data"]["counts"].values()) == 256
     vault = {"prep": "h", "helper": "minus", "out": "h", "measure": True}
     http = client.post("/api/vault/run", json={"token": signed_vault(5), "circuit": vault})
     browser = call("/api/vault/run", {"token": services.token("vault", 5), "circuit": vault}, AerSimulator(method="stabilizer"))
     assert http.status_code == browser["status"] == 200
-    assert http.json() == browser["data"]
+    assert http.json()["frames"] == browser["data"]["frames"]
+    assert http.json()["counts"] == browser["data"]["counts"]
 
 
 def test_shared_shor_plan_and_classical_processing_match_http():

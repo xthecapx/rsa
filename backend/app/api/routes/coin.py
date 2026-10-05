@@ -6,11 +6,13 @@ per shot, optionally applies H, and measures in the computational basis.
 
 from typing import Literal
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Header
 from pydantic import BaseModel, Field
 
 from app.quantum.worker import QuantumTimeout, run_on_worker
 from app.core.game_services import coin
+
+from app.quantum.simulators import SimulatorChoice, simulator, display_name
 
 router = APIRouter()
 
@@ -36,35 +38,34 @@ def classical(req: ClassicalCoinRequest):
     return coin(None, "classical", req.model_dump())
 
 
-def simulate_coin(hadamard: bool, shots: int):
-    return _coin("simulate", {"hadamard": hadamard, "shots": shots})
+def simulate_coin(hadamard: bool, shots: int, choice: SimulatorChoice = "ideal"):
+    return _coin("simulate", {"hadamard": hadamard, "shots": shots}, choice)
 
 
-def _coin(action, body):
-    from qiskit_aer import AerSimulator
-    result = coin(AerSimulator(), action, body)
-    result["backend"] = "AerSimulator"
+def _coin(action, body, choice: SimulatorChoice = "ideal"):
+    result = coin(simulator(choice), action, body)
+    result["backend"] = display_name(choice)
     return result
 
 
 @router.post("/simulate")
-def simulate(req: QuantumCoinRequest):
+def simulate(req: QuantumCoinRequest, choice: SimulatorChoice = Header("ideal", alias="X-Quantum-Simulator")):
     try:
-        return run_on_worker(lambda: simulate_coin(req.hadamard, req.shots), timeout=15)
+        return run_on_worker(lambda: simulate_coin(req.hadamard, req.shots, choice), timeout=15)
     except QuantumTimeout as exc:
         raise HTTPException(status_code=504, detail=str(exc)) from exc
     except ImportError as exc:
         raise HTTPException(status_code=503, detail="Qiskit Aer is unavailable") from exc
 
 
-def simulate_bench(starts, gates, shots):
-    return _coin("circuit", {"starts": starts, "gates": gates, "shots": shots})
+def simulate_bench(starts, gates, shots, choice: SimulatorChoice = "ideal"):
+    return _coin("circuit", {"starts": starts, "gates": gates, "shots": shots}, choice)
 
 
 @router.post("/circuit")
-def circuit(req: BenchCircuitRequest):
+def circuit(req: BenchCircuitRequest, choice: SimulatorChoice = Header("ideal", alias="X-Quantum-Simulator")):
     try:
-        return run_on_worker(lambda: simulate_bench(req.starts, req.gates, req.shots), timeout=15)
+        return run_on_worker(lambda: simulate_bench(req.starts, req.gates, req.shots, choice), timeout=15)
     except QuantumTimeout as exc:
         raise HTTPException(status_code=504, detail=str(exc)) from exc
     except ImportError as exc:

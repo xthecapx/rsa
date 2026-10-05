@@ -2,7 +2,7 @@
 
 import logging
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Header
 
 from app.config import get_settings
 from app.models.schemas import ShorPlanRequest, ShorSimulateRequest
@@ -10,6 +10,8 @@ from app.quantum import shor_service
 from app.quantum.worker import QuantumTimeout, run_on_worker
 
 logger = logging.getLogger(__name__)
+
+from app.quantum.simulators import SimulatorChoice
 
 router = APIRouter()
 
@@ -49,7 +51,7 @@ def classical(req: ShorPlanRequest):
 
 
 @router.post("/simulate")
-def simulate(req: ShorSimulateRequest):
+def simulate(req: ShorSimulateRequest, choice: SimulatorChoice = Header("ideal", alias="X-Quantum-Simulator")):
     return _run(
         "simulate",
         lambda: shor_service.simulate_shor(
@@ -59,5 +61,6 @@ def simulate(req: ShorSimulateRequest):
             strategy=req.strategy,
             shots=req.shots,
             include_statevector=req.include_statevector,
+            choice=choice,
         ),
     )

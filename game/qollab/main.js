@@ -29,14 +29,10 @@ const request = (path, init) => {
 
 const status = document.getElementById('quantum-runtime-status');
 status.textContent = `Qollab · ${info.backend} · ${info.kind}. Ghost Key needs 26 qubits.`;
-if (info.kind === 'hardware') {
-  status.textContent = 'Choose a free simulator, then Run again. This release does not submit paid hardware jobs. / Elige un simulador gratuito y vuelve a ejecutar. Esta versión no envía tareas a hardware de pago.';
-} else {
-  globalThis.quantumPlaygroundDispose?.();
-  const dispose = mountGame({ request, backend: info.backend, kind: info.kind });
-  globalThis.quantumPlaygroundDispose = () => { stopped = true; dispose(); };
-  window.addEventListener('pagehide', globalThis.quantumPlaygroundDispose, { once: true });
-  // Keep the interactive runtime active after main.js mounts the page. Stop
-  // tears down the iframe; no startup circuit or job is submitted automatically.
-  await new Promise((resolve) => window.addEventListener('pagehide', resolve, { once: true }));
-}
+globalThis.quantumPlaygroundDispose?.();
+const dispose = mountGame({ request, backend: info.backend, kind: info.kind });
+globalThis.quantumPlaygroundDispose = () => { stopped = true; dispose(); };
+window.addEventListener('pagehide', globalThis.quantumPlaygroundDispose, { once: true });
+// Keep the interactive runtime active after main.js mounts the page. Stop
+// tears down the iframe; no startup circuit or job is submitted automatically.
+await new Promise((resolve) => window.addEventListener('pagehide', resolve, { once: true }));

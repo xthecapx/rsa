@@ -1,5 +1,6 @@
 "use client";
 
+import { useSimulator } from "@/game/simulator";
 import { runtimeInfo } from "@/lib/transport";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import clsx from "clsx";
@@ -26,6 +27,8 @@ const TOTAL = 3;
 /** One completed run, kept so the boxes stay open after a reload. */
 type Run = {
   qpu: string;
+  kind?: "ideal" | "noise" | "hardware";
+  source?: "simulator" | "hardware";
   backend: Backend;
   N: number;
   a: number;
@@ -57,6 +60,7 @@ const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, 
 export function ShorPipeline({ armed }: { armed: boolean }) {
   useLocale((state) => state.locale);
   const vars = useGame((s) => s.vars);
+  const simulatorChoice = useSimulator((s) => s.choice);
   const recovered = useGame((s) => s.vars.recovered);
   const setVars = useGame((s) => s.setVars);
   const pushTerminal = useGame((s) => s.pushTerminal);
@@ -180,12 +184,12 @@ export function ShorPipeline({ armed }: { armed: boolean }) {
       let next: Run;
       let reference: number | null = null;
       if (backend === "aer") {
-        pushTerminal({ tone: "info", text: `Job: N = ${N}, a = ${a}, m = ${m}, ${shots} shots -> ${runtimeInfo.backend}.` });
+        pushTerminal({ tone: "info", text: `Job: N = ${N}, a = ${a}, m = ${m}, ${shots} shots -> ${runtimeInfo.target === "qollab" ? runtimeInfo.backend : simulatorChoice === "noise" ? "Aer teaching noise" : "AerSimulator"}.` });
         await hop("shor", 200);
         const res = await api.shor.simulate({ N, a, num_control: m, shots });
         if (!alive()) return;
         next = {
-          qpu: res.backend ?? "AerSimulator", backend, N, a, m, shots: res.shots ?? shots,
+          qpu: res.backend ?? "AerSimulator", kind: res.kind, source: res.source, backend, N, a, m, shots: res.shots ?? shots,
           qubits: res.num_qubits ?? null, depth: res.circuit_depth ?? null, usage: null, consoleUrl: null,
           counts: res.counts ?? {}, analysis: res.analysis, picked: null, fromReference: false,
         };
@@ -286,10 +290,11 @@ export function ShorPipeline({ armed }: { armed: boolean }) {
       case "qpu-setup":
         return <>
           <Row label={t("Machine")}>
-            <Toggle active={!locked} disabled={busy} onClick={() => clearRun({ backend: "aer" })}>{t("Simulator")}</Toggle>
+            <Toggle active={!locked} disabled={busy} onClick={() => clearRun({ backend: "aer" })}>{t(runtimeInfo.target === "qollab" ? "Selected Qollab backend" : simulatorChoice === "noise" ? "Noise-model simulator" : "Ideal simulator")}</Toggle>
             <Toggle active={locked} disabled={busy} onClick={() => clearRun({ backend: "ibm" })}>{t("IBM QPU, recorded run")}</Toggle>
           </Row>
           {!locked && runtimeInfo.target === "qollab" && <p className="laptop-note">{runtimeInfo.backend} · {t("Selected in Qollab before starting the game.")}</p>}
+          {!locked && runtimeInfo.target === "web" && simulatorChoice === "noise" && <p className="laptop-note">{t("Teaching noise model: gate and readout errors, not a calibration of a physical device.")}</p>}
           {locked && <>
             <select value={batchId} disabled={busy} onChange={(event) => clearRun({ batchId: event.target.value })}
               className="min-h-11 w-full rounded border-2 border-stage-border bg-stage-bg px-3 py-2 text-sm text-[#e8f4f8]">
@@ -323,7 +328,7 @@ export function ShorPipeline({ armed }: { armed: boolean }) {
           : <>
             <div className="flex items-center gap-3">
               <MeasureInspect className="qiskit-gate measure" measurement={{ bits: Object.keys(run.counts)[0]?.length ?? run.m, counts: run.counts,
-                source: run.backend === "aer" ? "simulator" : "hardware", backend: run.qpu, highlight: run.picked }}><MeasurementIcon /></MeasureInspect>
+                source: run.source ?? (run.backend === "aer" ? "simulator" : "hardware"), kind: run.kind, backend: run.qpu, highlight: run.picked }}><MeasurementIcon /></MeasureInspect>
               <p className="pipe-fact">{t(`${run.shots} shots, ${Object.keys(run.counts).length} distinct bitstrings.`)}</p>
             </div>
             <MeasureHint />

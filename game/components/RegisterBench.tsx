@@ -1,5 +1,7 @@
 "use client";
 
+import { CircuitHistogram } from "./CircuitHistogram";
+import { useRegisterRun } from "./useRegisterRun";
 import { useState } from "react";
 import { PuzzleDragDrop, PuzzlePiece, PuzzleSlot } from "./PuzzleDragDrop";
 import type { RegisterStep, RoundsStep } from "@/content/knowledge";
@@ -44,10 +46,10 @@ export function AmplitudeBars({ amps, mean = false, highlight, title, legend = t
   const labels = basisStates(Math.log2(amps.length));
   const probs = probsReg(amps);
   const average = amps.reduce((sum, a) => sum + a, 0) / amps.length;
-  return <div className="amp-bars" role="img" aria-label={`${title ? `${t(title)}. ` : ""}${t("Amplitudes")}: ${labels.map((label, i) => `|${label}⟩ ${amplitudeText(amps[i])}`).join(", ")}`}>
+  return <div className="amp-bars" role="img" aria-label={`${t("Ideal amplitude illustration, not measured counts.")} ${title ? `${t(title)}. ` : ""}${t("Amplitudes")}: ${labels.map((label, i) => `|${label}⟩ ${amplitudeText(amps[i])}`).join(", ")}`}>
     <div className="amp-head">
       {title && <strong className="text-accent-teal">{t(title)}</strong>}
-      {legend && <span className="text-stage-muted">{t("Bar height = amplitude; below the line means a minus sign. The % is the chance to read that state: the amplitude squared.")}</span>}
+      {legend && <span className="text-stage-muted">{t("Ideal amplitude illustration, not measured counts.")} {t("Bar height = amplitude; below the line means a minus sign. The % is the chance to read that state: the amplitude squared.")}</span>}
     </div>
     <div className="amp-plot" style={{ gridTemplateColumns: `repeat(${amps.length}, minmax(0, 1fr))` }}>
       {amps.map((a, i) => <div key={labels[i]} className={`amp-col ${highlight === labels[i] ? "marked" : ""}`}>
@@ -86,11 +88,12 @@ const SUBSCRIPTS = "₀₁₂₃₄";
  * Oracle and the Diffuser cover every wire of their column. On a bench with a
  * helper, the last wire is the helper: every CNOT and the ghost flip it.
  */
-export function RegisterBench({ step, onSolved }: { step: RegisterStep; onSolved: () => void }) {
+export function RegisterBench({ step, onSolved, onEdited, onBusyChange }: { step: RegisterStep; onSolved: () => void; onEdited?: () => void; onBusyChange?: (busy: boolean) => void }) {
   useLocale((state) => state.locale);
   const [columns, setColumns] = useState<Column[]>(() => emptyColumns(step.slots, step.qubits));
   const [selected, setSelected] = useState<RegPiece | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const experiment = useRegisterRun(onBusyChange);
   const fixed = step.fixed ?? [];
   const ops = [...columns.flatMap(columnOps), ...fixed];
   const start = startRegister(step.qubits, step.start);
@@ -102,8 +105,9 @@ export function RegisterBench({ step, onSolved }: { step: RegisterStep; onSolved
   const startKets = step.start === "even" ? wires.map(() => "|+⟩") : [...step.start].map((bit) => `|${bit}⟩`);
   const outputs = step.helper ? wireStates(final) : null;
 
-  function update(next: Column[]) { setColumns(next); setMessage(null); }
+  function update(next: Column[]) { if (experiment.running.current) return; setColumns(next); setMessage(null); experiment.clear(); onEdited?.(); }
   function place(c: number, q: number, piece = selected) {
+    if (experiment.running.current) return;
     const next = columns.map((column) => ({ span: column.span, wire: [...column.wire] }));
     const column = next[c];
     const hasControl = column.wire.includes("CX");
@@ -125,8 +129,10 @@ export function RegisterBench({ step, onSolved }: { step: RegisterStep; onSolved
     gameAudio.playSfx("select");
     update(next); setSelected(null);
   }
-  function run() {
+  async function run() {
+    if (experiment.running.current) return;
     if (step.fill && columns.some((column) => !columnOps(column).length)) { gameAudio.playSfx("error"); setMessage("Fill every slot on the line before running."); return; }
+    if (!await experiment.run(step.qubits, step.start, ops)) return;
     if (solvesReg(step, ops)) { gameAudio.playSynth("chime"); onSolved(); return; }
     gameAudio.playSfx("error");
     setMessage(`Your register ends at ${formatReg(final)}. Goal: ${t(step.goal)}`);
@@ -139,7 +145,7 @@ export function RegisterBench({ step, onSolved }: { step: RegisterStep; onSolved
   return <PuzzleDragDrop labels={Object.fromEntries(step.tray.map((piece) => [piece, t(pieceLabel(piece))]))} targets={targets}
     onPlace={(target, piece) => { const [, c, q] = target.split("-"); place(Number(c), Number(q), piece as RegPiece); }}
     renderPreview={(piece) => <span className="coin-operation-tool"><span className={`qiskit-gate ${pieceClass(piece as RegPiece)}`}>{pieceGlyph(piece as RegPiece)}</span><span>{t(pieceLabel(piece as RegPiece))}</span></span>}>
-    <div className="coin-challenge space-y-3">
+    <fieldset disabled={experiment.busy} className="coin-challenge min-w-0 space-y-3">
       <p>{t(step.text)}</p>
       <div className="coin-block-tray" aria-label={t("Register pieces")}>
         {step.tray.map((piece) => <PuzzlePiece key={piece} id={piece} label={t(pieceLabel(piece))} className="coin-operation-tool"
@@ -199,38 +205,48 @@ export function RegisterBench({ step, onSolved }: { step: RegisterStep; onSolved
         <button className="btn-primary" onClick={run}>{t("Run the register")}</button>
       </div>
       {message && <p role="status" className="text-accent-amber">{t(message)}</p>}
-    </div>
+      {experiment.busy && <p role="status">{t("Asking the quantum core…")}</p>}
+      {experiment.error && <p role="alert" className="text-actor-hacker">{t(experiment.error)}</p>}
+      {experiment.reading && <CircuitHistogram {...experiment.reading} />}
+      <p className="text-xs text-stage-muted">{t("The card checks the ideal circuit. Noise changes measurements, not the lesson’s goal.")}</p>
+    </fieldset>
   </PuzzleDragDrop>;
 }
 
 const MAX_ROUNDS = 5;
 
 /** Choose a round count; the bars follow it. Solved when the marked bar is at its peak. */
-export function RoundsDial({ step, onSolved }: { step: RoundsStep; onSolved: () => void }) {
+export function RoundsDial({ step, onSolved, onEdited, onBusyChange }: { step: RoundsStep; onSolved: () => void; onEdited?: () => void; onBusyChange?: (busy: boolean) => void }) {
   useLocale((state) => state.locale);
   const [rounds, setRounds] = useState(0);
   const [message, setMessage] = useState<string | null>(null);
+  const experiment = useRegisterRun(onBusyChange);
   const ops: RegOp[] = ["H"];
   for (let i = 0; i < rounds; i++) ops.push(`oracle:${step.marked}`, "D");
   const amps = traceReg(startRegister(step.qubits, "0".repeat(step.qubits)), ops).at(-1)!;
   const odds = groverOdds(step.qubits, step.marked, rounds);
-  function set(value: number) { setRounds(Math.max(0, Math.min(MAX_ROUNDS, value))); setMessage(null); }
-  function stop() {
+  function set(value: number) { if (experiment.running.current) return; experiment.clear(); onEdited?.(); setRounds(Math.max(0, Math.min(MAX_ROUNDS, value))); setMessage(null); }
+  async function stop() {
+    if (!await experiment.run(step.qubits, "0".repeat(step.qubits), ops)) return;
     if (rounds === step.answer) { gameAudio.playSynth("chime"); onSolved(); return; }
     gameAudio.playSfx("error");
     setMessage(rounds < step.answer ? "Still climbing: another round makes the marked bar taller." : "Past the top: the marked bar is shrinking again. Turn back.");
   }
-  return <div className="coin-challenge space-y-3">
+  return <fieldset disabled={experiment.busy} className="coin-challenge min-w-0 space-y-3">
     <p>{t(step.text)}</p>
     <div className="flex flex-wrap items-center gap-3" role="group" aria-label={t("Grover rounds")}>
       <button className="btn-ghost" onClick={() => set(rounds - 1)} disabled={rounds === 0} aria-label={t("One round fewer")}>−</button>
       <span className="text-lg text-accent-amber" aria-live="polite">{rounds} {t(rounds === 1 ? "round" : "rounds")}</span>
       <button className="btn-ghost" onClick={() => set(rounds + 1)} disabled={rounds === MAX_ROUNDS} aria-label={t("One round more")}>+</button>
-      <span className="text-sm">{t("Chance of")} <span className="qubit-ket">|{step.marked}⟩</span>: <strong className="text-accent-teal">{percent(odds)}</strong></span>
+      <span className="text-sm">{t("Ideal prediction:")} {t("Chance of")} <span className="qubit-ket">|{step.marked}⟩</span>: <strong className="text-accent-teal">{percent(odds)}</strong></span>
     </div>
     <p className="text-xs text-stage-muted">{t("Each round is one Oracle and one Diffuser, after the H box.")}</p>
     <AmplitudeBars amps={amps} highlight={step.marked} />
-    <button className="btn-primary" onClick={stop}>{t("Stop here")}</button>
+    <button className="btn-primary" onClick={stop}>{t("Run these rounds")}</button>
     {message && <p role="status" className="text-accent-amber">{t(message)}</p>}
-  </div>;
+    {experiment.busy && <p role="status">{t("Asking the quantum core…")}</p>}
+    {experiment.error && <p role="alert" className="text-actor-hacker">{t(experiment.error)}</p>}
+    {experiment.reading && <CircuitHistogram {...experiment.reading} />}
+    <p className="text-xs text-stage-muted">{t("The card checks the ideal circuit. Noise changes measurements, not the lesson’s goal.")}</p>
+  </fieldset>;
 }

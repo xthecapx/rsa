@@ -43,11 +43,11 @@ export const COIN_SCENES: Record<CoinStep, Scene> = {
     title: "Start with one qubit", place: "desk", objective: "Prepare |0⟩ and measure it. Does that make a fair coin?",
     lines: [
       { speaker: "ale", text: "Can we build a quantum coin whose circuit tells us the odds, but not the next bit?" },
-      { speaker: "hacker", text: "Let’s test the idea with one qubit in a simulator. First, prepare |0⟩ and measure it." },
+      { speaker: "hacker", text: "Let’s test the idea with one qubit on the selected backend. First, prepare |0⟩ and measure it." },
     ],
   },
   hadamard: {
-    title: "Give the coin two possibilities", place: "desk", objective: "Build the circuit with H and measurement, then run ten simulated tosses.",
+    title: "Give the coin two possibilities", place: "desk", objective: "Build the circuit with H and measurement, then run ten measured tosses.",
     lines: [
       { speaker: "ale", text: "The ideal prediction is only zero. Can you change the circuit to make a balanced coin?" },
       { speaker: "hacker", text: "Build a new circuit on one qubit. You need both H and measurement; their order matters." },
@@ -57,23 +57,23 @@ export const COIN_SCENES: Record<CoinStep, Scene> = {
     title: "Fair doesn’t mean exactly half", place: "board", objective: "Compare larger batches at the whiteboard, then explain the results.",
     lines: [
       { speaker: "brayan", text: "Ten shots is a small batch. A shot is one fresh run of the circuit. What do you expect from 100 shots? Let’s compare with 1,000." },
-      { speaker: "hacker", text: "These counts come from the selected simulator. The ideal circuit has equal chances, but finite samples vary and a noise model can shift the counts. We are not running quantum hardware." },
+      { speaker: "hacker", text: "These counts come from the selected backend. The ideal circuit has equal chances, but finite samples vary and noise can shift the counts. The result label tells you whether this run used a simulator or quantum hardware." },
     ],
   },
   table: {
-    title: "One toss. No rerolls.", place: "table", objective: "Return to the game table and use one simulated measurement.",
+    title: "One toss. No rerolls.", place: "table", objective: "Return to the game table and use one measured bit.",
     lines: [
       { speaker: "ale", text: "Zero is heads: I start. One is tails: Brayan starts. We agree before the result arrives." },
       { speaker: "brayan", text: "Use the first result, even if I lose. No trying again for a better result!" },
-      { speaker: "hacker", text: "I’ll run our circuit once in the simulator and read the bit it returns. This toss is simulated too." },
+      { speaker: "hacker", text: "I’ll run our circuit once on the selected backend and read the bit it returns. One toss, no rerolls." },
     ],
   },
   done: {
     title: "Your first quantum program", place: "table", objective: "Game night can begin. Your experiment is complete.",
     lines: [
-      { speaker: "ale", text: "We built a circuit, ran it in the simulator, and used the measurement to decide who starts. Let’s play!" },
+      { speaker: "ale", text: "We built a circuit, ran it on the selected backend, and used the measurement to decide who starts. Let’s play!" },
       { speaker: "brayan", text: "On ideal quantum hardware, knowing how this circuit prepares the qubit tells me the odds, not the next bit. I could still guess correctly by chance." },
-      { speaker: "hacker", text: "Today we simulated that behavior. Seeded generators are useful for replaying tests, and ordinary computers also have secure randomness tools. Different tools for different jobs." },
+      { speaker: "hacker", text: "Today we measured our circuit. A simulator models quantum behavior; a physical QPU runs it on quantum hardware. Seeded generators are useful for replaying tests, and ordinary computers also have secure randomness tools." },
     ],
   },
 };

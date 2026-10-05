@@ -18,11 +18,21 @@ Markdown files. See [README.md](README.md) for setup, deployment, and IBM data.
 - `game/qollab/`: browser entry and thin Python adapter for the Qollab target.
   `npm run build:qollab` produces `game/dist/quantum-playground-qollab.zip`;
   `npm run build` retains the Next.js/HTTP target. Qollab injects the selected
-  simulator; service calls use a queued Pyodide bridge instead of HTTP. Assets
+  simulator or physical QPU; service calls use a queued Pyodide bridge instead of HTTP. Assets
   and recorded IBM data are embedded, with their licenses retained. Fonts use
   pinned HTTPS Fontsource URLs with system fallbacks because Qollab blocks data fonts.
   Ghost Key keeps 25 data qubits plus its helper; IBM fake backends use MPS for
-  this circuit. No paid hardware jobs are submitted. See README for delivery.
+  this circuit. Physical QPU jobs run only after a player presses Run; startup,
+  language changes, and restoring a checkpoint never submit one. See README for delivery.
+
+The web game’s persistent Simulation selector offers ideal Aer and an Aer teaching
+noise model (0.3% single-gate, 1% CNOT depolarization, 2% readout error). This is not
+an IBM calibration. Each quantum HTTP request carries `X-Quantum-Simulator`; no
+server-global preference or credentials are shared between players. Native Ghost
+Key uses stabilizer for ideal runs and MPS for noisy runs. Qollab’s choice comes
+from its own QPU picker and ignores the web preference. Recorded IBM RSA results
+remain a separate source. Result metadata persists with the result; changing the
+preference affects only future runs, including Quantum Town replays.
 
 ## World and progression
 
@@ -67,14 +77,23 @@ count histogram and retains simulator kind in the measurement explorer.
 - **Who Goes First?**: assemble a seeded Python coin function from known
   instruction IDs; compare Ale and Brayan's five-call sequences and inspect the
   sixth call; measure a fresh zero; build H followed by measurement; compare
-  100 and 1,000 shots; make one final simulated toss (0 = Ale, 1 = Brayan).
+  100 and 1,000 shots; make one final measured toss (0 = Ale, 1 = Brayan).
   The scaffold never executes arbitrary player Python. The private PRNG starts
   with seed 42 per backend request. Aer runs a real one-qubit circuit, with at
   most 1,024 shots. The final decision is saved and is not rerolled on refresh.
+Foundry and Hollow neighbor register benches and Foundry’s rounds dial now run
+real 2–4-qubit circuits through the shared `core/register_circuit.py`. Displayed
+wire 1 is Qiskit’s highest-index wire, matching the frontend register math.
+Every editable operation has a barrier. Histograms show 256 returned shots;
+amplitude bars, card requirements, and round targets remain ideal references.
+Busy controls, edit invalidation, and close/reopen retention match Coin Town.
+
 - **Echo Chamber**: search sixteen PINs with a four-qubit Grover circuit and
   three classical guesses. One round is the oracle followed by the diffuser;
   the initial H layer prepares the register. Three rounds give about 96% success,
-  not a guarantee. Device tokens identify the puzzle; the backend validates the
+  not a guarantee. Preview runs sample 256 fresh preparations and return counts
+  in shuffled anonymous bar order. The final collapse remains one shot.
+  Device tokens identify the puzzle; the backend validates the
   circuit and round count before the final measurement.
 - **Operation Ghost Key**: recover a 25-bit secret using a parity oracle and a
   helper qubit in |−⟩. Classical questions consume three candles; checking a whole
@@ -82,14 +101,15 @@ count histogram and retains simulator kind in the measurement explorer.
   The backend uses Aer's stabilizer simulation for this Clifford circuit. The
   large Grover comparison is an estimate, not a second implemented search circuit.
   In Qollab, ideal phase frames explain the algorithm while the selected
-  simulator supplies the measurement. Noise can yield a wrong key; retry is
+  backend supplies the measurement. Noise can yield a wrong key; retry is
   available without changing the secret. The 24/25-qubit local devices are too small.
 - **Breaking RSA**: four acts cover letter encoding, Caesar shifts, small RSA,
   and Shor's quantum/classical pipeline. Each act runs prologue → client briefing
   → install a listener → intercept → decode in the laptop → type the plaintext
   at the car. Wrong reports raise suspicion; reaching 100 offers a retry.
   Arithmetic and circuit tools call the backend. IBM views read existing batches
-  or recorded hardware results; the app does not submit IBM jobs.
+  or recorded hardware results. The web server does not submit IBM jobs; Qollab
+  can submit a fresh run to its selected physical QPU as a separate option.
 
 ## Where to change behavior
 
@@ -108,7 +128,7 @@ Paths below are relative to the repository root.
 | Progress, cards, badges, economy | `game/game/{progress,knowledge,medals,wallet,travelPass}.ts` |
 | Shared UI | `game/components/{GameShell,LaptopShell,DialoguePresentation,SceneLoading,TouchControls}.tsx` |
 | Tools and math | `game/components/` benches/workbenches, `game/game/{qubit,register,crypto,calc,histogram}.ts` |
-| API clients and implementations | `game/lib/`, shared `backend/app/core/{game_services,shor_service,coin_circuit}.py`, HTTP adapters in `backend/app/api/routes/`, Qollab adapter in `game/qollab/python/quantum/services.py` |
+| API clients and implementations | `game/lib/`, shared `backend/app/core/{game_services,shor_service,coin_circuit,register_circuit}.py`, HTTP adapters in `backend/app/api/routes/`, Qollab adapter in `game/qollab/python/quantum/services.py` |
 | Translation | `game/i18n/{index,translate}.ts`, `game/i18n/es.json` |
 | Sound and PWA | `game/game/{audio,synth}.ts`, `game/public/sw.js`, `game/components/PwaBootstrap.tsx` |
 | Visible viewport and mobile layout | `game/game/viewport.ts`, `game/components/ViewportBootstrap.tsx`, `game/app/globals.css` |

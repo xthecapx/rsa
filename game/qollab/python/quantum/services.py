@@ -1,9 +1,14 @@
 """Qollab runtime policy and bridge; lesson implementation lives in core.
 
-The build copies backend/app/core unchanged. Qollab supplies the simulator.
+The build copies backend/app/core unchanged. Qollab supplies the selected simulator or physical QPU.
 """
+from functools import partial
 from core import game_services as shared
 from core.game_services import describe, describe_json, execute, token, read_token, integer, ServiceError
+
+
+# Qollab selection and the player’s Run action authorize this backend.
+selected_execute = partial(execute, allow_hardware=True)
 
 
 def shor(backend, action, body):
@@ -26,12 +31,12 @@ def shor(backend, action, body):
         raise ServiceError(404, "Unknown Shor operation")
     shots = integer(body, "shots", 1024, 1, 8192)
     return simulate_shor(N, a, num_control=m, shots=shots, engine=engine,
-                         executor=lambda circuit, shots: execute(backend, circuit, shots))
+                         executor=lambda circuit, shots: selected_execute(backend, circuit, shots))
 
 
 def dispatch(backend, path, body):
-    return shared.dispatch(backend, path, body, shor_handler=shor)
+    return shared.dispatch(backend, path, body, shor_handler=shor, executor=selected_execute)
 
 
 def dispatch_json(backend, path, body_json):
-    return shared.dispatch_json(backend, path, body_json, shor_handler=shor)
+    return shared.dispatch_json(backend, path, body_json, shor_handler=shor, executor=selected_execute)

@@ -8,7 +8,7 @@ export interface QubitReading {
 export interface BenchResult {
   source: "simulator" | "hardware";
   backend: string;
-  kind: "ideal" | "noise";
+  kind: "ideal" | "noise" | "hardware";
   shots: number;
   circuits: (QubitReading & { start: NamedState })[];
 }
@@ -21,7 +21,7 @@ export interface ClassicalCoin {
 export interface CoinResult {
   source: "simulator" | "hardware";
   backend: string;
-  kind?: "ideal" | "noise";
+  kind?: "ideal" | "noise" | "hardware";
   hadamard: boolean;
   shots: number;
   bits: number[];

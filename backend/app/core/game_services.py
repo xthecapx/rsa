@@ -32,7 +32,7 @@ def describe(backend):
     config = backend.configuration() if hasattr(backend, "configuration") else None
     basic = "basic_provider" in module
     braket_local = "braket" in module and "local" in type(backend).__name__.lower()
-    simulator = fake or basic or braket_local or bool(getattr(config, "simulator", False)) or bool(getattr(backend, "simulator", False))
+    simulator = fake or basic or braket_local or ("ionq" in module and "simulator" in name.lower()) or bool(getattr(config, "simulator", False)) or bool(getattr(backend, "simulator", False))
     qubits = getattr(backend, "num_qubits", None) or getattr(config, "n_qubits", None) or (24 if basic else 25 if braket_local else None)
     noise = fake or "ionq" in module or "aer" in module and bool(getattr(getattr(backend, "options", None), "noise_model", None))
     return {"status": "ok", "backend": name, "kind": "noise" if simulator and noise else "ideal" if simulator else "hardware",
@@ -79,22 +79,28 @@ def read_token(value, kind):
         raise ServiceError(400, "Unknown device") from None
 
 
-def execute(backend, circuit, shots, *, memory=False, vault=False):
+def execute(backend, circuit, shots, *, memory=False, vault=False, allow_hardware=False):
     from qiskit import transpile
     info = describe(backend)
-    if info["kind"] == "hardware":
+    if info["kind"] == "hardware" and not allow_hardware:
         raise ServiceError(400, "Choose a simulator in Qollab. This game does not submit paid hardware jobs.")
     if info["qubits"] and circuit.num_qubits > info["qubits"]:
-        raise ServiceError(400, "Ghost Key needs 26 qubits. Stop and select an IBM noise-model or compatible larger simulator in Qollab.")
+        if vault:
+            raise ServiceError(400, "Ghost Key needs 26 qubits. Stop and select an IBM noise-model simulator or a compatible larger backend in Qollab.")
+        raise ServiceError(400, f"This circuit needs {circuit.num_qubits} qubits; {info['backend']} supports {info['qubits']}. Select a larger backend in Qollab.")
     compiled = transpile(circuit, backend=backend, optimization_level=1)
     options = {"shots": shots}
     # Aer-backed fake IBM devices support MPS. Keep the selected backend and
     # its noise model, while avoiding a dense 26-qubit statevector allocation.
     if vault and info["fake"]:
         options["method"] = "matrix_product_state"
-    if memory and "ionq" not in type(backend).__module__.lower():
+    if memory and info["kind"] != "hardware" and "ionq" not in type(backend).__module__.lower():
         options["memory"] = True
     job = backend.run(compiled, **options)
+    if info["kind"] == "hardware":
+        job_id = getattr(job, "job_id", None)
+        job_id = job_id() if callable(job_id) else job_id
+        print(f"Submitted QPU job {job_id or '(provider ID unavailable)'} on {info['backend']}. Waiting for measurements…", flush=True)
     result = job.result()
     raw = result.get_counts()
     counts = {}
@@ -119,7 +125,7 @@ def execute(backend, circuit, shots, *, memory=False, vault=False):
     return counts, bits, compiled, info
 
 
-def coin(backend, action, body):
+def coin(backend, action, body, *, executor=execute):
     if action == "circuit":
         from .coin_circuit import teaching_circuit
         starts, gates = body.get("starts"), body.get("gates")
@@ -131,9 +137,9 @@ def coin(backend, action, body):
         circuits = []
         for start in starts:
             circuit, ideal = teaching_circuit(start, gates)
-            counts, _, _, info = execute(backend, circuit, shots)
+            counts, _, _, info = executor(backend, circuit, shots)
             circuits.append({"start": start, "counts": {"0": counts.get("0", 0), "1": counts.get("1", 0)}, "probabilities": ideal})
-        return {"source": "simulator", "backend": info["backend"], "kind": info["kind"], "shots": shots, "circuits": circuits}
+        return {"source": "hardware" if info["kind"] == "hardware" else "simulator", "backend": info["backend"], "kind": info["kind"], "shots": shots, "circuits": circuits}
     if action == "classical":
         flips = integer(body, "flips", 6, 1, 100)
         seed = integer(body, "seed", 42, 0, 2 ** 32 - 1)
@@ -150,12 +156,12 @@ def coin(backend, action, body):
     if h:
         qc.h(0)
     qc.measure(0, 0)
-    counts, memory, _, info = execute(backend, qc, shots, memory=True)
+    counts, memory, _, info = executor(backend, qc, shots, memory=True)
     reconstructed = memory is None and shots > 1
     if memory is None:
         memory = [key for key, count in counts.items() for _ in range(count)]
         random.shuffle(memory)
-    return {"source": "simulator", "backend": info["backend"], "kind": info["kind"], "hadamard": h, "shots": shots,
+    return {"source": "hardware" if info["kind"] == "hardware" else "simulator", "backend": info["backend"], "kind": info["kind"], "hadamard": h, "shots": shots,
             "bits": [int(bit) for bit in memory], "memory_reconstructed": reconstructed,
             "counts": {"0": counts.get("0", 0), "1": counts.get("1", 0)},
             "probabilities": {"0": 0.5 if h else 1.0, "1": 0.5 if h else 0.0}}
@@ -193,7 +199,7 @@ def grover_block(name, secret):
     return qc
 
 
-def grover(backend, action, body, *, read_device=read_token, write_device=token):
+def grover(backend, action, body, *, read_device=read_token, write_device=token, executor=execute):
     if action == "device":
         return device("grover", body, read_device=read_device, write_device=write_device)
     secret, seed = read_device(body.get("token"), "grover")
@@ -235,14 +241,19 @@ def grover(backend, action, body, *, read_device=read_token, write_device=token)
             full.compose(gate, inplace=True)
             snapshot(round_, block)
     measured = None
+    # Preview measurements use fresh preparations; the final PIN remains one shot.
+    full.measure_all()
+    shots = 1 if measure else 256
+    counts, _, _, info = executor(backend, full, shots)
     if measure:
-        full.measure_all()
-        counts, _, _, _ = execute(backend, full, 1)
         measured = next(key for key, value in counts.items() if value)
-    return {"steps": steps, "measured": measured, "labels": [format(i, "04b") for i in order] if measure else None}
+    return {"steps": steps, "measured": measured, "labels": [format(i, "04b") for i in order] if measure else None,
+            "counts": {str(position): counts.get(format(i, "04b"), 0) for position, i in enumerate(order)},
+            "shots": shots, "backend": info["backend"], "kind": info["kind"],
+            "source": "hardware" if info["kind"] == "hardware" else "simulator"}
 
 
-def vault(backend, action, body, *, read_device=read_token, write_device=token):
+def vault(backend, action, body, *, read_device=read_token, write_device=token, executor=execute):
     if action == "device":
         return device("vault", body, read_device=read_device, write_device=write_device)
     secret, _ = read_device(body.get("token"), "vault")
@@ -271,16 +282,18 @@ def vault(backend, action, body, *, read_device=read_token, write_device=token):
             qc.cx(i, BITS)
     qc.h(range(BITS))
     qc.measure(range(BITS), range(BITS))
-    counts, _, _, _ = execute(backend, qc, 1, vault=True)
+    counts, _, _, info = executor(backend, qc, 1, vault=True)
     measured = next(key for key, value in counts.items() if value)[::-1]
     phases = ["-" if secret >> i & 1 else "+" for i in range(BITS)]
     return {"frames": [{"block": "prep", "phases": ["+"] * BITS}, {"block": "oracle", "phases": phases},
                        {"block": "out", "bits": "".join("1" if p == "-" else "0" for p in phases)}],
-            "measured": measured, "queries": 1}
+            "measured": measured, "queries": 1, "counts": {key[::-1]: value for key, value in counts.items()},
+            "shots": 1, "backend": info["backend"], "kind": info["kind"],
+            "source": "hardware" if info["kind"] == "hardware" else "simulator"}
 
 
 
-def dispatch(backend, path, body, *, shor_handler=None):
+def dispatch(backend, path, body, *, shor_handler=None, executor=execute):
     if path == "/api/health":
         return describe(backend)
     if path == "/api/plaintext":
@@ -304,24 +317,24 @@ def dispatch(backend, path, body, *, shor_handler=None):
             return crack_rsa(N, integer(body, "bits", 2048, 16, 8192))
     if path.startswith("/api/shor/") and shor_handler is not None:
         return shor_handler(backend, path.rsplit("/", 1)[1], body)
-    for family, handler in (("coin", coin), ("grover", grover), ("vault", vault)):
+    for family, handler in (("coin", coin), ("grover", grover), ("vault", vault), ("register", register)):
         if path.startswith(f"/api/{family}/"):
-            return handler(backend, path.rsplit("/", 1)[1], body)
+            return handler(backend, path.rsplit("/", 1)[1], body, executor=executor)
     raise ServiceError(404, "Unknown game operation")
 
 
-def dispatch_json(backend, path, body_json, *, shor_handler=None):
+def dispatch_json(backend, path, body_json, *, shor_handler=None, executor=execute):
     try:
         body = json.loads(body_json)
         if not isinstance(body, dict):
             raise ServiceError(422, "Invalid request")
-        return json.dumps({"status": 200, "data": dispatch(backend, path, body, shor_handler=shor_handler)}, allow_nan=False)
+        return json.dumps({"status": 200, "data": dispatch(backend, path, body, shor_handler=shor_handler, executor=executor)}, allow_nan=False)
     except ServiceError as error:
         return json.dumps({"status": error.status, "data": {"detail": error.detail}})
     except (ValueError, KeyError, TypeError) as error:
         return json.dumps({"status": 422, "data": {"detail": str(error)}})
     except Exception as error:
-        return json.dumps({"status": 503, "data": {"detail": f"Simulator execution failed: {error}"}})
+        return json.dumps({"status": 503, "data": {"detail": f"Quantum execution failed: {error}"}})
 
 
 def plaintext(char):
@@ -337,3 +350,19 @@ def keyboard(modulus=None, require_coprime=False):
 
 def crack_rsa(N, bits):
     return {"toy": rsa_crack_toy(N), "rsa2048_projection": rsa_projected_crack_time(bits)}
+
+
+def register(backend, action, body, *, executor=execute):
+    if action != "circuit":
+        raise ServiceError(404, "Unknown register operation")
+    from .register_circuit import teaching_register
+    qubits = integer(body, "qubits", 2, 2, 4)
+    shots = integer(body, "shots", 256, 1, 1024)
+    operations = body.get("operations")
+    if not isinstance(operations, list) or len(operations) > 32:
+        raise ServiceError(422, "Invalid register operations")
+    circuit, ideal = teaching_register(qubits, body.get("start"), operations)
+    counts, _, _, info = executor(backend, circuit, shots)
+    return {"bits": qubits, "counts": counts, "probabilities": ideal, "shots": shots,
+            "backend": info["backend"], "kind": info["kind"],
+            "source": "hardware" if info["kind"] == "hardware" else "simulator"}

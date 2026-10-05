@@ -64,13 +64,19 @@ the selected backend and its noise model while avoiding dense statevector memory
 Device width alone is not a practical browser simulation guarantee.
 
 Grover amplitude frames and Ghost Key phase frames are ideal explanatory
-calculations. Actual outcomes come from the selected simulator; noise may cause
+calculations. Actual outcomes come from the selected backend; noise may cause
 failure, and Ghost Key permits retry. Counts-only coin displays are labeled as
 reconstructed when ordered shot memory is unavailable. The final toss uses one
 actual measured shot and is persisted.
 
-This export blocks physical hardware submissions. Recorded IBM views remain
-recorded data. Browser-local puzzle tokens are inspectable educational state;
+Physical hardware submissions are enabled for the backend selected in Qollab.
+Only an explicit player Run submits work. Calls stay queued until provider results
+arrive; the HTTP timeout does not race or retry an in-flight QPU submission.
+The provider job ID is printed to Qollab’s console before waiting. Hardware-backed
+counts carry `source=hardware` and the selected backend name; unavailable ordered
+shot memory is reconstructed explicitly. This path has been tested with a local
+provider double, not by spending credits on a live device. Recorded IBM views
+remain recorded data and remain a separate RSA choice. Browser-local puzzle tokens are inspectable educational state;
 server signing secrets are not shipped. Saves remain local to the sandbox origin
 and do not automatically transfer from the Cloud Run origin. If Qollab blocks
 browser storage, the save stores retain progress in memory for the current run;
@@ -126,3 +132,18 @@ configuration, and Qollab's injected backend and N=15 browser capability limit.
 The vendored QWARD algorithm remains a licensed external dependency.
 Rebuild with `cd game && npm run build:qollab`, then replace the uploaded folder
 contents so Qollab receives the new shared Python files too.
+
+## Server preference and additional maps
+
+The native game’s Simulation selector persists separately from progress. A request
+header selects ideal Aer or an educational Aer noise model. This header is ignored
+for Qollab, which always uses the externally selected backend. Both targets share
+register circuit construction and shot processing. Foundry/Hollow benches and the
+rounds dial execute 256 shots; Grover previews also sample 256 shots in anonymous
+bar order. Final coin/PIN/key decisions remain single measured shots. Ideal traces
+and card criteria remain references and never become fabricated measured counts.
+Verify that changing a preference affects a subsequent run but retains earlier
+counts, that noisy Ghost Key can retry a failed key, and that the RSA recorded-data
+option never submits new work. For live QPU validation, select a physical backend
+in Qollab and perform one deliberate Run after checking provider costs/credits;
+this implementation did not submit a live test job.

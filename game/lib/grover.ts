@@ -16,6 +16,11 @@ export interface GroverStepSnapshot {
 }
 
 export interface GroverRun {
+  counts?: Record<string, number>;
+  shots?: number;
+  backend?: string;
+  source?: "simulator" | "hardware";
+  kind?: "ideal" | "noise" | "hardware";
   steps: GroverStepSnapshot[];
   measured: string | null;
   labels: string[] | null;

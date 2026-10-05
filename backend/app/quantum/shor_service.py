@@ -4,12 +4,12 @@ from app.core.shor_service import simulate_shor as shared_simulate
 from app.core.game_services import execute
 
 
-def simulate_shor(N, a, **options):
-    from qiskit_aer import AerSimulator
-    backend = AerSimulator(method="statevector")
+def simulate_shor(N, a, *, choice="ideal", **options):
+    from app.quantum.simulators import simulator, display_name
+    backend = simulator(choice)
 
     def executor(circuit, shots):
         counts, memory, compiled, info = execute(backend, circuit, shots)
-        return counts, memory, compiled, {**info, "backend": "AerSimulator"}
+        return counts, memory, compiled, {**info, "backend": display_name(choice)}
 
     return shared_simulate(N, a, executor=executor, **options)

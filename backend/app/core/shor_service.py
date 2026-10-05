@@ -184,6 +184,7 @@ def simulate_shor(
         "plan": shor.plan_dict(),
         "backend": info["backend"],
         "kind": info["kind"],
+        "source": "hardware" if info["kind"] == "hardware" else "simulator",
         "engine": "qward.algorithms.Shor",
         "method": "phase_estimation + continued_fractions",
         "strategy": strategy,

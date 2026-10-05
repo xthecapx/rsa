@@ -71,7 +71,9 @@ Choose a free **IBM noise-model simulator** for the full game. Ghost Key retains
 25-qubit local simulator cannot run that lesson. The adapter passes the full
 circuit to the selected IBM simulator using matrix product state simulation.
 Noisy measurements may fail the key check, so the player can retry. Hardware
-submission is disabled in this export.
+jobs are enabled when a physical QPU is selected in Qollab. Each explicit Run
+submits work on that selected backend; startup and save restoration submit no jobs.
+Provider limits and credits apply. Recorded IBM RSA batches remain a separate option.
 
 Qollab runs the included Python services in its browser runtime and supplies the
 quantum backend; no FastAPI server, provider credential, or backend URL is shipped.
@@ -80,6 +82,17 @@ shots per starting state through either backend. The shared histogram shows the
 returned counts, selected backend, and a separate ideal prediction. Correctness
 checks the designed circuit so noise does not block a knowledge card. Closing and
 reopening a neighbor's laptop retains its current circuit and counts.
+The server game includes a persistent **Simulation** selector for ideal Aer or
+**Aer teaching noise**. The latter models 0.3% single-gate depolarization, 1% CNOT
+depolarization, and 2% readout error; it does not claim to reproduce a device’s
+calibration. Selection is carried per request, so players do not change one
+another’s backend. Coin, Foundry/Hollow register benches, Grover, Ghost Key, and
+live RSA simulations use this preference. Saved results retain their original
+backend metadata. Full game resets retain this preference, like language and sound.
+Qollab uses its external QPU selection, including authorized live hardware runs.
+Foundry’s rounds dial submits real shots while ideal amplitude illustrations and
+card goals stay labeled references. Recorded IBM counts stay labeled hardware.
+
 Existing `npm run build` and Cloud Run commands still use the HTTP backend.
 Backend lesson changes belong in `backend/app/core/game_services.py`; Shor planning,
 execution result processing, and factor extraction belong in

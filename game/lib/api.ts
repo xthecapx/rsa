@@ -186,6 +186,8 @@ export interface ShorAnalysis {
 }
 
 export interface ShorSimulateResponse {
+  kind?: "ideal" | "noise" | "hardware";
+  source?: "simulator" | "hardware";
   precheck: Record<string, unknown>;
   plan?: Record<string, unknown>;
   backend?: string;

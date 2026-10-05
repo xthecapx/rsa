@@ -488,9 +488,9 @@ export function BvCircuitBuilder({ slots, onChange, locked, measurement }: {
   </PuzzleDragDrop>;
 }
 
-/** The vault's run as a measurement: one shot, and the ideal machine is certain of the mask. */
+/** One returned shot; never infer ideal certainty from a noisy measured key. */
 export function vaultMeasurement(run: VaultRun): Measurement {
-  return { bits: BITS, counts: { [run.measured]: 1 }, probabilities: { [run.measured]: 1 }, source: "simulator", highlight: run.measured };
+  return { bits: BITS, counts: run.counts ?? { [run.measured]: 1 }, source: run.source ?? "simulator", kind: run.kind, backend: run.backend, highlight: run.measured };
 }
 
 const STAGE_CAPTIONS = [

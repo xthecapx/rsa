@@ -153,7 +153,7 @@ export function groverMeasurement(run: GroverRun): Measurement | null {
   const last = run.steps.at(-1);
   if (!run.measured || !run.labels || !last) return null;
   const probabilities = Object.fromEntries(run.labels.map((label, i) => [label, (last.amplitudes[i] ?? 0) ** 2]));
-  return { bits: run.measured.length, counts: { [run.measured]: 1 }, probabilities, source: "simulator", highlight: run.measured };
+  return { bits: run.measured.length, counts: { [run.measured]: 1 }, probabilities, source: run.source ?? "simulator", kind: run.kind, backend: run.backend, highlight: run.measured };
 }
 
 function frameLabel(step: GroverRun["steps"][number]) {

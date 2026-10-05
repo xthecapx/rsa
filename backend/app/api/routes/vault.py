@@ -17,12 +17,14 @@ from __future__ import annotations
 
 from typing import List, Literal, Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Header
 from pydantic import BaseModel, Field
 
 from app.api.game_token import read_payload, sign_payload
 from app.quantum.worker import QuantumTimeout, run_on_worker
 from app.core.game_services import vault as lesson, ServiceError
+
+from app.quantum.simulators import SimulatorChoice, simulator, display_name
 
 router = APIRouter()
 
@@ -110,25 +112,27 @@ def simulate(secret: int):
 
 
 @router.post("/run")
-def run(req: RunRequest):
+def run(req: RunRequest, choice: SimulatorChoice = Header("ideal", alias="X-Quantum-Simulator")):
     try:
-        return run_on_worker(lambda: _lesson("run", req.model_dump()), timeout=15)
+        return run_on_worker(lambda: _lesson("run", req.model_dump(), choice), timeout=15)
     except QuantumTimeout as exc:
         raise HTTPException(status_code=504, detail=str(exc)) from exc
     except ImportError as exc:
         raise HTTPException(status_code=503, detail="Qiskit Aer is unavailable") from exc
 
 
-def _lesson(action, body):
+def _lesson(action, body, choice: SimulatorChoice = "ideal"):
     def read_device(value, kind):
         return read_token(value), 0
     def write_device(kind, secret, seed):
         return make_token(secret)
     backend = None
     if action == "run":
-        from qiskit_aer import AerSimulator
-        backend = AerSimulator(method="stabilizer")
+        backend = simulator(choice, vault=True)
     try:
-        return lesson(backend, action, body, read_device=read_device, write_device=write_device)
+        result = lesson(backend, action, body, read_device=read_device, write_device=write_device)
+        if "backend" in result:
+            result["backend"] = display_name(choice)
+        return result
     except ServiceError as exc:
         raise HTTPException(status_code=exc.status, detail=exc.detail) from exc

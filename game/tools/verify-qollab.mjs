@@ -17,7 +17,7 @@ export async function verifyQollab(dir = outputDir) {
   const files = await filesIn(dir);
   if (files.length > 100) throw new Error(`Qollab permits 100 files; found ${files.length}`);
   const names = files.map((file) => path.relative(dir, file));
-  for (const required of ['index.html', 'main.js', 'main.css', 'game.js', 'assets.js', 'requirements.txt', 'quantum/services.py', 'core/coin_circuit.py', 'core/game_services.py', 'core/shor_service.py', 'vendor/shor.py', 'assets/kenney/LICENSE.txt']) {
+  for (const required of ['index.html', 'main.js', 'main.css', 'game.js', 'assets.js', 'requirements.txt', 'quantum/services.py', 'core/coin_circuit.py', 'core/register_circuit.py', 'core/game_services.py', 'core/shor_service.py', 'vendor/shor.py', 'assets/kenney/LICENSE.txt']) {
     if (!names.includes(required)) throw new Error(`Missing Qollab file: ${required}`);
   }
   let bytes = 0;

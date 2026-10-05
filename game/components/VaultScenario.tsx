@@ -1,5 +1,5 @@
 "use client";
-import { runtimeInfo } from "@/lib/transport";
+import { CircuitHistogram } from "./CircuitHistogram";
 import { t, useLocale } from "@/i18n";
 
 import { useEffect, useRef, useState } from "react";
@@ -325,7 +325,9 @@ export function VaultScenario({ onExit, onRestartGame }: { onExit?: () => void; 
     >
       <section className="coin-workbench" aria-label={t(panelTitle)}>
         <div className="flex items-center justify-between gap-2"><h2>{t(panelTitle).toUpperCase()}</h2><span className="coin-badge">{t("25 tumblers")} · {formatCount(KEYSPACE)} {t("keys")}</span></div>
-        {runtimeInfo.target === "qollab" && runtimeInfo.kind === "noise" && <p className="my-4 text-stage-muted">{t("The animation shows ideal phase kickback. Noise can change the measured key; check it at the vault and retry if needed.")}</p>}
+        <p className="text-xs text-stage-muted">{t("Ideal phase-kickback illustration, not measured counts.")}</p>
+        {session.run && (session.run.kind === "noise" || session.run.source === "hardware") && <p className="my-4 text-stage-muted">{t("The animation shows ideal phase kickback. Noise can change the measured key; check it at the vault and retry if needed.")}</p>}
+        {session.run?.counts && <CircuitHistogram counts={session.run.counts} backend={session.run.backend} kind={session.run.kind} source={session.run.source ?? "simulator"} />}
         {busy && <p role="status" className="my-4 text-accent-teal">{t("Asking the quantum core…")}</p>}
         {error && <p role="alert" className="my-4 text-actor-hacker">{t(error)}</p>}
         {!atPlace || !finishedDialog ? <p className="coin-placeholder">{t(!atPlace ? "Visit the highlighted location to open this step." : "Finish the conversation to unlock this step.")}</p> :

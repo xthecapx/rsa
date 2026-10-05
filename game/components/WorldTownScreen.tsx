@@ -330,7 +330,7 @@ export function WorldTownScreen({ config, restartOptions }: { config: TownConfig
   const missionTalk = mission?.talk;
   return <GameShell restartControl={restartControl} title={t(config.title)} subtitle={missionShell?.subtitle ?? t(config.subtitle)}
     missionProgress={missionShell?.missionProgress}
-    backHref="/" backLabel={missionShell?.backLabel ?? t(greeter.title)} backDisabled={missionShell?.backDisabled}
+    backHref="/" backLabel={missionShell?.backLabel ?? t(greeter.title)} backDisabled={activityBusy || missionShell?.backDisabled}
     onBack={() => { if (missionShell?.onBack) missionShell.onBack(); else if (!talk && !activityVisible) talkToGreeter(); }}
     sidebar={journal} objectives={journal} onObjectivesOpen={setJournalOpen}
     sceneReady={sceneReady} sceneFailed={sceneStatus === "error"} laptopOpen={activityVisible || !!missionShell?.laptopOpen} laptopReady={!!activity || !!missionShell?.laptopReady}
@@ -384,11 +384,11 @@ export function WorldTownScreen({ config, restartOptions }: { config: TownConfig
       closeDisabled={activityBusy} onClose={() => { if (!activityBusy) setActivityOpen(false); }} footer={<p>{t("Results stay here when you close the laptop.")} {t("The card is yours once every step is done.")}</p>}>
       <div key={`${activity.npc}-${activity.step}`} className="space-y-3">
         {step.kind === "bench" ? <QubitBench step={step} onSolved={solved} onEdited={() => setActivity({ ...activity, solved: false })} onBusyChange={setActivityBusy} />
-          : step.kind === "register" ? <RegisterBench step={step} onSolved={solved} />
-          : step.kind === "rounds" ? <RoundsDial step={step} onSolved={solved} />
+          : step.kind === "register" ? <RegisterBench step={step} onSolved={solved} onEdited={() => setActivity({ ...activity, solved: false })} onBusyChange={setActivityBusy} />
+          : step.kind === "rounds" ? <RoundsDial step={step} onSolved={solved} onEdited={() => setActivity({ ...activity, solved: false })} onBusyChange={setActivityBusy} />
           : step.kind === "crypto" ? <CryptoBench step={step} onSolved={solved} />
           : step.kind === "dial" ? <DialBench step={step} onSolved={solved} />
-          : <BenchQuestion step={step} onSolved={solved} idealReference={config.world === "coinTown"} />}
+          : <BenchQuestion step={step} onSolved={solved} idealReference />}
         {activity.solved && <div className="laptop-challenge space-y-2" role="status">
           <p className="text-accent-teal">{t(step.feedback)}</p>
           <button className="btn-primary" disabled={activityBusy} autoFocus onClick={() => activity.step + 1 < npc.steps.length

@@ -51,7 +51,7 @@ export function MeasurementExplorer({ measurement, title, qubitName = "Qubit", o
       <div className="measure-tabs" role="tablist">{tabButton("outcomes", "Outcomes")}{tabButton("qubits", "Qubit by qubit")}{tabButton("raw", "Raw counts")}</div>
 
       {tab === "outcomes" && <div className="space-y-2" role="tabpanel">
-        <p className="text-xs text-stage-muted">{t("Each bar is one bitstring and the share of shots that landed on it, tallest first. The marker shows what an ideal machine would give.")}</p>
+        <p className="text-xs text-stage-muted">{t(measurement.probabilities ? "Each bar is one bitstring and the share of shots that landed on it, tallest first. The marker shows what an ideal machine would give." : "Each bar shows a returned bitstring and its share of measured shots, tallest first.")}</p>
         <ol className="measure-rows">
           {rows.map((row) => <li key={row.bitstring} className={row.highlight ? "highlight" : ""}>
             <code className="measure-bits">{groupBits(row.bitstring)}</code>
@@ -93,8 +93,8 @@ export function MeasurementExplorer({ measurement, title, qubitName = "Qubit", o
 }
 
 function note(measurement: Measurement, shots: number, top: string | null): ReactNode {
-  if (measurement.source === "hardware") return t("Real hardware is noisy: shots spread over strings close to the answer. Read the tallest bars, or the qubit-by-qubit vote.");
   if (shots <= 1) return <>{t("This circuit ran once. One measured outcome does not establish its probabilities.")}{top && <> <code className="measure-bits">{groupBits(top)}</code></>}</>;
+  if (measurement.source === "hardware") return t("Real hardware can add gate and readout errors. These bars show returned counts; noise can shift them from the ideal prediction.");
   if (measurement.kind === "noise") return t("Noise-model simulation: the bars show returned counts, including the selected backend’s noise.");
   if (measurement.kind === "ideal") return t("An ideal simulator: no noise, only the spread the circuit itself makes.");
   return t("These bars show returned measurement counts. Compare them with the ideal probabilities when available.");

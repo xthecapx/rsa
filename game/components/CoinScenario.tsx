@@ -263,7 +263,7 @@ export function CoinScenario({ onExit, onRestartGame }: { onExit?: () => void; o
     <div className="panel p-4 space-y-3 text-sm leading-relaxed">
       <p className="text-accent-teal">{t("GAME NIGHT · ALE’S HOUSE")}</p>
       <p>{t(scene.objective)}</p>
-      <p className="text-stage-muted">{t("Simulator only")}</p>
+      <p className="text-stage-muted">{t("Selected backend")}</p>
       {session.result && <p>{t("Heads")}: {session.result.counts["0"]} · {t("Tails")}: {session.result.counts["1"]}</p>}
       <div className="coin-rewards" aria-label={t("Achievements")}>
         {([ ["code", "Program builder"], ["seed", "Seed detective"], ["circuit", "Circuit maker"] ] as const).map(([id, label]) =>
@@ -309,19 +309,19 @@ export function CoinScenario({ onExit, onRestartGame }: { onExit?: () => void; o
       </div>}
     </div>}
 
-      <LaptopShell restartControl={restartControl} closeDisabled={busy} open={sceneReady && laptopOpen} title={t("Quantum Coin")} status={busy ? "Running the experiment…" : "Simulator only"} onClose={() => setLaptopOpen(false)}
+      <LaptopShell restartControl={restartControl} closeDisabled={busy} open={sceneReady && laptopOpen} title={t("Quantum Coin")} status={busy ? "Running the experiment…" : "Selected backend"} onClose={() => setLaptopOpen(false)}
         footer={<p>{t("Close the laptop to return to the room. Your results are saved.")}</p>}
         memory={<div className="grid grid-cols-3 gap-3 text-sm"><div>{t("Seed")}<br /><strong>42</strong></div><div>{t("Circuit")}<br /><strong>{session.step === "hadamard" && !session.circuitBuilt
           ? `|0⟩ → ${session.circuitSlots.first ?? "□"} → ${session.circuitSlots.second ?? "□"}`
           : localize(session.hadamard ? "|0⟩ → H → M" : "|0⟩ → M")}</strong></div><div>{t("Result")}<br /><strong>{localize(session.winner === null ? "—" : session.winner === 0 ? "Heads" : "Tails")}</strong></div></div>}
       >
       <section className="coin-workbench" aria-label={t("Experiment workbench")}>
-        <div className="flex items-center justify-between gap-2"><h2>{localize(index < 4 ? "THE LAPTOP" : "QUANTUM COIN LAB")}</h2><span className="coin-badge">{localize(index < 4 ? "Python · seed 42" : "Simulator only")}</span></div>
+        <div className="flex items-center justify-between gap-2"><h2>{localize(index < 4 ? "THE LAPTOP" : "QUANTUM COIN LAB")}</h2><span className="coin-badge">{localize(index < 4 ? "Python · seed 42" : "Selected backend")}</span></div>
         <div className="coin-rewards mt-3" aria-label={t("Achievements")}>
           {([ ["code", "Program builder"], ["seed", "Seed detective"], ["circuit", "Circuit maker"] ] as const).map(([id, label]) =>
             <span key={id} className={session.badges[id] ? "earned" : ""}>{session.badges[id] ? "★ " : "☆ "}{t(label)}</span>)}
         </div>
-        <p className="my-4 text-stage-muted">{localize(index < 4 ? "0 = heads · 1 = tails. Build and inspect the seeded function." : "A real one-qubit circuit runs on the selected simulator. No quantum hardware is used.")}</p>
+        <p className="my-4 text-stage-muted">{localize(index < 4 ? "0 = heads · 1 = tails. Build and inspect the seeded function." : "A real one-qubit circuit runs on your selected backend. The result identifies the simulator or physical QPU.")}</p>
         {index > 0 && index < 4 && session.codeBuilt && <pre>{`import random\ncoin = random.Random(42)\n\ndef flip_coin():\n    return coin.randint(0, 1)`}</pre>}
         {index >= 4 && (session.step !== "hadamard" || session.circuitBuilt) && <>
           <CircuitSnapshot hadamard={session.hadamard} measurement={session.result ? coinMeasurement(session.result) : null} />
@@ -331,7 +331,7 @@ export function CoinScenario({ onExit, onRestartGame }: { onExit?: () => void; o
         {busy && <p role="status" className="my-4 text-accent-teal">{t("Running the experiment…")}</p>}
         {localize(error && <p role="alert" className="my-4 text-actor-hacker">{localize(error)}</p>)}
         {session.step === "done" && <div className="coin-achievement mt-5" aria-live="polite"><span>{t("QUANTUM COIN")}</span><h2>{localize(session.winner === 0 ? "Ale" : "Brayan")}{t(" goes first!")}</h2>
-          <Coins bits={[session.winner ?? 0]} /><p>{t("Your first quantum program, tested in a simulator.")}</p></div>}
+          <Coins bits={[session.winner ?? 0]} /><p>{t("Your first quantum program, measured on the selected backend.")}</p></div>}
         {session.step === "done" && <div className="mt-4"><MedalReveal id="quantum-coin" /></div>}
         {!atPlace || !finishedDialog ? <p className="coin-placeholder">{localize(!atPlace ? "Visit the highlighted location to open this step." : "Finish the conversation to unlock the experiment.")}</p> :
           <div className="mt-5 space-y-5">

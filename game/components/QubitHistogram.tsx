@@ -3,7 +3,7 @@
 import type { BenchResult, QubitReading } from "@/lib/coin";
 import { t, useLocale } from "@/i18n";
 
-type Props = QubitReading & Pick<BenchResult, "backend" | "shots" | "source"> & { kind?: "ideal" | "noise" };
+type Props = QubitReading & Pick<BenchResult, "backend" | "shots" | "source"> & { kind?: "ideal" | "noise" | "hardware" };
 
 /** Bars always represent provider counts. Ideal probabilities are text only. */
 export function QubitHistogram({ counts, probabilities, backend, shots, source, kind }: Props) {
@@ -21,6 +21,6 @@ export function QubitHistogram({ counts, probabilities, backend, shots, source, 
     </div>
     <p className="text-xs text-stage-muted">{t("Ideal prediction:")} 0 = {Math.round(probabilities["0"] * 100)}% · 1 = {Math.round(probabilities["1"] * 100)}%</p>
     <p className="text-xs text-stage-muted">{t("Each shot starts from a fresh preparation. These bars show returned measurements, not calculated probabilities.")}</p>
-    {kind === "noise" && <p className="text-xs text-accent-amber">{t("Noise can shift these counts away from the ideal prediction.")}</p>}
+    {(kind === "noise" || source === "hardware") && <p className="text-xs text-accent-amber">{t("Noise can shift these counts away from the ideal prediction.")}</p>}
   </section>;
 }

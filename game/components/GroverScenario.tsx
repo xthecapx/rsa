@@ -3,6 +3,7 @@ import { t, localize, useLocale } from "@/i18n";
 
 import { useEffect, useRef, useState } from "react";
 import { GROVER_SCENES, GROVER_STEPS, type GroverPlace, type GroverStep } from "@/content/grover";
+import { CircuitHistogram } from "./CircuitHistogram";
 import { groverApi, GroverRefusal, tallest, type GroverRun } from "@/lib/grover";
 import { useProgress } from "@/game/progress";
 import { useMedals } from "@/game/medals";
@@ -343,7 +344,10 @@ export function GroverScenario({ onExit, onRestartGame }: { onExit?: () => void;
                 repeat={session.step === "loop" ? 1 : session.repeat}
                 onRepeat={session.step === "tuneRun" || session.step === "measure" ? (repeat) => patch({ repeat }) : null}
                 measurement={session.step === "measure" && session.lastRun ? groverMeasurement(session.lastRun) : null} />
+              <p className="text-xs text-stage-muted">{t("Ideal amplitude illustration, not measured counts.")}</p>
               <QuantumEqualizer run={session.lastRun} runKey={session.runKey} animate={true} />
+              {session.lastRun?.counts && <CircuitHistogram counts={session.lastRun.labels ? Object.fromEntries(session.lastRun.labels.map((label, i) => [label, session.lastRun!.counts![String(i)] ?? 0])) : session.lastRun.counts} backend={session.lastRun.backend} kind={session.lastRun.kind} source={session.lastRun.source ?? "simulator"} hiddenLabels={!session.lastRun.labels} />}
+
 
               {session.step === "init" && session.lastRun && (session.lastRun.steps.at(-1)!.block === "h"
                 ? <p className="coin-callout">{t("Sixteen flat bars, each 1/16 = 6.25%. Every PIN is in play at once — but a measurement now is still a blind guess.")}</p>
@@ -352,7 +356,7 @@ export function GroverScenario({ onExit, onRestartGame }: { onExit?: () => void;
                 ? <p className="coin-callout">{t("One round, one question to the lock: the tallest bar reached")} {percent(lastPeak)}.</p>
                 : <p className="text-accent-amber">{t(loopHint(session.slots))}</p>)}
               {session.step === "tuneRun" && <>
-                <table className="w-full text-left"><caption className="mb-2 text-left text-stage-muted">{t("Your runs · tallest bar")}</caption>
+                <table className="w-full text-left"><caption className="mb-2 text-left text-stage-muted">{t("Your runs · tallest ideal bar")}</caption>
                   <thead><tr>{[0, 1, 2, 3, 4, 5].map((k) => <th key={k}>×{k}</th>)}</tr></thead>
                   <tbody><tr>{[0, 1, 2, 3, 4, 5].map((k) => <td key={k}>{session.peaks[k] === undefined ? "—" : percent(session.peaks[k])}</td>)}</tr></tbody></table>
                 {session.lastRun && !isSearch(session.slots) && <p className="text-accent-amber">{t(loopHint(session.slots))}</p>}
