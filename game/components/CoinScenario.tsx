@@ -136,11 +136,12 @@ function Results({ result }: { result: CoinResult }) {
   useLocale((state) => state.locale);
   const heads = result.counts["0"];
   return <div className="coin-results" aria-live="polite">
-    <div className="flex justify-between gap-3"><strong>{result.shots}{t(" simulated shots")}</strong><span>{t("AerSimulator")}</span></div>
+    <div className="flex justify-between gap-3"><strong>{result.shots}{t(result.source === "hardware" ? " hardware shots" : " simulated shots")}</strong><span>{result.backend}</span></div>
     <div className="coin-bar" role="img" aria-label={tOptional(`${heads} heads, ${result.counts["1"]} tails`)}>
       <div style={{ width: `${100 * heads / result.shots}%` }} />
     </div>
     <div className="flex justify-between"><span>{t("Heads ")}{heads} · {localize((heads / result.shots * 100).toFixed(1))}%</span><span>{t("Tails ")}{result.counts["1"]}</span></div>
+    {result.memory_reconstructed && <p className="mt-2 text-stage-muted">{t("Sample display reconstructed from counts; execution order is unavailable.")}</p>}
     <p className="mt-2 text-stage-muted">{t("Expected probabilities: ")}{localize(result.hadamard ? "50% / 50%" : "100% / 0%")}{t(". Observed counts can vary.")}</p>
   </div>;
 }
@@ -323,7 +324,7 @@ export function CoinScenario({ onExit, onRestartGame }: { onExit?: () => void; o
           {([ ["code", "Program builder"], ["seed", "Seed detective"], ["circuit", "Circuit maker"] ] as const).map(([id, label]) =>
             <span key={id} className={session.badges[id] ? "earned" : ""}>{session.badges[id] ? "★ " : "☆ "}{t(label)}</span>)}
         </div>
-        <p className="my-4 text-stage-muted">{localize(index < 4 ? "0 = heads · 1 = tails. Build and inspect the seeded function." : "A real one-qubit circuit, simulated by Qiskit Aer on the backend. No quantum hardware is used.")}</p>
+        <p className="my-4 text-stage-muted">{localize(index < 4 ? "0 = heads · 1 = tails. Build and inspect the seeded function." : "A real one-qubit circuit runs on the selected simulator. No quantum hardware is used.")}</p>
         {index > 0 && index < 4 && session.codeBuilt && <pre>{`import random\ncoin = random.Random(42)\n\ndef flip_coin():\n    return coin.randint(0, 1)`}</pre>}
         {index >= 4 && (session.step !== "hadamard" || session.circuitBuilt) && <>
           <CircuitSnapshot hadamard={session.hadamard} measurement={session.result ? coinMeasurement(session.result) : null} />

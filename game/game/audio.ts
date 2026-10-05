@@ -82,6 +82,14 @@ class GameAudioController {
   private desiredTrack: MusicTrack | null = null;
   private synth = new Synth();
 
+  /** Dispose browser audio when an embedded run is stopped or replaced. */
+  stop(): void {
+    this.bgm?.pause(); this.jingle?.pause(); this.activeComputer?.pause();
+    for (const audio of this.sfxCache.values()) audio.pause();
+    this.bgm = null; this.jingle = null; this.activeComputer = null;
+    this.desiredTrack = null;
+  }
+
   preload(): Promise<void> {
     if (this.preloadPromise) return this.preloadPromise;
 

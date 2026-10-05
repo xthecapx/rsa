@@ -15,6 +15,14 @@ Markdown files. See [README.md](README.md) for setup, deployment, and IBM data.
 - `frontend/`: a separate presentation app on port 7013, with depth tiers and IBM
   batch results. It is not the game's UI.
 - `docker-compose.yml` and `deploy-cloudrun.sh`: local services and Cloud Run deployment.
+- `game/qollab/`: browser entry and Python services for the Qollab target.
+  `npm run build:qollab` produces `game/dist/quantum-playground-qollab.zip`;
+  `npm run build` retains the Next.js/HTTP target. Qollab injects the selected
+  simulator; service calls use a queued Pyodide bridge instead of HTTP. Assets
+  and recorded IBM data are embedded, with their licenses retained. Fonts use
+  pinned HTTPS Fontsource URLs with system fallbacks because Qollab blocks data fonts.
+  Ghost Key keeps 25 data qubits plus its helper; IBM fake backends use MPS for
+  this circuit. No paid hardware jobs are submitted. See README for delivery.
 
 ## World and progression
 
@@ -60,6 +68,9 @@ their earned gear.
   key is a separate interaction. Bernstein–Vazirani uses one ideal quantum query.
   The backend uses Aer's stabilizer simulation for this Clifford circuit. The
   large Grover comparison is an estimate, not a second implemented search circuit.
+  In Qollab, ideal phase frames explain the algorithm while the selected
+  simulator supplies the measurement. Noise can yield a wrong key; retry is
+  available without changing the secret. The 24/25-qubit local devices are too small.
 - **Breaking RSA**: four acts cover letter encoding, Caesar shifts, small RSA,
   and Shor's quantum/classical pipeline. Each act runs prologue → client briefing
   → install a listener → intercept → decode in the laptop → type the plaintext
@@ -112,6 +123,10 @@ Progress is browser-local; no account or database is required. Towns, lesson
 sessions, completion, knowledge, and wallet state have separate stores. Preserve
 existing save keys and migration behavior. Quantum replay doors reuse the same
 lesson sessions. Language and mute preferences persist independently of progress.
+Persisted Zustand stores use `game/game/storage.ts` to keep their hydration APIs
+available when iframe/private-mode storage is blocked. Its in-memory fallback
+retains state across rehydration for the current run only; existing browser save
+keys and serialization are unchanged.
 
 RSA checkpoints contain serializable story progress, secrets, suspicion, captured
 messages, and laptop results. Restore the last safe checkpoint without rerunning

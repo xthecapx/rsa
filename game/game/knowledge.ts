@@ -2,6 +2,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { saveStorage } from "./storage";
 import { ALL_KNOWLEDGE_IDS, type KnowledgeId } from "@/content/knowledge";
 
 /** Knowledge cards learned from town neighbors. Like medals, replaying a lesson never removes one. */
@@ -29,6 +30,7 @@ export const useKnowledge = create<KnowledgeCase>()(persist((set, get) => ({
   reset: () => set({ cards: [], fresh: null }),
 }), {
   name: "quantum-town-knowledge-v1",
+  storage: saveStorage<Pick<KnowledgeCase, "cards">>(),
   skipHydration: true,
   partialize: (state) => ({ cards: state.cards }),
   merge: (saved, current) => {

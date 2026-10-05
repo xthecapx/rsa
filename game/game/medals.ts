@@ -2,6 +2,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { saveStorage } from "./storage";
 import { medalFor, type MedalId } from "@/content/medals";
 import type { ScenarioId } from "@/content/scenarios";
 
@@ -27,6 +28,7 @@ export const useMedals = create<MedalCase>()(persist((set, get) => ({
   reset: () => set({ earned: {}, fresh: null }),
 }), {
   name: "quantum-town-medals-v1",
+  storage: saveStorage<Pick<MedalCase, "earned">>(),
   skipHydration: true,
   partialize: (state) => ({ earned: state.earned }),
 }));

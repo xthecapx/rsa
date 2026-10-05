@@ -1,3 +1,4 @@
+import { serviceError, serviceFetch } from "./transport";
 /** The Ghost Key vault: 25 tumblers, a parity "ghost", three candles a night. */
 export const BITS = 25;
 export const KEYSPACE = 2 ** BITS;
@@ -28,7 +29,7 @@ export class VaultRefusal extends Error {
 const REASONS: VaultReason[] = ["prep", "helper", "output", "measure", "extra"];
 
 async function post<T>(path: string, body: object): Promise<T> {
-  const response = await fetch(`/api/vault/${path}`, {
+  const response = await serviceFetch(`/api/vault/${path}`, {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body), signal: AbortSignal.timeout(20000),
   });
@@ -37,7 +38,7 @@ async function post<T>(path: string, body: object): Promise<T> {
     const reason = data?.detail?.reason;
     throw new VaultRefusal(REASONS.includes(reason) ? reason : "prep");
   }
-  if (!response.ok) throw new Error("The quantum core did not answer. Check the backend and try again.");
+  if (!response.ok) throw await serviceError(response, "The quantum core did not answer. Check the backend and try again.");
   return response.json();
 }
 

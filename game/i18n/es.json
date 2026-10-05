@@ -2459,5 +2459,13 @@
   "Pet the cat": "Acaricia al gato",
   "Press Space or tap Pet": "Pulsa Espacio o toca Acariciar",
   "The dog wags its tail.": "El perro mueve la cola.",
-  "The cat purrs happily.": "El gato ronronea feliz."
+  "The cat purrs happily.": "El gato ronronea feliz.",
+  " hardware shots": " ejecuciones en hardware",
+  "Sample display reconstructed from counts; execution order is unavailable.": "Muestra reconstruida a partir de los conteos; el orden de las ejecuciones no está disponible.",
+  "A real one-qubit circuit runs on the selected simulator. No quantum hardware is used.": "Un circuito real de un cúbit se ejecuta en el simulador seleccionado. No se usa hardware cuántico.",
+  "The animation shows ideal phase kickback. Noise can change the measured key; check it at the vault and retry if needed.": "La animación muestra el retroceso de fase ideal. El ruido puede cambiar el código medido; compruébalo en la bóveda y vuelve a intentar si hace falta.",
+  "Selected in Qollab before starting the game.": "Seleccionado en Qollab antes de iniciar el juego.",
+  "Ghost Key needs 26 qubits. Stop and select an IBM noise-model or compatible larger simulator in Qollab.": "Clave Fantasma necesita 26 cúbits. Detén la ejecución y elige un simulador con modelo de ruido de IBM u otro simulador compatible de mayor capacidad en Qollab.",
+  "Choose a simulator in Qollab. This game does not submit paid hardware jobs.": "Elige un simulador en Qollab. Este juego no envía tareas a hardware de pago.",
+  "The Qollab Shor experiment supports N=15. Use the web build for other moduli.": "El experimento de Shor en Qollab admite N=15. Usa la versión web para otros módulos."
 }

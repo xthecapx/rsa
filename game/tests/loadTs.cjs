@@ -6,7 +6,9 @@ const ts = require('typescript');
 const root = path.join(__dirname, '..');
 const cache = new Map();
 function loadTs(file) {
-  const full = path.resolve(file.endsWith('.ts') ? file : `${file}.ts`);
+  const resolved = path.resolve(file);
+  const full = fs.existsSync(resolved) && fs.statSync(resolved).isDirectory()
+    ? path.join(resolved, 'index.ts') : path.resolve(file.endsWith('.ts') ? file : `${file}.ts`);
   if (cache.has(full)) return cache.get(full);
   const exports = {};
   cache.set(full, exports);

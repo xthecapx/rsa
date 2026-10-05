@@ -2,6 +2,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { saveStorage } from "./storage";
 import { CIPHER_KNOWLEDGE_IDS, type CipherKnowledgeId } from "@/content/knowledge";
 import { ACT_PAYOUT, CLIENT_ADVANCE, GEAR, type GearId } from "@/content/cipher";
 import type { ActNumber } from "@/content/types";
@@ -63,6 +64,7 @@ export const useWallet = create<Wallet>()(persist((set, get) => ({
   reset: () => set({ ...EMPTY }),
 }), {
   name: "quantum-town-wallet-v1",
+  storage: saveStorage<typeof EMPTY>(),
   skipHydration: true,
   partialize: ({ credits, gear, advanced, paidActs, paidCards, bounties }) => ({ credits, gear, advanced, paidActs, paidCards, bounties }),
   merge: (saved, current) => {

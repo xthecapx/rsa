@@ -1,5 +1,6 @@
 "use client";
 
+import { runtimeInfo } from "@/lib/transport";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import clsx from "clsx";
 import { t, localize, useLocale } from "@/i18n";
@@ -179,7 +180,7 @@ export function ShorPipeline({ armed }: { armed: boolean }) {
       let next: Run;
       let reference: number | null = null;
       if (backend === "aer") {
-        pushTerminal({ tone: "info", text: `Job: N = ${N}, a = ${a}, m = ${m}, ${shots} shots -> local simulator.` });
+        pushTerminal({ tone: "info", text: `Job: N = ${N}, a = ${a}, m = ${m}, ${shots} shots -> ${runtimeInfo.backend}.` });
         await hop("shor", 200);
         const res = await api.shor.simulate({ N, a, num_control: m, shots });
         if (!alive()) return;
@@ -288,6 +289,7 @@ export function ShorPipeline({ armed }: { armed: boolean }) {
             <Toggle active={!locked} disabled={busy} onClick={() => clearRun({ backend: "aer" })}>{t("Simulator")}</Toggle>
             <Toggle active={locked} disabled={busy} onClick={() => clearRun({ backend: "ibm" })}>{t("IBM QPU, recorded run")}</Toggle>
           </Row>
+          {!locked && runtimeInfo.target === "qollab" && <p className="laptop-note">{runtimeInfo.backend} · {t("Selected in Qollab before starting the game.")}</p>}
           {locked && <>
             <select value={batchId} disabled={busy} onChange={(event) => clearRun({ batchId: event.target.value })}
               className="min-h-11 w-full rounded border-2 border-stage-border bg-stage-bg px-3 py-2 text-sm text-[#e8f4f8]">

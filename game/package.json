@@ -8,7 +8,9 @@
     "start": "next start -p 7019",
     "lint": "next lint",
     "icons": "python3 tools/gen_pwa_icons.py",
-    "test": "node --test tests/*.test.cjs"
+    "test": "node --test tests/*.test.cjs",
+    "build:qollab": "node tools/build-qollab.mjs",
+    "verify:qollab": "node tools/verify-qollab.mjs"
   },
   "dependencies": {
     "@dnd-kit/dom": "^0.5.0",
@@ -24,9 +26,12 @@
     "zustand": "^5.0.2"
   },
   "devDependencies": {
+    "@fontsource/dm-sans": "^5.3.0",
+    "@fontsource/press-start-2p": "^5.3.0",
     "@types/node": "^22.10.2",
     "@types/react": "^19.0.2",
     "@types/react-dom": "^19.0.2",
+    "esbuild": "^0.25.10",
     "eslint": "^8.57.1",
     "eslint-config-next": "^15.5.23",
     "typescript": "^5.7.2"

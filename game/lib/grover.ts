@@ -1,3 +1,4 @@
+import { serviceError, serviceFetch } from "./transport";
 export type GroverBlock = "oracle" | "diffuser" | "h" | "x";
 
 export interface GroverCircuit {
@@ -26,7 +27,7 @@ export class GroverRefusal extends Error {
 }
 
 async function post<T>(path: string, body: object): Promise<T> {
-  const response = await fetch(`/api/grover/${path}`, {
+  const response = await serviceFetch(`/api/grover/${path}`, {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body), signal: AbortSignal.timeout(20000),
   });
@@ -35,7 +36,7 @@ async function post<T>(path: string, body: object): Promise<T> {
     const reason = data?.detail?.reason;
     throw new GroverRefusal(reason === "rounds" ? "rounds" : "circuit");
   }
-  if (!response.ok) throw new Error("The quantum core did not answer. Check the backend and try again.");
+  if (!response.ok) throw await serviceError(response, "The quantum core did not answer. Check the backend and try again.");
   return response.json();
 }
 

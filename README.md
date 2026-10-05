@@ -50,6 +50,35 @@ gcloud run services update rsa-backend --region=us-east1 --min-instances=0
 gcloud run services update rsa-game --region=us-east1 --min-instances=0
 ```
 
+## Qollab bundle
+
+The same game supports a Qollab export alongside the existing Next.js/FastAPI
+deployment. Build the upload archive without running a backend server:
+
+```bash
+cd game
+npm ci
+npm run build:qollab
+```
+
+Upload `game/dist/quantum-playground-qollab.zip` to the project's **Edit Code**
+file browser, choose **Unpack**, and keep/add files to replace the entry files.
+Upload the complete archive: its Python modules and licenses are required along
+with `index.html`, `main.js`, and `main.css`. Keep `README.md` / the Project Card.
+
+Choose a free **IBM noise-model simulator** for the full game. Ghost Key retains
+25 data qubits plus its helper; the built-in 24-qubit simulator and Braket's
+25-qubit local simulator cannot run that lesson. The adapter passes the full
+circuit to the selected IBM simulator using matrix product state simulation.
+Noisy measurements may fail the key check, so the player can retry. Hardware
+submission is disabled in this export.
+
+Qollab runs the included Python services in its browser runtime and supplies the
+quantum backend; no FastAPI server, provider credential, or backend URL is shipped.
+Existing `npm run build` and Cloud Run commands still use the HTTP backend.
+See [Qollab delivery and test notes](docs/qollab-deployment-plan.md) for the
+package layout, validation limits, and test checklist.
+
 ## Quick start (Docker)
 
 ```bash

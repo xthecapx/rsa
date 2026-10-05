@@ -1,7 +1,8 @@
 "use client";
 
 import { create } from "zustand";
-import { createJSONStorage, persist } from "zustand/middleware";
+import { persist } from "zustand/middleware";
+import { saveStorage } from "./storage";
 import { getAct } from "@/content";
 import type { ActNumber } from "@/content/types";
 import { TOWN_SPAWN, type WorldFacing } from "@/content/town";
@@ -87,11 +88,7 @@ interface TownState {
   reset: () => void;
 }
 export let townStorageUnavailable = false;
-const storage = createJSONStorage<TownState>(() => ({
-  getItem: (key: string) => { try { return localStorage.getItem(key); } catch { townStorageUnavailable = true; return null; } },
-  setItem: (key: string, value: string) => { try { localStorage.setItem(key, value); } catch { townStorageUnavailable = true; } },
-  removeItem: (key: string) => { try { localStorage.removeItem(key); } catch { townStorageUnavailable = true; } },
-}));
+const storage = saveStorage<TownState>(() => { townStorageUnavailable = true; });
 
 export const useTown = create<TownState>()(persist((set) => ({
   welcomed: false, location: "coinTown", position: { ...TOWN_SPAWN }, facing: "up", tracked: "coin", coinTown: COIN_TOWN_START(), foundry: FOUNDRY_START(), hollow: HOLLOW_START(), cipher: CIPHER_START(), groverFrom: "foundry", vaultFrom: "hollow", rsaFrom: "cipher",

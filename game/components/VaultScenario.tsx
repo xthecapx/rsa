@@ -1,4 +1,5 @@
 "use client";
+import { runtimeInfo } from "@/lib/transport";
 import { t, useLocale } from "@/i18n";
 
 import { useEffect, useRef, useState } from "react";
@@ -229,7 +230,8 @@ export function VaultScenario({ onExit, onRestartGame }: { onExit?: () => void; 
     const { open } = await vaultApi.key(session.token, session.run.measured);
     if (open) { gameAudio.playSynth("door"); return { step: "done", line: 0 }; }
     gameAudio.playSfx("error");
-    throw new Error("The tumblers did not turn. Execute the circuit again.");
+    setError("The tumblers did not turn. Execute the circuit again.");
+    return { step: "execute", line: 0, place: "desk", run: null, revealed: false };
   });
 
   const action = (label: string, onClick: () => void, disabled = false) => (
@@ -323,6 +325,7 @@ export function VaultScenario({ onExit, onRestartGame }: { onExit?: () => void; 
     >
       <section className="coin-workbench" aria-label={t(panelTitle)}>
         <div className="flex items-center justify-between gap-2"><h2>{t(panelTitle).toUpperCase()}</h2><span className="coin-badge">{t("25 tumblers")} · {formatCount(KEYSPACE)} {t("keys")}</span></div>
+        {runtimeInfo.target === "qollab" && runtimeInfo.kind === "noise" && <p className="my-4 text-stage-muted">{t("The animation shows ideal phase kickback. Noise can change the measured key; check it at the vault and retry if needed.")}</p>}
         {busy && <p role="status" className="my-4 text-accent-teal">{t("Asking the quantum core…")}</p>}
         {error && <p role="alert" className="my-4 text-actor-hacker">{t(error)}</p>}
         {!atPlace || !finishedDialog ? <p className="coin-placeholder">{t(!atPlace ? "Visit the highlighted location to open this step." : "Finish the conversation to unlock this step.")}</p> :

@@ -2,6 +2,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { saveStorage } from "./storage";
 import type { ScenarioId } from "@/content/scenarios";
 import { awardMedalFor } from "./medals";
 
@@ -26,4 +27,4 @@ export const useProgress = create<Progress>()(persist((set) => ({
     // Lessons stay complete once finished; the medal is the knowledge you keep even after a replay.
     void awardMedalFor(scenario, mission);
   },
-}), { name: "quantum-playground-progress-v1", skipHydration: true }));
+}), { name: "quantum-playground-progress-v1", storage: saveStorage<Progress>(), skipHydration: true }));

@@ -1,3 +1,4 @@
+import { runtimeInfo, serviceError, serviceFetch } from "./transport";
 /**
  * Thin client over the FastAPI backend. Mirrors frontend/lib/api.ts; the game
  * runs on its own port and reaches the backend through the /api/* rewrite.
@@ -11,8 +12,9 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const token = missionGeneration();
   useGame.getState().changeOperations(1);
   try {
-    const res = await fetch(path, init);
+    const res = await serviceFetch(path, init);
     if (!res.ok) {
+      if (runtimeInfo.target === "qollab") throw await serviceError(res, `${path} failed (${res.status})`);
       const detail = await res.text();
       throw new Error(detail || `${init?.method ?? "GET"} ${path} failed (${res.status})`);
     }

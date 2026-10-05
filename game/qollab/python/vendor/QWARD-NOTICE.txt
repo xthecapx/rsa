@@ -1,0 +1,4 @@
+Shor module from qiskit-qward 0.28.1, Apache-2.0.
+https://pypi.org/project/qiskit-qward/0.28.1/
+Wheel SHA256: f721d889719923988353d6306d2b1a21c153b9cee6c3e3185874fdc9be3f2eab
+Unmodified source; isolated to avoid loading QWARD research/plotting dependencies in Pyodide.
