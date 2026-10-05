@@ -14,9 +14,11 @@ import { clearTouchInput, queueTouchInteract } from "@/engine/touchInput";
 export function TouchControls({
   canInteract,
   visible,
+  label = "Talk",
 }: {
   canInteract: boolean;
   visible: boolean;
+  label?: string;
 }) {
   useLocale((state) => state.locale);
   useEffect(() => {
@@ -35,7 +37,7 @@ export function TouchControls({
 
   return <>
     {visible && <MovementStick />}
-    <TalkControl canInteract={canInteract} visible={visible} onTalk={queueTouchInteract} />
+    <TalkControl canInteract={canInteract} visible={visible} label={label} onTalk={queueTouchInteract} />
   </>;
 }
 
@@ -79,7 +81,12 @@ export function TalkControl({ canInteract, visible, onTalk, label = "Talk", inli
             ? "border-accent-amber bg-accent-amber/25 text-accent-amber active:bg-accent-amber/45"
             : "border-stage-border bg-stage-surface/70 text-stage-muted opacity-50",
         )}
-      >{!inline && <svg className="talk-glyph" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+      >{!inline && label === "Pet" ? <svg className="talk-glyph" viewBox="0 0 32 32" fill="currentColor" aria-hidden="true">
+        <ellipse cx="7" cy="13" rx="3.2" ry="4.3" transform="rotate(-25 7 13)" />
+        <ellipse cx="13" cy="7" rx="3.1" ry="4.3" /><ellipse cx="21" cy="7" rx="3.1" ry="4.3" />
+        <ellipse cx="27" cy="13" rx="3.2" ry="4.3" transform="rotate(25 27 13)" />
+        <path d="M8 24c0-4 5-11 9-11s9 7 9 11c0 5-6 3-9 3s-9 2-9-3Z" />
+      </svg> : !inline && <svg className="talk-glyph" viewBox="0 0 32 32" fill="none" aria-hidden="true">
         <path d="M7 5h18a4 4 0 0 1 4 4v11a4 4 0 0 1-4 4h-9l-7 5v-5H7a4 4 0 0 1-4-4V9a4 4 0 0 1 4-4Z" fill="currentColor" />
         <circle cx="10" cy="14" r="1.7" fill="#102630" /><circle cx="16" cy="14" r="1.7" fill="#102630" /><circle cx="22" cy="14" r="1.7" fill="#102630" />
       </svg>}<span>{t(label)}</span></button>

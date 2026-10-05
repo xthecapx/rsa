@@ -8,6 +8,7 @@ import type { Speaker } from "@/content/types";
 import type { WorldFacing } from "@/content/town";
 import type { WorldName } from "@/engine/createGame";
 import { bus } from "@/engine/bus";
+import type { PetKind } from "@/engine/petting";
 import { exploreAround, useTown, type TownSlot } from "@/game/town";
 import { useGame } from "@/game/state";
 import { useMedals } from "@/game/medals";
@@ -141,6 +142,8 @@ export function WorldTownScreen({ config, restartOptions }: { config: TownConfig
   const [hydrated, setHydrated] = useState(false);
   const [sceneStatus, setSceneStatus] = useState<"loading" | "ready" | "error">("loading");
   const [near, setNear] = useState<string | null>(null);
+  const [nearPet, setNearPet] = useState<PetKind | null>(null);
+  const [petted, setPetted] = useState<{ kind: PetKind } | null>(null);
   const [talk, setTalk] = useState<Talk | null>(null);
   const [activity, setActivity] = useState<Activity | null>(null);
   const [journalOpen, setJournalOpen] = useState(false);
@@ -176,6 +179,11 @@ export function WorldTownScreen({ config, restartOptions }: { config: TownConfig
       if (exit) { readyRef.current = false; gameAudio.playSynth("door"); exit.go(); }
     }
     if (event.type === "worldNear") setNear(event.near);
+    if (event.type === "worldPetNear") setNearPet(event.kind);
+    if (event.type === "worldPetted") {
+      setPetted({ kind: event.kind });
+      gameAudio.playSfx("select");
+    }
     if (event.type === "walking") useGame.getState().setWalking(event.walking);
     if (event.type === "worldInteract") events.current.interact(event.target);
     if (event.type === "worldBlocked") events.current.blocked(event.gate);
@@ -247,6 +255,11 @@ export function WorldTownScreen({ config, restartOptions }: { config: TownConfig
     const timer = window.setTimeout(() => setBlocked(null), 4000);
     return () => window.clearTimeout(timer);
   }, [blocked]);
+  useEffect(() => {
+    if (!petted) return;
+    const timer = window.setTimeout(() => setPetted(null), 2200);
+    return () => window.clearTimeout(timer);
+  }, [petted]);
   events.current.interact = (id) => {
     if (talk || activity || panel || mission?.talk) return;
     if (mission?.handles(id)) { mission.interact(id); return; }
@@ -299,7 +312,8 @@ export function WorldTownScreen({ config, restartOptions }: { config: TownConfig
     <MedalCase compact />
   </div>;
   const nearNpc = near ? npcById(near) : undefined;
-  const nearLabel = near && mission?.nearLabel(near) ? mission.nearLabel(near) : near === challenge.door ? challenge.enter : near && config.nearLabels[near] ? config.nearLabels[near] : nearNpc ? `${t("Talk to")} ${t(nearNpc.title)}` : null;
+  const petAction = !near && !!nearPet;
+  const nearLabel = near && mission?.nearLabel(near) ? mission.nearLabel(near) : near === challenge.door ? challenge.enter : near && config.nearLabels[near] ? config.nearLabels[near] : nearNpc ? `${t("Talk to")} ${t(nearNpc.title)}` : petAction ? nearPet === "dog" ? "Pet the dog" : "Pet the cat" : null;
   const nextNpc = next ? npcById(next) : undefined;
   const objective = mission?.active ? mission.objective
     : nextStage ? nextStage.objective
@@ -330,8 +344,9 @@ export function WorldTownScreen({ config, restartOptions }: { config: TownConfig
           <p className="text-xs font-bold uppercase tracking-widest text-[#fca5a5]">🔒 {t("Locked")}</p>
           <p className="text-sm">{t(config.gateNotes[blocked].text)}</p>
         </div> : <div className={`map-hint textbox max-w-lg space-y-2 px-4 py-3 text-center transition-opacity ${walking ? "opacity-30" : ""}`}>
-          <p className="text-sm">{t(objective ?? config.idle)}</p>
-          {nearLabel && <p className="text-xs text-accent-amber">{t(nearLabel)}{" · "}{t("Press Space or tap Talk")}</p>}
+          {petted ? <p className="text-sm" role="status" aria-live="polite"><span className="text-[#ff91ab]" aria-hidden="true">♥ </span>{t(petted.kind === "dog" ? "The dog wags its tail." : "The cat purrs happily.")}</p>
+            : <p className="text-sm">{t(objective ?? config.idle)}</p>}
+          {nearLabel && <p className="text-xs text-accent-amber">{t(nearLabel)}{" · "}{t(petAction ? "Press Space or tap Pet" : "Press Space or tap Talk")}</p>}
         </div>}
       </div>}
       {missionTalk && <div className="absolute inset-0 z-20 flex items-end justify-center bg-black/30 p-3 sm:p-5" role="dialog" aria-modal="true" aria-label={t(missionTalk.title)} ref={talkRef}
@@ -360,7 +375,7 @@ export function WorldTownScreen({ config, restartOptions }: { config: TownConfig
           {talk.index === talk.lines.length - 1 && talk.medal && <MedalReveal id={talk.medal} />}
         </DialogueFrame>
       </div>}
-      <TouchControls canInteract={!!near} visible={!inputLocked} />
+      <TouchControls canInteract={!!near || !!nearPet} label={petAction ? "Pet" : "Talk"} visible={!inputLocked} />
     </>}
     {npc && step && activity && <LaptopShell open calculator={npc.steps.some((candidate) => candidate.kind === "crypto")} title={`${t(npc.title)} · ${t(step.title)}`} status={`${t("Step ")}${activity.step + 1}/${npc.steps.length}`}
       onClose={() => setActivity(null)} footer={<p>{t("Close the laptop to stop. The card is yours once every step is done.")}</p>}>

@@ -2453,5 +2453,11 @@
   "Move down": "Mover hacia abajo",
   "Move left": "Mover a la izquierda",
   "Move right": "Mover a la derecha",
-  "Drag the stick to walk. Release it to stop.": "Arrastra la palanca para caminar. Suéltala para detenerte."
+  "Drag the stick to walk. Release it to stop.": "Arrastra la palanca para caminar. Suéltala para detenerte.",
+  "Pet": "Acariciar",
+  "Pet the dog": "Acaricia al perro",
+  "Pet the cat": "Acaricia al gato",
+  "Press Space or tap Pet": "Pulsa Espacio o toca Acariciar",
+  "The dog wags its tail.": "El perro mueve la cola.",
+  "The cat purrs happily.": "El gato ronronea feliz."
 }

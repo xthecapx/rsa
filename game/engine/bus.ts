@@ -1,5 +1,6 @@
 import type { TownTarget, WorldFacing } from "@/content/town";
 import type { Landmark } from "./maps/street";
+import type { PetKind } from "./petting";
 
 export type { Landmark };
 
@@ -38,6 +39,8 @@ export type EngineEvent =
   | { type: "moved"; near: Landmark | null }
   | { type: "walking"; walking: boolean }
   | { type: "worldNear"; near: string | null }
+  | { type: "worldPetNear"; kind: PetKind | null }
+  | { type: "worldPetted"; kind: PetKind }
   | { type: "worldInteract"; target: string }
   /** The player walked into a closed gate. */
   | { type: "worldBlocked"; gate: string };

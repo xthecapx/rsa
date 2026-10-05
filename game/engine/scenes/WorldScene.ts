@@ -12,6 +12,7 @@ import type { PropSpec, PropSprite } from "@/content/knowledge";
 import { foundryMap } from "../maps/foundryMap";
 import { hollowMap } from "../maps/hollowMap";
 import { Wanderer } from "../actors/Wanderer";
+import { canPet, nearestPet, type PetKind } from "../petting";
 import { coinTownMap } from "../maps/coinTownMap";
 import { Character } from "../actors/Character";
 import { RsaStreet, isStreetCommand } from "../actors/RsaStreet";
@@ -100,6 +101,8 @@ export class WorldScene extends Scene {
   private locale = "";
   private pointerSub: Subscription | null = null;
   private animals: Wanderer[] = [];
+  private lastPet: PetKind | null = null;
+  private petApproach: Wanderer | null = null;
   /** Neighbors stay on their tile; they only breathe and glance around. */
   private idlers: { actor: Actor; sprite: Sprite; seed: number; glance: number }[] = [];
   private clock = 0;
@@ -260,6 +263,15 @@ export class WorldScene extends Scene {
     if (this.inputLocked) return;
     const near: string | null = worldTargetAt(this.def, this.player.grid) ?? this.street?.near(this.player.grid) ?? null;
     if (near !== this.lastNear) { this.lastNear = near; bus.emit({ type: "worldNear", near }); }
+    const pet = nearestPet(this.animals, this.player.pos);
+    const kind = pet && canPet(pet.kind) ? pet.kind : null;
+    if (kind !== this.lastPet) { this.lastPet = kind; bus.emit({ type: "worldPetNear", kind }); }
+    if (this.petApproach && nearestPet([this.petApproach], this.player.pos)) {
+      this.petAnimal(this.petApproach);
+      this.petApproach = null;
+      return;
+    }
+    if (this.petApproach && !this.player.isMoving) this.petApproach = null;
     if (this.needsSpaceRelease && !engine.input.keyboard.isHeld(Keys.Space)) this.needsSpaceRelease = false;
     const talked = (!this.needsSpaceRelease && engine.input.keyboard.wasPressed(Keys.Space)) || consumeTouchInteract();
     if (near && talked) {
@@ -269,8 +281,12 @@ export class WorldScene extends Scene {
       bus.emit({ type: "worldInteract", target: near });
       return;
     }
+    if (pet && talked) { this.petAnimal(pet); return; }
     const direction = touchDirection();
-    if (direction || MOVE_KEYS.some(({ keys }) => keys.some((key) => engine.input.keyboard.isHeld(key)))) this.player.clearRoute();
+    if (direction || MOVE_KEYS.some(({ keys }) => keys.some((key) => engine.input.keyboard.isHeld(key)))) {
+      this.petApproach = null;
+      this.player.clearRoute();
+    }
     if (this.player.isMoving) return;
     for (const { keys, direction: moveDirection, delta } of MOVE_KEYS) {
       const padHeld = direction === moveDirection;
@@ -333,12 +349,40 @@ export class WorldScene extends Scene {
     if ("button" in event.nativeEvent && event.nativeEvent.button !== 0) return;
     if ("isPrimary" in event.nativeEvent && event.nativeEvent.isPrimary === false) return;
     if ("touches" in event.nativeEvent && (event.nativeEvent as TouchEvent).touches.length > 1) return;
+    this.petApproach = null;
+    const clicked = this.animals.find((animal) => canPet(animal.kind)
+      && Math.abs(animal.pos.x - event.coordinates.worldPos.x) <= TILE_SIZE / 2
+      && Math.abs(animal.pos.y - event.coordinates.worldPos.y) <= TILE_SIZE / 2);
+    if (clicked) {
+      if (nearestPet([clicked], this.player.pos)) { this.petAnimal(clicked); return; }
+      const at = { x: Math.floor(clicked.pos.x / TILE_SIZE), y: Math.floor(clicked.pos.y / TILE_SIZE) };
+      const routes = [{ x: 0, y: 0 }, { x: 0, y: 1 }, { x: 0, y: -1 }, { x: 1, y: 0 }, { x: -1, y: 0 }]
+        .map((delta) => ({ x: at.x + delta.x, y: at.y + delta.y }))
+        .filter((goal) => !!nearestPet([clicked], tileCenter(goal)))
+        .map((goal) => findRoute(this.grid, this.player.grid, goal))
+        .filter((route): route is GridPos[] => route !== null)
+        .sort((a, b) => a.length - b.length);
+      if (routes.length) {
+        clicked.waitForPlayer();
+        this.petApproach = clicked;
+        void this.player.follow(routes[0]);
+      }
+      return;
+    }
     const tapped = { x: Math.floor(event.coordinates.worldPos.x / TILE_SIZE), y: Math.floor(event.coordinates.worldPos.y / TILE_SIZE) };
     if (this.bumped(tapped)) return;
     const goal = this.reachable(tapped);
     if (!goal) return;
     const route = findRoute(this.grid, this.player.grid, goal);
     if (route?.length) void this.player.follow(route);
+  }
+
+  private petAnimal(animal: Wanderer): void {
+    if (!canPet(animal.kind) || !animal.pet(this.player.grid)) return;
+    this.player.stop();
+    this.player.faceTowards({ x: Math.floor(animal.pos.x / TILE_SIZE), y: Math.floor(animal.pos.y / TILE_SIZE) });
+    clearTouchInput();
+    bus.emit({ type: "worldPetted", kind: animal.kind });
   }
 
   /** Walking into, or tapping, a closed gate tells React which one, at most every second and a half. */
@@ -382,10 +426,12 @@ export class WorldScene extends Scene {
     switch (command.type) {
       case "lockInput":
         this.inputLocked = command.locked;
+        this.petApproach = null;
         if (command.locked) this.player.stop(); else this.needsSpaceRelease = true;
         clearTouchInput();
         return;
       case "placePlayer": {
+        this.petApproach = null;
         const requested = { x: Math.round(command.at.x), y: Math.round(command.at.y) };
         const at = Number.isFinite(requested.x) && walkable(this.grid, requested) ? requested : this.def.spawn;
         this.player.stop(); this.player.grid = { ...at };
@@ -395,6 +441,7 @@ export class WorldScene extends Scene {
         return;
       }
       case "reset":
+        this.petApproach = null;
         this.player.stop(); this.street?.reset();
         this.needsSpaceRelease = false; this.lastWalking = false; this.walkIdleMs = 0;
         clearTouchInput();

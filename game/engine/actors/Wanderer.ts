@@ -1,10 +1,11 @@
-import { Actor, vec, type Sprite, type Vector } from "excalibur";
+import { Actor, Color, Font, FontUnit, Text, vec, type Sprite, type Vector } from "excalibur";
 
 import type { AnimalSpec } from "@/content/coinTown";
 import { animalImages } from "../resources";
 import { TILE_SIZE } from "../tiles";
 import { tileCenter, type GridPos } from "../maps/street";
 import { findRoute, tilesNear, type WorldGrid } from "../maps/grid";
+import { canPet, nearestPet } from "../petting";
 
 /** Tiles per second, and how long each kind likes to stand still between walks. */
 const PACE: Record<AnimalSpec["kind"], { speed: number; rest: [number, number] }> = {
@@ -36,6 +37,11 @@ export class Wanderer extends Actor {
   private flying = false;
   private rest = random(300, 2500);
   private clock = Math.random() * 10000;
+  private waiting = 0;
+  private affection = 0;
+  private heart: Actor;
+
+  get kind(): AnimalSpec["kind"] { return this.spec.kind; }
 
   constructor(private readonly spec: AnimalSpec, private readonly world: WorldGrid, private readonly ground: (pos: GridPos) => string) {
     const at = tileCenter(spec.home);
@@ -45,6 +51,23 @@ export class Wanderer extends Actor {
     this.sprite = animalImages[spec.kind].toSprite();
     this.sprite.flipHorizontal = Math.random() < 0.5;
     this.graphics.use(this.sprite);
+    this.heart = new Actor({ pos: vec(0, -16), z: 20 });
+    this.heart.graphics.use(new Text({ text: "♥", color: Color.fromHex("#ff91ab"),
+      font: new Font({ family: "sans-serif", size: 12, unit: FontUnit.Px }) }));
+    this.heart.graphics.visible = false;
+    this.addChild(this.heart);
+  }
+
+  /** Keep a clicked pet still while the player approaches. */
+  waitForPlayer(): void { if (canPet(this.kind)) this.waiting = 12000; }
+
+  pet(player: GridPos): boolean {
+    if (!canPet(this.kind) || this.affection > 0) return false;
+    this.affection = 1600;
+    this.waiting = 0;
+    this.sprite.flipHorizontal = tileCenter(player).x < this.pos.x;
+    this.heart.graphics.visible = true;
+    return true;
   }
 
   private allowed = (pos: GridPos) => !this.spec.ground || this.ground(pos) === this.spec.ground;
@@ -52,6 +75,18 @@ export class Wanderer extends Actor {
   /** Called by the scene every frame with the player's tile. */
   tick(elapsed: number, player: GridPos): void {
     this.clock += elapsed;
+    this.waiting = Math.max(0, this.waiting - elapsed);
+    if (this.affection > 0) {
+      this.affection = Math.max(0, this.affection - elapsed);
+      const progress = 1 - this.affection / 1600;
+      this.heart.pos = vec(0, -16 - progress * 12);
+      this.heart.graphics.opacity = Math.min(1, this.affection / 400);
+      this.heart.graphics.visible = this.affection > 0;
+      // A small happy wiggle, then resume the interrupted stroll.
+      this.graphics.offset = vec(Math.sin(this.clock / (this.kind === "dog" ? 70 : 160)), 0);
+      return;
+    }
+    if (this.waiting > 0 || nearestPet([this], tileCenter(player))) { this.idle(); return; }
     if (this.to && this.from) { this.step(elapsed); return; }
     const near = Math.abs(player.x - this.grid.x) + Math.abs(player.y - this.grid.y);
     if (this.spec.shy && near <= 2) { this.takeOff(player); return; }

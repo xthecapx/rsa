@@ -89,6 +89,12 @@ Paths below are relative to the repository root.
 | Sound and PWA | `game/game/{audio,synth}.ts`, `game/public/sw.js`, `game/components/PwaBootstrap.tsx` |
 | Visible viewport and mobile layout | `game/game/viewport.ts`, `game/components/ViewportBootstrap.tsx`, `game/app/globals.css` |
 
+Dogs and cats in the teaching towns can be petted: Space or the contextual Pet
+button when nearby, or click/tap an animal to walk over and pet it. They pause
+near players and respond with a floating heart and a translated status message.
+Petting does not open a dialog or change lesson progress. Other animals still
+wander normally.
+
 Excalibur owns outdoor pixels and animation; React owns text and tools. They
 coordinate through the Zustand game store and typed command bus. Preserve one
 active engine, pause movement during overlays, and require a fresh interaction
