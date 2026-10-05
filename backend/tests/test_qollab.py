@@ -112,3 +112,73 @@ def test_fake_ibm_uses_selected_backend_with_mps_and_full_vault_width():
     assert len(result["data"]["measured"]) == 25
     # The noisy outcome need not equal the secret. Never assert ideal certainty.
     assert result["data"]["queries"] == 1
+
+
+def test_bench_contract_matches_http_and_preserves_player_gates():
+    from app.api.routes.coin import simulate_bench
+    from app.core.coin_circuit import teaching_circuit
+    payload = {"starts": ["+", "-"], "gates": ["H"], "shots": 256}
+    browser = call("/api/coin/circuit", payload)["data"]
+    http = simulate_bench(payload["starts"], payload["gates"], payload["shots"])
+    assert browser["circuits"] == http["circuits"]
+    assert browser["source"] == http["source"] == "simulator"
+    circuit, ideal = teaching_circuit("0", ["H", "H"])
+    assert [instruction.operation.name for instruction in circuit.data].count("h") == 2
+    assert [instruction.operation.name for instruction in circuit.data].count("barrier") == 3
+    assert ideal == {"0": 1.0, "1": 0.0}
+
+
+def test_bench_counts_include_actual_selected_simulator_noise():
+    from qiskit_aer.noise import NoiseModel, ReadoutError
+    from unittest.mock import patch
+    noise = NoiseModel()
+    noise.add_all_qubit_readout_error(ReadoutError([[0.75, 0.25], [0.35, 0.65]]))
+    backend = AerSimulator(noise_model=noise, seed_simulator=42)
+    with patch.object(backend, "run", wraps=backend.run) as submitted:
+        result = call("/api/coin/circuit", {"starts": ["0"], "gates": ["H", "H"], "shots": 256}, backend)
+    assert result["status"] == 200
+    submitted.assert_called_once()
+    assert result["data"]["kind"] == "noise"
+    reading = result["data"]["circuits"][0]
+    assert reading["probabilities"] == {"0": 1.0, "1": 0.0}
+    assert 0 < reading["counts"]["1"] < 256
+    assert sum(reading["counts"].values()) == 256
+
+
+@pytest.mark.parametrize("payload", [
+    {"starts": [], "gates": []}, {"starts": ["bad"], "gates": []},
+    {"starts": ["0"] * 5, "gates": []}, {"starts": ["0"], "gates": ["Y"]},
+    {"starts": ["0"], "gates": ["H"] * 9}, {"starts": ["0"], "gates": [], "shots": 1025},
+])
+def test_browser_bench_validates_before_submission(payload):
+    assert call("/api/coin/circuit", payload)["status"] == 422
+
+
+def test_shared_lessons_match_http_with_existing_signed_tokens():
+    from fastapi.testclient import TestClient
+    from app.main import app
+    from app.api.routes.grover import make_token as signed_grover
+    from app.api.routes.vault import make_token as signed_vault
+    client = TestClient(app)
+    circuit = {"init": "h", "loop": ["oracle", "diffuser"], "repeat": 3, "measure": False}
+    http = client.post("/api/grover/run", json={"token": signed_grover(6, 42), "circuit": circuit})
+    browser = call("/api/grover/run", {"token": services.token("grover", 6, 42), "circuit": circuit})
+    assert http.status_code == browser["status"] == 200
+    assert http.json() == browser["data"]
+    vault = {"prep": "h", "helper": "minus", "out": "h", "measure": True}
+    http = client.post("/api/vault/run", json={"token": signed_vault(5), "circuit": vault})
+    browser = call("/api/vault/run", {"token": services.token("vault", 5), "circuit": vault}, AerSimulator(method="stabilizer"))
+    assert http.status_code == browser["status"] == 200
+    assert http.json() == browser["data"]
+
+
+def test_shared_shor_plan_and_classical_processing_match_http():
+    from fastapi.testclient import TestClient
+    from app.main import app
+    client = TestClient(app)
+    for action in ("plan", "classical"):
+        body = {"N": 15, "a": 7, "num_control": 4}
+        http = client.post(f"/api/shor/{action}", json=body)
+        browser = call(f"/api/shor/{action}", body)
+        assert http.status_code == browser["status"] == 200
+        assert http.json() == browser["data"]

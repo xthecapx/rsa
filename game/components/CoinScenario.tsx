@@ -1,9 +1,10 @@
 "use client";
-import { t, tOptional, localize, useLocale } from "@/i18n";
+import { t, localize, useLocale } from "@/i18n";
 
 import { useEffect, useRef, useState } from "react";
 import { COIN_SCENES, COIN_STEPS, type CoinStep, type RoomPlace } from "@/content/coin";
 import { coinApi, type CoinResult } from "@/lib/coin";
+import { QubitHistogram } from "./QubitHistogram";
 import { useProgress } from "@/game/progress";
 import { useMedals } from "@/game/medals";
 import { MedalReveal } from "./MedalCase";
@@ -136,13 +137,9 @@ function Results({ result }: { result: CoinResult }) {
   useLocale((state) => state.locale);
   const heads = result.counts["0"];
   return <div className="coin-results" aria-live="polite">
-    <div className="flex justify-between gap-3"><strong>{result.shots}{t(result.source === "hardware" ? " hardware shots" : " simulated shots")}</strong><span>{result.backend}</span></div>
-    <div className="coin-bar" role="img" aria-label={tOptional(`${heads} heads, ${result.counts["1"]} tails`)}>
-      <div style={{ width: `${100 * heads / result.shots}%` }} />
-    </div>
+    <QubitHistogram {...result} />
     <div className="flex justify-between"><span>{t("Heads ")}{heads} · {localize((heads / result.shots * 100).toFixed(1))}%</span><span>{t("Tails ")}{result.counts["1"]}</span></div>
     {result.memory_reconstructed && <p className="mt-2 text-stage-muted">{t("Sample display reconstructed from counts; execution order is unavailable.")}</p>}
-    <p className="mt-2 text-stage-muted">{t("Expected probabilities: ")}{localize(result.hadamard ? "50% / 50%" : "100% / 0%")}{t(". Observed counts can vary.")}</p>
   </div>;
 }
 
@@ -393,11 +390,11 @@ export function CoinScenario({ onExit, onRestartGame }: { onExit?: () => void; o
             </>}
             {session.step === "qubit" && <>
               {!session.result || session.result.hadamard ? <>
-                <ChoiceChallenge prompt="If we prepare |0⟩ and immediately measure it, which outcomes can appear?"
+                <ChoiceChallenge prompt="In an ideal circuit, if we prepare |0⟩ and immediately measure it, which outcomes can appear?"
                   choices={ZERO_CHOICES} order={session.variants.zero} value={session.zeroChoice} onChoose={(zeroChoice) => patch({ zeroChoice })} />
                 {session.zeroChoice && action("Measure |0⟩ · 10 shots", () => void simulate(false, 10))}
               </> : <><Results result={session.result} />
-                <p className="coin-callout">{t(session.zeroChoice === "zero" ? "Right. Measuring a qubit prepared as zero returns zero without another gate." : "Only zero appeared. Measuring alone did not create two possible outcomes.")}</p>
+                <p className="coin-callout">{t("The ideal circuit returns only zero. A noisy backend may return some ones; use the counts above to see what actually happened.")}</p>
                 {action("Something is missing →", () => next("hadamard"))}</>}
             </>}
             {session.step === "hadamard" && <>
@@ -422,6 +419,7 @@ export function CoinScenario({ onExit, onRestartGame }: { onExit?: () => void; o
               {session.batches.some((b) => b.shots === 100) && session.batches.some((b) => b.shots === 1000) && <div className="space-y-3">
                 <p className="coin-callout">{t(session.splitChoice === "varies" ? "Correct: equal chances do not require equal counts in a finite batch." : "Equal chances do not require exactly equal counts in a finite batch.")}</p>
                 <p>{t(`Your 100-shot batch had ${session.batches.find((b) => b.shots === 100)?.counts["0"]} heads; your 1,000-shot batch had ${session.batches.find((b) => b.shots === 1000)?.counts["0"]} heads. What makes this circuit fair?`)}</p>
+                <p className="text-xs text-stage-muted">{t("Fairness here describes the ideal circuit. Sampling varies, and a noise model can also bias the observed counts.")}</p>
                 <ChoiceChallenge prompt="Choose the explanation" choices={EXPLAIN_CHOICES} order={session.variants.explain}
                   value={session.explainChoice} onChoose={(explainChoice) => patch({ explainChoice })} />
                 {session.explainChoice && <p role="status" className="text-accent-amber">{t(session.explainChoice === "equal" ? "Yes. Each fresh shot has equal probabilities; streaks and uneven counts are possible." : "Alternating would make the next bit predictable. Equal probabilities still allow streaks and uneven counts.")}</p>}

@@ -1,4 +1,17 @@
 import { serviceError, serviceFetch } from "./transport";
+import type { Gate, NamedState } from "@/game/qubit";
+export interface QubitReading {
+  counts: { "0": number; "1": number };
+  /** Ideal mathematical reference, never the measured histogram. */
+  probabilities: { "0": number; "1": number };
+}
+export interface BenchResult {
+  source: "simulator" | "hardware";
+  backend: string;
+  kind: "ideal" | "noise";
+  shots: number;
+  circuits: (QubitReading & { start: NamedState })[];
+}
 export interface ClassicalCoin {
   seed: number;
   bits: number[];
@@ -8,6 +21,7 @@ export interface ClassicalCoin {
 export interface CoinResult {
   source: "simulator" | "hardware";
   backend: string;
+  kind?: "ideal" | "noise";
   hadamard: boolean;
   shots: number;
   bits: number[];
@@ -26,6 +40,7 @@ async function post<T>(path: string, body: object): Promise<T> {
 }
 
 export const coinApi = {
+  circuit: (starts: NamedState[], gates: Gate[], shots = 256) => post<BenchResult>("circuit", { starts, gates, shots }),
   classical: (flips: number) => post<ClassicalCoin>("classical", { seed: 42, flips }),
   simulate: (hadamard: boolean, shots: number) => post<CoinResult>("simulate", { hadamard, shots }),
 };

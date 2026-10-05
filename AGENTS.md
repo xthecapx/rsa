@@ -15,7 +15,7 @@ Markdown files. See [README.md](README.md) for setup, deployment, and IBM data.
 - `frontend/`: a separate presentation app on port 7013, with depth tiers and IBM
   batch results. It is not the game's UI.
 - `docker-compose.yml` and `deploy-cloudrun.sh`: local services and Cloud Run deployment.
-- `game/qollab/`: browser entry and Python services for the Qollab target.
+- `game/qollab/`: browser entry and thin Python adapter for the Qollab target.
   `npm run build:qollab` produces `game/dist/quantum-playground-qollab.zip`;
   `npm run build` retains the Next.js/HTTP target. Qollab injects the selected
   simulator; service calls use a queued Pyodide bridge instead of HTTP. Assets
@@ -50,6 +50,19 @@ the Cipher checkpoint and skips the gear check. Older RSA completions retain
 their earned gear.
 
 ## Lessons
+
+Coin Town's one-qubit neighbor benches run their named starting states and X/Z/H
+gate sequences through `/api/coin/circuit` on both delivery targets, with 256 shots
+per case. Python/Aer and Qollab share lesson logic in `backend/app/core/game_services.py`,
+Shor processing in `backend/app/core/shor_service.py`, and the circuit builder in
+`backend/app/core/coin_circuit.py`. Barriers preserve consecutive gates such as
+Marisol's H→H during transpilation. Histograms display returned counts and backend
+identity; ideal state traces, probabilities, and waves are labeled references.
+Exercise correctness comes from the ideal designed state, never noisy counts.
+Editing clears the previous result and solved state. Laptop close and next/reset
+actions are disabled during execution; closing/reopening retains the current
+neighbor's circuit and counts without resubmitting. The coin house uses the same
+count histogram and retains simulator kind in the measurement explorer.
 
 - **Who Goes First?**: assemble a seeded Python coin function from known
   instruction IDs; compare Ale and Brayan's five-call sequences and inspect the
@@ -95,7 +108,7 @@ Paths below are relative to the repository root.
 | Progress, cards, badges, economy | `game/game/{progress,knowledge,medals,wallet,travelPass}.ts` |
 | Shared UI | `game/components/{GameShell,LaptopShell,DialoguePresentation,SceneLoading,TouchControls}.tsx` |
 | Tools and math | `game/components/` benches/workbenches, `game/game/{qubit,register,crypto,calc,histogram}.ts` |
-| API clients and implementations | `game/lib/`, `backend/app/api/routes/`, `backend/app/quantum/` |
+| API clients and implementations | `game/lib/`, shared `backend/app/core/{game_services,shor_service,coin_circuit}.py`, HTTP adapters in `backend/app/api/routes/`, Qollab adapter in `game/qollab/python/quantum/services.py` |
 | Translation | `game/i18n/{index,translate}.ts`, `game/i18n/es.json` |
 | Sound and PWA | `game/game/{audio,synth}.ts`, `game/public/sw.js`, `game/components/PwaBootstrap.tsx` |
 | Visible viewport and mobile layout | `game/game/viewport.ts`, `game/components/ViewportBootstrap.tsx`, `game/app/globals.css` |

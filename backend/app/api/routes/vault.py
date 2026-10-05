@@ -15,7 +15,6 @@ the measured shot.
 
 from __future__ import annotations
 
-import secrets
 from typing import List, Literal, Optional
 
 from fastapi import APIRouter, HTTPException
@@ -23,6 +22,7 @@ from pydantic import BaseModel, Field
 
 from app.api.game_token import read_payload, sign_payload
 from app.quantum.worker import QuantumTimeout, run_on_worker
+from app.core.game_services import vault as lesson, ServiceError
 
 router = APIRouter()
 
@@ -90,87 +90,45 @@ class RunRequest(BaseModel):
     circuit: Circuit
 
 
-def wiring_problem(circuit: Circuit) -> Optional[str]:
-    """First concept the circuit gets wrong, in the order the page explains them."""
-    if circuit.extra:
-        return "extra"
-    if circuit.prep != "h":
-        return "prep"
-    if circuit.helper != "minus":
-        return "helper"
-    if circuit.out != "h":
-        return "output"
-    if not circuit.measure:
-        return "measure"
-    return None
-
-
 @router.post("/device")
 def device(req: DeviceRequest):
-    avoid = read_token(req.previous) if req.previous else None
-    secret = 0
-    while secret == 0 or secret == avoid:
-        secret = secrets.randbits(BITS)
-    return {"token": make_token(secret)}
+    return _lesson("device", req.model_dump())
 
 
 @router.post("/key")
 def key(req: KeyRequest):
-    return {"open": from_bits(req.key) == read_token(req.token)}
+    return _lesson("key", req.model_dump())
 
 
 @router.post("/ask")
 def ask(req: AskRequest):
-    x = from_bits(req.x)
-    if x == 0:
-        raise HTTPException(status_code=422, detail="Light at least one candle")
-    return {"knock": parity(read_token(req.token), x)}
-
-
-def kickback_phases(secret: int) -> List[str]:
-    """Each data qubit on its own: |+> picks up (-1)^{s_i} from the |-> helper."""
-    return ["-" if (secret >> i) & 1 else "+" for i in range(BITS)]
+    return _lesson("ask", req.model_dump())
 
 
 def simulate(secret: int):
-    from qiskit import QuantumCircuit
-    from qiskit_aer import AerSimulator
-
-    helper = BITS
-    qc = QuantumCircuit(BITS + 1, BITS)
-    qc.h(range(BITS))
-    qc.x(helper)
-    qc.h(helper)
-    for i in range(BITS):
-        if (secret >> i) & 1:
-            qc.cx(i, helper)
-    qc.h(range(BITS))
-    qc.measure(range(BITS), range(BITS))
-
-    memory = AerSimulator(method="stabilizer").run(qc, shots=1, memory=True).result().get_memory()[0]
-    # Qiskit prints classical bit 0 last; the page reads tumbler 0 first.
-    measured = memory[::-1]
-    phases = kickback_phases(secret)
-    return {
-        "frames": [
-            {"block": "prep", "phases": ["+"] * BITS},
-            {"block": "oracle", "phases": phases},
-            {"block": "out", "bits": "".join("1" if p == "-" else "0" for p in phases)},
-        ],
-        "measured": measured,
-        "queries": 1,
-    }
+    return _lesson("run", {"token": make_token(secret), "circuit": {"prep": "h", "helper": "minus", "out": "h", "measure": True}})
 
 
 @router.post("/run")
 def run(req: RunRequest):
-    secret = read_token(req.token)
-    problem = wiring_problem(req.circuit)
-    if problem:
-        raise HTTPException(status_code=409, detail={"reason": problem})
     try:
-        return run_on_worker(lambda: simulate(secret), timeout=15)
+        return run_on_worker(lambda: _lesson("run", req.model_dump()), timeout=15)
     except QuantumTimeout as exc:
         raise HTTPException(status_code=504, detail=str(exc)) from exc
     except ImportError as exc:
         raise HTTPException(status_code=503, detail="Qiskit Aer is unavailable") from exc
+
+
+def _lesson(action, body):
+    def read_device(value, kind):
+        return read_token(value), 0
+    def write_device(kind, secret, seed):
+        return make_token(secret)
+    backend = None
+    if action == "run":
+        from qiskit_aer import AerSimulator
+        backend = AerSimulator(method="stabilizer")
+    try:
+        return lesson(backend, action, body, read_device=read_device, write_device=write_device)
+    except ServiceError as exc:
+        raise HTTPException(status_code=exc.status, detail=exc.detail) from exc

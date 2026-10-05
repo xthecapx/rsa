@@ -108,7 +108,7 @@ export function CircuitSnapshot({ hadamard, measurement = null }: { hadamard: bo
 
 /** A coin batch as a measurement: Aer's shot counts, and the odds an ideal machine gives. */
 export function coinMeasurement(result: CoinResult): Measurement {
-  return { bits: 1, counts: { ...result.counts }, probabilities: result.hadamard ? { "0": 0.5, "1": 0.5 } : { "0": 1, "1": 0 }, source: "simulator", backend: result.backend };
+  return { bits: 1, counts: { ...result.counts }, probabilities: { ...result.probabilities }, source: result.source, backend: result.backend, kind: result.kind };
 }
 
 export function CircuitPuzzle({ slots, onChange, onSolved }: { slots: CircuitSlots; onChange: (slots: CircuitSlots) => void; onSolved: () => void }) {

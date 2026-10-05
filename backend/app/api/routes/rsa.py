@@ -3,11 +3,9 @@
 from fastapi import APIRouter, HTTPException
 
 from app.core import (
-    rsa_crack_toy,
     rsa_decrypt,
     rsa_encrypt,
     rsa_keygen,
-    rsa_projected_crack_time,
 )
 from app.models.schemas import (
     RsaCrackRequest,
@@ -15,6 +13,8 @@ from app.models.schemas import (
     RsaEncryptRequest,
     RsaKeygenRequest,
 )
+
+from app.core.game_services import crack_rsa
 
 router = APIRouter()
 
@@ -42,6 +42,4 @@ def decrypt(req: RsaDecryptRequest):
 
 @router.post("/crack")
 def crack(req: RsaCrackRequest):
-    toy = rsa_crack_toy(req.N)
-    projection = rsa_projected_crack_time(req.bits)
-    return {"toy": toy, "rsa2048_projection": projection}
+    return crack_rsa(req.N, req.bits)

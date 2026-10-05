@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { PuzzleDragDrop, PuzzlePiece, PuzzleSlot } from "./PuzzleDragDrop";
 import { LaptopChoiceButton, LaptopQuestion } from "./LaptopControls";
 import type { BenchStep, QuestionStep } from "@/content/coinTown";
@@ -10,6 +10,8 @@ import { OceanWaves, RippleGraph } from "./InterferenceWaves";
 import { AmplitudeBars } from "./RegisterBench";
 import { startRegister, traceReg } from "@/game/register";
 import { t, useLocale } from "@/i18n";
+import { coinApi, type BenchResult } from "@/lib/coin";
+import { QubitHistogram } from "./QubitHistogram";
 
 const GATE_LABELS: Record<Gate, string> = { X: "X gate · flip", Z: "Z gate · sign", H: "Hadamard · H" };
 const GATE_CLASS: Record<Gate, string> = { X: "pauli-x", Z: "pauli-z", H: "hadamard" };
@@ -17,29 +19,51 @@ const percent = (p: number) => `${Math.round(p * 100)}%`;
 
 /**
  * One-qubit workbench: drag gates onto the wire, then run it. Every case shows
- * the state after each gate and the odds of reading 0 or 1, so the math is on
- * screen the whole time.
+ * ideal state after each gate. Run adds real backend measurement counts.
  */
-export function QubitBench({ step, onSolved }: { step: BenchStep; onSolved: () => void }) {
+export function QubitBench({ step, onSolved, onEdited, onBusyChange }: {
+  step: BenchStep; onSolved: () => void; onEdited?: () => void; onBusyChange?: (busy: boolean) => void;
+}) {
   useLocale((state) => state.locale);
   const [slots, setSlots] = useState<(Gate | null)[]>(() => Array(step.slots).fill(null));
   const [selected, setSelected] = useState<Gate | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [ran, setRan] = useState(false);
+  const [result, setResult] = useState<BenchResult | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const inFlight = useRef(false);
+  const alive = useRef(true);
+  useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
   const gates = slots.filter((gate): gate is Gate => gate !== null);
 
   function place(index: number, gate = selected) {
+    if (inFlight.current) return;
     if (!gate) { if (slots[index]) update(slots.map((g, i) => (i === index ? null : g))); return; }
     update(slots.map((g, i) => (i === index ? gate : g))); setSelected(null);
   }
-  function update(next: (Gate | null)[]) { setSlots(next); setMessage(null); setRan(false); }
-  function run() {
-    setRan(true);
+  function update(next: (Gate | null)[]) { if (inFlight.current) return; setSlots(next); setMessage(null); setRan(false); setResult(null); setError(null); onEdited?.(); }
+  async function run() {
+    if (inFlight.current) return;
+    setRan(true); setMessage(null); setError(null); setResult(null);
     if (step.fill && gates.length < step.slots) { gameAudio.playSfx("error"); setMessage("Fill every slot on the wire before running."); return; }
-    if (solves(step.cases, gates)) { gameAudio.playSynth("chime"); onSolved(); return; }
-    gameAudio.playSfx("error");
-    const miss = step.cases.find(({ start, target }) => !solves([{ start, target }], gates))!;
-    setMessage(`From ${KET[miss.start]} your circuit makes ${ketName(trace(STATES[miss.start], gates).at(-1)!)}; the goal is ${KET[miss.target]}.`);
+    inFlight.current = true; setBusy(true); onBusyChange?.(true);
+    try {
+      const measured = await coinApi.circuit(step.cases.map(({ start }) => start), gates);
+      if (!alive.current) return;
+      setResult(measured);
+      // Validate the designed state, not a lucky/noisy sample. Counts cannot
+      // prove a phase, and noise must not withhold a correctly earned card.
+      if (solves(step.cases, gates)) { gameAudio.playSynth("chime"); onSolved(); return; }
+      gameAudio.playSfx("error");
+      const miss = step.cases.find(({ start, target }) => !solves([{ start, target }], gates))!;
+      setMessage(`From ${KET[miss.start]} your circuit makes ${ketName(trace(STATES[miss.start], gates).at(-1)!)}; the goal is ${KET[miss.target]}.`);
+    } catch (cause) {
+      if (alive.current) setError(cause instanceof Error ? cause.message : "The experiment could not finish. Check the backend and try again.");
+    } finally {
+      inFlight.current = false;
+      if (alive.current) { setBusy(false); onBusyChange?.(false); }
+    }
   }
 
   return <PuzzleDragDrop labels={Object.fromEntries(step.gates.map((gate) => [gate, t(GATE_LABELS[gate])]))}
@@ -48,6 +72,7 @@ export function QubitBench({ step, onSolved }: { step: BenchStep; onSolved: () =
     renderPreview={(gate) => <span className="coin-operation-tool"><span className={`qiskit-gate ${GATE_CLASS[gate as Gate]}`}>{gate}</span><span>{t(GATE_LABELS[gate as Gate])}</span></span>}>
     <div className="coin-challenge space-y-3">
       <p>{t(step.text)}</p>
+      <fieldset disabled={busy} className="min-w-0 space-y-3">
       <div className="coin-block-tray" aria-label={t("Gates")}>
         {step.gates.map((gate) => <PuzzlePiece key={gate} id={gate} label={t(GATE_LABELS[gate])} className="coin-operation-tool"
           selected={selected === gate} onSelect={() => setSelected(selected === gate ? null : gate)}>
@@ -57,28 +82,30 @@ export function QubitBench({ step, onSolved }: { step: BenchStep; onSolved: () =
       <div className="qiskit-circuit" role="group" aria-label={t("Single-qubit circuit editor")}>
         <div className="qiskit-register-labels"><span>q₀</span></div>
         <div className="qiskit-tracks">
-          <div className="qiskit-quantum-wire" style={{ gridTemplateColumns: `repeat(${step.slots}, minmax(0, 1fr))` }}>
+          <div className="qiskit-quantum-wire" style={{ gridTemplateColumns: `repeat(${step.slots + 1}, minmax(0, 1fr))` }}>
             {slots.map((gate, i) => <PuzzleSlot key={i} id={`slot-${i}`} className={`qiskit-wire-slot ${gate ? "filled" : ""}`} onSelect={() => place(i)}
               label={`${t("Wire slot")} ${i + 1}: ${gate ? t(GATE_LABELS[gate]) : t("Empty")}`}>
               {gate ? <span className={`qiskit-gate ${GATE_CLASS[gate]}`}>{gate}</span> : <span className="qiskit-empty">{i + 1}</span>}
             </PuzzleSlot>)}
+            <span className="qiskit-wire-slot filled" aria-label={t("Measurement after the gates")}><span className="qiskit-gate measure">M</span></span>
           </div>
         </div>
       </div>
+      </fieldset>
       <p className="text-xs text-stage-muted">{t("Tap a placed gate with nothing selected to remove it. Empty slots do nothing.")}</p>
+      <p className="text-xs text-stage-muted">{t("M measures after your gates. Run sends this circuit to the backend; nothing runs while you edit.")}</p>
       <div className="qubit-cases">
-        {step.cases.map(({ start, target }) => {
+        {step.cases.map(({ start, target }, index) => {
           const states = trace(STATES[start], gates);
           const [p0, p1] = probabilities(states.at(-1)!);
           return <div key={start + target} className="qubit-case">
-            <p className="qubit-trace" aria-label={t("State after each gate")}>
+            <p className="text-xs text-accent-teal">{t("Ideal state and probabilities")}</p>
+            <p className="qubit-trace" aria-label={t("Ideal state after each gate")}>
               {states.map((state, i) => <span key={i}>{i > 0 && <span className="qubit-arrow"> —{gates[i - 1]}→ </span>}<span className="qubit-ket">{i === 0 ? KET[start] : expand(state)}</span></span>)}
             </p>
             <p className="text-xs text-stage-muted">{t("Goal")}: <span className="qubit-ket">{KET[target]}{target === "+" || target === "-" ? ` = ${expand(STATES[target])}` : ""}</span></p>
-            <div className="qubit-odds" aria-label={`${t("Measurement odds")}: 0 ${percent(p0)}, 1 ${percent(p1)}`}>
-              <span>0</span><span className="qubit-bar"><span style={{ width: percent(p0) }} /></span><span>{percent(p0)}</span>
-              <span>1</span><span className="qubit-bar"><span style={{ width: percent(p1) }} /></span><span>{percent(p1)}</span>
-            </div>
+            {!result && <p className="text-xs text-stage-muted">{t("Ideal prediction:")} 0 = {percent(p0)} · 1 = {percent(p1)}<br />{t("No measurements yet. Run the circuit to see backend counts.")}</p>}
+            {result && <QubitHistogram {...result} {...result.circuits[index]} />}
           </div>;
         })}
       </div>
@@ -86,20 +113,24 @@ export function QubitBench({ step, onSolved }: { step: BenchStep; onSolved: () =
         ? <RippleGraph from={trace(STATES[step.cases[0].start], gates.slice(0, -1)).at(-1)!} />
         : <p className="text-xs text-accent-teal">{t("Put H in the last slot to see its ripples.")}</p>)}
       <div className="flex flex-wrap gap-2">
-        <button className="btn-ghost" onClick={() => { update(Array(step.slots).fill(null)); setSelected(null); }}>{t("Clear circuit")}</button>
-        <button className="btn-primary" onClick={run}>{t("Run circuit")}</button>
+        <button className="btn-ghost" disabled={busy} onClick={() => { update(Array(step.slots).fill(null)); setSelected(null); }}>{t("Clear circuit")}</button>
+        <button className="btn-primary" disabled={busy} onClick={() => void run()}>{t(busy ? "Running circuit…" : "Run circuit · 256 shots")}</button>
       </div>
+      {busy && <p role="status" className="text-accent-teal">{t("Waiting for backend measurements…")}</p>}
+      {error && <p role="alert" className="text-accent-amber">{t(error)}</p>}
+      {result && <p className="text-xs text-stage-muted">{t("The exercise checks the ideal circuit you built. Noisy counts do not change whether it is correct.")}</p>}
       {ran && message && <p role="status" className="text-accent-amber">{t(message)}</p>}
     </div>
   </PuzzleDragDrop>;
 }
 
 /** Multiple choice; a wrong answer explains itself and can be retried. */
-export function BenchQuestion({ step, onSolved }: { step: QuestionStep; onSolved: () => void }) {
+export function BenchQuestion({ step, onSolved, idealReference = false }: { step: QuestionStep; onSolved: () => void; idealReference?: boolean }) {
   useLocale((state) => state.locale);
   const [picked, setPicked] = useState<number | null>(null);
   const option = picked === null ? null : step.options[picked];
   return <LaptopQuestion prompt={t(step.text)}>
+    {idealReference && <p className="mb-3 text-xs text-stage-muted">{t("Answer for the ideal circuit. The benches show actual backend counts, which can differ because of sampling or noise.")}</p>}
     {step.bars && (() => {
       const before = traceReg(startRegister(step.bars.qubits, step.bars.start), step.bars.ops).at(-1)!;
       return <div className="mb-3 space-y-2">

@@ -11,6 +11,7 @@ export interface Measurement {
   /** Ideal probabilities, when a simulator knows them. */
   probabilities?: Record<string, number>;
   source: "simulator" | "hardware";
+  kind?: "ideal" | "noise";
   /** Which machine ran it, e.g. "ibm_torino". */
   backend?: string;
   /** The string the story cares about: the mask, the PIN, the shot that split N. */

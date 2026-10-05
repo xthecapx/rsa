@@ -6,8 +6,6 @@ from app.core import (
     caesar_crack,
     caesar_decrypt,
     caesar_encrypt,
-    char_to_message,
-    keyboard_state,
 )
 from app.models.schemas import (
     CaesarCrackRequest,
@@ -16,28 +14,19 @@ from app.models.schemas import (
     KeyboardRequest,
 )
 
+from app.core.game_services import plaintext as shared_plaintext, keyboard as shared_keyboard
+
 router = APIRouter()
 
 
 @router.post("/plaintext")
 def plaintext(req: CharRequest):
-    c = req.char.strip().upper()
-    return {
-        "char": c,
-        "value": char_to_message(c),
-        "encrypted": False,
-        "packet": {"payload": c, "readable_by_hacker": True},
-        "trace": [{"step": "send", "detail": f"Ale sends '{c}' in the clear"}],
-    }
+    return shared_plaintext(req.char)
 
 
 @router.post("/keyboard")
 def keyboard(req: KeyboardRequest):
-    return {
-        "keys": keyboard_state(
-            modulus=req.modulus, require_coprime=req.require_coprime
-        )
-    }
+    return shared_keyboard(req.modulus, req.require_coprime)
 
 
 @router.post("/caesar/encrypt")

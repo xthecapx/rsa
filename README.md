@@ -75,7 +75,21 @@ submission is disabled in this export.
 
 Qollab runs the included Python services in its browser runtime and supplies the
 quantum backend; no FastAPI server, provider credential, or backend URL is shipped.
+Coin Town's neighbor benches execute the constructed one-qubit circuit with 256
+shots per starting state through either backend. The shared histogram shows the
+returned counts, selected backend, and a separate ideal prediction. Correctness
+checks the designed circuit so noise does not block a knowledge card. Closing and
+reopening a neighbor's laptop retains its current circuit and counts.
 Existing `npm run build` and Cloud Run commands still use the HTTP backend.
+Backend lesson changes belong in `backend/app/core/game_services.py`; Shor planning,
+execution result processing, and factor extraction belong in
+`backend/app/core/shor_service.py`. Both targets call these implementations.
+FastAPI routes provide HTTP validation, worker timeouts, signed tokens, and local
+Aer selection. `game/qollab/python/quantum/services.py` provides the browser bridge
+and Qollab capability limits. Classical primitives also remain shared in `core/`.
+`npm run build:qollab` copies the current core modules into the upload folder and
+ZIP automatically; do not edit generated files under `game/dist/`.
+
 See [Qollab delivery and test notes](docs/qollab-deployment-plan.md) for the
 package layout, validation limits, and test checklist.
 

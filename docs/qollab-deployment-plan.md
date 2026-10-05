@@ -24,7 +24,7 @@ Upload `game/dist/quantum-playground-qollab.zip` to
    was tested natively), and run. Publish only after testing.
 
 If uploading manually, upload the entire contents of `game/dist/qollab/`, with
-paths intact. The archive contains 25 files and is approximately 1.2 MB compressed;
+paths intact. The archive contains 26 files and is approximately 1.2 MB compressed;
 all individual files pass the 2 MB limit. JavaScript entry files alone are insufficient.
 
 | Files | Purpose |
@@ -33,7 +33,7 @@ all individual files pass the 2 MB limit. JavaScript entry files alone are insuf
 | `game.js`, `assets.js` | React/Excalibur game, embedded images/audio |
 | `recorded.js` | Existing recorded IBM batches, without new IBM submissions |
 | `quantum/` | Browser Python service adapter |
-| `core/` | Shared classical alphabet, Caesar, and RSA helpers |
+| `core/` | Canonical game services, coin circuits, Shor processing, and classical helpers copied from `backend/app/core/` |
 | `vendor/` | Portable QWARD 0.28.1 Shor circuit/analysis and attribution |
 | `requirements.txt` | Qiskit version constraint |
 | `assets/`, font licenses, `game.js.LEGAL.txt` | Required asset/dependency attribution |
@@ -51,6 +51,11 @@ contracts. It does not construct a replacement quantum backend. The included
 Python helpers execute real coin, Grover, Bernstein–Vazirani, and N=15 Shor
 circuits. Shor factors come from measurement analysis and verified classical
 processing. Larger Shor moduli are explicitly unsupported in this browser release.
+Coin Town's X/Z/H benches execute the player's gates for each displayed initial
+state with 256 shots, using the same circuit builder as FastAPI. Barriers keep H→H
+from being optimized away. Histograms display returned counts; ideal ket traces,
+probabilities, and interference illustrations are labeled references. Noisy
+measurements never decide whether a correctly designed exercise earns its card.
 
 Ghost Key retains its **25-bit secret plus one helper (26 total)**. Built-in
 24-qubit and Braket local 25-qubit devices cannot execute it. IBM fake/noise
@@ -109,3 +114,15 @@ Platform references: [JS projects](https://qollab.xyz/learn/docs/js-qiskit-proje
 [Python projects](https://qollab.xyz/learn/docs/python-qiskit-projects),
 [uploading files](https://qollab.xyz/learn/docs/upload-your-files), and
 [ideal versus noise-model simulators](https://qollab.xyz/learn/docs/ideal-vs-noise-model-simulators).
+
+## One place to change backend behavior
+
+Edit `backend/app/core/game_services.py` for Coin, Grover, Ghost Key, and shared
+classical response behavior; edit `backend/app/core/shor_service.py` for Shor plans
+and measurement processing. FastAPI and Qollab use these same source modules.
+The Qollab build copies `core/` unchanged, including new modules, into the bundle.
+Runtime adapters retain HTTP schemas/timeouts, server token signatures, local Aer
+configuration, and Qollab's injected backend and N=15 browser capability limit.
+The vendored QWARD algorithm remains a licensed external dependency.
+Rebuild with `cd game && npm run build:qollab`, then replace the uploaded folder
+contents so Qollab receives the new shared Python files too.

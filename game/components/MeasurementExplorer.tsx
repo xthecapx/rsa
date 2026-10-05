@@ -44,7 +44,7 @@ export function MeasurementExplorer({ measurement, title, qubitName = "Qubit", o
           <p className="text-xs text-stage-muted">
             {measurement.bits} {t("qubits")} · {summary.possible.toLocaleString("en-US")} {t("possible outcomes")} · {shots} {t(shots === 1 ? "shot" : "shots")} · {summary.distinct} {t("seen")}
           </p>
-          <p className="text-xs text-accent-teal">{measurement.source === "hardware" ? `${t("Real hardware")}${measurement.backend ? ` · ${measurement.backend}` : ""}` : t("Ideal simulator")}</p>
+          <p className="text-xs text-accent-teal">{t(measurement.source === "hardware" ? "Real hardware" : measurement.kind === "noise" ? "Noise-model simulator" : measurement.kind === "ideal" ? "Ideal simulator" : "Simulator")}{measurement.backend ? ` · ${measurement.backend}` : ""}</p>
         </div>
         <button type="button" className="btn-ghost text-sm" onClick={onClose}>{t("Close")}</button>
       </header>
@@ -94,8 +94,10 @@ export function MeasurementExplorer({ measurement, title, qubitName = "Qubit", o
 
 function note(measurement: Measurement, shots: number, top: string | null): ReactNode {
   if (measurement.source === "hardware") return t("Real hardware is noisy: shots spread over strings close to the answer. Read the tallest bars, or the qubit-by-qubit vote.");
-  if (shots <= 1) return <>{t("This circuit ran once, so there is one shot. For this circuit, an ideal device gives the same string every time. Real hardware may give other strings because of noise; repeated runs help us compare the results.")}{top && <> <code className="measure-bits">{groupBits(top)}</code></>}</>;
-  return t("An ideal simulator: no noise, only the spread the circuit itself makes.");
+  if (shots <= 1) return <>{t("This circuit ran once. One measured outcome does not establish its probabilities.")}{top && <> <code className="measure-bits">{groupBits(top)}</code></>}</>;
+  if (measurement.kind === "noise") return t("Noise-model simulation: the bars show returned counts, including the selected backend’s noise.");
+  if (measurement.kind === "ideal") return t("An ideal simulator: no noise, only the spread the circuit itself makes.");
+  return t("These bars show returned measurement counts. Compare them with the ideal probabilities when available.");
 }
 
 /** The M block after a run: a magnifier cursor and badge, and a click or tap opens the explorer. */

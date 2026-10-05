@@ -53,6 +53,7 @@ export function OceanWaves({ from, reveal = true }: { from: Qubit; reveal?: bool
   const stage = clock.time < JOIN ? "The swell from the |0⟩ part rolls in…" : clock.time < MERGED ? "…the swell from the |1⟩ part joins it…" : "…and the sea becomes their sum.";
 
   return <div className="ocean-waves" role="img" aria-label={t("Swells from the last H meeting at sea")}>
+    <p className="text-xs text-accent-teal">{t("Ideal interference illustration · not backend measurements")}</p>
     <div className="flex flex-wrap items-baseline justify-between gap-2">
       <p className="text-xs text-stage-muted">{t("Watch the last H: each part of the state sends a swell to both outcomes. Do they grow, or go flat?")}</p>
       <button type="button" className="btn-ghost text-xs" onClick={() => setRun((n) => n + 1)}>{t("Replay the waves")}</button>
@@ -124,6 +125,7 @@ export function RippleGraph({ from }: { from: Qubit }) {
   const r = Math.SQRT1_2;
   const outcomes = [[r * from.a, r * from.b], [r * from.a, -r * from.b]];
   return <div className="interference-waves" role="img" aria-label={t("Ripples from the last H")}>
+    <p className="text-xs text-accent-teal">{t("Ideal interference illustration · not backend measurements")}</p>
     <p className="text-xs text-stage-muted">{t("Watch the last H: each part of the state sends a ripple to both outcomes.")}</p>
     <p className="interference-legend">
       <span style={{ color: PART_COLORS[0] }}>— {t("from the |0⟩ part")}</span>

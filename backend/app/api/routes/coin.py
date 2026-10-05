@@ -4,12 +4,13 @@ No IBM calls or hardware submission. Every simulation prepares a fresh |0>
 per shot, optionally applies H, and measures in the computational basis.
 """
 
-import random
+from typing import Literal
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from app.quantum.worker import QuantumTimeout, run_on_worker
+from app.core.game_services import coin
 
 router = APIRouter()
 
@@ -24,41 +25,46 @@ class QuantumCoinRequest(BaseModel):
     shots: int = Field(1, ge=1, le=1024)
 
 
+class BenchCircuitRequest(BaseModel):
+    starts: list[Literal["0", "1", "+", "-"]] = Field(min_length=1, max_length=4)
+    gates: list[Literal["X", "Z", "H"]] = Field(max_length=8)
+    shots: int = Field(256, ge=1, le=1024)
+
+
 @router.post("/classical")
 def classical(req: ClassicalCoinRequest):
-    coin = random.Random(req.seed)
-    return {
-        "seed": req.seed,
-        "bits": [coin.randint(0, 1) for _ in range(req.flips)],
-        "source": "python_seeded_prng",
-    }
+    return coin(None, "classical", req.model_dump())
 
 
 def simulate_coin(hadamard: bool, shots: int):
-    from qiskit import QuantumCircuit
-    from qiskit_aer import AerSimulator
+    return _coin("simulate", {"hadamard": hadamard, "shots": shots})
 
-    circuit = QuantumCircuit(1, 1)
-    if hadamard:
-        circuit.h(0)
-    circuit.measure(0, 0)
-    result = AerSimulator().run(circuit, shots=shots, memory=True).result()
-    bits = [int(bit) for bit in result.get_memory()]
-    return {
-        "source": "simulator",
-        "backend": "AerSimulator",
-        "hadamard": hadamard,
-        "shots": shots,
-        "bits": bits,
-        "counts": {"0": bits.count(0), "1": bits.count(1)},
-        "probabilities": {"0": 0.5 if hadamard else 1.0, "1": 0.5 if hadamard else 0.0},
-    }
+
+def _coin(action, body):
+    from qiskit_aer import AerSimulator
+    result = coin(AerSimulator(), action, body)
+    result["backend"] = "AerSimulator"
+    return result
 
 
 @router.post("/simulate")
 def simulate(req: QuantumCoinRequest):
     try:
         return run_on_worker(lambda: simulate_coin(req.hadamard, req.shots), timeout=15)
+    except QuantumTimeout as exc:
+        raise HTTPException(status_code=504, detail=str(exc)) from exc
+    except ImportError as exc:
+        raise HTTPException(status_code=503, detail="Qiskit Aer is unavailable") from exc
+
+
+def simulate_bench(starts, gates, shots):
+    return _coin("circuit", {"starts": starts, "gates": gates, "shots": shots})
+
+
+@router.post("/circuit")
+def circuit(req: BenchCircuitRequest):
+    try:
+        return run_on_worker(lambda: simulate_bench(req.starts, req.gates, req.shots), timeout=15)
     except QuantumTimeout as exc:
         raise HTTPException(status_code=504, detail=str(exc)) from exc
     except ImportError as exc:

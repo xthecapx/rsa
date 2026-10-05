@@ -146,6 +146,9 @@ export function WorldTownScreen({ config, restartOptions }: { config: TownConfig
   const [petted, setPetted] = useState<{ kind: PetKind } | null>(null);
   const [talk, setTalk] = useState<Talk | null>(null);
   const [activity, setActivity] = useState<Activity | null>(null);
+  const [activityBusy, setActivityBusy] = useState(false);
+  const [activityOpen, setActivityOpen] = useState(true);
+  const activityVisible = !!activity && activityOpen;
   const [journalOpen, setJournalOpen] = useState(false);
   const [restartOpen, setRestartOpen] = useState(false);
   const [panel, setPanel] = useState<string | null>(null);
@@ -201,7 +204,7 @@ export function WorldTownScreen({ config, restartOptions }: { config: TownConfig
   const onError = useCallback(() => setSceneStatus("error"), []);
 
   const sceneReady = hydrated && sceneStatus === "ready";
-  const inputLocked = !!talk || !!activity || journalOpen || restartOpen || !!panel || !!mission?.talk || !!mission?.locked;
+  const inputLocked = !!talk || activityVisible || journalOpen || restartOpen || !!panel || !!mission?.talk || !!mission?.locked;
   useEffect(() => { if (sceneReady) void bus.send({ type: "lockInput", locked: inputLocked }); }, [sceneReady, inputLocked]);
   const ready = cards.length === cardIds.length && challenge.complete;
   const stageById = (id: string) => challenge.stages?.find((stage) => stage.id === id);
@@ -244,7 +247,7 @@ export function WorldTownScreen({ config, restartOptions }: { config: TownConfig
     say(greeter.title, [count, challenge.complete ? greeter.challengeDone : greeter.waiting, greeter.guide], [{ label: "Keep exploring", action: close }]);
   }
   function talkToTeacher(npc: TownNpc) {
-    const start = () => { close(); setActivity({ npc: npc.id, step: 0, solved: false }); };
+    const start = () => { close(); if (activity?.npc !== npc.id) setActivity({ npc: npc.id, step: 0, solved: false }); setActivityOpen(true); };
     if (cards.includes(npc.knowledge!)) say(npc.title, npc.repeat, [{ label: "Try the activity again", action: start }, { label: "Keep exploring", action: close }], { card: npc.knowledge });
     else say(npc.title, npc.intro, [{ label: "Show me", action: start }, { label: "Later", action: close }]);
   }
@@ -261,7 +264,7 @@ export function WorldTownScreen({ config, restartOptions }: { config: TownConfig
     return () => window.clearTimeout(timer);
   }, [petted]);
   events.current.interact = (id) => {
-    if (talk || activity || panel || mission?.talk) return;
+    if (talk || activityVisible || panel || mission?.talk) return;
     if (mission?.handles(id)) { mission.interact(id); return; }
     gameAudio.playSfx("select");
     if (config.panels?.[id]) setPanel(id);
@@ -289,7 +292,7 @@ export function WorldTownScreen({ config, restartOptions }: { config: TownConfig
     } },
     ...(mission?.restartOptions ?? []),
     ...restartOptions,
-  ]} disabled={!sceneReady} onOpenChange={setRestartOpen} />;
+  ]} disabled={!sceneReady || activityBusy} onOpenChange={setRestartOpen} />;
 
   const npc = activity ? npcById(activity.npc)! : null;
   const step = npc && activity ? npc.steps[activity.step] : null;
@@ -328,10 +331,10 @@ export function WorldTownScreen({ config, restartOptions }: { config: TownConfig
   return <GameShell restartControl={restartControl} title={t(config.title)} subtitle={missionShell?.subtitle ?? t(config.subtitle)}
     missionProgress={missionShell?.missionProgress}
     backHref="/" backLabel={missionShell?.backLabel ?? t(greeter.title)} backDisabled={missionShell?.backDisabled}
-    onBack={() => { if (missionShell?.onBack) missionShell.onBack(); else if (!talk && !activity) talkToGreeter(); }}
+    onBack={() => { if (missionShell?.onBack) missionShell.onBack(); else if (!talk && !activityVisible) talkToGreeter(); }}
     sidebar={journal} objectives={journal} onObjectivesOpen={setJournalOpen}
-    sceneReady={sceneReady} sceneFailed={sceneStatus === "error"} laptopOpen={!!activity || !!missionShell?.laptopOpen} laptopReady={!!missionShell?.laptopReady}
-    onOpenLaptop={() => missionShell?.onOpenLaptop ? missionShell.onOpenLaptop()
+    sceneReady={sceneReady} sceneFailed={sceneStatus === "error"} laptopOpen={activityVisible || !!missionShell?.laptopOpen} laptopReady={!!activity || !!missionShell?.laptopReady}
+    onOpenLaptop={() => missionShell?.onOpenLaptop ? missionShell.onOpenLaptop() : activity ? setActivityOpen(true)
       : say("Your laptop", [{ speaker: "system", text: "Neighbors lend you their benches here. Talk to anyone whose name board starts with !." }], [{ label: "Keep exploring", action: close }])}>
     {hydrated && <GameCanvas world={config.world} onReady={onReady} onError={onError} />}
     {sceneReady && <>
@@ -339,7 +342,7 @@ export function WorldTownScreen({ config, restartOptions }: { config: TownConfig
         {config.minimap({ position: saved.position, facing: saved.facing, explored: saved.explored, done, pending: [...alerts, ...(challenge.complete ? [] : [challenge.door])], tracked })}
         {config.hud}
       </div>}
-      {!talk && !activity && !journalOpen && !restartOpen && !panel && !missionTalk && !missionShell?.laptopOpen && <div className={`pointer-events-none absolute inset-x-0 bottom-0 flex justify-center p-3 ${mission?.active && mission.dialog ? "z-20 pb-3" : "pb-24 lg:pb-4"}`}>
+      {!talk && !activityVisible && !journalOpen && !restartOpen && !panel && !missionTalk && !missionShell?.laptopOpen && <div className={`pointer-events-none absolute inset-x-0 bottom-0 flex justify-center p-3 ${mission?.active && mission.dialog ? "z-20 pb-3" : "pb-24 lg:pb-4"}`}>
         {mission?.active && mission.dialog ? <DialogBox /> : blocked && config.gateNotes?.[blocked] ? <div className="textbox gate-note max-w-lg space-y-1 px-4 py-3 text-center" role="status">
           <p className="text-xs font-bold uppercase tracking-widest text-[#fca5a5]">🔒 {t("Locked")}</p>
           <p className="text-sm">{t(config.gateNotes[blocked].text)}</p>
@@ -377,18 +380,18 @@ export function WorldTownScreen({ config, restartOptions }: { config: TownConfig
       </div>}
       <TouchControls canInteract={!!near || !!nearPet} label={petAction ? "Pet" : "Talk"} visible={!inputLocked} />
     </>}
-    {npc && step && activity && <LaptopShell open calculator={npc.steps.some((candidate) => candidate.kind === "crypto")} title={`${t(npc.title)} · ${t(step.title)}`} status={`${t("Step ")}${activity.step + 1}/${npc.steps.length}`}
-      onClose={() => setActivity(null)} footer={<p>{t("Close the laptop to stop. The card is yours once every step is done.")}</p>}>
+    {npc && step && activity && <LaptopShell open={activityOpen} calculator={npc.steps.some((candidate) => candidate.kind === "crypto")} title={`${t(npc.title)} · ${t(step.title)}`} status={`${t("Step ")}${activity.step + 1}/${npc.steps.length}`}
+      closeDisabled={activityBusy} onClose={() => { if (!activityBusy) setActivityOpen(false); }} footer={<p>{t("Results stay here when you close the laptop.")} {t("The card is yours once every step is done.")}</p>}>
       <div key={`${activity.npc}-${activity.step}`} className="space-y-3">
-        {step.kind === "bench" ? <QubitBench step={step} onSolved={solved} />
+        {step.kind === "bench" ? <QubitBench step={step} onSolved={solved} onEdited={() => setActivity({ ...activity, solved: false })} onBusyChange={setActivityBusy} />
           : step.kind === "register" ? <RegisterBench step={step} onSolved={solved} />
           : step.kind === "rounds" ? <RoundsDial step={step} onSolved={solved} />
           : step.kind === "crypto" ? <CryptoBench step={step} onSolved={solved} />
           : step.kind === "dial" ? <DialBench step={step} onSolved={solved} />
-          : <BenchQuestion step={step} onSolved={solved} />}
+          : <BenchQuestion step={step} onSolved={solved} idealReference={config.world === "coinTown"} />}
         {activity.solved && <div className="laptop-challenge space-y-2" role="status">
           <p className="text-accent-teal">{t(step.feedback)}</p>
-          <button className="btn-primary" autoFocus onClick={() => activity.step + 1 < npc.steps.length
+          <button className="btn-primary" disabled={activityBusy} autoFocus onClick={() => activity.step + 1 < npc.steps.length
             ? setActivity({ npc: activity.npc, step: activity.step + 1, solved: false }) : finishActivity(npc)}>
             {t(activity.step + 1 < npc.steps.length ? "Next step" : "Take the card")}</button>
         </div>}

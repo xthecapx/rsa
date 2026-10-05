@@ -49,7 +49,7 @@ export const COIN_SCENES: Record<CoinStep, Scene> = {
   hadamard: {
     title: "Give the coin two possibilities", place: "desk", objective: "Build the circuit with H and measurement, then run ten simulated tosses.",
     lines: [
-      { speaker: "ale", text: "Only zeros. Can you change the circuit before we measure?" },
+      { speaker: "ale", text: "The ideal prediction is only zero. Can you change the circuit to make a balanced coin?" },
       { speaker: "hacker", text: "Build a new circuit on one qubit. You need both H and measurement; their order matters." },
     ],
   },
@@ -57,7 +57,7 @@ export const COIN_SCENES: Record<CoinStep, Scene> = {
     title: "Fair doesn’t mean exactly half", place: "board", objective: "Compare larger batches at the whiteboard, then explain the results.",
     lines: [
       { speaker: "brayan", text: "Ten shots is a small batch. A shot is one fresh run of the circuit. What do you expect from 100 shots? Let’s compare with 1,000." },
-      { speaker: "hacker", text: "The simulator uses software randomness to sample the circuit’s probabilities. We are not running quantum hardware." },
+      { speaker: "hacker", text: "These counts come from the selected simulator. The ideal circuit has equal chances, but finite samples vary and a noise model can shift the counts. We are not running quantum hardware." },
     ],
   },
   table: {
