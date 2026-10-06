@@ -1,5 +1,6 @@
 "use client";
 
+import { CircuitActions } from "./CircuitActions";
 import { CircuitHistogram } from "./CircuitHistogram";
 import { useRegisterRun } from "./useRegisterRun";
 import { useState } from "react";
@@ -96,6 +97,7 @@ export function RegisterBench({ step, onSolved, onEdited, onBusyChange }: { step
   const experiment = useRegisterRun(onBusyChange);
   const fixed = step.fixed ?? [];
   const ops = [...columns.flatMap(columnOps), ...fixed];
+  const successful = !!experiment.reading && solvesReg(step, ops);
   const start = startRegister(step.qubits, step.start);
   const states = traceReg(start, ops);
   const final = states.at(-1)!;
@@ -131,6 +133,7 @@ export function RegisterBench({ step, onSolved, onEdited, onBusyChange }: { step
   }
   async function run() {
     if (experiment.running.current) return;
+    setMessage(null);
     if (step.fill && columns.some((column) => !columnOps(column).length)) { gameAudio.playSfx("error"); setMessage("Fill every slot on the line before running."); return; }
     if (!await experiment.run(step.qubits, step.start, ops)) return;
     if (solvesReg(step, ops)) { gameAudio.playSynth("chime"); onSolved(); return; }
@@ -153,6 +156,7 @@ export function RegisterBench({ step, onSolved, onEdited, onBusyChange }: { step
           <span className={`qiskit-gate ${pieceClass(piece)}`}>{pieceGlyph(piece)}</span><span>{t(pieceLabel(piece))}</span>
         </PuzzlePiece>)}
       </div>
+      <div className={`circuit-workspace ${successful ? "" : "has-actions"}`}>
       <div className="qiskit-circuit" role="group" aria-label={t("Register line editor")}>
         <div className="reg-grid" style={{ gridTemplateColumns: `${hasHelper ? 96 : 68}px repeat(${step.slots + fixed.length}, minmax(58px, 1fr))${outputs ? " 52px" : ""}`, gridTemplateRows: `repeat(${step.qubits}, 64px)` }}>
           {wires.map((q) => <span key={`label-${q}`} className="reg-label" style={{ gridRow: q + 1, gridColumn: 1 }}>{wireName(q)} <small>{startKets[q]}</small></span>)}
@@ -189,6 +193,9 @@ export function RegisterBench({ step, onSolved, onEdited, onBusyChange }: { step
           {outputs && wires.map((q) => <span key={`out-${q}`} className="reg-out" style={{ gridRow: q + 1, gridColumn: step.slots + fixed.length + 2 }}>{WIRE_KET[outputs[q]]}</span>)}
         </div>
       </div>
+      {!successful && <CircuitActions busy={experiment.busy} clearLabel="Clear line" runLabel="Run the register"
+        onClear={() => { update(emptyColumns(step.slots, step.qubits)); setSelected(null); }} onRun={() => void run()} />}
+      </div>
       <p className="text-xs text-stage-muted">{t(hasHelper
         ? "X, Z, H and a CNOT’s control dot sit on one wire; every CNOT flips the helper, the bottom wire. The H box and the Oracle cover every wire. Tap a placed piece with nothing selected to remove it."
         : "X sits on one wire. The H box, the Oracle and the Diffuser cover every wire. Tap a placed piece with nothing selected to remove it.")}</p>
@@ -200,10 +207,6 @@ export function RegisterBench({ step, onSolved, onEdited, onBusyChange }: { step
       </p>
       <AmplitudeBars amps={final} mean={ops.includes("D")} highlight={marked} />
       <p className="text-xs text-stage-muted">{t("Goal")}: {t(step.goal)}</p>
-      <div className="flex flex-wrap gap-2">
-        <button className="btn-ghost" onClick={() => { update(emptyColumns(step.slots, step.qubits)); setSelected(null); }}>{t("Clear line")}</button>
-        <button className="btn-primary" onClick={run}>{t("Run the register")}</button>
-      </div>
       {message && <p role="status" className="text-accent-amber">{t(message)}</p>}
       {experiment.busy && <p role="status">{t("Asking the quantum core…")}</p>}
       {experiment.error && <p role="alert" className="text-actor-hacker">{t(experiment.error)}</p>}
@@ -227,6 +230,7 @@ export function RoundsDial({ step, onSolved, onEdited, onBusyChange }: { step: R
   const odds = groverOdds(step.qubits, step.marked, rounds);
   function set(value: number) { if (experiment.running.current) return; experiment.clear(); onEdited?.(); setRounds(Math.max(0, Math.min(MAX_ROUNDS, value))); setMessage(null); }
   async function stop() {
+    setMessage(null);
     if (!await experiment.run(step.qubits, "0".repeat(step.qubits), ops)) return;
     if (rounds === step.answer) { gameAudio.playSynth("chime"); onSolved(); return; }
     gameAudio.playSfx("error");
@@ -242,7 +246,7 @@ export function RoundsDial({ step, onSolved, onEdited, onBusyChange }: { step: R
     </div>
     <p className="text-xs text-stage-muted">{t("Each round is one Oracle and one Diffuser, after the H box.")}</p>
     <AmplitudeBars amps={amps} highlight={step.marked} />
-    <button className="btn-primary" onClick={stop}>{t("Run these rounds")}</button>
+    {!(experiment.reading && rounds === step.answer) && <button className="btn-primary" onClick={stop}>{t("Run these rounds")}</button>}
     {message && <p role="status" className="text-accent-amber">{t(message)}</p>}
     {experiment.busy && <p role="status">{t("Asking the quantum core…")}</p>}
     {experiment.error && <p role="alert" className="text-actor-hacker">{t(experiment.error)}</p>}

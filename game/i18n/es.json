@@ -2540,5 +2540,6 @@
   "Practice backend": "Backend de práctica",
   "Final challenge backend": "Backend del reto final",
   "Backend": "Backend",
-  "Physical QPU": "QPU física"
+  "Physical QPU": "QPU física",
+  "Circuit controls": "Controles del circuito"
 }

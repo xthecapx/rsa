@@ -14,30 +14,28 @@ npm run build:qollab
 npm run verify:qollab
 ```
 
-Upload `game/dist/quantum-playground-qollab.zip` to
+Upload the contents of `game/dist/qollab/` to
 [Quantum Playground](https://qollab.xyz/u/xthecapx/quantum-playground#code):
 
-1. Open **Edit Code**, then **Browse → Files** and select the ZIP.
-2. Choose **Unpack**, then **Keep & add** to replace matching starter files.
-   Retain `README.md` / the Project Card. Preserve all archive subdirectories.
+1. Open **Edit Code**, then upload the generated folder's contents.
+2. Replace matching starter files and preserve all subdirectories.
+   Retain `README.md` / the Project Card.
 3. Open **Run Project**, select a free **IBM noise-model simulator** (Marrakesh
    was tested natively), and run. Publish only after testing.
 
-If uploading manually, upload the entire contents of `game/dist/qollab/`, with
-paths intact. The archive contains 26 files and is approximately 1.2 MB compressed;
+The folder contains 19 files and is approximately 3.02 MB in total;
 all individual files pass the 2 MB limit. JavaScript entry files alone are insufficient.
 
 | Files | Purpose |
 | --- | --- |
-| `index.html`, `main.js`, `main.css` | Qollab HTML/JS entry and styles |
+| `index.html`, `main.js`, `main.css` | Qollab HTML/JS entry, runtime bridge, recorded IBM batches and styles |
 | `game.js`, `assets.js` | React/Excalibur game, embedded images/audio |
-| `recorded.js` | Existing recorded IBM batches, without new IBM submissions |
 | `quantum/` | Browser Python service adapter |
 | `core/` | Canonical game services, coin circuits, Shor processing, and classical helpers copied from `backend/app/core/` |
-| `vendor/` | Portable QWARD 0.28.1 Shor circuit/analysis and attribution |
-| `requirements.txt` | Qiskit version constraint |
-| `assets/`, font licenses, `game.js.LEGAL.txt` | Required asset/dependency attribution |
-| `build-info.json` | Build metadata |
+| `vendor/` | Portable QWARD 0.28.1 Shor circuit/analysis |
+| `requirements.txt` | Explicit Qiskit version constraint for the Python runtime |
+| `THIRD-PARTY-NOTICES.txt` | Full dependency, asset, font and QWARD attribution |
+| `../build-report.json` | Review metadata; excluded from the platform upload |
 
 The normal `npm run build` and Cloud Run deployment retain FastAPI/Aer. The
 Qollab target needs no hosted Python server, API URL, or provider credential.
@@ -113,7 +111,7 @@ cd game
 ../backend/.venv/bin/python tools/preview-qollab.py --backend ibm-marrakesh
 ```
 
-Open `http://localhost:7027`. The development HTTP bridge is excluded from the ZIP.
+Open `http://localhost:7027`. The development HTTP bridge is excluded from the upload folder.
 
 Platform references: [JS projects](https://qollab.xyz/learn/docs/js-qiskit-projects),
 [runtime environment](https://qollab.xyz/learn/docs/runtime-environment),
@@ -154,3 +152,12 @@ the selected remote backend, with one submission per Qollab code Run. Stop and
 Run again after collecting the badge or before retrying a noisy failure. Test
 browser-storage persistence across this restart; no progression bypass is enabled.
 Ghost Key requires a 29-qubit Forte simulator rather than 25-qubit Aria.
+
+The generated distribution contains exactly 19 upload files and is ignored by Git.
+Rebuild it locally; commit the source and build tools. The report
+sits beside `dist/qollab/` and stays outside the upload. No ZIP is generated. JS and
+CSS use esbuild minification, unused public assets are omitted conservatively,
+and recorded data joins the bootstrap. Python module boundaries remain intact
+so both backend targets still use the canonical core. Requirements are copied
+from the Qollab source folder. Attribution is consolidated, never discarded. Remove
+obsolete files from older Qollab uploads when replacing the project tree.

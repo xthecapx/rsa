@@ -3,12 +3,12 @@
 import type { BenchResult, QubitReading } from "@/lib/coin";
 import { t, useLocale } from "@/i18n";
 
-type Props = QubitReading & Pick<BenchResult, "backend" | "shots" | "source"> & { kind?: "ideal" | "noise" | "hardware" };
+type Props = QubitReading & Pick<BenchResult, "backend" | "shots" | "source"> & { highlight?: boolean; kind?: "ideal" | "noise" | "hardware" };
 
 /** Bars always represent provider counts. Ideal probabilities are text only. */
-export function QubitHistogram({ counts, probabilities, backend, shots, source, kind }: Props) {
+export function QubitHistogram({ counts, probabilities, backend, shots, source, kind, highlight = true }: Props) {
   useLocale((state) => state.locale);
-  return <section className="space-y-2" aria-label={t("Observed counts")}>
+  return <section className={`space-y-2 ${highlight ? "measurement-result" : ""}`} aria-label={t("Observed counts")}>
     <div className="flex flex-wrap justify-between gap-2 text-xs">
       <strong>{t("Observed counts")} · {shots} {t("shots")}</strong>
       <span>{backend} · {t(source === "hardware" ? "Quantum hardware" : kind === "noise" ? "Noise-model simulator" : kind === "ideal" ? "Ideal simulator" : "Simulator")}</span>

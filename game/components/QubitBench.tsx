@@ -11,6 +11,7 @@ import { AmplitudeBars } from "./RegisterBench";
 import { startRegister, traceReg } from "@/game/register";
 import { t, useLocale } from "@/i18n";
 import { coinApi, type BenchResult } from "@/lib/coin";
+import { CircuitActions } from "./CircuitActions";
 import { QubitHistogram } from "./QubitHistogram";
 
 const GATE_LABELS: Record<Gate, string> = { X: "X gate · flip", Z: "Z gate · sign", H: "Hadamard · H" };
@@ -36,6 +37,7 @@ export function QubitBench({ step, onSolved, onEdited, onBusyChange }: {
   const alive = useRef(true);
   useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
   const gates = slots.filter((gate): gate is Gate => gate !== null);
+  const successful = !!result && solves(step.cases, gates);
 
   function place(index: number, gate = selected) {
     if (inFlight.current) return;
@@ -79,6 +81,7 @@ export function QubitBench({ step, onSolved, onEdited, onBusyChange }: {
           <span className={`qiskit-gate ${GATE_CLASS[gate]}`}>{gate}</span><span>{t(GATE_LABELS[gate])}</span>
         </PuzzlePiece>)}
       </div>
+      <div className={`circuit-workspace ${successful ? "" : "has-actions"}`}>
       <div className="qiskit-circuit" role="group" aria-label={t("Single-qubit circuit editor")}>
         <div className="qiskit-register-labels"><span>q₀</span></div>
         <div className="qiskit-tracks">
@@ -91,6 +94,9 @@ export function QubitBench({ step, onSolved, onEdited, onBusyChange }: {
           </div>
         </div>
       </div>
+      {!successful && <CircuitActions busy={busy}
+        onClear={() => { update(Array(step.slots).fill(null)); setSelected(null); }} onRun={() => void run()} />}
+      </div>
       </fieldset>
       <p className="text-xs text-stage-muted">{t("Tap a placed gate with nothing selected to remove it. Empty slots do nothing.")}</p>
       <p className="text-xs text-stage-muted">{t("M measures after your gates. Run sends this circuit to the backend; nothing runs while you edit.")}</p>
@@ -98,24 +104,20 @@ export function QubitBench({ step, onSolved, onEdited, onBusyChange }: {
         {step.cases.map(({ start, target }, index) => {
           const states = trace(STATES[start], gates);
           const [p0, p1] = probabilities(states.at(-1)!);
-          return <div key={start + target} className="qubit-case">
+          return <div key={start + target} className={`qubit-case ${result ? "measurement-result" : ""}`}>
             <p className="text-xs text-accent-teal">{t("Ideal state and probabilities")}</p>
             <p className="qubit-trace" aria-label={t("Ideal state after each gate")}>
               {states.map((state, i) => <span key={i}>{i > 0 && <span className="qubit-arrow"> —{gates[i - 1]}→ </span>}<span className="qubit-ket">{i === 0 ? KET[start] : expand(state)}</span></span>)}
             </p>
             <p className="text-xs text-stage-muted">{t("Goal")}: <span className="qubit-ket">{KET[target]}{target === "+" || target === "-" ? ` = ${expand(STATES[target])}` : ""}</span></p>
             {!result && <p className="text-xs text-stage-muted">{t("Ideal prediction:")} 0 = {percent(p0)} · 1 = {percent(p1)}<br />{t("No measurements yet. Run the circuit to see backend counts.")}</p>}
-            {result && <QubitHistogram {...result} {...result.circuits[index]} />}
+            {result && <QubitHistogram {...result} {...result.circuits[index]} highlight={false} />}
           </div>;
         })}
       </div>
       {step.waves && (gates.at(-1) === "H"
         ? <RippleGraph from={trace(STATES[step.cases[0].start], gates.slice(0, -1)).at(-1)!} />
         : <p className="text-xs text-accent-teal">{t("Put H in the last slot to see its ripples.")}</p>)}
-      <div className="flex flex-wrap gap-2">
-        <button className="btn-ghost" disabled={busy} onClick={() => { update(Array(step.slots).fill(null)); setSelected(null); }}>{t("Clear circuit")}</button>
-        <button className="btn-primary" disabled={busy} onClick={() => void run()}>{t(busy ? "Running circuit…" : "Run circuit · 256 shots")}</button>
-      </div>
       {busy && <p role="status" className="text-accent-teal">{t("Waiting for backend measurements…")}</p>}
       {error && <p role="alert" className="text-accent-amber">{t(error)}</p>}
       {result && <p className="text-xs text-stage-muted">{t("The exercise checks the ideal circuit you built. Noisy counts do not change whether it is correct.")}</p>}

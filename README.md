@@ -53,7 +53,7 @@ gcloud run services update rsa-game --region=us-east1 --min-instances=0
 ## Qollab bundle
 
 The same game supports a Qollab export alongside the existing Next.js/FastAPI
-deployment. Build the upload archive without running a backend server:
+deployment. Build the upload folder without running a backend server:
 
 ```bash
 cd game
@@ -61,10 +61,24 @@ npm ci
 npm run build:qollab
 ```
 
-Upload `game/dist/quantum-playground-qollab.zip` to the project's **Edit Code**
-file browser, choose **Unpack**, and keep/add files to replace the entry files.
-Upload the complete archive: its Python modules and licenses are required along
+Upload the contents of `game/dist/qollab/` to the project's **Edit Code**
+file browser, preserving subdirectories and replacing matching entry files.
+Upload the complete folder: its Python modules and attribution are required along
 with `index.html`, `main.js`, and `main.css`. Keep `README.md` / the Project Card.
+The upload contains exactly 19 files: five browser files, twelve Python package
+files, `requirements.txt`, and `THIRD-PARTY-NOTICES.txt`. Recorded IBM data is
+bundled into `main.js`; images/audio referenced by the game live in `assets.js`.
+`requirements.txt` explicitly declares `qiskit>=2.5.2,<3.0.0` for Qollab's Python runtime.
+
+The generated distribution and `game/dist/build-report.json` are ignored by Git.
+Rebuild them locally with `npm run build:qollab`; commit the source and build tools.
+The report is for review and stays outside the upload.
+It lists file sizes/hashes, included/omitted assets, and the largest JS modules.
+The esbuild production bundle removes unused code and minifies JS/CSS.
+The build refreshes the folder and report without creating a ZIP.
+To replace an older upload, remove its obsolete `recorded.js`, `build-info.json`,
+and separate license files; the current folder contains the combined attribution.
+Use a fresh project file tree when possible.
 
 Choose a free **IBM noise-model simulator** for the full game. Ghost Key retains
 25 data qubits plus its helper; the built-in 24-qubit simulator and Braket's
@@ -109,8 +123,8 @@ execution result processing, and factor extraction belong in
 FastAPI routes provide HTTP validation, worker timeouts, signed tokens, and local
 Aer selection. `game/qollab/python/quantum/services.py` provides the browser bridge
 and Qollab capability limits. Classical primitives also remain shared in `core/`.
-`npm run build:qollab` copies the current core modules into the upload folder and
-ZIP automatically; do not edit generated files under `game/dist/`.
+`npm run build:qollab` copies the current core modules and requirements into the
+upload folder automatically; do not edit generated files under `game/dist/`.
 
 See [Qollab delivery and test notes](docs/qollab-deployment-plan.md) for the
 package layout, validation limits, and test checklist.

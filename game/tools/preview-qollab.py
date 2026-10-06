@@ -1,7 +1,7 @@
 """Local UI preview of the packaged game/services; Qollab/Pyodide is tested separately.
 
 Run with backend/.venv Python, after npm run build:qollab. This development-only
-HTTP bridge is never included in the uploaded archive.
+HTTP bridge is never included in the uploaded folder.
 """
 import argparse
 import json

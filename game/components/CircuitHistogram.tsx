@@ -9,7 +9,7 @@ export function CircuitHistogram({ counts, probabilities, backend, kind, source,
   const shots = Object.values(counts).reduce((sum, count) => sum + count, 0);
   const keys = Array.from(new Set([...Object.keys(probabilities ?? {}), ...Object.keys(counts)]));
   keys.sort(hiddenLabels ? (a, b) => Number(a) - Number(b) : undefined);
-  return <section className="space-y-2" aria-label={t("Observed counts")}>
+  return <section className="measurement-result space-y-2" aria-label={t("Observed counts")}>
     <p className="text-xs text-accent-teal">{t("Observed counts")} · {shots} {t("shots")} · {backend} · {t(source === "hardware" ? "Real hardware" : kind === "noise" ? "Noise-model simulator" : "Ideal simulator")}</p>
     <div className="qubit-odds" style={{ gridTemplateColumns: "auto minmax(32px, 1fr) auto" }}>
       {keys.map((key) => <div key={key} className="contents">

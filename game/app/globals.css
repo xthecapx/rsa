@@ -725,3 +725,20 @@ html[data-compact-viewport="true"] .laptop-footer { padding: 4px 8px; font-size:
 @media (pointer: coarse) and (max-width: 600px) and (orientation: portrait) {
   .town-minimap { max-height: max(100px, calc(var(--game-viewport-height) - 300px)); }
 }
+
+/* Circuit actions belong to their wire editor; measured results stand apart. */
+.circuit-workspace { position: relative; min-width: 0; }
+.circuit-workspace.has-actions > .qiskit-circuit { padding-bottom: 80px; }
+.circuit-actions { position: absolute; right: 10px; bottom: 10px; display: flex; gap: 8px; padding: 6px; border: 1px solid #456a70; border-radius: 30px; background: #102630; box-shadow: 0 4px 12px #0004; }
+.measurement-result { padding: 12px; border: 1px solid #26c6b8; border-radius: 8px; background: #102a33; box-shadow: 0 6px 20px #0005, 0 0 0 1px #26c6b833; animation: measurements-arrive 650ms ease-out; }
+@keyframes measurements-arrive { from { box-shadow: 0 6px 20px #0005, 0 0 0 4px #26c6b877; } to { box-shadow: 0 6px 20px #0005, 0 0 0 1px #26c6b833; } }
+
+.circuit-icon-action { position: relative; display: grid; place-items: center; flex-shrink: 0; width: 44px; height: 44px; min-height: 44px; padding: 8px; border: 1px solid #718e97; border-radius: 50%; background: #183944; color: #c5dce2; }
+.circuit-icon-action svg { width: 22px; height: 22px; }
+.circuit-icon-action.run { border-color: #ffb52c; background: #584421; color: #ffca65; }
+.circuit-icon-action:hover:not(:disabled) { filter: brightness(1.2); }
+.circuit-icon-action:focus-visible { outline: 2px solid #26c6b8; outline-offset: 3px; }
+.circuit-icon-action:disabled { opacity: .5; }
+.circuit-shots-badge { position: absolute; right: -3px; bottom: -3px; padding: 1px 3px; border: 1px solid #ffb52c; border-radius: 6px; background: #102630; color: #ffca65; font: 9px/1.2 monospace; }
+
+@media (prefers-reduced-motion: reduce) { .measurement-result { animation: none; } }

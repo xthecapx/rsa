@@ -16,7 +16,7 @@ Markdown files. See [README.md](README.md) for setup, deployment, and IBM data.
   batch results. It is not the game's UI.
 - `docker-compose.yml` and `deploy-cloudrun.sh`: local services and Cloud Run deployment.
 - `game/qollab/`: browser entry and thin Python adapter for the Qollab target.
-  `npm run build:qollab` produces `game/dist/quantum-playground-qollab.zip`;
+  `npm run build:qollab` produces the upload folder `game/dist/qollab/`;
   `npm run build` retains the Next.js/HTTP target. Qollab injects the selected
   simulator or physical QPU; service calls use a queued Pyodide bridge instead of HTTP. Assets
   and recorded IBM data are embedded, with their licenses retained. Fonts use
@@ -283,3 +283,23 @@ and do not unlock all challenges until Qollab storage persistence is tested.
 
 The outdoor top bar and laptop toolbar share `BackendLabel`, showing the selected
 backend; IonQ mode labels local practice and the remote final challenge separately.
+
+Neighbor circuit benches anchor Run/Clear inside the circuit workspace at the
+bottom right as 44px icon buttons with hover/accessibility labels and a shot-count
+badge, with reserved space so tools never cover wires. A successful
+backend result plus the existing ideal correctness check hides these actions;
+editing invalidates the result and restores them. Measured histogram panels
+share a teal border/shadow and a brief arrival highlight, respecting reduced
+motion. Rounds exercises also hide Run after a successful answer.
+
+Keep the generated Qollab distribution (`game/dist/qollab/` and sibling
+`build-report.json`) ignored by Git; regenerate it with `npm run build:qollab`.
+Commit the source, requirements and build tools. Tests must run without a generated
+distribution in a clean checkout. The platform folder has an
+exact 19-file allowlist in `verify-qollab.mjs`: five browser files, twelve Python
+files, explicit requirements and consolidated attribution. Keep reports out of the upload. Esbuild
+bundles/minifies JS and CSS, filters unused public assets conservatively, and
+bundles recorded data into main.js. Source Python remains copied unchanged.
+Preserve all dependency/asset/font/QWARD license texts in THIRD-PARTY-NOTICES.txt.
+Delivery uses the folder; do not generate or commit a ZIP. The build copies
+`game/qollab/requirements.txt` into the folder and removes any obsolete build ZIP.
