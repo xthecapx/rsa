@@ -50,8 +50,9 @@ lesson; cards are required for its badge, but never to enter the lesson.
 The Coin badge opens Coin Town's east road to Foundry. The Foundry badge opens
 Coin Town's west road to Hollow. The Hollow badge opens Coin Town's north road
 to Cipher. The Cipher badge requires all four RSA acts and opens Cipher's north
-road to Quantum. Older saves that reached the hub retain access; a temporary
-travel pass also has its own route rules. See `game/game/roads.ts`.
+road to Quantum. Older saves that reached the hub retain access. Short checkpoint
+codes provide explicit lesson shortcuts; URL travel passes have been removed.
+See `game/game/roads.ts`.
 
 Cipher's client pays an advance and a fee per completed act, each once. Chispa
 sells the sniffer, shift wheel, factor kit, and QPU voucher required by the four
@@ -71,7 +72,10 @@ identity; ideal state traces, probabilities, and waves are labeled references.
 Exercise correctness comes from the ideal designed state, never noisy counts.
 Editing clears the previous result and solved state. Laptop close and next/reset
 actions are disabled during execution; closing/reopening retains the current
-neighbor's circuit and counts without resubmitting. The coin house uses the same
+neighbor's circuit and counts without resubmitting. Neighbor activity state is
+in memory for the current visit; refresh retains earned cards but resets the
+unfinished bench. The coin house persists its full lesson session in the native
+version and uses the same
 count histogram and retains simulator kind in the measurement explorer.
 
 - **Who Goes First?**: assemble a seeded Python coin function from known
@@ -125,7 +129,7 @@ Paths below are relative to the repository root.
 | Interior lessons and room movement | `game/components/{CoinScenario,GroverScenario,VaultScenario}.tsx`, `game/game/*Room.ts` |
 | RSA scripts and validation | `game/content/acts/act1.ts` through `act4.ts`, `game/content/{defineAct,types,index}.ts` |
 | RSA state, dialogue, effects, async ownership | `game/game/{state,dialog,effects,runtime,town}.ts` |
-| Progress, cards, badges, economy | `game/game/{progress,knowledge,medals,wallet,travelPass}.ts` |
+| Progress, cards, badges, economy, checkpoint shortcuts | `game/game/{progress,knowledge,medals,wallet,checkpoints,restoreCheckpoint}.ts` |
 | Shared UI | `game/components/{GameShell,LaptopShell,DialoguePresentation,SceneLoading,TouchControls}.tsx` |
 | Tools and math | `game/components/` benches/workbenches, `game/game/{qubit,register,crypto,calc,histogram}.ts` |
 | API clients and implementations | `game/lib/`, shared `backend/app/core/{game_services,shor_service,coin_circuit,register_circuit}.py`, HTTP adapters in `backend/app/api/routes/`, Qollab adapter in `game/qollab/python/quantum/services.py` |
@@ -279,10 +283,24 @@ a second final job is refused without contacting the provider. After the final
 result, a dismissible message asks players to collect their badge, then Stop/Run
 Qollab before the next final challenge or retry. The allowance is never persisted.
 Aria’s 25 qubits cannot run Ghost Key; Forte’s 29 can. Preserve existing save keys
-and do not unlock all challenges until Qollab storage persistence is tested.
+and keep automatic progression gated. Public short checkpoint codes now offer
+explicit lesson shortcuts because Qollab's sandbox does not persist storage.
 
 The outdoor top bar and laptop toolbar share `BackendLabel`, showing the selected
 backend; IonQ mode labels local practice and the remote final challenge separately.
+
+`CheckpointControl` appears beside Start over in shared world/laptop controls.
+Public short codes restore teaching milestones on both targets: ct/ft/ht/ci +
+1 (arrival), 2 (all five neighbor lessons), or 3 (challenge and town badge);
+qt1 opens Quantum Town with prior towns complete. These are user-authorized
+lesson shortcuts, not exact saves or proof of completion. Earlier badges/cards
+and gear for completed RSA acts are restored; current earned progress is merged.
+Partial conversations, circuits, measurements, and active RSA checkpoints are
+not encoded. Save/restart wording is platform-neutral; the same codes work in
+both versions. Remote-job notices tell players to keep a code before restarting.
+Restore via the TownScreen event owner to rebuild the scene without
+reloading Qollab, changing the backend, or submitting jobs. Busy controls block
+restore; code validation precedes mutation. Keep all labels bilingual.
 
 Neighbor circuit benches anchor Run/Clear inside the circuit workspace at the
 bottom right as 44px icon buttons with hover/accessibility labels and a shot-count

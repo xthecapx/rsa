@@ -41,10 +41,10 @@ export function QuantumJobProgress() {
   if (!job || now - job.started < 1000) {
     if (!remoteUsed || dismissed) return null;
     return <div role="status" style={{ fontFamily: "var(--font-dm-sans), sans-serif" }} className="fixed bottom-3 left-3 right-3 z-[100] mx-auto max-h-[calc(var(--game-viewport-height)-1.5rem)] max-w-xl overflow-y-auto rounded border-2 border-accent-amber bg-stage-bg p-3 text-xs shadow-xl">
-      <p className="text-accent-amber">{t("Remote job used for this Qollab Run.")}</p>
-      <p className="mt-1 text-stage-muted">{t("Finish this challenge and collect your badge. Then press Stop and Run in Qollab to continue with another town’s final challenge.")}</p>
+      <p className="text-accent-amber">{t("Remote job used for this game session.")}</p>
+      <p className="mt-1 text-stage-muted">{t("Finish this challenge and collect your badge. Keep your checkpoint code, then restart the game before another town’s final challenge.")}</p>
       <p className="mt-1 text-stage-muted">{t("If noise gives an unsuccessful result, restart before retrying.")}</p>
-      <p className="mt-1 text-stage-muted">{t("Progress is saved in browser storage when available. Restarting never automatically submits a circuit.")}</p>
+      <p className="mt-1 text-stage-muted">{t("After restarting, use Save progress to restore your checkpoint. No circuit runs automatically.")}</p>
       <button className="btn-ghost mt-2" onClick={() => setDismissed(true)}>{t("Continue this challenge")}</button>
     </div>;
   }

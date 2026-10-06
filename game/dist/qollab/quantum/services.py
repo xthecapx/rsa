@@ -13,7 +13,7 @@ from core.game_services import describe as describe_backend, execute, token, rea
 # consumes it; only a final challenge can reach the injected remote backend.
 _used = WeakKeyDictionary()
 _practice = None
-RESTART_MESSAGE = "This Qollab run has already used its remote job. Finish collecting your badge, then press Stop and Run in Qollab before another final challenge."
+RESTART_MESSAGE = "This game session has already used its remote job. Finish collecting your badge, keep your checkpoint code, then restart the game before another final challenge."
 
 
 def describe(backend):

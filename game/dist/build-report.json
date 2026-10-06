@@ -5,7 +5,7 @@
   "hardwareSubmissions": true,
   "remoteExecutionPolicy": "one-final-challenge-per-code-run; local-ideal-practice",
   "fileCount": 19,
-  "bytes": 3020762,
+  "bytes": 3027843,
   "assets": {
     "included": [
       "/assets/characters/animal-bat.svg",
@@ -153,8 +153,8 @@
     },
     {
       "path": "core/game_services.py",
-      "bytes": 18464,
-      "sha256": "d08d2569013c88f6502d09e9873a231e255d2f49e70b3509800f6fc16ed0d06a"
+      "bytes": 18475,
+      "sha256": "89ca434fb7516203e214d33e53886aaa8b885297b26589f141b6cd644046fa01"
     },
     {
       "path": "core/register_circuit.py",
@@ -173,8 +173,8 @@
     },
     {
       "path": "game.js",
-      "bytes": 1680667,
-      "sha256": "645d7a57bc2d43414d970c37bb2cf69bab4b1344e4d796539a5b91509c25ff0f"
+      "bytes": 1688214,
+      "sha256": "5764cd3c06760e922130eae8cc0af756535685d302e1d505fcb068b13dd99eff"
     },
     {
       "path": "index.html",
@@ -183,8 +183,8 @@
     },
     {
       "path": "main.css",
-      "bytes": 79726,
-      "sha256": "d187b230893ecc520effdd21eb3dbc0f2a33ddf1194e9853ff86dfbbbd16537b"
+      "bytes": 79232,
+      "sha256": "f6969034acc6fdf88dd42d6cbb0a1b952006e950d38ff1537c3d8e5de864b37d"
     },
     {
       "path": "main.js",
@@ -198,8 +198,8 @@
     },
     {
       "path": "quantum/services.py",
-      "bytes": 4712,
-      "sha256": "2937e7a7846a45781c494e3934bb5d1a52187dcb255e918e1dac2ac4c322ced0"
+      "bytes": 4729,
+      "sha256": "51d779da9530cf4f3df90509a8f461bcfd405a686ce0c111e7723c6e828d113a"
     },
     {
       "path": "requirements.txt",
@@ -224,7 +224,7 @@
     },
     {
       "path": "i18n/es.json",
-      "bytes": 343680
+      "bytes": 347073
     },
     {
       "path": "node_modules/react-dom/cjs/react-dom-client.production.js",
@@ -244,7 +244,7 @@
     },
     {
       "path": "components/TownScreen.tsx",
-      "bytes": 21752
+      "bytes": 21611
     },
     {
       "path": "node_modules/@dnd-kit/dom/utilities.js",

@@ -8,10 +8,9 @@
  *
  * A road stays open once a later badge is earned. Saves from before the towns
  * existed keep their way in: they already met Professor Thecap in Quantum Town,
- * or ran RSA acts on its street. The temporary travel pass opens everything.
+ * or ran RSA acts on its street. Explicit checkpoints restore badge progress.
  */
 export interface RoadFacts {
-  pass: boolean;
   badges: { coin: boolean; foundry: boolean; hollow: boolean; cipher: boolean };
   /** Professor Thecap has welcomed this save in Quantum Town. */
   metThecap: boolean;
@@ -29,10 +28,10 @@ export interface Roads {
   cipherNorth: boolean;
 }
 
-export function openRoads({ pass, badges, metThecap, rsaActs }: RoadFacts): Roads {
+export function openRoads({ badges, metThecap, rsaActs }: RoadFacts): Roads {
   const legacy = metThecap || rsaActs > 0;
-  const cipherNorth = pass || badges.cipher || metThecap;
-  const coinNorth = pass || badges.hollow || badges.cipher || legacy;
+  const cipherNorth = badges.cipher || metThecap;
+  const coinNorth = badges.hollow || badges.cipher || legacy;
   const coinWest = coinNorth || badges.foundry;
   const coinEast = coinWest || badges.coin;
   return { coinEast, coinWest, coinNorth, cipherNorth };

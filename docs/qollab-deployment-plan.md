@@ -75,10 +75,10 @@ counts carry `source=hardware` and the selected backend name; unavailable ordere
 shot memory is reconstructed explicitly. This path has been tested with a local
 provider double, not by spending credits on a live device. Recorded IBM views
 remain recorded data and remain a separate RSA choice. Browser-local puzzle tokens are inspectable educational state;
-server signing secrets are not shipped. Saves remain local to the sandbox origin
-and do not automatically transfer from the Cloud Run origin. If Qollab blocks
-browser storage, the save stores retain progress in memory for the current run;
-stopping or refreshing loses that fallback state. All stores keep their hydration
+server signing secrets are not shipped. The server version saves to browser
+storage; Qollab's sandbox blocks persistent storage. Its save stores retain
+progress in memory for the current run; stopping or refreshing loses that fallback
+state. Short checkpoint codes work in either version. All stores keep their hydration
 APIs so blocked storage does not strand boot on the scene-loading screen.
 
 The bundle embeds assets because uploaded project files are not a normal public
@@ -92,13 +92,14 @@ if the CDN is unreachable; font license files remain in the distribution.
 ## Owner's Qollab test checklist
 
 - Verify boot, fonts, sprites, music unlock/mute, and movement with keyboard and touch.
-- Run the coin lesson, switch EN/ES with a result visible, close/reopen the laptop,
-  and refresh/resume; the saved final toss must not rerun.
+- Run the coin lesson, switch EN/ES with a result visible, and close/reopen the
+  laptop; the final toss must not rerun. Keep a checkpoint code before restarting
+  and restore it afterward; restoration must not submit a circuit.
 - Run three-round Grover and the full 26-qubit Ghost Key on an IBM simulator.
   Check a noisy wrong-key result can be retried without changing the device.
 - Run N=15 Shor and inspect measured counts and factors; open recorded IBM views.
 - Stop/restart Run and confirm there is one engine and one audio owner. Check
-  participant browsers meet Qollab's JSPI requirements and localStorage survives.
+  participant browsers meet Qollab's JSPI requirements.
 - Test short landscape, portrait, and an input with the on-screen keyboard open.
 
 Report the selected backend, the lesson/action, and Qollab's console error if any
@@ -149,8 +150,9 @@ this implementation did not submit a live test job.
 IonQ remote policy: practice circuits execute on BasicSimulator. The Coin final
 toss, Grover final measurement, Ghost Key recovery, and RSA Shor simulation use
 the selected remote backend, with one submission per Qollab code Run. Stop and
-Run again after collecting the badge or before retrying a noisy failure. Test
-browser-storage persistence across this restart; no progression bypass is enabled.
+Run again after collecting the badge or before retrying a noisy failure. Keep
+the checkpoint code before restarting and restore it afterward. The shared
+checkpoint menu offers the same short-code lesson shortcuts in both versions.
 Ghost Key requires a 29-qubit Forte simulator rather than 25-qubit Aria.
 
 The generated distribution contains exactly 19 upload files and is ignored by Git.

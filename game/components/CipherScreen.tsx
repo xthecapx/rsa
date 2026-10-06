@@ -12,7 +12,6 @@ import { bus } from "@/engine/bus";
 import { useGame } from "@/game/state";
 import { useProgress } from "@/game/progress";
 import { useTown } from "@/game/town";
-import { useTravelPass } from "@/game/travelPass";
 import { useWallet } from "@/game/wallet";
 import { openRoads } from "@/game/roads";
 import { fill } from "@/game/interpolate";
@@ -123,13 +122,12 @@ export function CipherScreen({ onSouth, onNorth, restartOptions }: {
   const completed = useProgress((state) => state.completed);
   const { gear, advanced } = useWallet();
   const badge = !!completed.rsa?.includes("town");
-  const pass = useTravelPass((state) => state.active);
   const metThecap = useTown((state) => state.welcomed);
   const game = useGame();
   const [talk, setTalk] = useState<MissionTalk | null>(null);
   const readyRef = useRef(true);
   const actDone = (act: ActNumber) => !!completed.rsa?.includes(String(act));
-  const northOpen = openRoads({ pass, badges: { coin: false, foundry: false, hollow: false, cipher: badge }, metThecap, rsaActs: 0 }).cipherNorth;
+  const northOpen = openRoads({ badges: { coin: false, foundry: false, hollow: false, cipher: badge }, metThecap, rsaActs: 0 }).cipherNorth;
   const allActs = ACT_NUMBERS.every(actDone);
 
   const toStall = { label: "Head to Chispa’s stall", action: () => setTalk(null) };

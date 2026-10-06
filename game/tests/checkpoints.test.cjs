@@ -1,0 +1,73 @@
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const path = require('node:path');
+const { loadTs } = require('./loadTs.cjs');
+const { checkpoint, currentCheckpoint } = loadTs(path.join(__dirname, '../game/checkpoints.ts'));
+const { restoreCheckpoint } = loadTs(path.join(__dirname, '../game/restoreCheckpoint.ts'));
+const { useTown } = loadTs(path.join(__dirname, '../game/town.ts'));
+const { useProgress } = loadTs(path.join(__dirname, '../game/progress.ts'));
+const { useKnowledge } = loadTs(path.join(__dirname, '../game/knowledge.ts'));
+const { useGame } = loadTs(path.join(__dirname, '../game/state.ts'));
+const { useWallet } = loadTs(path.join(__dirname, '../game/wallet.ts'));
+const { useMedals } = loadTs(path.join(__dirname, '../game/medals.ts'));
+const { COIN_KNOWLEDGE_IDS } = loadTs(path.join(__dirname, '../content/knowledge.ts'));
+
+test('short checkpoint codes validate and distinguish practice from town completion', () => {
+  for (const code of ['ct0', 'ct4', 'ft9', 'qt2', 'ct1extra', '', '../ct2']) assert.equal(checkpoint(code), null);
+  assert.equal(checkpoint(' CT2 ').code, 'ct2');
+  assert.deepEqual(checkpoint('ct1').cards, []);
+  assert.deepEqual(checkpoint('ct2').cards, COIN_KNOWLEDGE_IDS);
+  assert.deepEqual(checkpoint('ct2').completed, {});
+  assert.deepEqual(checkpoint('ct3').completed.coin, ['coin', 'town']);
+  assert.equal(currentCheckpoint('coinTown', [], {}), 'ct1');
+  assert.equal(currentCheckpoint('coin', COIN_KNOWLEDGE_IDS, {}), 'ct2');
+  assert.equal(currentCheckpoint('coinTown', COIN_KNOWLEDGE_IDS, { coin: ['coin'] }), 'ct3');
+});
+
+test('later checkpoints restore predecessor badges and keep the current challenge uncompleted', () => {
+  const foundry = checkpoint('ft1');
+  assert.deepEqual(foundry.completed, { coin: ['coin', 'town'] });
+  assert.deepEqual(foundry.cards, COIN_KNOWLEDGE_IDS);
+  const cipher = checkpoint('ci2');
+  assert.equal(cipher.cards.length, 20);
+  assert.equal(cipher.completed.rsa, undefined);
+  assert.deepEqual(checkpoint('qt1').completed.rsa, ['1', '2', '3', '4', 'town']);
+});
+
+test('restore works without browser storage, keeps earned progress and never starts a mission', () => {
+  useProgress.setState({ completed: { vault: ['vault'] } });
+  useKnowledge.setState({ cards: ['control'] });
+  useGame.getState().resetRun(1);
+  assert.equal(restoreCheckpoint('ft2'), true);
+  assert.equal(useTown.getState().location, 'foundry');
+  assert.equal(useTown.getState().foundry.welcomed, true);
+  assert.deepEqual(useProgress.getState().completed.vault, ['vault']);
+  assert.deepEqual(useProgress.getState().completed.coin, ['coin', 'town']);
+  assert.equal(useProgress.getState().completed.grover, undefined);
+  assert.equal(useKnowledge.getState().cards.length, 11);
+  assert.equal(useKnowledge.getState().fresh, null);
+  assert.ok(useMedals.getState().earned['coin-town']);
+  assert.equal(useMedals.getState().fresh, null);
+  assert.equal(useTown.getState().rsaRunning, false);
+  assert.equal(useTown.getState().checkpoint, null);
+  assert.equal(useGame.getState().operations, 0);
+  assert.equal(useGame.getState().phase, 'exploring');
+  assert.equal(restoreCheckpoint('ci3'), true);
+  assert.deepEqual(useWallet.getState().paidActs, [1, 2, 3, 4]);
+  assert.equal(useWallet.getState().gear.length, 4);
+  assert.ok(useMedals.getState().earned['cipher-town']);
+  const earned = { ...useMedals.getState().earned };
+  assert.equal(restoreCheckpoint('ci3'), true);
+  assert.deepEqual(useMedals.getState().earned, earned);
+});
+
+test('restoring rejects busy runs and bad codes without changing progress', () => {
+  const before = useProgress.getState().completed;
+  useGame.setState({ operations: 1 });
+  assert.equal(restoreCheckpoint('ct3'), false);
+  useGame.setState({ operations: 0, phase: 'busy' });
+  assert.equal(restoreCheckpoint('ct3'), false);
+  useGame.setState({ phase: 'exploring' });
+  assert.equal(restoreCheckpoint('bad'), false);
+  assert.equal(useProgress.getState().completed, before);
+});

@@ -93,9 +93,12 @@ remote submission is allowed per Qollab code Run; a second is blocked locally.
 After reviewing the result and collecting the badge, press **Stop**, then
 **Run** in Qollab for the next final challenge (or to retry after a noisy failure).
 Ghost Key needs Forte/Forte Enterprise (29 qubits); Aria (25) is too small.
-Progress and results use browser storage when available, not cookies. Test
-restart persistence in Qollab before relying on it; no automatic job is submitted
-on startup or restoration.
+The server version preserves main lesson sessions and progress in browser storage.
+Neighbor benches retain unfinished activities and counts during the current visit;
+earned knowledge cards survive refresh, but those bench activities restart.
+Qollab's
+sandbox does not persist storage across runs, so keep a short checkpoint code
+before restarting. No automatic job is submitted on startup or restoration.
 Provider limits and credits apply. Recorded IBM RSA batches remain a separate option.
 
 Qollab runs the included Python services in its browser runtime and supplies the
@@ -128,6 +131,21 @@ upload folder automatically; do not edit generated files under `game/dist/`.
 
 See [Qollab delivery and test notes](docs/qollab-deployment-plan.md) for the
 package layout, validation limits, and test checklist.
+
+### Short lesson checkpoints
+
+**Save progress** in the top bar or laptop shows a short checkpoint code to keep
+before restarting or changing backends. The same codes work in both the Python
+server and Qollab versions. Enter one in the same menu after restarting, or
+choose a checkpoint directly to reach a lesson quickly. Coin Town
+uses `ct1` (arrival), `ct2` (all five neighbor lessons complete), and `ct3`
+(neighbors, town challenge, and badge complete). Foundry uses `ft1`–`ft3`, Hollow
+uses `ht1`–`ht3`, and Cipher uses `ci1`–`ci3`. `qt1` opens Quantum Town's replay hub.
+Later-town codes restore earlier town badges and required RSA gear for completed
+acts. These are public teaching milestones, not full save snapshots: incomplete
+neighbor activities, individual circuits, puzzle answers, measurements, and RSA
+mid-act checkpoints are not encoded. Existing progress in the current run is
+retained; restoration never executes a circuit or changes the selected backend.
 
 ## Quick start (Docker)
 

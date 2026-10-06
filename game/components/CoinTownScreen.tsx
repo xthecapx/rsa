@@ -6,7 +6,6 @@ import { coinTownMap } from "@/engine/maps/coinTownMap";
 import { useTown } from "@/game/town";
 import { useProgress } from "@/game/progress";
 import { useMedals } from "@/game/medals";
-import { useTravelPass } from "@/game/travelPass";
 import { openRoads } from "@/game/roads";
 import { t } from "@/i18n";
 import type { RestartOption } from "./StartOverControl";
@@ -42,12 +41,10 @@ export function CoinTownScreen({ onLeave, onEast, onWest, onEnterCoin, restartOp
   const foundryBadge = useMedals((state) => !!state.earned["foundry-town"]);
   const hollowBadge = useMedals((state) => !!state.earned["hollow-town"]);
   const metThecap = useTown((state) => state.welcomed);
-  /** The temporary travel pass opens every built road, for checking towns. */
-  const pass = useTravelPass((state) => state.active);
   const coinComplete = !!completed.coin?.includes("coin");
   /** The roads open in challenge order (game/roads.ts): Coin Town's badge opens the east road, the Foundry Badge the west road, the Hollow Badge the north road. */
   const cipherBadge = useMedals((state) => !!state.earned["cipher-town"]);
-  const roads = openRoads({ pass, badges: { coin: coinBadge, foundry: foundryBadge, hollow: hollowBadge, cipher: cipherBadge }, metThecap,
+  const roads = openRoads({ badges: { coin: coinBadge, foundry: foundryBadge, hollow: hollowBadge, cipher: cipherBadge }, metThecap,
     rsaActs: ["1", "2", "3", "4"].filter((act) => completed.rsa?.includes(act)).length });
   const { coinNorth: northOpen, coinWest: westOpen, coinEast: eastOpen } = roads;
 

@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { t, useLocale } from "@/i18n";
+import { CheckpointControl } from "./CheckpointControl";
 
 export interface RestartOption { label: string; description: string; restart: () => void }
 
@@ -21,6 +22,7 @@ export function StartOverControl({ options, disabled = false, onOpenChange }: {
   }, [open]);
 
   return <>
+    <CheckpointControl disabled={disabled} onOpenChange={onOpenChange} />
     <button ref={trigger} type="button" aria-label={t("Start over")} className="btn-ghost text-xs" disabled={disabled}
       title={disabled ? t("Finishing the current operation…") : t("Start over")}
       onClick={() => { setOpen(true); onOpenChange(true); }}><span aria-hidden="true">↺</span><span className="ml-1 hidden sm:inline">{t("Start over")}</span></button>

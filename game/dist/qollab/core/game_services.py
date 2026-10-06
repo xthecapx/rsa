@@ -83,11 +83,11 @@ def execute(backend, circuit, shots, *, memory=False, vault=False, allow_hardwar
     from qiskit import transpile
     info = describe(backend)
     if info["kind"] == "hardware" and not allow_hardware:
-        raise ServiceError(400, "Choose a simulator in Qollab. This game does not submit paid hardware jobs.")
+        raise ServiceError(400, "Choose a simulator. This execution does not submit paid hardware jobs.")
     if info["qubits"] and circuit.num_qubits > info["qubits"]:
         if vault:
-            raise ServiceError(400, "Ghost Key needs 26 qubits. Stop and select an IBM noise-model simulator or a compatible larger backend in Qollab.")
-        raise ServiceError(400, f"This circuit needs {circuit.num_qubits} qubits; {info['backend']} supports {info['qubits']}. Select a larger backend in Qollab.")
+            raise ServiceError(400, "Ghost Key needs 26 qubits. Keep your checkpoint code and select a compatible backend with at least 26 qubits.")
+        raise ServiceError(400, f"This circuit needs {circuit.num_qubits} qubits; {info['backend']} supports {info['qubits']}. Keep your checkpoint code and select a larger backend.")
     if progress:
         progress("preparing", "")
     compiled = transpile(circuit, backend=backend, optimization_level=1)
