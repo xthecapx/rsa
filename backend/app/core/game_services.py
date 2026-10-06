@@ -79,7 +79,7 @@ def read_token(value, kind):
         raise ServiceError(400, "Unknown device") from None
 
 
-def execute(backend, circuit, shots, *, memory=False, vault=False, allow_hardware=False):
+def execute(backend, circuit, shots, *, memory=False, vault=False, allow_hardware=False, progress=None):
     from qiskit import transpile
     info = describe(backend)
     if info["kind"] == "hardware" and not allow_hardware:
@@ -88,6 +88,8 @@ def execute(backend, circuit, shots, *, memory=False, vault=False, allow_hardwar
         if vault:
             raise ServiceError(400, "Ghost Key needs 26 qubits. Stop and select an IBM noise-model simulator or a compatible larger backend in Qollab.")
         raise ServiceError(400, f"This circuit needs {circuit.num_qubits} qubits; {info['backend']} supports {info['qubits']}. Select a larger backend in Qollab.")
+    if progress:
+        progress("preparing", "")
     compiled = transpile(circuit, backend=backend, optimization_level=1)
     options = {"shots": shots}
     # Aer-backed fake IBM devices support MPS. Keep the selected backend and
@@ -96,7 +98,21 @@ def execute(backend, circuit, shots, *, memory=False, vault=False, allow_hardwar
         options["method"] = "matrix_product_state"
     if memory and info["kind"] != "hardware" and "ionq" not in type(backend).__module__.lower():
         options["memory"] = True
+    if progress:
+        progress("submitting", "")
     job = backend.run(compiled, **options)
+    if progress:
+        identifier = getattr(job, "job_id", None)
+        identifier = identifier() if callable(identifier) else identifier
+        identifier = str(identifier or "")
+        progress("waiting", identifier)
+        # Provider polling reports real states; local jobs need no polling.
+        remote = info["kind"] == "hardware" or "ionq" in type(backend).__module__.lower()
+        if remote and callable(getattr(job, "wait_for_final_state", None)):
+            def report(job_id, job_status, *args, **kwargs):
+                progress(str(getattr(job_status, "name", job_status)).lower(), identifier)
+            job.wait_for_final_state(wait=5, callback=report)
+        progress("retrieving", identifier)
     if info["kind"] == "hardware":
         job_id = getattr(job, "job_id", None)
         job_id = job_id() if callable(job_id) else job_id

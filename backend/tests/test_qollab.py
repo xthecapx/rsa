@@ -111,7 +111,7 @@ def test_qollab_selected_hardware_submits_one_job_and_labels_results():
     backend.name = "test_qpu"
     assert services.describe(backend)["kind"] == "hardware"
     with patch.object(backend, "run", wraps=backend.run) as submitted:
-        result = call("/api/coin/simulate", {"shots": 1, "hadamard": False}, backend)
+        result = call("/api/coin/simulate", {"shots": 1, "hadamard": False, "finalChallenge": True}, backend)
     assert result["status"] == 200, result
     submitted.assert_called_once()
     assert "memory" not in submitted.call_args.kwargs
@@ -201,3 +201,96 @@ def test_shared_shor_plan_and_classical_processing_match_http():
         browser = call(f"/api/shor/{action}", body)
         assert http.status_code == browser["status"] == 200
         assert http.json() == browser["data"]
+
+
+def test_remote_progress_reports_provider_states_without_resubmitting():
+    from types import SimpleNamespace
+    from qiskit.providers import JobStatus
+
+    events = []
+    submissions = []
+    local = BasicSimulator()
+
+    class Remote(BasicSimulator):
+        def configuration(self):
+            return SimpleNamespace(simulator=False, n_qubits=24)
+
+        def run(self, circuit, **options):
+            submissions.append(options)
+            actual = local.run(circuit, **options)
+
+            class Job:
+                def job_id(self):
+                    return "test-progress-job"
+
+                def wait_for_final_state(self, *, wait, callback):
+                    assert wait == 5
+                    for state in (JobStatus.QUEUED, JobStatus.RUNNING, JobStatus.DONE):
+                        callback(self.job_id(), state, self)
+
+                def result(self):
+                    return actual.result()
+
+            return Job()
+
+    result = json.loads(services.dispatch_json(Remote(), "/api/coin/simulate",
+        json.dumps({"hadamard": False, "shots": 100, "finalChallenge": True}), lambda state, identifier: events.append((state, identifier))))
+    assert result["status"] == 200
+    assert len(submissions) == 1
+    assert [state for state, _ in events] == ["preparing", "remote_reserved", "submitting", "waiting", "queued", "running", "done", "retrieving"]
+    assert all(identifier == "test-progress-job" for _, identifier in events[3:])
+
+
+@pytest.mark.parametrize("path,body,expected", [
+    ("/api/coin/circuit", {"starts": ["0", "1"], "gates": ["H"]}, False),
+    ("/api/coin/simulate", {"shots": 1}, False),
+    ("/api/coin/simulate", {"finalChallenge": True}, True),
+    ("/api/grover/run", {"circuit": {"measure": False}}, False),
+    ("/api/grover/run", {"circuit": {"measure": True}}, True),
+    ("/api/vault/run", {}, True),
+    ("/api/shor/simulate", {}, True),
+    ("/api/register/circuit", {}, False),
+])
+def test_remote_final_challenge_routes(path, body, expected):
+    assert bool(services.final_challenge(path, body)) is expected
+
+
+def test_ionq_practice_does_not_consume_remote_job_and_second_final_is_blocked():
+    from unittest.mock import patch
+    class IonQ(BasicSimulator):
+        pass
+    IonQ.__module__ = "qiskit_ionq.ionq_backend"
+    backend = IonQ()
+    backend.name = "ionq_simulator"
+    with patch.object(backend, "run", wraps=backend.run) as submitted:
+        practice = call("/api/coin/circuit", {"starts": ["0", "1"], "gates": ["H"], "shots": 100}, backend)
+        assert practice["status"] == 200
+        assert practice["data"]["backend"] == "basic_simulator"
+        submitted.assert_not_called()
+        final = call("/api/coin/simulate", {"shots": 1, "finalChallenge": True}, backend)
+        assert final["status"] == 200
+        assert final["data"]["backend"] == "ionq_simulator"
+        submitted.assert_called_once()
+        again = call("/api/coin/simulate", {"shots": 1, "finalChallenge": True}, backend)
+        assert again["status"] == 409
+        assert again["data"]["detail"] == services.RESTART_MESSAGE
+        submitted.assert_called_once()
+        assert call("/api/coin/circuit", {"starts": ["0"], "gates": []}, backend)["status"] == 200
+        submitted.assert_called_once()
+    # A fresh runtime/provider starts with an unused allowance.
+    fresh = IonQ()
+    fresh.name = "ionq_simulator"
+    assert call("/api/coin/simulate", {"shots": 1, "finalChallenge": True}, fresh)["status"] == 200
+
+
+def test_remote_vault_width_failure_does_not_consume_allowance():
+    class IonQ(BasicSimulator):
+        @property
+        def num_qubits(self):
+            return 25
+    IonQ.__module__ = "qiskit_ionq.ionq_backend"
+    backend = IonQ()
+    backend.name = "ionq_simulator"
+    body = {"token": services.token("vault", 42), "circuit": {"prep": "h", "helper": "minus", "out": "h", "measure": True}}
+    assert call("/api/vault/run", body, backend)["status"] == 400
+    assert not services._used.get(backend)

@@ -137,7 +137,7 @@ contents so Qollab receives the new shared Python files too.
 
 The native game’s Simulation selector persists separately from progress. A request
 header selects ideal Aer or an educational Aer noise model. This header is ignored
-for Qollab, which always uses the externally selected backend. Both targets share
+for Qollab, which uses local ideal practice and reserves IonQ for final challenges. Both targets share
 register circuit construction and shot processing. Foundry/Hollow benches and the
 rounds dial execute 256 shots; Grover previews also sample 256 shots in anonymous
 bar order. Final coin/PIN/key decisions remain single measured shots. Ideal traces
@@ -147,3 +147,10 @@ counts, that noisy Ghost Key can retry a failed key, and that the RSA recorded-d
 option never submits new work. For live QPU validation, select a physical backend
 in Qollab and perform one deliberate Run after checking provider costs/credits;
 this implementation did not submit a live test job.
+
+IonQ remote policy: practice circuits execute on BasicSimulator. The Coin final
+toss, Grover final measurement, Ghost Key recovery, and RSA Shor simulation use
+the selected remote backend, with one submission per Qollab code Run. Stop and
+Run again after collecting the badge or before retrying a noisy failure. Test
+browser-storage persistence across this restart; no progression bypass is enabled.
+Ghost Key requires a 29-qubit Forte simulator rather than 25-qubit Aria.

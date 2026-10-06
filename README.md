@@ -71,8 +71,17 @@ Choose a free **IBM noise-model simulator** for the full game. Ghost Key retains
 25-qubit local simulator cannot run that lesson. The adapter passes the full
 circuit to the selected IBM simulator using matrix product state simulation.
 Noisy measurements may fail the key check, so the player can retry. Hardware
-jobs are enabled when a physical QPU is selected in Qollab. Each explicit Run
-submits work on that selected backend; startup and save restoration submit no jobs.
+jobs are enabled when a physical QPU is selected in Qollab. IonQ remote
+simulators and physical QPUs are reserved for final town challenges: the Coin
+final toss, Grover final measurement, Ghost Key recovery, and the RSA Shor run.
+Practice uses the built-in ideal simulator and labels its actual counts. One
+remote submission is allowed per Qollab code Run; a second is blocked locally.
+After reviewing the result and collecting the badge, press **Stop**, then
+**Run** in Qollab for the next final challenge (or to retry after a noisy failure).
+Ghost Key needs Forte/Forte Enterprise (29 qubits); Aria (25) is too small.
+Progress and results use browser storage when available, not cookies. Test
+restart persistence in Qollab before relying on it; no automatic job is submitted
+on startup or restoration.
 Provider limits and credits apply. Recorded IBM RSA batches remain a separate option.
 
 Qollab runs the included Python services in its browser runtime and supplies the

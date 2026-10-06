@@ -42,5 +42,5 @@ async function post<T>(path: string, body: object): Promise<T> {
 export const coinApi = {
   circuit: (starts: NamedState[], gates: Gate[], shots = 256) => post<BenchResult>("circuit", { starts, gates, shots }),
   classical: (flips: number) => post<ClassicalCoin>("classical", { seed: 42, flips }),
-  simulate: (hadamard: boolean, shots: number) => post<CoinResult>("simulate", { hadamard, shots }),
+  simulate: (hadamard: boolean, shots: number, finalChallenge = false) => post<CoinResult>("simulate", { hadamard, shots, finalChallenge }),
 };

@@ -2,6 +2,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { useEffect, useState } from "react";
 import { LanguageProvider } from "@/components/LanguageProvider";
 import { ViewportBootstrap } from "@/components/ViewportBootstrap";
+import { QuantumJobProgress } from "@/components/QuantumJobProgress";
 import { SplashScreen } from "@/components/SplashScreen";
 import { TownScreen } from "@/components/TownScreen";
 import { gameAudio } from "@/game/audio";
@@ -12,6 +13,7 @@ import type { ActNumber } from "@/content/types";
 export interface RuntimeBridge {
   request: ServiceTransport;
   backend: string;
+  remoteFinalOnly?: boolean;
   kind: "ideal" | "noise" | "hardware";
 }
 
@@ -41,10 +43,10 @@ export function mountGame(bridge: RuntimeBridge): () => void {
   const host = document.getElementById("quantum-playground");
   if (!host) throw new Error("Missing Quantum Playground mount element");
   setServiceTransport(bridge.request);
-  Object.assign(runtimeInfo, { target: "qollab", backend: bridge.backend, kind: bridge.kind });
+  Object.assign(runtimeInfo, { target: "qollab", backend: bridge.backend, kind: bridge.kind, remoteFinalOnly: bridge.remoteFinalOnly ?? false });
   document.documentElement.dataset.boot = "1";
   root = createRoot(host);
-  root.render(<LanguageProvider><ViewportBootstrap /><SplashScreen /><BrowserWorld /></LanguageProvider>);
+  root.render(<LanguageProvider><ViewportBootstrap /><SplashScreen /><BrowserWorld /><QuantumJobProgress /></LanguageProvider>);
   const dispose = () => {
     invalidateMission();
     root?.unmount();

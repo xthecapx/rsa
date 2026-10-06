@@ -3,6 +3,7 @@ import { t, localize, useLocale } from "@/i18n";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { BackendLabel } from "./BackendLabel";
 import { LanguageSwitch } from "./LanguageSwitch";
 import { Calculator, useCalculator } from "./Calculator";
 
@@ -71,7 +72,7 @@ export function LaptopShell({ open, title, status, memory, footer, children, onC
       <div className="shared-laptop" role="dialog" aria-modal="true" aria-label={t("Laptop")} tabIndex={-1} ref={dialog}>
         <div className="laptop-bezel"><div className="laptop-camera">● &nbsp; th3c4p</div>
           <div className="laptop-screen">
-            <header className="laptop-toolbar"><div><h2>{localize(title)}</h2>{localize(status && <div className="laptop-status">{localize(status)}</div>)}</div>
+            <header className="laptop-toolbar"><div className="min-w-0"><h2>{localize(title)}</h2><BackendLabel />{localize(status && <div className="laptop-status">{localize(status)}</div>)}</div>
               <div className="flex flex-wrap items-center justify-end gap-2">{calculator && <button type="button" className="btn-ghost" aria-pressed={calculatorOpen}
                 onClick={() => useCalculator.getState().toggle()}>🧮 {t("Calculator")}</button>}{restartControl}<LanguageSwitch /><button className="btn-ghost" disabled={closeDisabled} onClick={onClose}>{t("Close laptop")}</button></div>
             </header>

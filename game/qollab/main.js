@@ -18,7 +18,19 @@ const request = (path, init) => {
         : recorded[decodeURIComponent(path.slice('/api/ibm/batch/'.length))];
       return new Response(JSON.stringify(data ?? { detail: 'Unknown recorded batch' }), { status: data ? 200 : 404 });
     }
-    const result = JSON.parse(await services.dispatch_json.callPromising(backend, path, init?.body ?? '{}'));
+    let remoteReserved = false;
+    const notify = (state, jobId = '') => {
+      if (String(state) === 'remote_reserved') { remoteReserved = true; return; }
+      if (!stopped) window.dispatchEvent(new CustomEvent('quantum-job-progress', { detail: { state: String(state), jobId: String(jobId) } }));
+    };
+    notify('preparing');
+    let result;
+    try {
+      result = JSON.parse(await services.dispatch_json.callPromising(backend, path, init?.body ?? '{}', notify));
+    } finally {
+      notify('idle');
+      if (remoteReserved && !stopped) window.dispatchEvent(new Event('quantum-remote-used'));
+    }
     if (stopped) throw new Error('The game run has stopped.');
     return new Response(JSON.stringify(result.data), { status: result.status });
   };
@@ -30,7 +42,7 @@ const request = (path, init) => {
 const status = document.getElementById('quantum-runtime-status');
 status.textContent = `Qollab · ${info.backend} · ${info.kind}. Ghost Key needs 26 qubits.`;
 globalThis.quantumPlaygroundDispose?.();
-const dispose = mountGame({ request, backend: info.backend, kind: info.kind });
+const dispose = mountGame({ request, backend: info.backend, kind: info.kind, remoteFinalOnly: info.remote_final_only });
 globalThis.quantumPlaygroundDispose = () => { stopped = true; dispose(); };
 window.addEventListener('pagehide', globalThis.quantumPlaygroundDispose, { once: true });
 // Keep the interactive runtime active after main.js mounts the page. Stop

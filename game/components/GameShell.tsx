@@ -6,6 +6,7 @@ import clsx from "clsx";
 import { t, useLocale } from "@/i18n";
 import { LanguageSwitch } from "./LanguageSwitch";
 import { MuteButton } from "./MuteButton";
+import { BackendLabel } from "./BackendLabel";
 import { SimulatorPicker } from "./SimulatorPicker";
 import { SceneLoading } from "./SceneLoading";
 
@@ -23,7 +24,7 @@ export function GameShell({ title, subtitle, backHref, backLabel, sidebar, objec
   const [objectivesOpen, setObjectivesOpen] = useState(false);
   function toggleObjectives(open: boolean) { setObjectivesOpen(open); onObjectivesOpen?.(open); }
   return <main className="game-shell viewport-overlay flex flex-col overflow-hidden bg-stage-bg">
-    <header className="flex shrink-0 items-center justify-between gap-2 border-b-2 border-stage-border px-3 py-2 sm:px-4">
+    <header className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b-2 border-stage-border px-3 py-2 sm:px-4">
       <div className="flex min-w-0 items-baseline gap-2 sm:gap-3">
         {onBack ? <button className="shrink-0 text-[10px] text-stage-muted hover:text-accent-teal disabled:opacity-40" disabled={backDisabled} title={backDisabled ? t("Finishing the current operation…") : undefined} onClick={onBack}>{backLabel}</button> : <Link href={backHref} className="shrink-0 text-[10px] text-stage-muted hover:text-accent-teal">{backLabel}</Link>}
         <h1 className="truncate text-[11px] text-accent-amber">{title}</h1>
@@ -37,6 +38,7 @@ export function GameShell({ title, subtitle, backHref, backLabel, sidebar, objec
         <LanguageSwitch />
         <MuteButton />
       </div>
+      <div className="w-full min-w-0"><BackendLabel /></div>
     </header>
     <SimulatorPicker disabled={backDisabled} />
     {sceneReady && !laptopOpen && missionProgress && <div className="shrink-0 border-b border-stage-border bg-stage-surface px-3 py-2 sm:px-4">{missionProgress}</div>}

@@ -32,5 +32,6 @@ export async function serviceError(response: Response, fallback: string): Promis
 export const runtimeInfo = {
   target: "web" as "web" | "qollab",
   backend: "AerSimulator",
+  remoteFinalOnly: false,
   kind: "ideal" as "ideal" | "noise" | "hardware",
 };

@@ -431,7 +431,7 @@ export function CoinScenario({ onExit, onRestartGame }: { onExit?: () => void; o
               <pre>{`POST /api/coin/simulate\n{"hadamard": true, "shots": 1}`}</pre>
               <p>{t("Use the first returned bit. The result is saved; refreshing won’t give another toss.")}</p>
               {session.winner === null && action("Agree & toss once", () => void run(async () => {
-                const result = await coinApi.simulate(true, 1);
+                const result = await coinApi.simulate(true, 1, true);
                 const final = { result, winner: result.bits[0], step: "done" as const, line: 0 };
                 try { localStorage.setItem(SAVE_KEY, JSON.stringify({ ...session, ...final })); }
                 catch { if (alive.current) setStorageNote(true); }

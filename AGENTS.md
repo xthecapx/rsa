@@ -265,3 +265,21 @@ smaller. Existing small labels and code keep their sizes; form inputs stay 16px
 to avoid focus zoom. Minimap panels start collapsed on touch devices, remain
 scrollable when expanded, and preserve the player’s toggle when rotating. Wide
 laptop circuits scroll horizontally and also support tapping a piece then its slot.
+
+Qollab remote runs display provider job states, elapsed time, and the job ID in a
+shared status panel. Poll via the provider’s `wait_for_final_state` callback; never
+resubmit a job to refresh status. Status feedback is transient, not saved progress.
+
+IonQ remote simulators and physical QPUs are reserved for final challenges in the
+Qollab adapter: Coin’s explicitly marked final toss, Grover’s final measurement,
+Ghost Key’s recovery run, and RSA’s Shor simulation. Practice uses BasicSimulator
+with real returned counts and its own backend metadata. A runtime-only allowance
+is claimed immediately before submission, including ambiguous submission failure;
+a second final job is refused without contacting the provider. After the final
+result, a dismissible message asks players to collect their badge, then Stop/Run
+Qollab before the next final challenge or retry. The allowance is never persisted.
+Aria’s 25 qubits cannot run Ghost Key; Forte’s 29 can. Preserve existing save keys
+and do not unlock all challenges until Qollab storage persistence is tested.
+
+The outdoor top bar and laptop toolbar share `BackendLabel`, showing the selected
+backend; IonQ mode labels local practice and the remote final challenge separately.

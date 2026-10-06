@@ -119,7 +119,7 @@ let recordedJs = `export const recorded = ${JSON.stringify(Object.fromEntries(la
 for (const row of index.batches) recordedJs += `recorded[${JSON.stringify(row.batch_id)}] = recorded[${JSON.stringify(row.label)}];\n`;
 recordedJs += `export const batches = ${JSON.stringify(index.batches.map((row) => ({ ...row, recorded: true })))};\n`;
 await writeFile(path.join(outputDir, 'recorded.js'), recordedJs);
-await writeFile(path.join(outputDir, 'build-info.json'), JSON.stringify({ target: 'qollab', builtAt: new Date().toISOString(), vaultBits: 25, assets: Object.keys(assets).length, shor: 'qiskit-qward 0.28.1 (portable module)', hardwareSubmissions: false }, null, 2) + '\n');
+await writeFile(path.join(outputDir, 'build-info.json'), JSON.stringify({ target: 'qollab', builtAt: new Date().toISOString(), vaultBits: 25, assets: Object.keys(assets).length, shor: 'qiskit-qward 0.28.1 (portable module)', hardwareSubmissions: true, remoteExecutionPolicy: "one-final-challenge-per-code-run; local-ideal-practice" }, null, 2) + '\n');
 await verifyQollab();
 const archive = path.join(root, 'dist/quantum-playground-qollab.zip');
 await rm(archive, { force: true });
