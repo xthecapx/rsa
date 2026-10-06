@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const path = require('node:path');
-const { mkdtemp, cp, writeFile, rm } = require('node:fs/promises');
+const { mkdtemp, mkdir, writeFile, rm } = require('node:fs/promises');
 const os = require('node:os');
 
 const helpers = import('../tools/qollab-package.mjs');
@@ -19,11 +19,21 @@ test('asset matching preserves dynamic sprites and drops unused static assets', 
 });
 
 test('upload verifier rejects unnecessary files and escaping runtime imports', async () => {
-  const { outputDir, verifyQollab } = await verifier;
+  const { QOLLAB_FILES, verifyQollab } = await verifier;
   const temporary = await mkdtemp(path.join(os.tmpdir(), 'qollab-package-'));
   const fixture = path.join(temporary, 'upload');
   try {
-    await cp(outputDir, fixture, { recursive: true });
+    // Test upload validation without requiring ignored build artifacts.
+    for (const name of QOLLAB_FILES) {
+      const file = path.join(fixture, name);
+      await mkdir(path.dirname(file), { recursive: true });
+      await writeFile(file, name === 'THIRD-PARTY-NOTICES.txt'
+        ? 'Kenney react excalibur QWARD dm-sans press-start-2p' : '');
+    }
+    await verifyQollab(fixture);
+    await rm(path.join(fixture, 'requirements.txt'));
+    await assert.rejects(verifyQollab(fixture), /Missing Qollab file: requirements.txt/);
+    await writeFile(path.join(fixture, 'requirements.txt'), 'qiskit>=2.5.2,<3.0.0\n');
     await writeFile(path.join(fixture, 'build-info.json'), '{}');
     await assert.rejects(verifyQollab(fixture), /Unnecessary file/);
     await rm(path.join(fixture, 'build-info.json'));
