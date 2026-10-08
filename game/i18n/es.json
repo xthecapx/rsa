@@ -2593,5 +2593,6 @@
   "Buy each job’s gear from Chispa and finish all four client jobs to open Quantum Town. Neighbor lessons are optional; Root Cap also offers the Cipher Badge after the jobs.": "Compra el equipo de cada trabajo en el puesto de Chispa y completa los cuatro trabajos del cliente para abrir Pueblo cuántico. Las lecciones de los vecinos son opcionales; Root Cap también ofrece la insignia de Pueblo Cifrado después de los trabajos.",
   "This lesson is complete and stays complete. Your Quantum Coin opens the east road to Foundry Town. Back in Coin Town, you can collect the town badge from Mayor Cap or visit the neighbors for optional practice.": "Esta lección queda completada. Tu Moneda cuántica abre el camino este a Pueblo Forja. En Pueblo Moneda puedes recoger la insignia del pueblo de la alcaldesa Cap o visitar a los vecinos para practicar de forma opcional.",
   "Town challenge complete · next road open": "Reto del pueblo completado · siguiente camino abierto",
-  "Optional: {activity}": "Opcional: {activity}"
+  "Optional: {activity}": "Opcional: {activity}",
+  "These are lesson shortcuts, not exact saves. Restoring a challenge-complete code also grants that town’s optional knowledge cards and town badge.": "Son atajos para las lecciones, no guardados exactos. Restaurar un código de reto completado también otorga las tarjetas de conocimiento opcionales y la insignia de ese pueblo."
 }

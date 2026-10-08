@@ -43,7 +43,7 @@ test('available storage preserves existing save keys and restores serialized pro
     removeItem: (key) => saved.delete(key),
   } } });
   try {
-    const [, progress] = stores();
+    const [, progress, medals] = stores();
     // Start a new save session after the preceding blocked-storage test.
     for (const store of stores()) store.persist.clearStorage();
     saved.set('quantum-playground-progress-v1', JSON.stringify({ state: { completed: { rsa: ['1', '2'] } }, version: 0 }));
@@ -51,6 +51,17 @@ test('available storage preserves existing save keys and restores serialized pro
     assert.deepEqual(progress.getState().completed.rsa, ['1', '2']);
     progress.getState().complete('rsa', '3');
     assert.deepEqual(JSON.parse(saved.get('quantum-playground-progress-v1')).state.completed.rsa, ['1', '2', '3']);
+    await medals.persist.rehydrate();
+    progress.getState().complete('coin', 'coin');
+    progress.getState().reset('coin');
+    await Promise.all([progress.persist.rehydrate(), medals.persist.rehydrate()]);
+    const { currentCheckpoint } = loadTs(path.join(__dirname, '../game/checkpoints.ts'));
+    assert.equal(currentCheckpoint('coinTown', [], progress.getState().completed, medals.getState().earned), 'ct3');
+    assert.deepEqual(progress.getState().completed.coin, []);
+    progress.getState().reset();
+    medals.getState().reset();
+    await Promise.all([progress.persist.rehydrate(), medals.persist.rehydrate()]);
+    assert.equal(currentCheckpoint('coinTown', [], progress.getState().completed, medals.getState().earned), 'ct1');
     assert.deepEqual(stores().map((store) => store.persist.getOptions().name), ['quantum-town-v1', 'quantum-playground-progress-v1', 'quantum-town-medals-v1', 'quantum-town-knowledge-v1', 'quantum-town-wallet-v1']);
   } finally {
     if (previous) Object.defineProperty(global, 'window', previous);

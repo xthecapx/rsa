@@ -11,6 +11,53 @@ const { useGame } = loadTs(path.join(__dirname, '../game/state.ts'));
 const { useWallet } = loadTs(path.join(__dirname, '../game/wallet.ts'));
 const { useMedals } = loadTs(path.join(__dirname, '../game/medals.ts'));
 const { COIN_KNOWLEDGE_IDS } = loadTs(path.join(__dirname, '../content/knowledge.ts'));
+const { roadBadges, openRoads } = loadTs(path.join(__dirname, '../game/roads.ts'));
+
+test('lesson replays keep earned checkpoint milestones while a full reset clears them', async () => {
+  await useMedals.persist.rehydrate();
+  useProgress.getState().reset();
+  useMedals.getState().reset();
+  for (const [location, scenario, mission, code] of [
+    ['coin', 'coin', 'coin', 'ct3'], ['grover', 'grover', 'grover', 'ft3'], ['vault', 'vault', 'vault', 'ht3'],
+  ]) {
+    useProgress.getState().complete(scenario, mission);
+    useProgress.getState().reset(scenario);
+    assert.equal(currentCheckpoint(location, [], useProgress.getState().completed, useMedals.getState().earned), code);
+  }
+  for (const act of ['1', '2', '3']) useProgress.getState().complete('rsa', act);
+  assert.equal(currentCheckpoint('cipher', [], {}, useMedals.getState().earned), 'ci1');
+  useProgress.getState().complete('rsa', '4');
+  useProgress.getState().reset('rsa');
+  assert.equal(currentCheckpoint('cipher', [], {}, useMedals.getState().earned), 'ci3');
+  useProgress.getState().reset();
+  useMedals.getState().reset();
+  assert.equal(currentCheckpoint('coinTown', [], {}, useMedals.getState().earned), 'ct1');
+  assert.equal(currentCheckpoint('cipher', [], {}, useMedals.getState().earned), 'ci1');
+});
+
+test('challenge-only codes restore open roads and merge without deleting earned progress', () => {
+  for (const [location, completed, code, road] of [
+    ['coinTown', { coin: ['coin'] }, 'ct3', 'coinEast'],
+    ['foundry', { grover: ['grover'] }, 'ft3', 'coinWest'],
+    ['hollow', { vault: ['vault'] }, 'ht3', 'coinNorth'],
+    ['cipher', { rsa: ['1', '2', '3', '4'] }, 'ci3', 'cipherNorth'],
+  ]) {
+    assert.equal(currentCheckpoint(location, [], completed), code);
+    useProgress.setState({ completed: { vault: ['vault'] } });
+    useMedals.getState().reset();
+    useKnowledge.setState({ cards: ['control'], fresh: null });
+    useGame.getState().resetRun(1);
+    assert.equal(restoreCheckpoint(code), true);
+    assert.equal(useTown.getState().location, location);
+    assert.ok(useKnowledge.getState().cards.includes('control'));
+    assert.ok(useProgress.getState().completed.vault.includes('vault'));
+    assert.equal(openRoads({ badges: roadBadges(useMedals.getState().earned), metThecap: false, rsaActs: 0 })[road], true);
+    assert.equal(useGame.getState().operations, 0);
+    const before = JSON.stringify({ progress: useProgress.getState().completed, medals: useMedals.getState().earned, cards: useKnowledge.getState().cards, wallet: useWallet.getState() });
+    assert.equal(restoreCheckpoint(code), true);
+    assert.equal(JSON.stringify({ progress: useProgress.getState().completed, medals: useMedals.getState().earned, cards: useKnowledge.getState().cards, wallet: useWallet.getState() }), before);
+  }
+});
 
 test('short checkpoint codes validate and distinguish practice from town completion', () => {
   for (const code of ['ct0', 'ct4', 'ft9', 'qt2', 'ct1extra', '', '../ct2']) assert.equal(checkpoint(code), null);

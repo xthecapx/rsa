@@ -152,7 +152,8 @@ acts. These are public teaching milestones, not full save snapshots: incomplete
 neighbor activities, individual circuits, puzzle answers, measurements, and RSA
 mid-act checkpoints are not encoded. Code 3 is available after the challenge
 even without cards; its preset also restores optional neighbor lessons and the
-town badge, preserving the existing codes. Existing progress in the current run is
+town badge, preserving the existing codes. Earned medals keep code 3 available
+during lesson replays; a full reset clears them. Existing progress in the current run is
 retained; restoration never executes a circuit or changes the selected backend.
 
 ## Quick start (Docker)

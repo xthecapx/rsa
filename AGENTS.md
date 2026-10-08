@@ -300,6 +300,7 @@ lesson shortcuts, not exact saves or proof of completion. Earlier badges/cards
 and gear for completed RSA acts are restored; current earned progress is merged.
 Partial conversations, circuits, measurements, and active RSA checkpoints are
 not encoded. A completed challenge yields code 3 even without knowledge cards.
+Earned medals retain code 3 when a lesson is restarted; full reset clears them.
 Existing public code-3 presets still restore the optional cards and town badge
 for compatibility; they are not exact snapshots. Save/restart wording is platform-neutral; the same codes work in
 both versions. Remote-job notices tell players to keep a code before restarting.

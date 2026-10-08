@@ -8,6 +8,7 @@ import { useTown } from "@/game/town";
 import { useProgress } from "@/game/progress";
 import { useKnowledge } from "@/game/knowledge";
 import { useGame } from "@/game/state";
+import { useMedals } from "@/game/medals";
 
 const STAGES = ["Town arrival", "All five neighbor lessons complete", "Town challenge complete · next road open"];
 
@@ -18,7 +19,8 @@ export function CheckpointControl({ disabled: parentDisabled, onOpenChange }: { 
   const location = useTown((state) => state.location);
   const cards = useKnowledge((state) => state.cards);
   const completed = useProgress((state) => state.completed);
-  const code = currentCheckpoint(location, cards, completed);
+  const earned = useMedals((state) => state.earned);
+  const code = currentCheckpoint(location, cards, completed, earned);
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [error, setError] = useState(false);
@@ -57,6 +59,7 @@ export function CheckpointControl({ disabled: parentDisabled, onOpenChange }: { 
         </label>
         <p className="text-sm text-stage-muted">{t(checkpoint(code)!.title)} · {t(code === "qt1" ? "Quantum Town replay hub" : STAGES[checkpoint(code)!.stage - 1])}</p>
         <p className="text-xs text-stage-muted">{t("Codes restore town milestones: completed neighbor lessons, challenges, and earlier town badges. Unfinished conversations, circuits, and measurement results are not included.")}</p>
+        <p className="text-xs text-stage-muted">{t("These are lesson shortcuts, not exact saves. Restoring a challenge-complete code also grants that town’s optional knowledge cards and town badge.")}</p>
         <div className="space-y-2">
           <label className="block text-sm">{t("Restore a checkpoint")}
             <input className="mt-2 w-full border border-stage-border bg-stage-bg p-3 text-base" value={input} placeholder="ct2" autoCapitalize="none" autoCorrect="off" maxLength={12}

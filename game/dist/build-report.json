@@ -5,7 +5,7 @@
   "hardwareSubmissions": true,
   "remoteExecutionPolicy": "one-final-challenge-per-code-run; local-ideal-practice",
   "fileCount": 19,
-  "bytes": 3040187,
+  "bytes": 3040857,
   "assets": {
     "included": [
       "/assets/characters/animal-bat.svg",
@@ -173,8 +173,8 @@
     },
     {
       "path": "game.js",
-      "bytes": 1700558,
-      "sha256": "9cb078aef5999c7c4dbbba93d7af05b86203e8540ded3e9e2115e74ff4d8a224"
+      "bytes": 1701228,
+      "sha256": "1d94d70d285971b0bb4b3d4cf145c96d596de9cd9d48b6489fa4d0d9060ce48e"
     },
     {
       "path": "index.html",
@@ -224,7 +224,7 @@
     },
     {
       "path": "i18n/es.json",
-      "bytes": 359201
+      "bytes": 359538
     },
     {
       "path": "node_modules/react-dom/cjs/react-dom-client.production.js",
