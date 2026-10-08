@@ -28,9 +28,9 @@ export const MEDALS: readonly Medal[] = [
   {
     id: "coin-town", scenario: "coin", mission: "town", glyph: "✪",
     title: "Coin Town Badge", skill: "Qubit states · |0⟩ |1⟩ |+⟩ |−⟩",
-    description: "You learned what a single qubit can be, how H and Z move it, how interference cancels amplitudes and how to read a hidden sign, then settled game night with a fair quantum coin.",
+    description: "You settled game night with a fair quantum coin. The town’s optional neighbor lessons explore qubit states, gates, interference and hidden signs.",
     ability: "Qubit Sense: prepare |0⟩, |1⟩, |+⟩ or |−⟩ and read the ± basis with H before measuring.",
-    hint: "Collect all five knowledge cards in Coin Town and settle the coin toss.",
+    hint: "Settle the coin toss, then visit Mayor Cap. Knowledge cards are optional.",
   },
   {
     id: "codebook", scenario: "rsa", mission: "1", glyph: "≡",
@@ -70,9 +70,9 @@ export const MEDALS: readonly Medal[] = [
   {
     id: "foundry-town", scenario: "grover", mission: "town", glyph: "⚙",
     title: "Foundry Badge", skill: "Amplitude amplification",
-    description: "You learned how a register holds 2ⁿ states, how one H box spreads it evenly, how the Oracle marks the answer with a hidden minus, how the Diffuser lifts it and when to stop, then disarmed the drone core.",
+    description: "You disarmed the drone core with Grover’s search. The crew’s optional lessons explore registers, the Oracle, the Diffuser and the right number of rounds.",
     ability: "Round Counter: build Grover rounds from an Oracle and a Diffuser and stop at about π/4·√N.",
-    hint: "Collect all five Foundry cards and disarm the drone core in Thecap’s workshop.",
+    hint: "Disarm the drone core, then visit VP Cap. Knowledge cards are optional.",
   },
   {
     id: "ghost-key", scenario: "vault", mission: "vault", glyph: "±",
@@ -84,16 +84,16 @@ export const MEDALS: readonly Medal[] = [
   {
     id: "hollow-town", scenario: "vault", mission: "town", glyph: "🕯",
     title: "Hollow Badge", skill: "Phase kickback",
-    description: "You learned how a CNOT flips only when its control is 1, why a flip only hands |−⟩ a minus sign, how that minus kicks back onto the control, what parity the ghost answers and how one question reads it all, then opened Anselmo’s vault.",
+    description: "You opened Anselmo’s vault using phase kickback. The neighbors’ optional lessons explore controlled gates, the helper qubit, parity and the one-question trick.",
     ability: "Kickback: turn an Oracle’s answer into a phase with a |−⟩ helper, and read it with H.",
-    hint: "Collect all five Hollow cards and open the vault in Casa Ofelia.",
+    hint: "Open the vault in Casa Ofelia, then visit Keeper Cap. Knowledge cards are optional.",
   },
   {
     id: "cipher-town", scenario: "rsa", mission: "town", glyph: "🔐",
     title: "Cipher Badge", skill: "Public-key crypto",
-    description: "You learned that an encoding is no lock, why a key needs a huge key space, how clock math wraps, how a public padlock hides a private key and how a number’s rhythm splits it, then finished all four of the client’s jobs.",
+    description: "You finished all four of the client’s jobs, from encoding to Shor’s algorithm. The neighbors’ optional lessons explore keys, clock math and public padlocks.",
     ability: "Padlock Sense: build an RSA key from two primes, and know that whoever splits N, or hears its rhythm, opens it.",
-    hint: "Collect all five Cipher cards and finish the client’s four jobs in Cipher Town.",
+    hint: "Finish all four client jobs, then visit Root Cap. Knowledge cards are optional.",
   },
 ];
 

@@ -206,7 +206,7 @@ export function WorldTownScreen({ config, restartOptions }: { config: TownConfig
   const sceneReady = hydrated && sceneStatus === "ready";
   const inputLocked = !!talk || activityVisible || journalOpen || restartOpen || !!panel || !!mission?.talk || !!mission?.locked;
   useEffect(() => { if (sceneReady) void bus.send({ type: "lockInput", locked: inputLocked }); }, [sceneReady, inputLocked]);
-  const ready = cards.length === cardIds.length && challenge.complete;
+  const ready = challenge.complete;
   const stageById = (id: string) => challenge.stages?.find((stage) => stage.id === id);
   const next: string | null = !saved.welcomed || (ready && !badge) ? greeter.id : badge ? config.afterBadge()
     : config.route.find((id) => (stageById(id) ? !stageById(id)!.complete : id === challenge.door ? !challenge.complete : !cards.includes(npcById(id)!.knowledge!))) ?? greeter.id;
@@ -304,7 +304,7 @@ export function WorldTownScreen({ config, restartOptions }: { config: TownConfig
       <li>{saved.welcomed ? "✓ " : "◇ "}{t(greeter.meet)}</li>
       {teachers.map((teacher) => <li key={teacher.id}>{cards.includes(teacher.knowledge!) ? "✓ " : "◇ "}{t(teacher.title)} · {t(config.cards[teacher.knowledge!].title)}</li>)}
       <li>{challenge.complete ? "✓ " : "◇ "}{t(challenge.journal)}</li>
-      <li>{badge ? "★ " : "◇ "}{t(config.badge.journal)}</li>
+      <li>{badge ? "★ " : "◇ "}{t(`Optional: ${t(config.badge.journal)}`)}</li>
       {config.journal.roads.map((road) => <li key={road.label}>{road.open ? "◆ " : "◇ "}{t(road.label)}</li>)}
     </ul>
     {config.journal.extra}
@@ -320,7 +320,7 @@ export function WorldTownScreen({ config, restartOptions }: { config: TownConfig
   const nextNpc = next ? npcById(next) : undefined;
   const objective = mission?.active ? mission.objective
     : nextStage ? nextStage.objective
-    : next === greeter.id ? (badge ? null : ready ? config.badge.collect : greeter.meet)
+    : next === greeter.id ? (badge ? null : ready ? t(`Optional: ${t(config.badge.collect)}`) : greeter.meet)
     : next === challenge.door ? challenge.objective
     : nextNpc?.knowledge ? `${t("Next")}: ${t(nextNpc.title)} · ${t(nextNpc.description)}`
     : next ? config.objectiveFor(next) : null;

@@ -5,7 +5,7 @@
   "hardwareSubmissions": true,
   "remoteExecutionPolicy": "one-final-challenge-per-code-run; local-ideal-practice",
   "fileCount": 19,
-  "bytes": 3027843,
+  "bytes": 3040187,
   "assets": {
     "included": [
       "/assets/characters/animal-bat.svg",
@@ -173,8 +173,8 @@
     },
     {
       "path": "game.js",
-      "bytes": 1688214,
-      "sha256": "5764cd3c06760e922130eae8cc0af756535685d302e1d505fcb068b13dd99eff"
+      "bytes": 1700558,
+      "sha256": "9cb078aef5999c7c4dbbba93d7af05b86203e8540ded3e9e2115e74ff4d8a224"
     },
     {
       "path": "index.html",
@@ -224,7 +224,7 @@
     },
     {
       "path": "i18n/es.json",
-      "bytes": 347073
+      "bytes": 359201
     },
     {
       "path": "node_modules/react-dom/cjs/react-dom-client.production.js",
@@ -240,7 +240,7 @@
     },
     {
       "path": "components/CoinScenario.tsx",
-      "bytes": 23582
+      "bytes": 23645
     },
     {
       "path": "components/TownScreen.tsx",
@@ -264,7 +264,7 @@
     },
     {
       "path": "content/cipher.ts",
-      "bytes": 18269
+      "bytes": 18180
     },
     {
       "path": "components/VaultScenario.tsx",
@@ -272,11 +272,11 @@
     },
     {
       "path": "content/hollow.ts",
-      "bytes": 15394
+      "bytes": 15377
     },
     {
       "path": "components/WorldTownScreen.tsx",
-      "bytes": 13456
+      "bytes": 13472
     }
   ]
 }

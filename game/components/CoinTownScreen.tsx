@@ -6,7 +6,7 @@ import { coinTownMap } from "@/engine/maps/coinTownMap";
 import { useTown } from "@/game/town";
 import { useProgress } from "@/game/progress";
 import { useMedals } from "@/game/medals";
-import { openRoads } from "@/game/roads";
+import { openRoads, roadBadges } from "@/game/roads";
 import { t } from "@/i18n";
 import type { RestartOption } from "./StartOverControl";
 import { WorldMinimap, type MinimapPlace } from "./WorldMinimap";
@@ -37,14 +37,11 @@ export function CoinTownScreen({ onLeave, onEast, onWest, onEnterCoin, restartOp
   onEnterCoin: () => void; restartOptions: RestartOption[];
 }) {
   const completed = useProgress((state) => state.completed);
-  const coinBadge = useMedals((state) => !!state.earned["coin-town"]);
-  const foundryBadge = useMedals((state) => !!state.earned["foundry-town"]);
-  const hollowBadge = useMedals((state) => !!state.earned["hollow-town"]);
+  const earned = useMedals((state) => state.earned);
   const metThecap = useTown((state) => state.welcomed);
   const coinComplete = !!completed.coin?.includes("coin");
-  /** The roads open in challenge order (game/roads.ts): Coin Town's badge opens the east road, the Foundry Badge the west road, the Hollow Badge the north road. */
-  const cipherBadge = useMedals((state) => !!state.earned["cipher-town"]);
-  const roads = openRoads({ badges: { coin: coinBadge, foundry: foundryBadge, hollow: hollowBadge, cipher: cipherBadge }, metThecap,
+  /** The challenge medals open roads; knowledge cards and town ceremonies are optional. */
+  const roads = openRoads({ badges: roadBadges(earned), metThecap,
     rsaActs: ["1", "2", "3", "4"].filter((act) => completed.rsa?.includes(act)).length });
   const { coinNorth: northOpen, coinWest: westOpen, coinEast: eastOpen } = roads;
 
@@ -82,7 +79,7 @@ export function CoinTownScreen({ onLeave, onEast, onWest, onEnterCoin, restartOp
       { test: (at) => at.x === 0, go: onWest },
     ],
     journal: {
-      title: "Coin Town journal", intro: "Learn from the neighbors, settle the coin toss, then see Mayor Cap for the town badge.",
+      title: "Coin Town journal", intro: "Settle the coin toss to open the east road to Foundry Town. Neighbor lessons are optional; Mayor Cap also offers a town badge after the challenge.",
       roads: [{ label: "Take the east road to Foundry Town", open: eastOpen }, { label: "Take the west road to Hollow Town", open: westOpen }, { label: "Take the north road to Cipher Town", open: northOpen }],
     },
     restart: { label: "Restart Coin Town", description: "Forget the five knowledge cards and meet Mayor Cap again. Your medals and the coin lesson stay.", restart: () => {} },

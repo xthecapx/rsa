@@ -1,10 +1,12 @@
+import type { MedalId } from "@/content/medals";
+
 /**
  * Which roads are open. Towns open strictly in challenge order, each by the
- * badge of the town before it:
+ * challenge medal of the town before it (older town badges also count):
  *
- *   Coin Town ─(Coin Town badge)→ Foundry Town (east)
- *             ─(Foundry Badge)──→ Hollow Town (west)
- *             ─(Hollow Badge)───→ Cipher Town (north) ─(Cipher Badge)→ Quantum Town
+ *   Coin Town ─(Quantum Coin)────────→ Foundry Town (east)
+ *             ─(Amplitude Amplifier)─→ Hollow Town (west)
+ *             ─(Ghost Key)───────────→ Cipher Town (north) ─(four RSA medals)→ Quantum Town
  *
  * A road stays open once a later badge is earned. Saves from before the towns
  * existed keep their way in: they already met Professor Thecap in Quantum Town,
@@ -26,6 +28,16 @@ export interface Roads {
   coinNorth: boolean;
   /** Cipher Town's north road to Quantum Town. */
   cipherNorth: boolean;
+}
+
+/** Roads use earned challenges, independently of optional knowledge cards or ceremonies. */
+export function roadBadges(earned: Partial<Record<MedalId, string>>): RoadFacts["badges"] {
+  return {
+    coin: !!(earned["quantum-coin"] || earned["coin-town"]),
+    foundry: !!(earned.amplifier || earned["foundry-town"]),
+    hollow: !!(earned["ghost-key"] || earned["hollow-town"]),
+    cipher: !!earned["cipher-town"] || (["codebook", "key-ring", "prime-cutter", "period-lens"] as const).every((id) => !!earned[id]),
+  };
 }
 
 export function openRoads({ badges, metThecap, rsaActs }: RoadFacts): Roads {

@@ -7,7 +7,7 @@ export type { ActivityStep, BenchStep, KnowledgeCard, Line, QuestionStep } from 
  * Coin Town: the first town on the road. Its challenge is the coin house
  * (Who Goes First?); its neighbors each teach one idea about a single qubit
  * that the later lessons assume. A card is never required for the coin toss,
- * but the town badge needs the toss and all five cards.
+ * and the completed challenge opens the road without visiting the neighbors.
  */
 export type KnowledgeId = CoinKnowledgeId;
 export const KNOWLEDGE_IDS = COIN_KNOWLEDGE_IDS;
@@ -163,26 +163,26 @@ export function coinTownNpc(id: CoinTownNpcId): CoinTownNpc {
 
 /** Mayor Cap's lines, picked from the player's progress. Every town is welcomed by a Cap; Professor Thecap in Quantum Town is her cousin. */
 export const MAYOR = {
-  welcome: { speaker: "mayor", text: "Welcome to Coin Town! I’m Cap, the mayor. Everyone here knows one small piece of how a qubit works. Learn from five neighbors, settle Ale and Brayan’s coin toss in the house up north, and the town badge is yours. The badge also opens the east road to Foundry Town." },
-  guide: { speaker: "mayor", text: "Luz is by the lamps, Don Óscar at his lens shop, Tomás at the east house, Nico at the weathervane and Marisol at the fountain. You can play the coin lesson right away. To earn the badge, finish the lesson and collect all five knowledge cards." },
+  welcome: { speaker: "mayor", text: "Welcome to Coin Town! I’m Cap, the mayor. Everyone here knows one small piece of how a qubit works. Settle Ale and Brayan’s coin toss in the house up north to earn the Quantum Coin and open the east road to Foundry Town. The neighbors are here if you want to practice first." },
+  guide: { speaker: "mayor", text: "Luz is by the lamps, Don Óscar at his lens shop, Tomás at the east house, Nico at the weathervane and Marisol at the fountain. Their knowledge cards are optional. You can go straight to the coin challenge; finishing it opens the east road. Come back to me afterward for the town badge." },
   coinWaiting: { speaker: "mayor", text: "The coin toss is still waiting in the house up north." },
   coinDone: { speaker: "mayor", text: "Ale and Brayan’s coin toss is settled." },
-  ready: { speaker: "mayor", text: "Five cards and a fair coin. You know what a qubit can be, how H mixes it, how a sign hides inside it and how to read that sign. That’s the Coin Town badge, and the east gate will open for you." },
+  ready: { speaker: "mayor", text: "A fair coin, and game night can begin! Your Quantum Coin has opened the east road. Here’s the Coin Town badge to celebrate. You can visit the neighbors whenever you want more practice." },
   done: { speaker: "mayor", text: "The badge suits you. Take the east road to Foundry Town. My cousin VP Cap runs it, and Professor Thecap has a workshop there. Then return here: our west road leads to Keeper Cap in Hollow Town, and our north road to Root Cap in Cipher Town. Tell them Cap sent you. Replay anything you like; you keep your cards and medals." },
 } satisfies Record<string, Line>;
 /** "{count} of 5 knowledge cards." is composed at runtime. */
 export const CARD_COUNT = "You have {count} of 5 knowledge cards.";
 
 export const WARDEN = {
-  closed: { speaker: "warden", text: "This road goes north to Cipher Town, where a client is hiring hackers, and on to Quantum Town. I only open it for travellers with the Hollow Badge. Keeper Cap hands it out, down the west road." },
+  closed: { speaker: "warden", text: "This road goes north to Cipher Town, where a client is hiring hackers, and on to Quantum Town. Earn Ghost Key by opening the vault in Casa Ofelia, down the west road, and I’ll let you through." },
   open: { speaker: "warden", text: "Badge checked. The road north to Cipher Town is open. Say hi to Root Cap for me." },
 } satisfies Record<string, Line>;
 
 /** Signposts at the ends of the crossing street. */
 export const SIGNS = {
-  eastClosed: { speaker: "system", text: "East road · Foundry Town. The gate opens for holders of the Coin Town badge. Mayor Cap hands it out, by the entrance." },
+  eastClosed: { speaker: "system", text: "East road · Foundry Town. Finish Who Goes First? in the coin house to earn Quantum Coin and open this gate. Knowledge cards are optional." },
   eastOpen: { speaker: "system", text: "East road · Foundry Town. VP Cap’s factories and Professor Thecap’s workshop. The gate is open." },
-  westClosed: { speaker: "system", text: "West road · Hollow Town. The gate opens for holders of the Foundry Badge. VP Cap hands it out, down the east road." },
+  westClosed: { speaker: "system", text: "West road · Hollow Town. Finish Echo Chamber in Thecap’s workshop to earn Amplitude Amplifier and open this gate. Knowledge cards are optional." },
   westOpen: { speaker: "system", text: "West road · Hollow Town. Keeper Cap’s old cemetery and Doña Ofelia’s knocking house. The gate is open." },
 } satisfies Record<string, Line>;
 

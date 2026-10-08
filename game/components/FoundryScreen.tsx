@@ -50,7 +50,7 @@ export function FoundryScreen({ onWest, onEnterWorkshop, restartOptions }: {
     gates: {},
     exits: [{ test: (at) => at.x === 0 && FOUNDRY_WEST_ROAD.includes(at.y), go: onWest }],
     journal: {
-      title: "Foundry Town journal", intro: "Learn from the crew, disarm the drone core in Thecap’s workshop, then see VP Cap for the Foundry Badge.",
+      title: "Foundry Town journal", intro: "Disarm the drone core to open Coin Town’s west road to Hollow Town. Crew lessons are optional; VP Cap also offers the Foundry Badge after the challenge.",
       roads: [{ label: "Take the west road back to Coin Town", open: true }],
     },
     restart: { label: "Restart Foundry Town", description: "Forget the five Foundry cards and meet VP Cap again. Your medals and the workshop lesson stay.", restart: () => {} },

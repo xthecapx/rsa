@@ -36,5 +36,5 @@ export function currentCheckpoint(location: string, cards: readonly KnowledgeId[
   const town = CHECKPOINT_TOWNS.find((item) => item.location === location || (location === "coin" && item.scenario === "coin") || (location === "grover" && item.scenario === "grover") || (location === "vault" && item.scenario === "vault")) ?? CHECKPOINT_TOWNS[0];
   const allCards = town.cards.every((card) => cards.includes(card));
   const allMissions = town.missions.every((mission) => completed[town.scenario]?.includes(mission));
-  return `${town.prefix}${allCards ? allMissions ? 3 : 2 : 1}`;
+  return `${town.prefix}${allMissions ? 3 : allCards ? 2 : 1}`;
 }

@@ -11,9 +11,10 @@ import { cipherMap } from "@/engine/maps/cipherMap";
 import { bus } from "@/engine/bus";
 import { useGame } from "@/game/state";
 import { useProgress } from "@/game/progress";
+import { useMedals } from "@/game/medals";
 import { useTown } from "@/game/town";
 import { useWallet } from "@/game/wallet";
-import { openRoads } from "@/game/roads";
+import { openRoads, roadBadges } from "@/game/roads";
 import { fill } from "@/game/interpolate";
 import { gameAudio } from "@/game/audio";
 import { t, useLocale } from "@/i18n";
@@ -121,13 +122,13 @@ export function CipherScreen({ onSouth, onNorth, restartOptions }: {
   useLocale((state) => state.locale);
   const completed = useProgress((state) => state.completed);
   const { gear, advanced } = useWallet();
-  const badge = !!completed.rsa?.includes("town");
+  const earned = useMedals((state) => state.earned);
   const metThecap = useTown((state) => state.welcomed);
   const game = useGame();
   const [talk, setTalk] = useState<MissionTalk | null>(null);
   const readyRef = useRef(true);
   const actDone = (act: ActNumber) => !!completed.rsa?.includes(String(act));
-  const northOpen = openRoads({ badges: { coin: false, foundry: false, hollow: false, cipher: badge }, metThecap, rsaActs: 0 }).cipherNorth;
+  const northOpen = openRoads({ badges: roadBadges(earned), metThecap, rsaActs: 0 }).cipherNorth;
   const allActs = ACT_NUMBERS.every(actDone);
 
   const toStall = { label: "Head to Chispa’s stall", action: () => setTalk(null) };
@@ -189,7 +190,7 @@ export function CipherScreen({ onSouth, onNorth, restartOptions }: {
       { test: (at) => at.y === 0 && CIPHER_NORTH_ROAD.includes(at.x), go: leave(onNorth) },
     ],
     journal: {
-      title: "Cipher Town journal", intro: "Learn from the neighbors, buy each job’s gear from Chispa, finish the client’s four jobs, then see Root Cap for the Cipher Badge.",
+      title: "Cipher Town journal", intro: "Buy each job’s gear from Chispa and finish all four client jobs to open Quantum Town. Neighbor lessons are optional; Root Cap also offers the Cipher Badge after the jobs.",
       roads: [{ label: "Take the south road back to Coin Town", open: true }, { label: "Take the north road to Quantum Town", open: northOpen }],
       extra: <section className="panel space-y-2 p-3" aria-label={t("Gear")}>
         <div className="flex items-baseline justify-between gap-2"><h3 className="text-accent-amber">{t("Gear")}</h3><Credits /></div>

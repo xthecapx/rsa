@@ -439,7 +439,7 @@ export function CoinScenario({ onExit, onRestartGame }: { onExit?: () => void; o
               }))}
             </>}
             {session.step === "done" && <>
-              <p>{t("This lesson is complete and stays complete. Next: back in Coin Town, finish learning from the neighbors and collect the town badge from Mayor Cap.")}</p>
+              <p>{t("This lesson is complete and stays complete. Your Quantum Coin opens the east road to Foundry Town. Back in Coin Town, you can collect the town badge from Mayor Cap or visit the neighbors for optional practice.")}</p>
               <button className="btn-primary inline-block" onClick={leaveHouse}>{t("Return to Coin Town →")}</button>
               <button className="btn-ghost block" onClick={restartLesson}>{t("Replay the whole lesson")}</button>
             </>}

@@ -50,7 +50,7 @@ export function HollowScreen({ onEast, onEnterVault, restartOptions }: {
     gates: {},
     exits: [{ test: (at) => at.x === hollowMap.width - 1 && HOLLOW_EAST_ROAD.includes(at.y), go: onEast }],
     journal: {
-      title: "Hollow Town journal", intro: "Learn from the neighbors, open the vault in Casa Ofelia, then see Keeper Cap for the Hollow Badge.",
+      title: "Hollow Town journal", intro: "Open the vault to open Coin Town’s north road to Cipher Town. Neighbor lessons are optional; Keeper Cap also offers the Hollow Badge after the challenge.",
       roads: [{ label: "Take the east road back to Coin Town", open: true }],
     },
     restart: { label: "Restart Hollow Town", description: "Forget the five Hollow cards and meet Keeper Cap again. Your medals and the vault lesson stay.", restart: () => {} },

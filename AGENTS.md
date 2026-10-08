@@ -37,7 +37,10 @@ preference affects only future runs, including Quantum Town replays.
 ## World and progression
 
 Players begin in Coin Town. Every teaching town has five knowledge cards and a
-lesson; cards are required for its badge, but never to enter the lesson.
+lesson. Knowledge cards are optional practice. Completing each challenge earns
+its medal and opens the next road directly; no neighbor cards or town ceremony
+are required. Each greeter also offers a town badge after its challenge, without
+a card requirement.
 
 | Town | Spanish name | Implemented lesson and role |
 | --- | --- | --- |
@@ -47,10 +50,10 @@ lesson; cards are required for its badge, but never to enter the lesson.
 | Cipher Town | Pueblo Cifrado | Root Cap; cryptography cards; **Breaking RSA** on Ale and Brayan's street. |
 | Quantum Town | Pueblo cuántico | Professor Thecap; replay hub with doors for the lessons and an RSA replay street. |
 
-The Coin badge opens Coin Town's east road to Foundry. The Foundry badge opens
-Coin Town's west road to Hollow. The Hollow badge opens Coin Town's north road
-to Cipher. The Cipher badge requires all four RSA acts and opens Cipher's north
-road to Quantum. Older saves that reached the hub retain access. Short checkpoint
+Quantum Coin opens Coin Town's east road to Foundry. Amplitude Amplifier opens
+Coin Town's west road to Hollow. Ghost Key opens Coin Town's north road to Cipher.
+All four RSA act medals open Cipher's north road to Quantum. Older town badges
+also unlock their roads, and saves that reached the hub retain access. Short checkpoint
 codes provide explicit lesson shortcuts; URL travel passes have been removed.
 See `game/game/roads.ts`.
 
@@ -291,12 +294,14 @@ backend; IonQ mode labels local practice and the remote final challenge separate
 
 `CheckpointControl` appears beside Start over in shared world/laptop controls.
 Public short codes restore teaching milestones on both targets: ct/ft/ht/ci +
-1 (arrival), 2 (all five neighbor lessons), or 3 (challenge and town badge);
+1 (arrival), 2 (all five neighbor lessons), or 3 (challenge complete / next road open);
 qt1 opens Quantum Town with prior towns complete. These are user-authorized
 lesson shortcuts, not exact saves or proof of completion. Earlier badges/cards
 and gear for completed RSA acts are restored; current earned progress is merged.
 Partial conversations, circuits, measurements, and active RSA checkpoints are
-not encoded. Save/restart wording is platform-neutral; the same codes work in
+not encoded. A completed challenge yields code 3 even without knowledge cards.
+Existing public code-3 presets still restore the optional cards and town badge
+for compatibility; they are not exact snapshots. Save/restart wording is platform-neutral; the same codes work in
 both versions. Remote-job notices tell players to keep a code before restarting.
 Restore via the TownScreen event owner to rebuild the scene without
 reloading Qollab, changing the backend, or submitting jobs. Busy controls block

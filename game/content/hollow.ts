@@ -9,8 +9,8 @@ import type { AnimalSpec } from "./coinTown";
  * Bernstein–Vazirani). The neighbors teach what the vault adds to Grover: a
  * controlled flip, a helper that a flip cannot move, the phase that kicks back,
  * the parity the ghost really answers, and the one-question trick. As in the
- * other towns, no card is needed for the vault, but the Hollow Badge needs the
- * lesson and all five cards.
+ * other towns, no card is needed for the vault or its badge. Finishing the
+ * challenge opens the next road.
  */
 export const KNOWLEDGE_IDS = HOLLOW_KNOWLEDGE_IDS;
 
@@ -172,11 +172,11 @@ export function hollowNpc(id: HollowNpcId): HollowNpc {
 export const KEEPER = {
   welcome: { speaker: "keepercap", text: "Mind the mist! I’m Cap, keeper of this cemetery. My cousin VP Cap sent word that the one who disarmed the drone was coming west. Here nobody searches for answers: we listen for them." },
   ofelia: { speaker: "keepercap", text: "Up the hill is Casa Ofelia. Every night since her husband Anselmo passed, the house knocks. Doña Ofelia thinks it’s his ghost; my cousin Thecap thinks it’s his vault. Either way she needs you." },
-  guide: { speaker: "keepercap", text: "Fausto rings the chapel bell, Candela makes candles, Rocío reads fortunes by the crypt, Ramiro keeps the graves and Aurelio walks the lantern row. You can try the vault challenge right away. To earn the Hollow Badge, open the vault and collect all five knowledge cards." },
+  guide: { speaker: "keepercap", text: "Fausto rings the chapel bell, Candela makes candles, Rocío reads fortunes by the crypt, Ramiro keeps the graves and Aurelio walks the lantern row. Their knowledge cards are optional. Open the vault to earn Ghost Key and open Coin Town’s north road to Cipher Town. Come back for the Hollow Badge whenever you like." },
   vaultWaiting: { speaker: "keepercap", text: "Casa Ofelia is still knocking." },
   vaultDone: { speaker: "keepercap", text: "Casa Ofelia is quiet at last. Doña Ofelia sleeps with the candles lit." },
-  ready: { speaker: "keepercap", text: "Five cards and a quiet house. You can build a controlled flip, park a helper in |−⟩, catch the kickback, count the parity and ask the one question. That’s Bernstein–Vazirani, and that’s the Hollow Badge." },
-  done: { speaker: "keepercap", text: "The badge is yours. Take the east road back to Coin Town. Show Beto your Hollow Badge to open its north road to Cipher Town, where Root Cap keeps the network running. Replay anything here; you keep your cards and medals." },
+  ready: { speaker: "keepercap", text: "The house is quiet. Your Ghost Key has opened Coin Town’s north road to Cipher Town. Take this Hollow Badge with my thanks. The neighbors will teach you more whenever you’re ready." },
+  done: { speaker: "keepercap", text: "The badge is yours. Take the east road back to Coin Town. Its north road is open to Cipher Town, where Root Cap keeps the network running. Replay anything here; you keep your cards and medals." },
 } satisfies Record<string, Line>;
 export const CARD_COUNT = "You have {count} of 5 Hollow cards.";
 

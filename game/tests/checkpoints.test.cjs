@@ -22,6 +22,11 @@ test('short checkpoint codes validate and distinguish practice from town complet
   assert.equal(currentCheckpoint('coinTown', [], {}), 'ct1');
   assert.equal(currentCheckpoint('coin', COIN_KNOWLEDGE_IDS, {}), 'ct2');
   assert.equal(currentCheckpoint('coinTown', COIN_KNOWLEDGE_IDS, { coin: ['coin'] }), 'ct3');
+  assert.equal(currentCheckpoint('coinTown', [], { coin: ['coin'] }), 'ct3');
+  assert.equal(currentCheckpoint('foundry', [], { grover: ['grover'] }), 'ft3');
+  assert.equal(currentCheckpoint('hollow', [], { vault: ['vault'] }), 'ht3');
+  assert.equal(currentCheckpoint('cipher', [], { rsa: ['1', '2', '3'] }), 'ci1');
+  assert.equal(currentCheckpoint('cipher', [], { rsa: ['1', '2', '3', '4'] }), 'ci3');
 });
 
 test('later checkpoints restore predecessor badges and keep the current challenge uncompleted', () => {

@@ -9,7 +9,7 @@ import { useProgress } from "@/game/progress";
 import { useKnowledge } from "@/game/knowledge";
 import { useGame } from "@/game/state";
 
-const STAGES = ["Town arrival", "All five neighbor lessons complete", "Town challenge and badge complete"];
+const STAGES = ["Town arrival", "All five neighbor lessons complete", "Town challenge complete · next road open"];
 
 export function CheckpointControl({ disabled: parentDisabled, onOpenChange }: { disabled: boolean; onOpenChange: (open: boolean) => void }) {
   useLocale((state) => state.locale);

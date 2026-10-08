@@ -6,7 +6,7 @@ import type { AnimalSpec } from "./coinTown";
  * Foundry Town: east of Coin Town, where Professor Thecap keeps a workshop.
  * Its challenge is the Echo Chamber (Grover's search); the factory hands each
  * teach one piece the search is built from. As in Coin Town, no card is needed
- * for the workshop, but the Foundry Badge needs the lesson and all five cards.
+ * for the workshop or its badge. Finishing the challenge opens the next road.
  */
 export const KNOWLEDGE_IDS = FOUNDRY_KNOWLEDGE_IDS;
 
@@ -153,11 +153,11 @@ export function foundryNpc(id: FoundryNpcId): FoundryNpc {
 /** VP Cap's lines, picked from the player's progress. Cousin of Mayor Cap and of Professor Thecap. */
 export const VP = {
   welcome: { speaker: "vpcap", text: "Welcome to Foundry Town! I’m Cap, VP of engineering. My cousin the mayor said a sharp one was coming up the east road. Here we don’t build one qubit, we build registers." },
-  thecap: { speaker: "vpcap", text: "My other cousin, Professor Thecap, rents the big workshop up the lane. An old drone core armed itself in there. Sixteen PINs, three tries. Learn from the crew, then help him disarm it." },
-  guide: { speaker: "vpcap", text: "Rosa runs the control room, Paco the silo yard, Inés the Oracle on the conveyor line, Joaquín the Diffuser press and Vera the crane at the dock. You can try the drone challenge right away. To earn the Foundry Badge, disarm the core and collect all five knowledge cards." },
+  thecap: { speaker: "vpcap", text: "My other cousin, Professor Thecap, rents the big workshop up the lane. An old drone core armed itself in there. Sixteen PINs, three tries. You can go straight to the challenge or practice with the crew first." },
+  guide: { speaker: "vpcap", text: "Rosa runs the control room, Paco the silo yard, Inés the Oracle on the conveyor line, Joaquín the Diffuser press and Vera the crane at the dock. Their knowledge cards are optional. Disarm the core to earn Amplitude Amplifier and open Coin Town’s west road to Hollow Town. Come back for the Foundry Badge whenever you like." },
   workshopWaiting: { speaker: "vpcap", text: "The drone core in Thecap’s workshop is still armed." },
   workshopDone: { speaker: "vpcap", text: "Thecap says the drone core is disarmed. Nice work." },
-  ready: { speaker: "vpcap", text: "Five cards and a disarmed core. You can spread a register, mark the answer with the Oracle, lift it with the Diffuser and stop at the top. That’s Grover’s search, and that’s the Foundry Badge." },
+  ready: { speaker: "vpcap", text: "The core is safe. Your Amplitude Amplifier has opened Coin Town’s west road to Hollow Town. Here’s the Foundry Badge for a job well done. The crew’s benches are always here for practice." },
   done: { speaker: "vpcap", text: "The badge is yours. Take the west road back to Coin Town. From there, its west road is now open to Hollow Town, where Keeper Cap looks after the old cemetery. Replay anything here; you keep your cards and medals." },
 } satisfies Record<string, Line>;
 export const CARD_COUNT = "You have {count} of 5 Foundry cards.";

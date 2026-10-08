@@ -9,8 +9,8 @@ import type { AnimalSpec } from "./coinTown";
  * The neighbors teach the defender's side: an encoding is not a lock, a lock
  * needs a huge key space, locks live on clocks, a public padlock with a private
  * key, and the rhythm that splits N. The client pays for each job and Chispa
- * sells the gear each job needs, so the acts never need a card, but the Cipher
- * Badge needs all four jobs and all five cards.
+ * sells the gear each job needs. All four jobs are required for the next road
+ * and the Cipher Badge; knowledge cards are optional.
  */
 export const KNOWLEDGE_IDS = CIPHER_KNOWLEDGE_IDS;
 
@@ -169,7 +169,7 @@ export const CIPHER_NPCS: CipherNpc[] = [
     ],
     outro: [
       { speaker: "dante", text: "You heard it: the beat splits the number. That’s everything the client’s last job needs." },
-      { speaker: "dante", text: "10 credits, and keep the headphones. Root Cap will want to hear you’ve learned all five." },
+      { speaker: "dante", text: "10 credits, and keep the headphones. Come back anytime you want another listen." },
     ],
     repeat: [{ speaker: "dante", text: "1, 7, 4, 13 … and back to 1. Can you hear it?" }],
   },
@@ -184,11 +184,11 @@ export function cipherNpc(id: CipherNpcId): CipherNpc {
 
 export const ROOT = {
   welcome: { speaker: "rootcap", text: "Hey, watch the cables! I’m Cap, root admin of Cipher Town: I keep the network up and the lights blinking. My cousin Keeper Cap said someone who talks to ghosts was coming north." },
-  client: { speaker: "rootcap", text: "There’s a client parked on the street up north, hiring someone to read Ale and Brayan’s messages. Learn how the locks are built before you sell yourself as someone who picks them." },
-  guide: { speaker: "rootcap", text: "Lupe paints the mural, Tadeo cuts keys, Nina runs the arcade, Paloma delivers parcels and Dante spins records in the plaza. Chispa sells gear and Cero posts bounties. You can take the client’s jobs without visiting the neighbors. To earn the Cipher Badge, finish all four jobs and collect all five knowledge cards." },
+  client: { speaker: "rootcap", text: "There’s a client parked on the street up north, hiring someone to read Ale and Brayan’s messages. Take the jobs directly, or visit the neighbors first to learn how the locks work." },
+  guide: { speaker: "rootcap", text: "Lupe paints the mural, Tadeo cuts keys, Nina runs the arcade, Paloma delivers parcels and Dante spins records in the plaza. Chispa sells gear and Cero posts bounties. Knowledge cards are optional. Finish all four client jobs to open the north road to Quantum Town, then visit me whenever you want the Cipher Badge." },
   actsWaiting: { speaker: "rootcap", text: "The client’s jobs aren’t finished: four messages, four locks." },
   actsDone: { speaker: "rootcap", text: "All four messages, from plain numbers to RSA. Ale and Brayan are already shopping for a better lock." },
-  ready: { speaker: "rootcap", text: "Five cards and four jobs. Encoding isn’t secrecy, a key needs a huge key space, locks live on clocks, a public padlock hides a private key, and a quantum computer hears the rhythm that splits N. That’s public-key crypto, and that’s the Cipher Badge." },
+  ready: { speaker: "rootcap", text: "Four jobs, four messages recovered. Your challenge medals have opened the north road to Quantum Town. Here’s the Cipher Badge. The neighbors are still here if you want to inspect the locks more closely." },
   done: { speaker: "rootcap", text: "The badge is yours, and the north road is open: Quantum Town is up there, where Professor Thecap keeps a replay door for everything. The south road goes back to Coin Town." },
 } satisfies Record<string, Line>;
 export const CARD_COUNT = "You have {count} of 5 Cipher cards.";
@@ -237,7 +237,7 @@ export const CHISPA = {
 } satisfies Record<string, Line>;
 
 export const CIPHER_SIGNS = {
-  northClosed: { speaker: "system", text: "North road · Quantum Town. The gate opens for holders of the Cipher Badge. Root Cap hands it out, by the south gate." },
+  northClosed: { speaker: "system", text: "North road · Quantum Town. Finish all four client jobs to open this gate. Knowledge cards are optional." },
 } satisfies Record<string, Line>;
 
 export const CERO = {
@@ -317,4 +317,3 @@ export function makeBounty(seed: number): CryptoStep | DialStep {
     [[`m = ${c}${sup(toy.d)} mod ${n}`, String(m)]], trayFor([String(m)], [String(c), String(n - m), String((m + 1) % n), String(toy.d)], random),
     "Opened. Only d undoes e."), vars: { n, e: toy.e, d: toy.d } };
 }
-

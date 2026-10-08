@@ -134,17 +134,25 @@ package layout, validation limits, and test checklist.
 
 ### Short lesson checkpoints
 
+Knowledge cards are optional. Earn Quantum Coin to open Foundry Town, Amplitude
+Amplifier to open Hollow Town, and Ghost Key to open Cipher Town. Completing all
+four RSA acts opens Quantum Town. Challenge medals unlock these roads directly;
+the greeters' extra town badges require only the challenge, and older earned
+town badges still unlock their roads.
+
 **Save progress** in the top bar or laptop shows a short checkpoint code to keep
 before restarting or changing backends. The same codes work in both the Python
 server and Qollab versions. Enter one in the same menu after restarting, or
 choose a checkpoint directly to reach a lesson quickly. Coin Town
 uses `ct1` (arrival), `ct2` (all five neighbor lessons complete), and `ct3`
-(neighbors, town challenge, and badge complete). Foundry uses `ft1`–`ft3`, Hollow
+(town challenge complete / next road open). Foundry uses `ft1`–`ft3`, Hollow
 uses `ht1`–`ht3`, and Cipher uses `ci1`–`ci3`. `qt1` opens Quantum Town's replay hub.
 Later-town codes restore earlier town badges and required RSA gear for completed
 acts. These are public teaching milestones, not full save snapshots: incomplete
 neighbor activities, individual circuits, puzzle answers, measurements, and RSA
-mid-act checkpoints are not encoded. Existing progress in the current run is
+mid-act checkpoints are not encoded. Code 3 is available after the challenge
+even without cards; its preset also restores optional neighbor lessons and the
+town badge, preserving the existing codes. Existing progress in the current run is
 retained; restoration never executes a circuit or changes the selected backend.
 
 ## Quick start (Docker)
