@@ -10,10 +10,10 @@ from core.game_services import describe as describe_backend, execute, token, rea
 
 
 # A remote provider has one submission per Qollab code run. Practice never
-# consumes it; only a final challenge can reach the injected remote backend.
+# consumes it; final challenges and explicit lab runs use the selected backend.
 _used = WeakKeyDictionary()
 _practice = None
-RESTART_MESSAGE = "This game session has already used its remote job. Finish collecting your badge, keep your checkpoint code, then restart the game before another final challenge."
+RESTART_MESSAGE = "This game session has already used its remote job. Keep your checkpoint code and export your lab layout, then restart the game before another remote experiment or final challenge."
 
 
 def describe(backend):
@@ -29,7 +29,7 @@ def describe_json(backend):
 def final_challenge(path, body):
     return (path == "/api/coin/simulate" and body.get("finalChallenge") is True
             or path == "/api/grover/run" and body.get("circuit", {}).get("measure") is True
-            or path in ("/api/vault/run", "/api/shor/simulate"))
+            or path in ("/api/vault/run", "/api/shor/simulate", "/api/lab/run"))
 
 
 def route_executor(backend, path, body, progress=None):

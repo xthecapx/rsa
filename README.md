@@ -86,10 +86,13 @@ Choose a free **IBM noise-model simulator** for the full game. Ghost Key retains
 circuit to the selected IBM simulator using matrix product state simulation.
 Noisy measurements may fail the key check, so the player can retry. Hardware
 jobs are enabled when a physical QPU is selected in Qollab. IonQ remote
-simulators and physical QPUs are reserved for final town challenges: the Coin
-final toss, Grover final measurement, Ghost Key recovery, and the RSA Shor run.
+simulators and physical QPUs run final town challenges or explicit personal-lab
+experiments: the Coin final toss, Grover final measurement, Ghost Key recovery,
+and the RSA Shor run.
 Practice uses the built-in ideal simulator and labels its actual counts. One
-remote submission is allowed per Qollab code Run; a second is blocked locally.
+remote submission is allowed per Qollab code Run, shared by lab experiments and
+final challenges; a second is blocked locally. The lab always uses the selected
+backend and explains this allowance before Run.
 After reviewing the result and collecting the badge, press **Stop**, then
 **Run** in Qollab for the next final challenge (or to retry after a noisy failure).
 Ghost Key needs Forte/Forte Enterprise (29 qubits); Aria (25) is too small.
@@ -98,7 +101,8 @@ Neighbor benches retain unfinished activities and counts during the current visi
 earned knowledge cards survive refresh, but those bench activities restart.
 Qollab's
 sandbox does not persist storage across runs, so keep a short checkpoint code
-before restarting. No automatic job is submitted on startup or restoration.
+before restarting. Export a custom lab plan too; checkpoint codes restore medals,
+not furniture layouts. No automatic job is submitted on startup or restoration.
 Provider limits and credits apply. Recorded IBM RSA batches remain a separate option.
 
 Qollab runs the included Python services in its browser runtime and supplies the
@@ -113,8 +117,9 @@ The server game includes a persistent **Simulation** selector for ideal Aer or
 depolarization, and 2% readout error; it does not claim to reproduce a device’s
 calibration. Selection is carried per request, so players do not change one
 another’s backend. Coin, Foundry/Hollow register benches, Grover, Ghost Key, and
-live RSA simulations use this preference. Saved results retain their original
-backend metadata. Full game resets retain this preference, like language and sound.
+live RSA simulations and personal-lab experiments use this preference. Saved
+results retain their original backend metadata. Full game resets retain this
+preference, like language and sound.
 Qollab uses its external QPU selection, including authorized live hardware runs.
 Foundry’s rounds dial submits real shots while ideal amplitude illustrations and
 card goals stay labeled references. Recorded IBM counts stay labeled hardware.
@@ -155,6 +160,75 @@ even without cards; its preset also restores optional neighbor lessons and the
 town badge, preserving the existing codes. Earned medals keep code 3 available
 during lesson replays; a full reset clears them. Existing progress in the current run is
 retained; restoration never executes a circuit or changes the selected backend.
+
+### Personal quantum lab
+
+From Coin Town's southern arrival area, follow the narrow path east to the hidden
+cave on the right side of the map. No medal is required to enter or run the starter
+experiment. The cave marker appears as the player approaches; leaving returns to
+the cave entrance in Coin Town.
+
+The scene stays within the visible screen and its camera follows the player.
+Equipment supplies scroll separately. Larger caves show a minimap with the player
+and camera area; tap it to walk across the base. On small screens, open the
+minimap or supplies when needed without scrolling the scene.
+
+Lab furniture, storage, plants and stone tiles use Kenney's CC0 Roguelike Indoors
+and Caves & Dungeons art. Matching previews appear in the supplies list and build
+grid. The original sheets and licenses live in `game/public/assets/kenney/lab/`;
+sprite changes do not alter saved layouts or equipment footprints.
+
+**Build mode** supports placing, moving, rotating, storing and undoing furniture.
+Use drag, tap an inventory item then a floor tile, or keyboard selection. Placement
+checks bounds, overlapping footprints and access to the entrance and equipment.
+Challenge medals expand the cave and unlock free supplies:
+
+| Medal | Acquirable equipment |
+| --- | --- |
+| Quantum Coin | X/H/Z gate modules, Ry(θ), Bloch display, garden |
+| Amplitude Amplifier | Register kit and Grover algorithm box |
+| Ghost Key | Controlled-gate and phase-kickback box |
+| Four RSA medals | Classical crypto toolkit and quantum period explorer |
+
+Acquire equipment in the supply catalog, then install laptop modules or place
+physical furniture. Knowledge cards are optional. Existing town badges also grant
+compatible unlocks; restoring a checkpoint never duplicates an item or changes a
+custom layout. Construction is free and independent of Cipher's mission wallet.
+
+The quantum laptop is a free-play workspace with a circuit builder, inspector,
+ideal state explorer and measured results. Open the component picker with **+**
+beside the floating Clear/Run buttons, then drag a gate or select it and tap a wire.
+Tapping a wire's **+** also lets you choose and place a gate directly; loading a
+starter recipe is optional. Select a placed gate and use its **×** button to
+remove only that operation, or press Delete/Backspace on the focused gate. Clear
+cancels any picked-up piece and resets the editor for a fresh circuit.
+Qubit controls explain equipment unlocks and warn
+that changing the count clears the circuit. It supports 1–4
+qubits, at most 32 operations and 1–1,024 shots. Ry has a Y-axis angle slider,
+numeric radians and presets. The Bloch display is an ideal single-qubit reference;
+returned counts do not reconstruct it. Multi-qubit recipes show register amplitudes.
+Grover and phase-kickback boxes load editable oracle/diffuser/helper recipes.
+The period box runs a separate N=15, a=7 Shor experiment.
+
+Only **Run** submits work. Editing, acquiring items, moving furniture, importing a
+plan, switching language and restoring progress never submit a job. Results keep
+their circuit snapshot and actual backend identity; edits label them as previous
+runs. Closing/reopening retains current-visit results, and successful experiments
+keep Run available. The Python build uses the player's ideal/noisy Aer preference;
+Qollab uses its selected backend, including its remote job limit.
+
+Layouts, ownership, installations and named recipes persist in the separate
+`quantum-player-lab-v1` save. **Export / import lab** provides a versioned JSON file
+and copy/paste fallback for restarts or switching delivery targets. Keep a short
+checkpoint code separately for medals. Import validates layout and recipes without
+awarding medals; unavailable equipment waits in storage. Results and provider jobs
+are transient and excluded from exports. Lesson resets retain the lab; full-game
+reset clears it. **Reset lab layout** restores only the starter arrangement.
+
+Both targets share `/api/lab/run`, the validated circuit builder in
+`backend/app/core/register_circuit.py`, and execution/result handling in
+`game_services.py`. Native HTTP exposes the route through `api/routes/lab.py`;
+Qollab copies the shared core unchanged and applies only provider policy.
 
 ## Quick start (Docker)
 

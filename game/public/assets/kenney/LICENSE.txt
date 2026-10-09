@@ -18,6 +18,18 @@ http://creativecommons.org/publicdomain/zero/1.0/
 Free to use in personal, educational and commercial projects.
 Created and distributed by Kenney (www.kenney.nl).
 
+lab/indoors.png and lab/caves.png
+-------------------------------
+Kenney "Roguelike Indoors" — Tilesheets/roguelikeIndoor_transparent.png
+https://kenney.nl/assets/roguelike-indoors
+27 x 18 grid of 16x16 tiles, 1px spacing.
+Kenney "Roguelike Caves & Dungeons" — Spritesheet/roguelikeDungeon_transparent.png
+https://kenney.nl/assets/roguelike-caves-dungeons
+29 x 18 grid of 16x16 tiles, 1px spacing.
+Original sheets are unchanged. CC0 — full source licenses in lab/LICENSE-*.txt.
+The lab combines these with existing game-authored CRT/rack sprites; quantum
+display overlays are game-authored SVG references, not additional Kenney art.
+
 
 characters.png
 --------------

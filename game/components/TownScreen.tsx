@@ -11,6 +11,9 @@ import { bus, type Landmark } from "@/engine/bus";
 import { useGame } from "@/game/state";
 import { townStorageUnavailable, useTown } from "@/game/town";
 import { invalidateMission, missionGeneration } from "@/game/runtime";
+import { LabScreen } from "./LabScreen";
+import { useLab } from "@/game/lab";
+import { LAB_DOOR } from "@/content/lab";
 import { restoreCheckpoint } from "@/game/restoreCheckpoint";
 import { useProgress } from "@/game/progress";
 import { useMedals } from "@/game/medals";
@@ -149,7 +152,7 @@ export function TownScreen({ initialAct, initialCoin = false, initialGrover = fa
   useEffect(() => {
     let cancelled = false;
     void (async () => {
-      await Promise.all([useTown.persist.rehydrate(), useProgress.persist.rehydrate(), useMedals.persist.rehydrate(), useKnowledge.persist.rehydrate(), useWallet.persist.rehydrate()]);
+      await Promise.all([useTown.persist.rehydrate(), useProgress.persist.rehydrate(), useMedals.persist.rehydrate(), useKnowledge.persist.rehydrate(), useWallet.persist.rehydrate(), useLab.persist.rehydrate()]);
       if (cancelled) return;
       const saved = useTown.getState();
       useGame.setState({ laptopOpen: false, walking: false, near: null, operations: 0, busyLabel: null });
@@ -376,7 +379,7 @@ export function TownScreen({ initialAct, initialCoin = false, initialGrover = fa
     setJournalOpen(false); setRestartOpen(false); setTownNear(null);
     try { localStorage.removeItem(COIN_SAVE); localStorage.removeItem(GROVER_SAVE); localStorage.removeItem(VAULT_SAVE); } catch { /* In-memory reset remains available. */ }
     useProgress.getState().reset(); useMedals.getState().reset(); useKnowledge.getState().reset(); useWallet.getState().reset(); useGame.getState().resetRun(1); useGame.setState({ completedActs: [] });
-    useTown.getState().reset(); setCoinSaved(false); setGroverSaved(false); setVaultSaved(false);
+    useLab.getState().reset(); useTown.getState().reset(); setCoinSaved(false); setGroverSaved(false); setVaultSaved(false);
     setWorldKey((key) => key + 1);
   }
   const restartOptions: RestartOption[] = [
@@ -385,7 +388,7 @@ export function TownScreen({ initialAct, initialCoin = false, initialGrover = fa
     ...mission.restartOptions.slice(-1),
     { label: "Restart Echo Chamber", description: "Clear the workshop lesson, its circuit, runs, and completion. Start inside the workshop.", restart: restartGrover },
     { label: "Restart Operation Ghost Key", description: "Clear the vault lesson: a new mask, fresh candles, empty circuits, and no completion. Start inside Casa Ofelia.", restart: restartVault },
-    { label: "Start the whole game over", description: "Clear every lesson, your medal case, and town progress. Return to Mayor Cap’s welcome in Coin Town.", restart: restartGame },
+    { label: "Start the whole game over", description: "Clear every lesson, your medal case, town progress, and your personal lab. Return to Mayor Cap’s welcome in Coin Town.", restart: restartGame },
   ];
   const restartControl = <StartOverControl options={restartOptions} disabled={!sceneReady || (rsaActive && blocked)} onOpenChange={setRestartOpen} />;
 
@@ -412,18 +415,19 @@ export function TownScreen({ initialAct, initialCoin = false, initialGrover = fa
   };
 
   if (!hydrated) return <main className="relative h-dvh bg-stage-bg"><SceneLoading /></main>;
+  if (town.location === "lab") return <LabScreen onExit={() => { useTown.getState().patch({ location: "coinTown", coinTown: { ...useTown.getState().coinTown, position: { ...LAB_DOOR.stand }, facing: "down" } }); setWorldKey((k) => k + 1); }} onRestartGame={restartGame} />;
   if (town.location === "coin") return <CoinScenario onExit={leaveCoin} onRestartGame={restartGame} />;
   if (town.location === "foundry") return <FoundryScreen key={worldKey} onWest={leaveFoundry} onEnterWorkshop={() => enterGrover("foundry")}
     restartOptions={[{ label: "Restart Echo Chamber", description: "Clear the workshop lesson, its circuit, runs, and completion. Start inside the workshop.", restart: restartGrover },
-      { label: "Start the whole game over", description: "Clear every lesson, your medal case, and town progress. Return to Mayor Cap’s welcome in Coin Town.", restart: restartGame }]} />;
+      { label: "Start the whole game over", description: "Clear every lesson, your medal case, town progress, and your personal lab. Return to Mayor Cap’s welcome in Coin Town.", restart: restartGame }]} />;
   if (town.location === "hollow") return <HollowScreen key={worldKey} onEast={leaveHollow} onEnterVault={() => enterVault("hollow")}
     restartOptions={[{ label: "Restart Operation Ghost Key", description: "Clear the vault lesson: a new mask, fresh candles, empty circuits, and no completion. Start inside Casa Ofelia.", restart: restartVault },
-      { label: "Start the whole game over", description: "Clear every lesson, your medal case, and town progress. Return to Mayor Cap’s welcome in Coin Town.", restart: restartGame }]} />;
+      { label: "Start the whole game over", description: "Clear every lesson, your medal case, town progress, and your personal lab. Return to Mayor Cap’s welcome in Coin Town.", restart: restartGame }]} />;
   if (town.location === "cipher") return <CipherScreen key={worldKey} onSouth={leaveCipherSouth} onNorth={leaveCipherNorth}
-    restartOptions={[{ label: "Start the whole game over", description: "Clear every lesson, your medal case, and town progress. Return to Mayor Cap’s welcome in Coin Town.", restart: restartGame }]} />;
-  if (town.location === "coinTown") return <CoinTownScreen key={worldKey} onLeave={enterCipher} onEast={enterFoundry} onWest={enterHollow} onEnterCoin={enterCoin}
+    restartOptions={[{ label: "Start the whole game over", description: "Clear every lesson, your medal case, town progress, and your personal lab. Return to Mayor Cap’s welcome in Coin Town.", restart: restartGame }]} />;
+  if (town.location === "coinTown") return <CoinTownScreen key={worldKey} onLeave={enterCipher} onEast={enterFoundry} onWest={enterHollow} onEnterCoin={enterCoin} onEnterLab={() => { if (!saveAndPause()) return; useLab.getState().discover(); useTown.getState().patch({ location: "lab" }); }}
     restartOptions={[{ label: "Restart Who Goes First?", description: "Clear the coin lesson, its puzzles, experiments, and completion. Start inside the house.", restart: restartCoin },
-      { label: "Start the whole game over", description: "Clear every lesson, your medal case, and town progress. Return to Mayor Cap’s welcome in Coin Town.", restart: restartGame }]} />;
+      { label: "Start the whole game over", description: "Clear every lesson, your medal case, town progress, and your personal lab. Return to Mayor Cap’s welcome in Coin Town.", restart: restartGame }]} />;
   if (town.location === "grover") return <GroverScenario onExit={leaveGrover} onRestartGame={restartGame} />;
   if (town.location === "vault") return <VaultScenario onExit={leaveVault} onRestartGame={restartGame} />;
 

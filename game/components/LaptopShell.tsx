@@ -9,12 +9,12 @@ import { Calculator, useCalculator } from "./Calculator";
 
 /** Shared laptop chrome and controls for every scenario. Contents stay mounted
  * while closed so a player never loses an experiment by lowering the lid. */
-export function LaptopShell({ open, title, status, memory, footer, children, onClose, closeDisabled = false, restartControl, calculator = false }: {
+export function LaptopShell({ open, title, status, memory, footer, children, onClose, closeDisabled = false, restartControl, calculator = false, selectedBackend = false }: {
   open: boolean; title: string; status?: ReactNode; memory?: ReactNode;
   restartControl?: ReactNode;
   footer?: ReactNode; children: ReactNode; onClose: () => void; closeDisabled?: boolean;
   /** Offer the whole-number calculator, for benches with sums to work out. */
-  calculator?: boolean;
+  calculator?: boolean; selectedBackend?: boolean;
 }) {
   useLocale((state) => state.locale);
   const calculatorOpen = useCalculator((state) => state.open);
@@ -72,7 +72,7 @@ export function LaptopShell({ open, title, status, memory, footer, children, onC
       <div className="shared-laptop" role="dialog" aria-modal="true" aria-label={t("Laptop")} tabIndex={-1} ref={dialog}>
         <div className="laptop-bezel"><div className="laptop-camera">● &nbsp; th3c4p</div>
           <div className="laptop-screen">
-            <header className="laptop-toolbar"><div className="min-w-0"><h2>{localize(title)}</h2><BackendLabel />{localize(status && <div className="laptop-status">{localize(status)}</div>)}</div>
+            <header className="laptop-toolbar"><div className="min-w-0"><h2>{localize(title)}</h2><BackendLabel selected={selectedBackend} />{localize(status && <div className="laptop-status">{localize(status)}</div>)}</div>
               <div className="flex flex-wrap items-center justify-end gap-2">{calculator && <button type="button" className="btn-ghost" aria-pressed={calculatorOpen}
                 onClick={() => useCalculator.getState().toggle()}>🧮 {t("Calculator")}</button>}{restartControl}<LanguageSwitch /><button className="btn-ghost" disabled={closeDisabled} onClick={onClose}>{t("Close laptop")}</button></div>
             </header>

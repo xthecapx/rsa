@@ -59,6 +59,11 @@ for (let y = 1; y < height - 1; y++) for (let x = 1; x < width - 1; x++) {
 for (const sign of [COIN_TOWN_EAST_SIGN, COIN_TOWN_WEST_SIGN]) if (ground[sign.at.y][sign.at.x] === "I" || overlay[sign.at.y][sign.at.x] !== ".") throw new Error("A signpost stands on a solid tile");
 for (const npc of COIN_TOWN_NPCS) if (ground[npc.at.y][npc.at.x] === "I" || overlay[npc.at.y][npc.at.x] !== ".") throw new Error(`${npc.id} stands on a solid tile`);
 
+// A secluded path stays inside the wall, away from the east travel gate.
+fill(21, 27, 15, 1, "q"); fill(35, 25, 2, 3, "v");
+// Move the tree out of the path; keep the cave screened on either side.
+overlay[27][25] = "."; overlay[26][25] = ".";
+
 export const coinTownMap = {
   width, height, tileSize: townMap.tileSize, sheetColumns: townMap.sheetColumns,
   legend: townMap.legend, overlayLegend: townMap.overlayLegend,

@@ -147,7 +147,7 @@ await writeFile(path.join(outputDir, 'THIRD-PARTY-NOTICES.txt'), notices.join('\
 const verified = await verifyQollab();
 const report = {
   target: 'qollab', vaultBits: 25, bundler: 'esbuild', hardwareSubmissions: true,
-  remoteExecutionPolicy: 'one-final-challenge-per-code-run; local-ideal-practice',
+  remoteExecutionPolicy: 'one-final-or-lab-job-per-code-run; local-ideal-practice',
   fileCount: verified.files.length, bytes: verified.bytes,
   assets: { included: Object.keys(assets).sort(), omitted: Object.keys(inventory).filter((name) => !(name in assets)).sort() },
   files: await Promise.all(verified.files.map(async (file) => { const data = await readFile(file); return { path: path.relative(outputDir, file), bytes: data.length, sha256: createHash('sha256').update(data).digest('hex') }; })),
@@ -156,4 +156,4 @@ const report = {
 await writeFile(path.join(root, 'dist/build-report.json'), JSON.stringify(report, null, 2) + '\n');
 // Clean up the obsolete archive from older builds; delivery uses the folder.
 await rm(path.join(root, 'dist/quantum-playground-qollab.zip'), { force: true });
-console.log(`Upload the contents of ${outputDir} to Qollab, preserving subdirectories. Use an IBM noise-model simulator for the full game; IonQ is reserved for final challenges.`);
+console.log(`Upload the contents of ${outputDir} to Qollab, preserving subdirectories. Use an IBM noise-model simulator for the full game; IonQ runs final challenges or an explicit lab experiment, sharing one remote job per session.`);

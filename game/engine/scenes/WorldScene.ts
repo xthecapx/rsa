@@ -7,6 +7,7 @@ import { COIN_TOWN_ANIMALS, COIN_TOWN_DOOR, COIN_TOWN_EAST_SIGN, COIN_TOWN_NORTH
 import { FOUNDRY_ANIMALS, FOUNDRY_BELT, FOUNDRY_DOOR, FOUNDRY_NPCS, FOUNDRY_PROPS, FOUNDRY_SMOKE, FOUNDRY_SPAWN } from "@/content/foundry";
 import { HOLLOW_ANIMALS, HOLLOW_DOOR, HOLLOW_FOG, HOLLOW_NPCS, HOLLOW_PROPS, HOLLOW_SPAWN } from "@/content/hollow";
 import { CIPHER_ANIMALS, CIPHER_BOARD, CIPHER_NORTH_GATE_ROW, CIPHER_NORTH_ROAD, CIPHER_NPCS, CIPHER_PROPS, CIPHER_SPAWN } from "@/content/cipher";
+import { LAB_DOOR } from "@/content/lab";
 import { cipherMap } from "../maps/cipherMap";
 import type { PropSpec, PropSprite } from "@/content/knowledge";
 import { foundryMap } from "../maps/foundryMap";
@@ -143,6 +144,13 @@ export class WorldScene extends Scene {
       this.add(sign); this.signs.push({ actor: sign, id: npc.id, text: npc.label, done: false, alert: false });
     }
     for (const door of this.def.doors) {
+      if (door.id === "labDoor") {
+        const rock = new Actor({ pos: vec(tileCenter(door.at).x, tileCenter(door.at).y), z: 2 });
+        rock.graphics.use(new Circle({ radius: 21, color: Color.fromHex("#50656a"), strokeColor: Color.fromHex("#95a29c"), lineWidth: 3 }));
+        const opening = new Actor({ pos: vec(tileCenter(door.at).x, tileCenter(door.at).y), z: 3 });
+        opening.graphics.use(new Circle({ radius: 11, color: Color.fromHex("#08171d"), strokeColor: Color.fromHex("#dfbc72"), lineWidth: 2 }));
+        this.add(rock); this.add(opening);
+      }
       const at = tileCenter(door.at);
       const sign = new TownSign(at.x, at.y - 9, true);
       this.add(sign); this.signs.push({ actor: sign, id: door.id, text: door.label, done: false, alert: false });
@@ -472,7 +480,7 @@ export class WorldScene extends Scene {
 export const COIN_TOWN_WORLD: WorldDef = {
   map: coinTownMap, spawn: COIN_TOWN_SPAWN,
   npcs: COIN_TOWN_NPCS.map((npc) => ({ id: npc.id, at: npc.at, label: npc.title })),
-  doors: [{ id: "coinDoor", ...COIN_TOWN_DOOR, label: "Coin house" },
+  doors: [{ id: "labDoor", ...LAB_DOOR, label: "Personal quantum lab" }, { id: "coinDoor", ...COIN_TOWN_DOOR, label: "Coin house" },
     { id: "eastSign", ...COIN_TOWN_EAST_SIGN, label: "Foundry Town →" }, { id: "westSign", ...COIN_TOWN_WEST_SIGN, label: "← Hollow Town" }],
   animals: COIN_TOWN_ANIMALS,
   gates: [{ id: "north", tiles: COIN_TOWN_NORTH_ROAD.map((x) => ({ x, y: NORTH_GATE_ROW })), lock: "Hollow Badge" },

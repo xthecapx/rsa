@@ -310,6 +310,8 @@ def vault(backend, action, body, *, read_device=read_token, write_device=token, 
 
 
 def dispatch(backend, path, body, *, shor_handler=None, executor=execute):
+    if path == "/api/lab/run":
+        return lab(backend, body, executor=executor)
     if path == "/api/health":
         return describe(backend)
     if path == "/api/plaintext":
@@ -382,3 +384,13 @@ def register(backend, action, body, *, executor=execute):
     return {"bits": qubits, "counts": counts, "probabilities": ideal, "shots": shots,
             "backend": info["backend"], "kind": info["kind"],
             "source": "hardware" if info["kind"] == "hardware" else "simulator"}
+
+
+def lab(backend, body, *, executor=execute):
+    from .register_circuit import lab_circuit
+    circuit, ideal, shots, text = lab_circuit(body)
+    counts, _, compiled, info = executor(backend, circuit, shots)
+    return {"bits": circuit.num_qubits, "shots": shots, "counts": counts,
+            "probabilities": ideal, "backend": info["backend"], "kind": info["kind"],
+            "source": "hardware" if info["kind"] == "hardware" else "simulator",
+            "circuit_text": text, "depth": compiled.depth()}

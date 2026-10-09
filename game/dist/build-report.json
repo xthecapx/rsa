@@ -3,9 +3,9 @@
   "vaultBits": 25,
   "bundler": "esbuild",
   "hardwareSubmissions": true,
-  "remoteExecutionPolicy": "one-final-challenge-per-code-run; local-ideal-practice",
+  "remoteExecutionPolicy": "one-final-or-lab-job-per-code-run; local-ideal-practice",
   "fileCount": 19,
-  "bytes": 3040857,
+  "bytes": 3185646,
   "assets": {
     "included": [
       "/assets/characters/animal-bat.svg",
@@ -99,6 +99,8 @@
       "/assets/kenney/audio/sfx/switch.ogg",
       "/assets/kenney/characters.png",
       "/assets/kenney/city_tiles.png",
+      "/assets/kenney/lab/caves.png",
+      "/assets/kenney/lab/indoors.png",
       "/assets/kenney/portraits.png",
       "/assets/kenney/ui/button_amber.png",
       "/assets/kenney/ui/button_blue.png",
@@ -123,13 +125,13 @@
   "files": [
     {
       "path": "THIRD-PARTY-NOTICES.txt",
-      "bytes": 42708,
-      "sha256": "3985edbd1ce975fac8a6d025230bf0be32d958685ff4cdf10d6b86e3a1e2fa24"
+      "bytes": 44760,
+      "sha256": "91dc4489b953e1c59e4b3c3a8daa34a6773b3949f309c4e0c4ad4a21d84435f5"
     },
     {
       "path": "assets.js",
-      "bytes": 750178,
-      "sha256": "434de55d44a13fa707683fdf5b954f77346b04436d417c75c6aa600e7dd57778"
+      "bytes": 821400,
+      "sha256": "1280b5afcf1d14f3ed5bd8d24d39c8cf84f2c1bd5fabe4319ad800059be4a1e3"
     },
     {
       "path": "core/__init__.py",
@@ -153,13 +155,13 @@
     },
     {
       "path": "core/game_services.py",
-      "bytes": 18475,
-      "sha256": "89ca434fb7516203e214d33e53886aaa8b885297b26589f141b6cd644046fa01"
+      "bytes": 19072,
+      "sha256": "f2c32fc843514f42cb97af295aedb529d6d6eff39a9f9f5a3a8531e31d32a08a"
     },
     {
       "path": "core/register_circuit.py",
-      "bytes": 2180,
-      "sha256": "fea1d982a7bf561298d345e7659dda1ea8f29792812ef558f3d9b17e34c9c5eb"
+      "bytes": 4743,
+      "sha256": "dea0a90f5265a4fb443336329d9092907d5a09c0f3a8f51c1c4281e5417806b4"
     },
     {
       "path": "core/rsa.py",
@@ -173,8 +175,8 @@
     },
     {
       "path": "game.js",
-      "bytes": 1701228,
-      "sha256": "1d94d70d285971b0bb4b3d4cf145c96d596de9cd9d48b6489fa4d0d9060ce48e"
+      "bytes": 1762908,
+      "sha256": "be652f210f4c1968eedce4271a2682a691cded8f899ff4a39fb0e10d9ce65155"
     },
     {
       "path": "index.html",
@@ -183,8 +185,8 @@
     },
     {
       "path": "main.css",
-      "bytes": 79232,
-      "sha256": "f6969034acc6fdf88dd42d6cbb0a1b952006e950d38ff1537c3d8e5de864b37d"
+      "bytes": 85870,
+      "sha256": "5758abd734281673825c21d04b6cee2ad191639f4f07079dfd193f9a7899e26e"
     },
     {
       "path": "main.js",
@@ -198,8 +200,8 @@
     },
     {
       "path": "quantum/services.py",
-      "bytes": 4729,
-      "sha256": "51d779da9530cf4f3df90509a8f461bcfd405a686ce0c111e7723c6e828d113a"
+      "bytes": 4766,
+      "sha256": "2c7488af08fb493a11a955b367d881ef7b8eec67cf27de7fcf0973de6bfc17c5"
     },
     {
       "path": "requirements.txt",
@@ -220,19 +222,19 @@
   "largestModules": [
     {
       "path": "node_modules/excalibur/build/esm/excalibur.js",
-      "bytes": 496039
+      "bytes": 496130
     },
     {
       "path": "i18n/es.json",
-      "bytes": 359538
+      "bytes": 371394
     },
     {
       "path": "node_modules/react-dom/cjs/react-dom-client.production.js",
-      "bytes": 177288
+      "bytes": 177404
     },
     {
       "path": "node_modules/@dnd-kit/dom/index.js",
-      "bytes": 35795
+      "bytes": 35791
     },
     {
       "path": "components/VaultChallenges.tsx",
@@ -240,11 +242,15 @@
     },
     {
       "path": "components/CoinScenario.tsx",
-      "bytes": 23645
+      "bytes": 23641
     },
     {
       "path": "components/TownScreen.tsx",
-      "bytes": 21611
+      "bytes": 22026
+    },
+    {
+      "path": "components/LabLaptop.tsx",
+      "bytes": 21276
     },
     {
       "path": "node_modules/@dnd-kit/dom/utilities.js",
@@ -256,11 +262,11 @@
     },
     {
       "path": "components/ShorPipeline.tsx",
-      "bytes": 19646
+      "bytes": 19759
     },
     {
       "path": "components/GroverScenario.tsx",
-      "bytes": 18761
+      "bytes": 18757
     },
     {
       "path": "content/cipher.ts",
@@ -268,15 +274,11 @@
     },
     {
       "path": "components/VaultScenario.tsx",
-      "bytes": 17823
+      "bytes": 17799
     },
     {
       "path": "content/hollow.ts",
       "bytes": 15377
-    },
-    {
-      "path": "components/WorldTownScreen.tsx",
-      "bytes": 13472
     }
   ]
 }

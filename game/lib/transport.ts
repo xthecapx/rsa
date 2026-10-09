@@ -11,7 +11,7 @@ export function setServiceTransport(next: ServiceTransport | null): void {
 }
 
 export function serviceFetch(path: string, init?: RequestInit): Promise<Response> {
-  if (runtimeInfo.target === "web" && /^(?:\/api\/(?:coin\/(?:simulate|circuit)|register\/circuit|grover\/run|vault\/run|shor\/simulate))$/.test(path)) {
+  if (runtimeInfo.target === "web" && /^(?:\/api\/(?:lab\/run|coin\/(?:simulate|circuit)|register\/circuit|grover\/run|vault\/run|shor\/simulate))$/.test(path)) {
     const headers = new Headers(init?.headers);
     headers.set("X-Quantum-Simulator", useSimulator.getState().choice);
     init = { ...init, headers };

@@ -111,6 +111,7 @@ export interface TownConfig {
   onCard?: (id: KnowledgeId) => void;
   /** Ids that open a panel of the town's own (a shop, a bounty board) instead of a conversation. */
   panels?: Record<string, (close: () => void) => ReactNode>;
+  actions?: Record<string, () => void>;
   /** Shown under the minimap, e.g. a credits counter. */
   hud?: ReactNode;
   mission?: WorldMission;
@@ -267,7 +268,8 @@ export function WorldTownScreen({ config, restartOptions }: { config: TownConfig
     if (talk || activityVisible || panel || mission?.talk) return;
     if (mission?.handles(id)) { mission.interact(id); return; }
     gameAudio.playSfx("select");
-    if (config.panels?.[id]) setPanel(id);
+    if (config.actions?.[id]) { readyRef.current = false; config.actions[id](); }
+    else if (config.panels?.[id]) setPanel(id);
     else if (id === challenge.door) say(challenge.title, [{ speaker: "system", text: challenge.blurb }],
       [{ label: challenge.complete ? challenge.resume : challenge.enter, action: () => { close(); readyRef.current = false; challenge.onEnter(); } }, { label: "Later", action: close }]);
     else if (id === greeter.id) talkToGreeter();

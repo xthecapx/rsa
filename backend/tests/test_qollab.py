@@ -294,3 +294,25 @@ def test_remote_vault_width_failure_does_not_consume_allowance():
     body = {"token": services.token("vault", 42), "circuit": {"prep": "h", "helper": "minus", "out": "h", "measure": True}}
     assert call("/api/vault/run", body, backend)["status"] == 400
     assert not services._used.get(backend)
+
+
+def test_lab_uses_selected_ionq_and_shares_one_job_with_final_challenges():
+    from unittest.mock import patch
+    class IonQ(BasicSimulator):
+        pass
+    IonQ.__module__ = "qiskit_ionq.ionq_backend"
+    backend = IonQ()
+    backend.name = "ionq_simulator"
+    recipe = {"qubits": 1, "start": "0", "operations": [{"gate": "RY", "wire": 0, "angle": 3.141592653589793}], "shots": 100}
+    with patch.object(backend,"run",wraps=backend.run) as submitted:
+        invalid = call("/api/lab/run", {**recipe, "operations": [{"gate": "RY", "wire": 0, "angle": 99}]}, backend)
+        assert invalid["status"] == 422
+        submitted.assert_not_called()
+        result = call("/api/lab/run", recipe, backend)
+        assert result["status"] == 200
+        assert result["data"]["backend"] == "ionq_simulator"
+        assert result["data"]["counts"] == {"1": 100}
+        submitted.assert_called_once()
+        assert call("/api/lab/run", recipe, backend)["status"] == 409
+        assert call("/api/coin/simulate", {"finalChallenge": True}, backend)["status"] == 409
+        submitted.assert_called_once()

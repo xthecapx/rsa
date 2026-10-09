@@ -37,6 +37,7 @@ test('server preference is captured per quantum request and leaves recorded hard
       return new Response('{}');
     });
     useSimulator.getState().select('noise');
+    await serviceFetch('/api/lab/run', { method: 'POST', body: '{}' });
     await serviceFetch('/api/register/circuit', { method: 'POST', body: '{}' });
     useSimulator.getState().select('ideal');
     await serviceFetch('/api/grover/run', { method: 'POST', body: '{}' });
@@ -44,7 +45,7 @@ test('server preference is captured per quantum request and leaves recorded hard
     runtimeInfo.target = 'qollab';
     useSimulator.getState().select('noise');
     await serviceFetch('/api/coin/simulate', { method: 'POST', body: '{}' });
-    assert.deepEqual(requests.map((r) => r.choice), ['noise', 'ideal', null, null]);
+    assert.deepEqual(requests.map((r) => r.choice), ['noise', 'noise', 'ideal', null, null]);
   } finally {
     runtimeInfo.target = 'web';
     useSimulator.getState().select('ideal');

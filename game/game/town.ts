@@ -37,7 +37,7 @@ function townPlace(value: Partial<TownPlace> | undefined, fallback: () => TownPl
       explored: Array.isArray(value!.explored) ? value!.explored.filter((cell) => Number.isInteger(cell) && cell >= 0) : [] }
     : fallback();
 }
-const LOCATIONS = ["town", "coinTown", "foundry", "hollow", "cipher", "coin", "grover", "vault"] as const;
+const LOCATIONS = ["town", "coinTown", "foundry", "hollow", "cipher", "coin", "grover", "vault", "lab"] as const;
 
 const CHECKPOINT_KEYS = ["act", "phase", "suspicion", "nodeId", "lineIndex", "lines", "choicesVisible", "waitingFor", "feedback", "panel", "terminal", "flags", "vars", "tasks", "pendingTravel", "capture", "reportError", "completedActs", "labMemory"] as const;
 export type RsaCheckpoint = Pick<GameState, (typeof CHECKPOINT_KEYS)[number]>;

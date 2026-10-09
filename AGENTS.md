@@ -63,6 +63,72 @@ jobs. Cero offers repeatable generated bounties. The Quantum replay street share
 the Cipher checkpoint and skips the gear check. Older RSA completions retain
 their earned gear.
 
+## Personal lab
+
+A hidden cave at (36,25) in southeast Coin Town opens an ungated personal lab;
+leave to (36,26). Its marker appears on discovery. `LabScreen` uses the shared
+React/SVG HouseRoom for exploration; the outdoor Excalibur engine is paused.
+Exploration has a bounded viewport and follows the player with the shared camera
+clamp. Supplies and Build mode scroll independently of the scene. A collapsible
+minimap shows the player and visible area whenever the cave exceeds the viewport;
+tap it to route to distant floor/equipment. It starts collapsed on small/touch
+screens and retains its toggle on rotation. Camera resize uses the shared visible
+viewport and never resets the player or submits work.
+`LabArt` draws the room and matching inventory/build previews from original Kenney
+Roguelike Indoors and Caves & Dungeons sheets under `public/assets/kenney/lab/`.
+Keep the original CC0 licenses and crop gutters. Existing game-authored CRT/rack
+sprites and SVG quantum display overlays supplement these sheets. Art and sprite
+rotation are separate from item IDs, footprints, collision, unlocks and saves.
+Free Build mode supports drag, tap and keyboard placement, rotate/store/undo,
+footprint validation and connected floor access. The doorway stays reserved.
+Medals or legacy town badges unlock equipment and expand the bounded 8×8 plot
+up to 16×8. Cards are optional; Cipher wallet credits are not spent here.
+
+`content/lab.ts` defines actual acquired items. X/H/Z/Ry and Bloch unlock from
+Quantum Coin, register/Grover from Amplitude Amplifier, controlled gates/phase
+kickback from Ghost Key, and crypto/period tools from all RSA medals. Players
+acquire supplies for free and install modules inside the laptop. Ownership is
+idempotent; eligibility remains derived from medals even after importing a plan.
+
+`LabLaptop` is free play, not a lesson: no correctness check, reward, or completion
+flow. Its bounded recipes support 1–4 wires, 32 operations and 1–1,024 shots,
+with X/H/Z/Ry/CX, phase oracles, diffusion and parity components. The component
+picker opens from + beside the floating Clear/Run controls; an empty wire's +
+also opens it and places the chosen gate directly, without loading a recipe.
+Tap selection, dragging and keyboard placement remain available. A selected
+component has a 44px × removal action on the circuit; Delete/Backspace on a
+focused component and the inspector remove action share the same deletion path.
+Clear, deletion and recipe/wire replacement cancel any picked-up component before
+mutating the circuit, reset pending selections, and invalidate deferred drops.
+`game/puzzleInteraction.ts` owns the shared drag click guard and cancellation
+lifetime. The lab palette stays mounted when closed so selecting a gate cannot
+unregister an active source. Optional starter
+and algorithm recipes live below the workspace. Qubit controls explain installed
+equipment requirements and warn that changing wire count clears the circuit.
+Ry angles are
+finite radians within ±2π, with slider, numeric input and presets. `labCircuit.ts`
+provides continuous real-amplitude ideal states; the single-qubit Bloch display
+is explicitly ideal and limited to the X–Z plane. Algorithm boxes load editable
+Grover and phase-kickback recipes. The period box executes the existing separate
+N=15/a=7 Shor pipeline; the crypto toolkit is classical.
+
+Explicit Run calls the selected backend through `/api/lab/run`; the HTTP route
+and Qollab dispatcher share the builder and service in `core/register_circuit.py`
+and `core/game_services.py`. Barrier-separated oracle/diffuser/parity helpers are
+shared with register lessons. Histograms contain actual counts with immutable
+recipe/backend metadata. Editing retains old counts as previous results. Latest
+and comparison results survive laptop close/language changes for the current
+visit, but are not persisted. Imports, placement, entry, refresh and ideal state
+playback never submit jobs. Busy controls prevent edits, exit and restore.
+
+The separate versioned `quantum-player-lab-v1` store uses saveStorage. Preserve
+ownership, installation, custom layout and named recipes across lesson resets
+and checkpoint restoration. Full reset clears the lab. Export/import JSON includes
+only validated lab data, never medals, jobs or an execution allowance. Short
+codes restore progress/unlocks separately. Locked imported equipment remains
+unavailable until its medal is restored. Reset lab layout retains ownership,
+recipes and medals. Save progress inside the lab reports the furthest milestone.
+
 ## Lessons
 
 Coin Town's one-qubit neighbor benches run their named starting states and X/Z/H
@@ -132,6 +198,7 @@ Paths below are relative to the repository root.
 | Interior lessons and room movement | `game/components/{CoinScenario,GroverScenario,VaultScenario}.tsx`, `game/game/*Room.ts` |
 | RSA scripts and validation | `game/content/acts/act1.ts` through `act4.ts`, `game/content/{defineAct,types,index}.ts` |
 | RSA state, dialogue, effects, async ownership | `game/game/{state,dialog,effects,runtime,town}.ts` |
+| Personal lab and free-play experiments | `game/components/{LabScreen,LabLaptop}.tsx`, `game/content/lab.ts`, `game/game/{lab,labLayout,labCircuit}.ts`, `game/lib/lab.ts` |
 | Progress, cards, badges, economy, checkpoint shortcuts | `game/game/{progress,knowledge,medals,wallet,checkpoints,restoreCheckpoint}.ts` |
 | Shared UI | `game/components/{GameShell,LaptopShell,DialoguePresentation,SceneLoading,TouchControls}.tsx` |
 | Tools and math | `game/components/` benches/workbenches, `game/game/{qubit,register,crypto,calc,histogram}.ts` |
@@ -277,20 +344,24 @@ Qollab remote runs display provider job states, elapsed time, and the job ID in 
 shared status panel. Poll via the provider’s `wait_for_final_state` callback; never
 resubmit a job to refresh status. Status feedback is transient, not saved progress.
 
-IonQ remote simulators and physical QPUs are reserved for final challenges in the
-Qollab adapter: Coin’s explicitly marked final toss, Grover’s final measurement,
-Ghost Key’s recovery run, and RSA’s Shor simulation. Practice uses BasicSimulator
-with real returned counts and its own backend metadata. A runtime-only allowance
+IonQ remote simulators and physical QPUs run final challenges or explicit lab
+experiments in the Qollab adapter: Coin’s explicitly marked final toss, Grover’s
+final measurement, Ghost Key’s recovery run, RSA’s Shor simulation and `/api/lab/run`. Lab runs
+always use the selected backend and share the same single-job allowance as finals.
+Warn before Run to keep a checkpoint code and export the custom lab plan.
+Practice outside the lab uses BasicSimulator with real returned counts and its
+own backend metadata. A runtime-only allowance
 is claimed immediately before submission, including ambiguous submission failure;
-a second final job is refused without contacting the provider. After the final
-result, a dismissible message asks players to collect their badge, then Stop/Run
-Qollab before the next final challenge or retry. The allowance is never persisted.
+a second remote job is refused without contacting the provider. After a job, a
+dismissible notice asks players to keep a code/export and restart before the next
+remote experiment, final challenge or retry. The allowance is never persisted.
 Aria’s 25 qubits cannot run Ghost Key; Forte’s 29 can. Preserve existing save keys
 and keep automatic progression gated. Public short checkpoint codes now offer
 explicit lesson shortcuts because Qollab's sandbox does not persist storage.
 
 The outdoor top bar and laptop toolbar share `BackendLabel`, showing the selected
-backend; IonQ mode labels local practice and the remote final challenge separately.
+backend; IonQ mode labels local practice and the remote final challenge separately,
+while the lab displays the actual selected backend.
 
 `CheckpointControl` appears beside Start over in shared world/laptop controls.
 Public short codes restore teaching milestones on both targets: ct/ft/ht/ci +

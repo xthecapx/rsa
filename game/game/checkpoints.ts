@@ -34,6 +34,10 @@ export function checkpoint(code: string): TeachingCheckpoint | null {
 }
 export function currentCheckpoint(location: string, cards: readonly KnowledgeId[], completed: Record<string, string[]>, earned: Partial<Record<MedalId, string>> = {}): string {
   if (location === "town") return "qt1";
+  if (location === "lab") {
+    const latest = [...CHECKPOINT_TOWNS].reverse().find((town) => town.cards.some((id) => cards.includes(id)) || town.missions.some((mission) => completed[town.scenario]?.includes(mission) || !!earned[medalFor(town.scenario, mission)!.id]) || !!earned[medalFor(town.scenario, "town")!.id]);
+    return currentCheckpoint(latest?.location ?? "coinTown", cards, completed, earned);
+  }
   const town = CHECKPOINT_TOWNS.find((item) => item.location === location || (location === "coin" && item.scenario === "coin") || (location === "grover" && item.scenario === "grover") || (location === "vault" && item.scenario === "vault")) ?? CHECKPOINT_TOWNS[0];
   const allCards = town.cards.every((card) => cards.includes(card));
   const townMedal = medalFor(town.scenario, "town");
