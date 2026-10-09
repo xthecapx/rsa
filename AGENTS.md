@@ -330,15 +330,22 @@ unregisters leftover workers. Preserve this behavior when changing asset deliver
 owns transient selection, focus and drag resets; pure transitions and equipment
 permissions live in `game/game/labEditor.ts`. `LabCircuitEditor`,
 `LabComponentPicker`, `LabRecipes` and `LabStateExplorer` render those concerns.
+`LabResults` renders completed snapshots, comparison and period/classical results;
+it never submits work. `useFloatingPanel` shares resize/scroll tracking, outside
+dismissal and Escape/focus behavior. Each panel keeps its own geometry: the
+picker stays mounted beside its trigger, while settings use a bounded portal.
 Keep the hidden component picker mounted so dnd-kit retains its drag sources.
 `LabBuildGrid`, `LabSupplies` and `LabTransfer` separate the base's controls from
 its scene and placement validation. Gate-specific `LabOp` types require their
 parameters; runtime validation still protects imports and old saves.
 
 `lib/request.ts` shares JSON requests, with endpoint-owned refusal/error policies.
-`useAsyncOperation` gives lab/register runs one synchronous execution lock and
+`useAsyncOperation` gives lab, neighbor benches, lesson runners and RSA tools one synchronous execution lock and
 suppresses results after their owner unmounts; it never retries or cancels jobs.
-RSA still owns its mission generation checks. `useLessonSession` hydrates before
+RSA supplies its mission-generation predicate; staged Shor work checks ownership
+before and after each animation wait, before any later submission or mutation.
+Each lesson still owns refusal messages, ideal correctness, completion and the
+final Coin toss's explicit save. `useLessonSession` hydrates before
 writing and reports unavailable storage; each lesson keeps its save validation,
 migrations, completion and explicit flush points. Neither hook starts execution
 on mount. `HistogramBars` and `AmplitudeBars` are shared display primitives;

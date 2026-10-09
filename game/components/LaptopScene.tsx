@@ -12,6 +12,7 @@ import { useGame } from "@/game/state";
 import { missionGeneration } from "@/game/runtime";
 import { api } from "@/lib/api";
 import { bus } from "@/engine/bus";
+import { useAsyncOperation } from "./useAsyncOperation";
 import { LaptopShell } from "./LaptopShell";
 import { LaptopChoiceButton, LaptopQuestion, StepHeader } from "./LaptopControls";
 import { PlaintextWorkbench } from "./PlaintextWorkbench";
@@ -187,39 +188,31 @@ function CaesarWizard({ armed }: { armed: boolean }) {
   const setVars = useGame((s) => s.setVars);
   const pushTerminal = useGame((s) => s.pushTerminal);
   const [candidates, setCandidates] = useState<{ shift: number; word: string }[]>(() => (useGame.getState().labMemory.candidates as { shift: number; word: string }[] | undefined) ?? []);
-  const [busy, setBusy] = useState(false);
+  const operation = useAsyncOperation();
+  const { busy } = operation;
 
   const step = recovered ? 3 : candidates.length ? 2 : 1;
 
   async function bruteForce() {
     if (!armed) return;
     const token = missionGeneration();
-    setBusy(true);
-    try {
-      const perChar = await Promise.all(
-        String(cipherText)
-          .split("")
-          .map((char) => api.caesar.crack(char)),
-      );
-      const rows = Array.from({ length: 25 }, (_, i) => {
-        const shift = i + 1;
-        const word = perChar
-          .map((res) => res.trials.find((t) => t.shift === shift)?.candidate ?? "?")
-          .join("");
-        return { shift, word };
-      });
-      setCandidates(rows);
-      useGame.getState().setLabMemory({ candidates: rows });
-      pushTerminal({
-        tone: "info",
-        text: `Tried all 25 shifts against "${cipherText}". One of them is English.`,
-      });
-      gameAudio.playSfx("computer");
-    } catch (error) {
-      if (token === missionGeneration()) useGame.getState().setError(error instanceof Error ? error.message : String(error));
-    } finally {
-      setBusy(false);
-    }
+    return operation.run(() => Promise.all(
+      String(cipherText).split("").map((char) => api.caesar.crack(char)),
+    ), {
+      isCurrent: () => token === missionGeneration(),
+      success(perChar) {
+        const rows = Array.from({ length: 25 }, (_, i) => {
+          const shift = i + 1;
+          const word = perChar.map((res) => res.trials.find((t) => t.shift === shift)?.candidate ?? "?").join("");
+          return { shift, word };
+        });
+        setCandidates(rows);
+        useGame.getState().setLabMemory({ candidates: rows });
+        pushTerminal({ tone: "info", text: `Tried all 25 shifts against "${cipherText}". One of them is English.` });
+        gameAudio.playSfx("computer");
+      },
+      error(cause) { useGame.getState().setError(cause instanceof Error ? cause.message : String(cause)); },
+    });
   }
 
   function pick(row: { shift: number; word: string }) {

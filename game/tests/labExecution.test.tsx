@@ -8,6 +8,7 @@ import {
 import type { ComponentProps, ReactNode } from "react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { LabLaptop } from "@/components/LabLaptop";
+import { LabResults, type LabExperiment } from "@/components/LabResults";
 import { useLab } from "@/game/lab";
 import { useGame } from "@/game/state";
 import { useLocale } from "@/i18n";
@@ -112,4 +113,62 @@ it("a pending run keeps one request and balances the operation counter even afte
     finish(Response.json(counts));
   });
   expect(useGame.getState().operations).toBe(before);
+});
+
+it("compares successive snapshots without changing their measurements or executed circuits", async () => {
+  const transport = vi
+    .fn()
+    .mockResolvedValueOnce(Response.json(counts))
+    .mockResolvedValueOnce(
+      Response.json({
+        ...counts,
+        counts: { "0": 250, "1": 6 },
+        circuit_text: "M",
+      }),
+    );
+  setServiceTransport(transport);
+  render(
+    <LabLaptop open onClose={vi.fn()} onBusyChange={vi.fn()} controls={null} />,
+  );
+  await act(async () => fireEvent.click(screen.getByText("Execute")));
+  fireEvent.click(screen.getByText("Edit"));
+  await act(async () => fireEvent.click(screen.getByText("Execute")));
+  expect(screen.getByText("Compare with previous run")).toBeTruthy();
+  expect(screen.getByText("120 · 46.9%")).toBeTruthy();
+  expect(screen.getByText("250 · 97.7%")).toBeTruthy();
+  expect(screen.getByText("M", { selector: "pre" })).toBeTruthy();
+  expect(transport).toHaveBeenCalledTimes(2);
+});
+
+it("renders period and classical results separately and only scrolls when a new result arrives", () => {
+  const latest: LabExperiment = {
+    recipe: starterRecipe(),
+    result: { ...counts, bits: 1, kind: "ideal", source: "simulator" },
+    date: "10:00",
+  };
+  const props = {
+    recipe: latest.recipe,
+    selectedBackend: "AerSimulator",
+    latest,
+    previous: null,
+    crypto: '{"N":15,"p":3,"q":5}',
+    period: {
+      counts: { "0000": 3, "0100": 253 },
+      backend: "Selected period device",
+      kind: "noise",
+      source: "simulator",
+      shor_result: { order_guess: 4, factors: [3, 5] },
+      circuit_text: "Shor → M",
+    },
+  };
+  const view = render(<LabResults {...props} />);
+  expect(screen.getByText("Period experiment results")).toBeTruthy();
+  expect(screen.getByText("Shor → M")).toBeTruthy();
+  expect(screen.getByText("253 · 98.8%")).toBeTruthy();
+  expect(screen.getByText(props.crypto)).toBeTruthy();
+  expect(Element.prototype.scrollIntoView).toHaveBeenCalledTimes(1);
+  act(() => useLocale.setState({ locale: "es" }));
+  view.rerender(<LabResults {...props} selectedBackend="Another device" />);
+  expect(screen.getByText("120 · 46.9%")).toBeTruthy();
+  expect(Element.prototype.scrollIntoView).toHaveBeenCalledTimes(1);
 });

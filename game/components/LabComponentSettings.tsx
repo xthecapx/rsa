@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   isRotation,
@@ -10,6 +10,7 @@ import {
   type RotationAxis,
 } from "@/game/labCircuit";
 import { t, useLocale } from "@/i18n";
+import { useFloatingPanel } from "./useFloatingPanel";
 import { AngleDial } from "./AngleDial";
 
 /** A selected block's optional parameters, kept outside the scrolling circuit. */
@@ -37,14 +38,14 @@ export function LabComponentSettings({
     ? trigger.current?.closest<HTMLElement>(".shared-laptop")
     : null;
 
-  function close() {
-    setOpen(false);
-    trigger.current?.focus();
-  }
-
-  useLayoutEffect(() => {
-    if (!open) return;
-    function positionPanel() {
+  const floatingPanel = useFloatingPanel({
+    open,
+    onClose: () => setOpen(false),
+    trigger,
+    panel,
+    focusOnOpen: true,
+    observe: () => [panel.current, trigger.current?.closest(".laptop-screen")],
+    position() {
       const anchor = trigger.current?.getBoundingClientRect();
       const bounds = trigger.current
         ?.closest(".laptop-screen")
@@ -70,35 +71,8 @@ export function LabComponentSettings({
           Math.min(top, bounds.bottom - actualHeight - 8),
         ),
       });
-    }
-    positionPanel();
-    window.addEventListener("scroll", positionPanel, true);
-    window.addEventListener("resize", positionPanel);
-    const observer = new ResizeObserver(positionPanel);
-    if (panel.current) observer.observe(panel.current);
-    const screen = trigger.current?.closest(".laptop-screen");
-    if (screen) observer.observe(screen);
-    return () => {
-      window.removeEventListener("scroll", positionPanel, true);
-      window.removeEventListener("resize", positionPanel);
-      observer.disconnect();
-    };
-  }, [open]);
-
-  useEffect(() => {
-    if (!open) return;
-    panel.current?.focus();
-    function outside(event: PointerEvent) {
-      if (
-        event.target instanceof Node &&
-        !panel.current?.contains(event.target) &&
-        !trigger.current?.contains(event.target)
-      )
-        setOpen(false);
-    }
-    document.addEventListener("pointerdown", outside);
-    return () => document.removeEventListener("pointerdown", outside);
-  }, [open]);
+    },
+  });
 
   if (!["ROTATION", "RY", "CX", "ORACLE", "PARITY"].includes(op.gate))
     return null;
@@ -140,13 +114,7 @@ export function LabComponentSettings({
               width: position.width,
               maxHeight: position.height,
             }}
-            onKeyDownCapture={(event) => {
-              if (event.key === "Escape") {
-                event.preventDefault();
-                event.stopPropagation();
-                close();
-              }
-            }}
+            onKeyDownCapture={floatingPanel.onKeyDownCapture}
           >
             <header>
               <h4>
@@ -158,7 +126,7 @@ export function LabComponentSettings({
                 type="button"
                 aria-label={t("Close settings")}
                 title={t("Close settings")}
-                onClick={close}
+                onClick={floatingPanel.close}
               >
                 ×
               </button>

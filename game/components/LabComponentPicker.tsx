@@ -30,24 +30,14 @@ export function LabComponentPicker({
     pickerTools,
     pickerButton,
     pickerPosition,
+    pickerPanel,
     place,
   } = editor;
   return (
     <div
       ref={pickerTools}
       className="lab-component-tools"
-      onKeyDownCapture={(event) => {
-        if (
-          event.key === "Escape" &&
-          pickerOpen &&
-          !event.currentTarget.closest('[data-puzzle-dragging="true"]')
-        ) {
-          event.preventDefault();
-          event.stopPropagation();
-          setPickerOpen(false);
-          pickerButton.current?.focus();
-        }
-      }}
+      onKeyDownCapture={pickerPanel.onKeyDownCapture}
     >
       <button
         type="button"

@@ -7,6 +7,7 @@ import { gameAudio } from "@/game/audio";
 import { useGame } from "@/game/state";
 import { missionGeneration } from "@/game/runtime";
 import { api } from "@/lib/api";
+import { useAsyncOperation } from "./useAsyncOperation";
 import { StepHeader } from "./LaptopControls";
 
 const TOTAL = 3;
@@ -28,7 +29,8 @@ export function PlaintextWorkbench({ armed }: { armed: boolean }) {
   const pushTerminal = useGame((s) => s.pushTerminal);
   const [table, setTable] = useState<Row[]>(() => (useGame.getState().labMemory.alphabet as Row[] | undefined) ?? []);
   const [scratch, setScratch] = useState<Scratch>(() => ({ ...EMPTY, ...((useGame.getState().labMemory.plain1 as Partial<Scratch> | undefined) ?? {}) }));
-  const [busy, setBusy] = useState(false);
+  const operation = useAsyncOperation();
+  const { busy } = operation;
   const [note, setNote] = useState<{ tone: "bad" | "good"; text: string } | null>(null);
 
   useEffect(() => { useGame.getState().setLabMemory({ plain1: scratch }); }, [scratch]);
@@ -41,19 +43,17 @@ export function PlaintextWorkbench({ armed }: { armed: boolean }) {
   async function loadTable() {
     if (!armed) return;
     const token = missionGeneration();
-    setBusy(true);
-    try {
-      const res = await api.keyboard();
-      const alphabet = res.keys.map((key) => ({ char: key.char, value: key.value }));
-      setTable(alphabet);
-      useGame.getState().setLabMemory({ alphabet });
-      pushTerminal({ tone: "info", text: "Pulled the alphabet table: A=1 through Z=26." });
-      gameAudio.playSfx("computer");
-    } catch (error) {
-      if (token === missionGeneration()) useGame.getState().setError(error instanceof Error ? error.message : String(error));
-    } finally {
-      setBusy(false);
-    }
+    return operation.run(() => api.keyboard(), {
+      isCurrent: () => token === missionGeneration(),
+      success(res) {
+        const alphabet = res.keys.map((key) => ({ char: key.char, value: key.value }));
+        setTable(alphabet);
+        useGame.getState().setLabMemory({ alphabet });
+        pushTerminal({ tone: "info", text: "Pulled the alphabet table: A=1 through Z=26." });
+        gameAudio.playSfx("computer");
+      },
+      error(cause) { useGame.getState().setError(cause instanceof Error ? cause.message : String(cause)); },
+    });
   }
 
   function pick(row: Row) {

@@ -13,6 +13,7 @@ import { charOf } from "@/game/secret";
 import { VERDICT_LABEL, VERDICT_STYLE, peakIsMisleading, readAnalysis, type Readout } from "@/game/shor";
 import { useGame } from "@/game/state";
 import { api, type IbmBatchDetail, type IbmBatchSummary, type ShorAnalysis } from "@/lib/api";
+import { useAsyncOperation } from "./useAsyncOperation";
 import { StepHeader } from "./LaptopControls";
 import { PuzzleDragDrop, PuzzlePiece, PuzzleSlot } from "./PuzzleDragDrop";
 import { MeasureHint, MeasureInspect } from "./MeasurementExplorer";
@@ -69,7 +70,8 @@ export function ShorPipeline({ armed }: { armed: boolean }) {
   const [batches, setBatches] = useState<IbmBatchSummary[]>([]);
   const [manifest, setManifest] = useState<IbmBatchDetail | null>(null);
   const [loadingManifest, setLoadingManifest] = useState(false);
-  const [busy, setBusy] = useState(false);
+  const operation = useAsyncOperation();
+  const { busy } = operation;
   const [stage, setStage] = useState<BoxId | null>(null);
   const [selected, setSelected] = useState<BoxId | null>(null);
   const [note, setNote] = useState<{ tone: "bad" | "good" | "note"; text: ReactNode } | null>(null);
@@ -163,103 +165,104 @@ export function ShorPipeline({ armed }: { armed: boolean }) {
   async function runPipeline() {
     if (!armed || busy || !allWired || badBase || useGame.getState().operations) return;
     const token = missionGeneration();
-    const alive = () => token === missionGeneration();
-    const hop = async (id: BoxId, ms: number) => {
-      if (!alive()) throw new Error("aborted");
-      setStage(id);
-      gameAudio.playSynth("tick");
-      await wait(ms);
-    };
-    const { m, shots } = scratch;
-    setBusy(true);
-    setError(null);
-    setNote(null);
-    setSelected(null);
-    setScratch((prev) => ({ ...prev, run: null }));
-    setVars({ recovered: null, p: null, q: null, d: null, factors: null, order: null, numControl: m });
-    try {
-      await hop("classical-in", 500);
-      pushTerminal({ tone: "info", text: `Classical PC: N = ${N}, a = ${a}, gcd(a, N) = 1. This one needs the QPU.` });
-      await hop("qpu-setup", 500);
-      let next: Run;
-      let reference: number | null = null;
-      if (backend === "aer") {
-        pushTerminal({ tone: "info", text: `Job: N = ${N}, a = ${a}, m = ${m}, ${shots} shots -> ${runtimeInfo.target === "qollab" ? runtimeInfo.backend : simulatorChoice === "noise" ? "Aer teaching noise" : "AerSimulator"}.` });
-        await hop("shor", 200);
-        const res = await api.shor.simulate({ N, a, num_control: m, shots });
-        if (!alive()) return;
-        next = {
-          qpu: res.backend ?? "AerSimulator", kind: res.kind, source: res.source, backend, N, a, m, shots: res.shots ?? shots,
-          qubits: res.num_qubits ?? null, depth: res.circuit_depth ?? null, usage: null, consoleUrl: null,
-          counts: res.counts ?? {}, analysis: res.analysis, picked: null, fromReference: false,
-        };
-      } else {
-        const detail = manifest ?? (await api.ibm.cached());
-        if (!alive()) return;
-        const qpu = detail.backend_name ?? "IBM Quantum";
-        pushTerminal({
-          tone: "note",
-          text: detail.cached
-            ? `No live credentials, replaying a recorded batch from ${qpu}. These counts came off real hardware.`
-            : `Connected to ${qpu}. Batch ${detail.batch_id}, ${detail.jobs.length} completed job(s).`,
-        });
-        await hop("shor", 200);
-        const job = detail.jobs.find((entry) => Object.keys(entry.counts ?? {}).length);
-        const counts = job?.counts ?? {};
-        next = {
-          qpu, backend, N: detail.N ?? N, a: detail.a ?? a, m: detail.num_control ?? m,
-          shots: Object.values(counts).reduce((sum, v) => sum + v, 0),
-          qubits: null, depth: null, usage: detail.usage_time ?? null,
-          consoleUrl: job?.console_url ?? detail.console_url ?? null,
-          counts, analysis: job?.analysis, picked: null, fromReference: false,
-        };
-        reference = detail.references?.true_order ?? null;
-      }
-      await hop("measure", 700);
-      gameAudio.playSfx("computer");
-      pushTerminal({ tone: "info", text: `${next.qpu}: ${Object.keys(next.counts).length} distinct outcomes over ${next.shots} shots.` });
-      await hop("classical-out", 500);
-
-      const read = readAnalysis(next.analysis, next.N);
-      const solution = read.solution;
-      if (solution?.factors?.length && solution.order) {
-        next.picked = solution.bitstring;
-        if (peakIsMisleading(read) && read.mostMeasured) {
+    return operation.run(async (alive) => {
+      const hop = async (id: BoxId, ms: number) => {
+        if (!alive()) throw new Error("aborted");
+        setStage(id);
+        gameAudio.playSynth("tick");
+        await wait(ms);
+        if (!alive()) throw new Error("aborted");
+      };
+      const { m, shots } = scratch;
+      setError(null);
+      setNote(null);
+      setSelected(null);
+      setScratch((prev) => ({ ...prev, run: null }));
+      setVars({ recovered: null, p: null, q: null, d: null, factors: null, order: null, numControl: m });
+      try {
+        await hop("classical-in", 500);
+        pushTerminal({ tone: "info", text: `Classical PC: N = ${N}, a = ${a}, gcd(a, N) = 1. This one needs the QPU.` });
+        await hop("qpu-setup", 500);
+        let next: Run;
+        let reference: number | null = null;
+        if (backend === "aer") {
+          pushTerminal({ tone: "info", text: `Job: N = ${N}, a = ${a}, m = ${m}, ${shots} shots -> ${runtimeInfo.target === "qollab" ? runtimeInfo.backend : simulatorChoice === "noise" ? "Aer teaching noise" : "AerSimulator"}.` });
+          await hop("shor", 200);
+          const res = await api.shor.simulate({ N, a, num_control: m, shots });
+          if (!alive()) return;
+          next = {
+            qpu: res.backend ?? "AerSimulator", kind: res.kind, source: res.source, backend, N, a, m, shots: res.shots ?? shots,
+            qubits: res.num_qubits ?? null, depth: res.circuit_depth ?? null, usage: null, consoleUrl: null,
+            counts: res.counts ?? {}, analysis: res.analysis, picked: null, fromReference: false,
+          };
+        } else {
+          const detail = manifest ?? (await api.ibm.cached());
+          if (!alive()) return;
+          const qpu = detail.backend_name ?? "IBM Quantum";
           pushTerminal({
-            tone: "bad",
-            text: `${next.qpu}: the most measured outcome was ${read.mostMeasured.bitstring} (r = ${read.mostMeasured.order}), which is not the period. ${solution.bitstring} (r = ${solution.order}) is the one that splits N. Never trust the tallest bar without checking it.`,
+            tone: "note",
+            text: detail.cached
+              ? `No live credentials, replaying a recorded batch from ${qpu}. These counts came off real hardware.`
+              : `Connected to ${qpu}. Batch ${detail.batch_id}, ${detail.jobs.length} completed job(s).`,
           });
+          await hop("shor", 200);
+          const job = detail.jobs.find((entry) => Object.keys(entry.counts ?? {}).length);
+          const counts = job?.counts ?? {};
+          next = {
+            qpu, backend, N: detail.N ?? N, a: detail.a ?? a, m: detail.num_control ?? m,
+            shots: Object.values(counts).reduce((sum, v) => sum + v, 0),
+            qubits: null, depth: null, usage: detail.usage_time ?? null,
+            consoleUrl: job?.console_url ?? detail.console_url ?? null,
+            counts, analysis: job?.analysis, picked: null, fromReference: false,
+          };
+          reference = detail.references?.true_order ?? null;
         }
-        applyShorResult({ order_guess: solution.order, factors: solution.factors, found: true }, next.qpu);
-      } else if (reference) {
-        next.fromReference = true;
-        pushTerminal({ tone: "note", text: `Hardware noise smeared the peaks. The reference distribution for this circuit peaks at r = ${reference}.` });
-        applyShorResult({ order_guess: reference, factors: factorsFromOrder(next.N, next.a, reference), found: true }, next.qpu);
-      } else {
-        applyShorResult(undefined, next.qpu);
+        await hop("measure", 700);
+        gameAudio.playSfx("computer");
+        pushTerminal({ tone: "info", text: `${next.qpu}: ${Object.keys(next.counts).length} distinct outcomes over ${next.shots} shots.` });
+        await hop("classical-out", 500);
+
+        const read = readAnalysis(next.analysis, next.N);
+        const solution = read.solution;
+        if (solution?.factors?.length && solution.order) {
+          next.picked = solution.bitstring;
+          if (peakIsMisleading(read) && read.mostMeasured) {
+            pushTerminal({
+              tone: "bad",
+              text: `${next.qpu}: the most measured outcome was ${read.mostMeasured.bitstring} (r = ${read.mostMeasured.order}), which is not the period. ${solution.bitstring} (r = ${solution.order}) is the one that splits N. Never trust the tallest bar without checking it.`,
+            });
+          }
+          applyShorResult({ order_guess: solution.order, factors: solution.factors, found: true }, next.qpu);
+        } else if (reference) {
+          next.fromReference = true;
+          pushTerminal({ tone: "note", text: `Hardware noise smeared the peaks. The reference distribution for this circuit peaks at r = ${reference}.` });
+          applyShorResult({ order_guess: reference, factors: factorsFromOrder(next.N, next.a, reference), found: true }, next.qpu);
+        } else {
+          applyShorResult(undefined, next.qpu);
+        }
+        if (!alive()) return;
+        setScratch((prev) => ({ ...prev, run: next }));
+        useGame.getState().setLabMemory({
+          pipeline: buildPipeline({
+            "classical-in": { N: next.N, a: next.a, e, c },
+            "qpu-setup": { backend: next.qpu, source: next.backend, m: next.m, shots: next.shots },
+            shor: { qubits: next.qubits, depth: next.depth },
+            measure: { outcomes: Object.keys(next.counts).length },
+            "classical-out": { picked: next.picked, order: useGame.getState().vars.order, factors: useGame.getState().vars.factors },
+          }),
+        });
+        if (useGame.getState().vars.p !== null) await runApiCall("deriveKey");
+      } finally {
+        if (alive()) setStage(null);
       }
-      if (!alive()) return;
-      setScratch((prev) => ({ ...prev, run: next }));
-      useGame.getState().setLabMemory({
-        pipeline: buildPipeline({
-          "classical-in": { N: next.N, a: next.a, e, c },
-          "qpu-setup": { backend: next.qpu, source: next.backend, m: next.m, shots: next.shots },
-          shor: { qubits: next.qubits, depth: next.depth },
-          measure: { outcomes: Object.keys(next.counts).length },
-          "classical-out": { picked: next.picked, order: useGame.getState().vars.order, factors: useGame.getState().vars.factors },
-        }),
-      });
-      if (useGame.getState().vars.p !== null) await runApiCall("deriveKey");
-    } catch (error) {
-      if (alive() && !(error instanceof Error && error.message === "aborted")) {
-        setError(error instanceof Error ? error.message : String(error));
-      }
-    } finally {
-      if (alive()) {
-        setBusy(false);
-        setStage(null);
-      }
-    }
+    }, {
+      isCurrent: () => token === missionGeneration(),
+      success() {},
+      error(cause) {
+        if (!(cause instanceof Error && cause.message === "aborted"))
+          setError(cause instanceof Error ? cause.message : String(cause));
+      },
+    });
   }
 
   const p = vars.p;

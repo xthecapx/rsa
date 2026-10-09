@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useAsyncOperation } from "./useAsyncOperation";
+import { useState } from "react";
 import { PuzzleDragDrop, PuzzlePiece, PuzzleSlot } from "./PuzzleDragDrop";
 import { LaptopChoiceButton, LaptopQuestion } from "./LaptopControls";
 import type { BenchStep, QuestionStep } from "@/content/coinTown";
@@ -31,11 +32,9 @@ export function QubitBench({ step, onSolved, onEdited, onBusyChange }: {
   const [message, setMessage] = useState<string | null>(null);
   const [ran, setRan] = useState(false);
   const [result, setResult] = useState<BenchResult | null>(null);
-  const [busy, setBusy] = useState(false);
+  const operation = useAsyncOperation(onBusyChange);
+  const { busy, running: inFlight } = operation;
   const [error, setError] = useState<string | null>(null);
-  const inFlight = useRef(false);
-  const alive = useRef(true);
-  useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
   const gates = slots.filter((gate): gate is Gate => gate !== null);
   const successful = !!result && solves(step.cases, gates);
 
@@ -49,23 +48,19 @@ export function QubitBench({ step, onSolved, onEdited, onBusyChange }: {
     if (inFlight.current) return;
     setRan(true); setMessage(null); setError(null); setResult(null);
     if (step.fill && gates.length < step.slots) { gameAudio.playSfx("error"); setMessage("Fill every slot on the wire before running."); return; }
-    inFlight.current = true; setBusy(true); onBusyChange?.(true);
-    try {
-      const measured = await coinApi.circuit(step.cases.map(({ start }) => start), gates);
-      if (!alive.current) return;
-      setResult(measured);
-      // Validate the designed state, not a lucky/noisy sample. Counts cannot
-      // prove a phase, and noise must not withhold a correctly earned card.
-      if (solves(step.cases, gates)) { gameAudio.playSynth("chime"); onSolved(); return; }
-      gameAudio.playSfx("error");
-      const miss = step.cases.find(({ start, target }) => !solves([{ start, target }], gates))!;
-      setMessage(`From ${KET[miss.start]} your circuit makes ${ketName(trace(STATES[miss.start], gates).at(-1)!)}; the goal is ${KET[miss.target]}.`);
-    } catch (cause) {
-      if (alive.current) setError(cause instanceof Error ? cause.message : "The experiment could not finish. Check the backend and try again.");
-    } finally {
-      inFlight.current = false;
-      if (alive.current) { setBusy(false); onBusyChange?.(false); }
-    }
+    return operation.run(() => coinApi.circuit(step.cases.map(({ start }) => start), gates), {
+      success(measured) {
+        setResult(measured);
+        // Correctness comes from the designed state, never from noisy counts.
+        if (solves(step.cases, gates)) { gameAudio.playSynth("chime"); onSolved(); return; }
+        gameAudio.playSfx("error");
+        const miss = step.cases.find(({ start, target }) => !solves([{ start, target }], gates))!;
+        setMessage(`From ${KET[miss.start]} your circuit makes ${ketName(trace(STATES[miss.start], gates).at(-1)!)}; the goal is ${KET[miss.target]}.`);
+      },
+      error(cause) {
+        setError(cause instanceof Error ? cause.message : "The experiment could not finish. Check the backend and try again.");
+      },
+    });
   }
 
   return <PuzzleDragDrop labels={Object.fromEntries(step.gates.map((gate) => [gate, t(GATE_LABELS[gate])]))}

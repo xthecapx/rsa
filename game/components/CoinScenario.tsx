@@ -2,6 +2,7 @@
 import { t, localize, useLocale } from "@/i18n";
 
 import { useLessonSession } from "./useLessonSession";
+import { useAsyncOperation } from "./useAsyncOperation";
 import { useEffect, useRef, useState } from "react";
 import { COIN_SCENES, COIN_STEPS, type CoinStep, type RoomPlace } from "@/content/coin";
 import { coinApi, type CoinResult } from "@/lib/coin";
@@ -160,9 +161,9 @@ export function CoinScenario({ onExit, onRestartGame }: { onExit?: () => void; o
   const [laptopOpen, setLaptopOpen] = useState(false);
   const [activePlace, setActivePlace] = useState<RoomPlace | null>(null);
   const [roomKey, setRoomKey] = useState(0);
-  const [busy, setBusy] = useState(false);
+  const operation = useAsyncOperation();
+  const { busy, running: inFlight } = operation;
   const [error, setError] = useState<string | null>(null);
-  const inFlight = useRef(false);
   const alive = useRef(true);
   const [nearbyPlace, setNearbyPlace] = useState<RoomPlace | null>(null);
   const [walking, setWalking] = useState(false);
@@ -210,18 +211,16 @@ export function CoinScenario({ onExit, onRestartGame }: { onExit?: () => void; o
     setLaptopOpen(false);
     patch({ step, line: 0 }); setError(null); gameAudio.playSfx("confirm");
   }
-  async function run(work: () => Promise<Partial<Session>>) {
-    if (inFlight.current) return;
-    inFlight.current = true; setBusy(true); setError(null);
-    try {
-      const values = await work();
-      if (alive.current) { patch(values); if (values.step === "done") setLaptopOpen(false); gameAudio.playSfx("computer"); }
-    } catch (e) {
-      if (alive.current) setError(e instanceof Error ? e.message : "Please try the experiment again.");
-    } finally {
-      inFlight.current = false;
-      if (alive.current) setBusy(false);
-    }
+  function run(work: () => Promise<Partial<Session>>) {
+    return operation.run(work, {
+      start() { setError(null); },
+      success(values) {
+        patch(values);
+        if (values.step === "done") setLaptopOpen(false);
+        gameAudio.playSfx("computer");
+      },
+      error(cause) { setError(cause instanceof Error ? cause.message : "Please try the experiment again."); },
+    });
   }
   const simulate = (hadamard: boolean, shots: number) => run(async () => {
     const result = await coinApi.simulate(hadamard, shots);

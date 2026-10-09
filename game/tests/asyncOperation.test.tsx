@@ -67,3 +67,37 @@ it("unmount clears parent busy state but never aborts/resubmits or applies late 
   expect(error).not.toHaveBeenCalled();
   expect(settled).toHaveBeenCalledTimes(1);
 });
+
+it("honors mission ownership during a sequence and releases the lock when that mission changes", async () => {
+  let generation = 1;
+  const job = deferred(),
+    success = vi.fn(),
+    error = vi.fn(),
+    submit = vi.fn();
+  const { result } = renderHook(() => useAsyncOperation());
+  let pending!: Promise<boolean>;
+  act(() => {
+    pending = result.current.run(
+      async (current) => {
+        await job.promise;
+        if (current()) submit();
+        return 9;
+      },
+      { success, error, isCurrent: () => generation === 1 },
+    );
+  });
+  generation = 2;
+  await act(async () => {
+    job.resolve(9);
+    await pending;
+  });
+  expect(submit).not.toHaveBeenCalled();
+  expect(success).not.toHaveBeenCalled();
+  expect(error).not.toHaveBeenCalled();
+  expect(result.current.busy).toBe(false);
+  expect(result.current.running.current).toBe(false);
+  await act(async () => {
+    await result.current.run(async () => 10, { success, error });
+  });
+  expect(success).toHaveBeenCalledWith(10);
+});

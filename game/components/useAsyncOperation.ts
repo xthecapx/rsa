@@ -23,22 +23,26 @@ export function useAsyncOperation(onBusyChange?: (busy: boolean) => void) {
   }, [busy, onBusyChange]);
 
   async function run<T>(
-    work: () => Promise<T>,
+    work: (isCurrent: () => boolean) => Promise<T>,
     handlers: {
       success: (result: T) => void;
       error: (cause: unknown) => void;
       start?: () => void;
       settled?: () => void;
+      /** Additional ownership, such as the current RSA mission generation. */
+      isCurrent?: () => boolean;
     },
   ): Promise<boolean> {
     if (running.current || !mounted.current) return false;
     const owner = generation.current;
-    const current = () => mounted.current && owner === generation.current;
+    const owned = () => mounted.current && owner === generation.current;
+    const current = () => owned() && (handlers.isCurrent?.() ?? true);
+    if (!current()) return false;
     running.current = true;
     setBusy(true);
     try {
       handlers.start?.();
-      const result = await work();
+      const result = await work(current);
       if (!current()) return false;
       handlers.success(result);
       return true;
@@ -48,7 +52,7 @@ export function useAsyncOperation(onBusyChange?: (busy: boolean) => void) {
     } finally {
       running.current = false;
       handlers.settled?.();
-      if (current()) setBusy(false);
+      if (owned()) setBusy(false);
     }
   }
   return { busy, running, run };

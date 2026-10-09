@@ -4,29 +4,20 @@ import { useLab } from "@/game/lab";
 import { useMedals } from "@/game/medals";
 import { LAB_ITEMS, itemAvailable } from "@/content/lab";
 import { type LabRecipe } from "@/game/labCircuit";
-import {
-  copyRecipe,
-  labEquipment,
-  operationLabel as label,
-} from "@/game/labEditor";
+import { copyRecipe, labEquipment } from "@/game/labEditor";
 import { useAsyncOperation } from "./useAsyncOperation";
 import { useLabEditor } from "./useLabEditor";
 import { LabCircuitEditor } from "./LabCircuitEditor";
 import { LabStateExplorer } from "./LabStateExplorer";
 import { LabRecipes, SavedLabRecipes } from "./LabRecipes";
-import { runLab, type LabResult } from "@/lib/lab";
+import { runLab } from "@/lib/lab";
 import { runtimeInfo } from "@/lib/transport";
 import { postJson, experimentError } from "@/lib/request";
 import { useSimulator } from "@/game/simulator";
 import { useGame } from "@/game/state";
 import { t, useLocale } from "@/i18n";
 import { LaptopShell } from "./LaptopShell";
-import { CircuitHistogram } from "./CircuitHistogram";
-interface Experiment {
-  recipe: LabRecipe;
-  result: LabResult;
-  date: string;
-}
+import { LabResults, type LabExperiment } from "./LabResults";
 export function LabLaptop({
   open,
   onClose,
@@ -46,14 +37,12 @@ export function LabLaptop({
   const operation = useAsyncOperation(onBusyChange);
   const { busy } = operation;
   const [error, setError] = useState("");
-  const [latest, setLatest] = useState<Experiment | null>(null),
-    [previous, setPrevious] = useState<Experiment | null>(null),
+  const [latest, setLatest] = useState<LabExperiment | null>(null),
+    [previous, setPrevious] = useState<LabExperiment | null>(null),
     [step, setStep] = useState<number | null>(null);
   const [notice, setNotice] = useState(""),
     [crypto, setCrypto] = useState<string | null>(null),
     [period, setPeriod] = useState<Record<string, unknown> | null>(null);
-  const results = useRef<HTMLElement>(null);
-  const periodResults = useRef<HTMLElement>(null);
   const feedback = useRef<HTMLParagraphElement>(null);
   useEffect(() => {
     if (error)
@@ -62,15 +51,6 @@ export function LabLaptop({
         behavior: "instant",
       });
   }, [error]);
-  useEffect(() => {
-    if (latest || period)
-      (period ? periodResults.current : results.current)?.scrollIntoView({
-        block: "nearest",
-        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
-          ? "instant"
-          : "smooth",
-      });
-  }, [latest, period]);
   const { installed, allowed, available, multipleQubits, canRun } =
     labEquipment(lab.installed, earned);
   const unlocked = canRun(recipe);
@@ -80,10 +60,6 @@ export function LabLaptop({
       : preference === "noise"
         ? "Aer teaching noise"
         : "AerSimulator";
-  const same =
-    !!latest &&
-    JSON.stringify(latest.recipe) === JSON.stringify(recipe) &&
-    latest.result.backend === selectedBackend;
   const editor = useLabEditor({
     recipe,
     allowed,
@@ -242,61 +218,14 @@ export function LabLaptop({
           )}
         </fieldset>
         {notice && <p role="status">{notice}</p>}
-        {latest && (
-          <section ref={results} className="space-y-2">
-            <h3>
-              {t(
-                same
-                  ? "Current circuit results"
-                  : "Previous run — the circuit or selected backend has changed",
-              )}
-            </h3>
-            <p className="text-xs text-stage-muted">
-              {latest.date} · {latest.recipe.start} ·{" "}
-              {latest.recipe.operations.map(label).join(" → ") || "M"}
-            </p>
-            <CircuitHistogram {...latest.result} />
-            <details>
-              <summary>{t("Executed circuit")}</summary>
-              <pre className="overflow-auto text-xs">
-                {latest.result.circuit_text}
-              </pre>
-            </details>
-          </section>
-        )}
-        {previous && (
-          <details>
-            <summary>{t("Compare with previous run")}</summary>
-            <p>
-              {previous.result.backend} ·{" "}
-              {previous.recipe.operations.map(label).join(" → ")}
-            </p>
-            <CircuitHistogram {...previous.result} />
-          </details>
-        )}
-        {crypto && (
-          <pre className="panel p-3 overflow-auto text-sm">{crypto}</pre>
-        )}
-        {period && (
-          <section ref={periodResults} className="space-y-2">
-            <h3>{t("Period experiment results")}</h3>
-            <CircuitHistogram
-              counts={period.counts as Record<string, number>}
-              backend={period.backend as string}
-              kind={period.kind as "ideal" | "noise" | "hardware"}
-              source={period.source as "simulator" | "hardware"}
-            />
-            <pre className="panel p-3 overflow-auto text-xs">
-              {JSON.stringify(period.shor_result, null, 2)}
-            </pre>
-            <details>
-              <summary>{t("Executed circuit")}</summary>
-              <pre className="overflow-auto text-xs">
-                {String(period.circuit_text)}
-              </pre>
-            </details>
-          </section>
-        )}
+        <LabResults
+          recipe={recipe}
+          selectedBackend={selectedBackend}
+          latest={latest}
+          previous={previous}
+          crypto={crypto}
+          period={period}
+        />
       </div>
     </LaptopShell>
   );

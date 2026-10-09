@@ -2,7 +2,8 @@
 import { t, localize, useLocale } from "@/i18n";
 
 import { useLessonSession } from "./useLessonSession";
-import { useEffect, useRef, useState } from "react";
+import { useAsyncOperation } from "./useAsyncOperation";
+import { useEffect, useState } from "react";
 import { GROVER_SCENES, GROVER_STEPS, type GroverPlace, type GroverStep } from "@/content/grover";
 import { CircuitHistogram } from "./CircuitHistogram";
 import { groverApi, GroverRefusal, tallest, type GroverRun } from "@/lib/grover";
@@ -109,11 +110,10 @@ export function GroverScenario({ onExit, onRestartGame }: { onExit?: () => void;
   const [laptopOpen, setLaptopOpen] = useState(false);
   const [activePlace, setActivePlace] = useState<GroverPlace | null>(null);
   const [roomKey, setRoomKey] = useState(0);
-  const [busy, setBusy] = useState(false);
+  const operation = useAsyncOperation();
+  const { busy, running: inFlight } = operation;
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-  const inFlight = useRef(false);
-  const alive = useRef(true);
   const [nearbyPlace, setNearbyPlace] = useState<GroverPlace | null>(null);
   const [walking, setWalking] = useState(false);
   const [nearExit, setNearExit] = useState(false);
@@ -130,10 +130,8 @@ export function GroverScenario({ onExit, onRestartGame }: { onExit?: () => void;
   const lastPeak = session.lastRun ? tallest(session.lastRun.steps.at(-1)!.amplitudes) : 0;
 
   useEffect(() => {
-    alive.current = true;
     void gameAudio.playMusic("play");
     void useProgress.persist.rehydrate(); void useMedals.persist.rehydrate();
-    return () => { alive.current = false; };
   }, []);
 
   useEffect(() => {
@@ -161,24 +159,20 @@ export function GroverScenario({ onExit, onRestartGame }: { onExit?: () => void;
     setLaptopOpen(false); setMessage(null);
     patch({ ...values, step, line: 0 }); setError(null); gameAudio.playSfx("confirm");
   }
-  async function run(work: () => Promise<Partial<Session>>) {
-    if (inFlight.current) return;
-    inFlight.current = true; setBusy(true); setError(null); setMessage(null);
-    try {
-      const values = await work();
-      if (!alive.current) return;
-      patch(values);
-      if (values.step && values.step !== session.step) setLaptopOpen(false);
-    } catch (e) {
-      if (!alive.current) return;
-      if (e instanceof GroverRefusal) {
-        gameAudio.playSfx("error");
-        setMessage(e.reason === "rounds" ? "Thecap: not at this count. The board said how many rounds make the tallest bar peak." : "Thecap: the core only collapses the full search: H, then the Oracle and the Diffuser in the repeat box, then M.");
-      } else setError(e instanceof Error ? e.message : "The quantum core did not answer. Try again.");
-    } finally {
-      inFlight.current = false;
-      if (alive.current) setBusy(false);
-    }
+  function run(work: () => Promise<Partial<Session>>) {
+    return operation.run(work, {
+      start() { setError(null); setMessage(null); },
+      success(values) {
+        patch(values);
+        if (values.step && values.step !== session.step) setLaptopOpen(false);
+      },
+      error(cause) {
+        if (cause instanceof GroverRefusal) {
+          gameAudio.playSfx("error");
+          setMessage(cause.reason === "rounds" ? "Thecap: not at this count. The board said how many rounds make the tallest bar peak." : "Thecap: the core only collapses the full search: H, then the Oracle and the Diffuser in the repeat box, then M.");
+        } else setError(cause instanceof Error ? cause.message : "The quantum core did not answer. Try again.");
+      },
+    });
   }
   const token = async () => session.token ?? (await groverApi.device()).token;
 

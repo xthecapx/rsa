@@ -1,12 +1,5 @@
 "use client";
-import {
-  useEffect,
-  useId,
-  useLayoutEffect,
-  useRef,
-  useState,
-  type RefObject,
-} from "react";
+import { useId, useRef, useState, type RefObject } from "react";
 import {
   validRecipe,
   type LabRecipe,
@@ -18,6 +11,7 @@ import {
   editLabOperation,
   placeLabOperation,
 } from "@/game/labEditor";
+import { useFloatingPanel } from "./useFloatingPanel";
 import type { PuzzleControls } from "./PuzzleDragDrop";
 
 export function useLabEditor({
@@ -44,9 +38,16 @@ export function useLabEditor({
     below: false,
     height: 240,
   });
-  useLayoutEffect(() => {
-    if (!pickerOpen) return;
-    function positionPicker() {
+  const pickerPanel = useFloatingPanel({
+    open: pickerOpen,
+    onClose: () => setPickerOpen(false),
+    trigger: pickerButton,
+    panel: pickerTools,
+    observe: () => [
+      pickerTools.current?.parentElement,
+      pickerTools.current?.closest(".laptop-scroll"),
+    ],
+    position() {
       const actions = pickerTools.current?.parentElement;
       const viewport = actions?.closest(".laptop-scroll");
       if (!actions || !viewport) return;
@@ -66,27 +67,8 @@ export function useLabEditor({
           ? previous
           : next,
       );
-    }
-    positionPicker();
-    window.addEventListener("scroll", positionPicker, true);
-    window.addEventListener("resize", positionPicker);
-    return () => {
-      window.removeEventListener("scroll", positionPicker, true);
-      window.removeEventListener("resize", positionPicker);
-    };
-  }, [pickerOpen]);
-  useEffect(() => {
-    if (!pickerOpen) return;
-    function outside(event: PointerEvent) {
-      if (
-        event.target instanceof Node &&
-        !pickerTools.current?.contains(event.target)
-      )
-        setPickerOpen(false);
-    }
-    document.addEventListener("pointerdown", outside);
-    return () => document.removeEventListener("pointerdown", outside);
-  }, [pickerOpen]);
+    },
+  });
   function resetInteraction() {
     puzzleControls.current?.resetInteraction();
     setSelected(null);
@@ -169,6 +151,7 @@ export function useLabEditor({
     pickerTools,
     pickerButton,
     pickerPosition,
+    pickerPanel,
     resetInteraction,
     update,
     removeComponent,

@@ -5,6 +5,7 @@ export default defineConfig({
   oxc: { jsx: { runtime: "automatic" } },
   test: {
     environment: "jsdom",
+    setupFiles: ["./tests/setup.mjs"],
     include: ["tests/**/*.test.tsx"],
     restoreMocks: true,
   },
