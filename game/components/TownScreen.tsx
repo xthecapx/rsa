@@ -94,6 +94,8 @@ export function TownScreen({ initialAct, initialCoin = false, initialGrover = fa
   const conversationRef = useRef<HTMLDivElement>(null);
   const mission = useRsaMission({ where: "town", position: () => useTown.getState().position, readyRef, say: setConversation, onLater: () => useTown.getState().patch({ tracked: nextChallenge() }) });
   const { active: rsaActive, activeRef, blocked } = mission;
+  const missionRef = useRef(mission);
+  missionRef.current = mission;
 
   const coinComplete = !!completed.coin?.includes("coin");
   const rsaComplete = ACT_NUMBERS.every((act) => completed.rsa?.includes(String(act)));
@@ -104,7 +106,7 @@ export function TownScreen({ initialAct, initialCoin = false, initialGrover = fa
     const restore = (event: Event) => {
       const code = (event as CustomEvent<unknown>).detail;
       if (typeof code !== "string" || !restoreCheckpoint(code)) return;
-      mission.stop();
+      missionRef.current.stop();
       readyRef.current = false;
       setSceneStatus("loading"); setConversation(null); setJournalOpen(false); setRestartOpen(false); setTownNear(null);
       setWorldKey((key) => key + 1);
@@ -218,7 +220,7 @@ export function TownScreen({ initialAct, initialCoin = false, initialGrover = fa
   }, [sceneReady, rsaActive, game.pendingTravel?.at, town.tracked]);
   useEffect(() => {
     if (sceneReady) void bus.send({ type: "townProgress", coinComplete, rsaComplete, groverComplete, vaultComplete, rsaPaused: !rsaActive && !!town.checkpoint && !["won", "caught"].includes(town.checkpoint.phase) });
-  }, [sceneReady, coinComplete, rsaComplete, groverComplete, vaultComplete, rsaActive, town.checkpoint?.phase]);
+  }, [sceneReady, coinComplete, rsaComplete, groverComplete, vaultComplete, rsaActive, town.checkpoint]);
   useEffect(() => {
     conversationRef.current?.querySelector<HTMLButtonElement>("button")?.focus();
   }, [conversation]);

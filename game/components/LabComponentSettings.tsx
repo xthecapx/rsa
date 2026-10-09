@@ -6,6 +6,7 @@ import {
   isRotation,
   rotationAxis,
   type LabOp,
+  type LabOpChange,
   type RotationAxis,
 } from "@/game/labCircuit";
 import { t, useLocale } from "@/i18n";
@@ -19,7 +20,7 @@ export function LabComponentSettings({
 }: {
   op: LabOp;
   qubits: number;
-  onChange: (change: Partial<LabOp>) => void;
+  onChange: (change: LabOpChange) => void;
 }) {
   useLocale((s) => s.locale);
   const [open, setOpen] = useState(false);

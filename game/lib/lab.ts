@@ -1,4 +1,5 @@
-import { serviceFetch, runtimeInfo } from "./transport";
+import { runtimeInfo } from "./transport";
+import { postJson, experimentError } from "./request";
 import type { LabRecipe } from "@/game/labCircuit";
 import type { Measurement } from "@/game/histogram";
 export interface LabResult extends Measurement {
@@ -8,20 +9,8 @@ export interface LabResult extends Measurement {
   depth: number;
 }
 export async function runLab(recipe: LabRecipe): Promise<LabResult> {
-  const response = await serviceFetch("/api/lab/run", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(recipe),
-    ...(runtimeInfo.target === "web"
-      ? { signal: AbortSignal.timeout(40000) }
-      : {}),
+  return postJson("/api/lab/run", recipe, {
+    timeout: runtimeInfo.target === "web" ? 40000 : undefined,
+    error: experimentError,
   });
-  const data = await response.json();
-  if (!response.ok)
-    throw new Error(
-      typeof data.detail === "string"
-        ? data.detail
-        : "The experiment could not finish. Check the backend and try again.",
-    );
-  return data;
 }

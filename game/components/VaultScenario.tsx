@@ -2,6 +2,7 @@
 import { CircuitHistogram } from "./CircuitHistogram";
 import { t, useLocale } from "@/i18n";
 
+import { useLessonSession } from "./useLessonSession";
 import { useEffect, useRef, useState } from "react";
 import { VAULT_SCENES, VAULT_STEPS, type VaultPlace, type VaultStep } from "@/content/vault";
 import { BITS, CANDLES, formatCount, KEYSPACE, knownBits, litCandles, vaultApi, VaultRefusal, type VaultRun } from "@/lib/vault";
@@ -99,18 +100,27 @@ const REFUSALS: Record<string, string> = {
   measure: "Notes: the core refused. Put M at the end of the data bus.",
 };
 
+function restoreSaved(value: unknown): Session {
+  const saved = value as Partial<Session> | null;
+  // v3 saves may sit on the removed odds card: resume at the lock.
+  if ((value as { step?: string } | null)?.step === "odds") Object.assign(saved!, { step: "classical", line: 0, place: "vault" });
+  if (saved && saved.step && VAULT_STEPS.includes(saved.step) && saved.place && PLACES.includes(saved.place)
+    && Number.isInteger(saved.line) && saved.line! >= 0) return restoreSession(saved);
+  return fresh();
+}
+
 export function VaultScenario({ onExit, onRestartGame }: { onExit?: () => void; onRestartGame?: () => void }) {
   useLocale((state) => state.locale);
   const assetStatus = useVaultSceneAssets();
-  const [session, setSession] = useState<Session>(INITIAL);
-  const [hydrated, setHydrated] = useState(false);
+  const { session, setSession, hydrated, storageNote, save } = useLessonSession({
+    key: VAULT_SAVE_KEY, initial: INITIAL, restore: restoreSaved, unreadable: () => fresh(),
+  });
   const [laptopOpen, setLaptopOpen] = useState(false);
   const [activePlace, setActivePlace] = useState<VaultPlace | null>(null);
   const [roomKey, setRoomKey] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-  const [storageNote, setStorageNote] = useState(false);
   const inFlight = useRef(false);
   const alive = useRef(true);
   const [nearbyPlace, setNearbyPlace] = useState<VaultPlace | null>(null);
@@ -131,22 +141,11 @@ export function VaultScenario({ onExit, onRestartGame }: { onExit?: () => void; 
     alive.current = true;
     void gameAudio.playMusic("play");
     void useProgress.persist.rehydrate(); void useMedals.persist.rehydrate();
-    try {
-      const saved = JSON.parse(localStorage.getItem(VAULT_SAVE_KEY) ?? "null");
-      // v3 saves may sit on the removed odds card: resume at the lock.
-      if (saved?.step === "odds") Object.assign(saved, { step: "classical", line: 0, place: "vault" });
-      if (saved && VAULT_STEPS.includes(saved.step) && PLACES.includes(saved.place)
-        && Number.isInteger(saved.line) && saved.line >= 0) setSession(restoreSession(saved));
-      else setSession(fresh());
-    } catch { setSession(fresh()); }
-    setHydrated(true);
     return () => { alive.current = false; };
   }, []);
 
   useEffect(() => {
     if (!hydrated) return;
-    try { localStorage.setItem(VAULT_SAVE_KEY, JSON.stringify(session)); }
-    catch { setStorageNote(true); }
     if (session.step === "done") useProgress.getState().complete("vault", "vault");
   }, [session, hydrated]);
 
@@ -240,14 +239,14 @@ export function VaultScenario({ onExit, onRestartGame }: { onExit?: () => void; 
 
   function leaveHouse() {
     if (inFlight.current || !hydrated) return;
-    try { localStorage.setItem(VAULT_SAVE_KEY, JSON.stringify(session)); } catch { setStorageNote(true); }
+    save(session);
     gameAudio.playSfx("switch");
     if (onExit) onExit(); else window.location.assign("/");
   }
   function restartLesson() {
     if (inFlight.current || !hydrated) return;
     const start = fresh();
-    try { localStorage.setItem(VAULT_SAVE_KEY, JSON.stringify(start)); } catch { setStorageNote(true); }
+    save(start);
     useProgress.getState().reset("vault", "vault");
     setLaptopOpen(false); setActivePlace(null); setNearbyPlace(null); setNearExit(false); setMessage(null);
     setRoomKey((key) => key + 1); setSession(start); setError(null);

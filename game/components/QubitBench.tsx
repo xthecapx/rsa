@@ -7,7 +7,7 @@ import type { BenchStep, QuestionStep } from "@/content/coinTown";
 import { KET, STATES, expand, ketName, probabilities, solves, trace, type Gate } from "@/game/qubit";
 import { gameAudio } from "@/game/audio";
 import { OceanWaves, RippleGraph } from "./InterferenceWaves";
-import { AmplitudeBars } from "./RegisterBench";
+import { AmplitudeBars } from "./AmplitudeBars";
 import { startRegister, traceReg } from "@/game/register";
 import { t, useLocale } from "@/i18n";
 import { coinApi, type BenchResult } from "@/lib/coin";

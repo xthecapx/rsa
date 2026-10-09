@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { LAB_ITEMS, itemAvailable, labTier } from "@/content/lab";
-import { useLab, exportLab } from "@/game/lab";
+import { useLab } from "@/game/lab";
 import { useMedals } from "@/game/medals";
 import {
   defaultLayout,
@@ -21,9 +21,11 @@ import { LanguageSwitch } from "./LanguageSwitch";
 import { MuteButton } from "./MuteButton";
 import { StartOverControl } from "./StartOverControl";
 import { HouseRoom } from "./HouseRoom";
-import { PuzzleDragDrop, PuzzlePiece, PuzzleSlot } from "./PuzzleDragDrop";
+import { LabBuildGrid } from "./LabBuildGrid";
+import { LabSupplies } from "./LabSupplies";
+import { LabTransfer } from "./LabTransfer";
 import { LabLaptop } from "./LabLaptop";
-import { LabRoomArt, LabItemIcon, LabFloorTile } from "./LabArt";
+import { LabRoomArt } from "./LabArt";
 
 export function LabScreen({
   onExit,
@@ -62,10 +64,17 @@ export function LabScreen({
     const item = LAB_ITEMS.find((i) => i.id === id);
     return !!item && itemAvailable(item, earned);
   };
-  const filtered = lab.layout.filter(
-    (p) => eligible(p.id) && footprint(p).every((c) => c.x < width),
-  );
-  const layout = validLayout(filtered, tier) ? filtered : defaultLayout();
+  const layout = useMemo(() => {
+    const filtered = lab.layout.filter((p) => {
+      const item = LAB_ITEMS.find((i) => i.id === p.id);
+      return (
+        !!item &&
+        itemAvailable(item, earned) &&
+        footprint(p).every((c) => c.x < width)
+      );
+    });
+    return validLayout(filtered, tier) ? filtered : defaultLayout();
+  }, [lab.layout, earned, tier, width]);
   const scene = useMemo(() => {
     const occupied = new Set(
       layout.flatMap(footprint).map((c) => `${c.x},${c.y}`),
@@ -107,7 +116,7 @@ export function LabScreen({
       }),
       floor: [14, 14, width * 28 - 14, LAB_HEIGHT * 28 - 14],
     });
-  }, [JSON.stringify(layout), width]);
+  }, [layout, width]);
   function commit(next: Placement[]) {
     const hidden = lab.layout.filter(
       (p) =>
@@ -239,131 +248,23 @@ export function LabScreen({
             </p>
           </div>
           {building ? (
-            <div className="lab-build-scroll">
-              <PuzzleDragDrop
-                labels={Object.fromEntries(
-                  LAB_ITEMS.map((i) => [i.id, t(i.title)]),
-                )}
-                targets={Object.fromEntries(
-                  Array.from({ length: width * LAB_HEIGHT }, (_, i) => [
-                    `${i % width},${Math.floor(i / width)}`,
-                    `${i % width},${Math.floor(i / width)}`,
-                  ]),
-                )}
-                onPlace={place}
-                renderPreview={(id) => (
-                  <span className="flex items-center gap-2">
-                    <LabItemIcon id={id} />
-                    {t(LAB_ITEMS.find((i) => i.id === id)!.title)}
-                  </span>
-                )}
-              >
-                <div className="flex flex-wrap gap-2">
-                  {lab.owned
-                    .filter(
-                      (id) =>
-                        eligible(id) &&
-                        !LAB_ITEMS.find((i) => i.id === id)!.module,
-                    )
-                    .map((id) => (
-                      <PuzzlePiece
-                        key={id}
-                        id={id}
-                        label={t(LAB_ITEMS.find((i) => i.id === id)!.title)}
-                        selected={selected === id}
-                        onSelect={() => {
-                          setSelected(id);
-                          setRotated(
-                            layout.find((p) => p.id === id)?.rotated ?? false,
-                          );
-                        }}
-                      >
-                        <LabItemIcon id={id} />
-                        {t(LAB_ITEMS.find((i) => i.id === id)!.title)}
-                      </PuzzlePiece>
-                    ))}
-                </div>
-                <div
-                  className="lab-floor"
-                  style={{ gridTemplateColumns: `repeat(${width},44px)` }}
-                >
-                  {Array.from({ length: width * LAB_HEIGHT }, (_, i) => {
-                    const x = i % width,
-                      y = Math.floor(i / width),
-                      p = layout.find((p) =>
-                        footprint(p).some((c) => c.x === x && c.y === y),
-                      ),
-                      item = LAB_ITEMS.find((i) => i.id === p?.id);
-                    return (
-                      <PuzzleSlot
-                        key={i}
-                        id={`${x},${y}`}
-                        label={`${t("Floor tile")} ${x + 1}, ${y + 1}${item ? `: ${t(item.title)}` : ""}`}
-                        className={`lab-cell ${p ? "occupied" : ""}`}
-                        onSelect={() =>
-                          selected
-                            ? place(`${x},${y}`)
-                            : p && (setSelected(p.id), setRotated(p.rotated))
-                        }
-                      >
-                        <svg
-                          className="lab-build-ground"
-                          viewBox="0 0 28 28"
-                          aria-hidden="true"
-                        >
-                          <LabFloorTile variant={i * 7} />
-                        </svg>
-                        {x === LAB_ENTRY.x && y === LAB_ENTRY.y && (
-                          <span className="lab-entry-marker" aria-hidden="true">
-                            ↧
-                          </span>
-                        )}
-                        {p && p.x === x && p.y === y && (
-                          <span
-                            className="lab-build-furniture"
-                            style={{
-                              width: (p.rotated ? item!.h : item!.w) * 46 - 2,
-                              height: (p.rotated ? item!.w : item!.h) * 46 - 2,
-                            }}
-                          >
-                            <LabItemIcon id={p.id} rotated={p.rotated} />
-                          </span>
-                        )}
-                      </PuzzleSlot>
-                    );
-                  })}
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    className="btn-ghost"
-                    disabled={!selected}
-                    onClick={() => setRotated(!rotated)}
-                  >
-                    {t("Rotate furniture")} {rotated ? "90°" : "0°"}
-                  </button>
-                  <button
-                    className="btn-ghost"
-                    disabled={!selected}
-                    onClick={() => {
-                      commit(layout.filter((p) => p.id !== selected));
-                      setSelected(null);
-                    }}
-                  >
-                    {t("Store item")}
-                  </button>
-                  <button
-                    className="btn-ghost"
-                    disabled={!history.length}
-                    onClick={() => {
-                      useLab.setState({ layout: history.at(-1)! });
-                      setHistory(history.slice(0, -1));
-                    }}
-                  >
-                    {t("Undo")}
-                  </button>
-                </div>
-              </PuzzleDragDrop>
-            </div>
+            <LabBuildGrid
+              owned={lab.owned}
+              layout={layout}
+              width={width}
+              selected={selected}
+              setSelected={setSelected}
+              rotated={rotated}
+              setRotated={setRotated}
+              eligible={eligible}
+              place={place}
+              commit={commit}
+              canUndo={!!history.length}
+              onUndo={() => {
+                useLab.setState({ layout: history.at(-1)! });
+                setHistory(history.slice(0, -1));
+              }}
+            />
           ) : (
             <HouseRoom
               key={JSON.stringify(layout)}
@@ -436,148 +337,21 @@ export function LabScreen({
           )}
         </section>
         {suppliesOpen && (
-          <aside className="lab-supplies panel p-3 space-y-3">
-            <div className="flex justify-between items-center gap-2">
-              <h2 className="text-accent-teal">{t("Equipment supplies")}</h2>
-              <button
-                className="btn-ghost"
-                aria-label={t("Close equipment supplies")}
-                onClick={() => setSuppliesOpen(false)}
-              >
-                ×
-              </button>
-            </div>
-            <p className="text-xs text-stage-muted">
-              {t(
-                "Medals unlock supplies. Acquire items for free, then place or install them.",
-              )}
-            </p>
-            {LAB_ITEMS.map((item) => {
-              const owned = lab.owned.includes(item.id),
-                available = itemAvailable(item, earned);
-              return (
-                <div
-                  key={item.id}
-                  className="lab-supply-row flex gap-2 items-center justify-between border-b border-stage-border pb-2"
-                >
-                  <div className="flex min-w-0 items-center gap-2">
-                    <LabItemIcon id={item.id} />
-                    <span className="min-w-0">
-                      {t(item.title)}
-                      {!available && (
-                        <small className="block text-stage-muted">
-                          {t(
-                            [
-                              "",
-                              "Requires Quantum Coin",
-                              "Requires Amplitude Amplifier",
-                              "Requires Ghost Key",
-                              "Requires all four RSA medals",
-                            ][item.tier],
-                          )}
-                        </small>
-                      )}
-                    </span>
-                  </div>
-                  <button
-                    className="btn-ghost text-xs"
-                    disabled={busy || !available || (owned && !item.module)}
-                    onClick={() =>
-                      owned ? lab.install(item.id) : lab.acquire(item.id)
-                    }
-                  >
-                    {t(
-                      !available
-                        ? "Locked"
-                        : !owned
-                          ? "Acquire"
-                          : item.module
-                            ? lab.installed.includes(item.id)
-                              ? "Uninstall"
-                              : "Install"
-                            : "Owned",
-                    )}
-                  </button>
-                </div>
-              );
-            })}
-          </aside>
+          <LabSupplies
+            earned={earned}
+            busy={busy}
+            onClose={() => setSuppliesOpen(false)}
+          />
         )}
         {transfer && (
-          <section className="panel p-3 space-y-3 lab-transfer">
-            <div className="flex justify-between items-center gap-2">
-              <h2>{t("Export / import lab")}</h2>
-              <button
-                className="btn-ghost"
-                aria-label={t("Close lab transfer")}
-                onClick={() => setTransfer(false)}
-              >
-                ×
-              </button>
-            </div>
-            <p className="text-sm">
-              {t(
-                "Keep your checkpoint code for medals. This plan saves furniture, installed equipment and recipes; it submits no jobs.",
-              )}
-            </p>
-            <textarea
-              aria-label={t("Exported lab plan")}
-              className="w-full bg-stage-bg p-2 font-mono text-xs"
-              readOnly
-              rows={4}
-              value={exportLab()}
-            />
-            <button
-              className="btn-ghost"
-              onClick={() => {
-                const url = URL.createObjectURL(
-                  new Blob([exportLab()], { type: "application/json" }),
-                );
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = "quantum-lab.json";
-                a.click();
-                window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-              }}
-            >
-              {t("Download lab plan")}
-            </button>
-            <textarea
-              aria-label={t("Import lab plan")}
-              className="w-full bg-stage-bg p-2 text-base"
-              rows={4}
-              maxLength={65536}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-            />
-            <input
-              aria-label={t("Choose lab plan file")}
-              type="file"
-              accept=".json,application/json"
-              disabled={busy}
-              onChange={async (e) => {
-                const file = e.target.files?.[0];
-                if (file && file.size <= 65536) setInput(await file.text());
-                else setMessage(t("Invalid lab plan."));
-              }}
-            />
-            <button
-              className="btn-primary"
-              disabled={busy}
-              onClick={() => {
-                setMessage(
-                  t(
-                    lab.importPlan(input)
-                      ? "Lab plan restored. Locked equipment stays in storage until its medal is earned."
-                      : "Invalid lab plan.",
-                  ),
-                );
-                setHistory([]);
-              }}
-            >
-              {t("Import lab plan")}
-            </button>
-          </section>
+          <LabTransfer
+            busy={busy}
+            input={input}
+            setInput={setInput}
+            setMessage={setMessage}
+            onClose={() => setTransfer(false)}
+            onImported={() => setHistory([])}
+          />
         )}
       </div>
       <LabLaptop

@@ -50,6 +50,29 @@ gcloud run services update rsa-backend --region=us-east1 --min-instances=0
 gcloud run services update rsa-game --region=us-east1 --min-instances=0
 ```
 
+## Development checks
+
+Use Node 22.12+ for the game and its React regression tests. From `game/`:
+
+```bash
+npm ci
+npm run check          # ESLint, TypeScript, Node tests and React interaction tests
+npm run build          # Next.js / Python HTTP target
+npm run build:qollab   # regenerate and verify the upload folder
+```
+
+`npm run test:unit` runs the domain/save/translation checks; `npm run test:ui`
+runs the Vitest and Testing Library checks in jsdom. These tests need no running
+backend and no generated distribution. Format only edited files with
+`npm run format -- <paths>` and verify them with `npm run format:check -- <paths>`.
+Backend checks run from `backend/` with `pytest` in its development environment.
+
+The lab separates circuit editing, equipment permissions, presentation and explicit
+execution. Lesson saves share hydration/writing while keeping their existing keys
+and migrations. HTTP and Qollab still use the same domain services; the shared
+request helper never retries quantum jobs automatically. See `AGENTS.md` for
+ownership boundaries and the required real-browser checks.
+
 ## Qollab bundle
 
 The same game supports a Qollab export alongside the existing Next.js/FastAPI

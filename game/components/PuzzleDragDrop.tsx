@@ -294,12 +294,13 @@ export function PuzzleCircuitPiece({
   const target = useDroppable({ id: slotId, accept: "puzzle-piece" });
   const { instructionsId, canClick, wholeBlockDrag } =
     useContext(PuzzleContext);
+  const sourceRef = source.ref, targetRef = target.ref;
   const ref = useCallback(
     (element: HTMLButtonElement | null) => {
-      source.ref(element);
-      target.ref(element);
+      sourceRef(element);
+      targetRef(element);
     },
-    [source.ref, target.ref],
+    [sourceRef, targetRef],
   );
   return (
     <span className="lab-circuit-component">

@@ -1,6 +1,7 @@
 "use client";
 import { t, localize, useLocale } from "@/i18n";
 
+import { useLessonSession } from "./useLessonSession";
 import { useEffect, useRef, useState } from "react";
 import { GROVER_SCENES, GROVER_STEPS, type GroverPlace, type GroverStep } from "@/content/grover";
 import { CircuitHistogram } from "./CircuitHistogram";
@@ -92,18 +93,25 @@ function countHint(repeat: number): string {
   return "Over-rotation! Grover is a rotation — keep turning and you point away again.";
 }
 
+function restoreSaved(value: unknown): Session {
+  const saved = value as Partial<Session> | null;
+  if (saved && saved.step && GROVER_STEPS.includes(saved.step) && saved.place && PLACES.includes(saved.place)
+    && Number.isInteger(saved.line) && saved.line! >= 0) return restoreSession(saved);
+  return fresh();
+}
+
 export function GroverScenario({ onExit, onRestartGame }: { onExit?: () => void; onRestartGame?: () => void }) {
   useLocale((state) => state.locale);
   const assetStatus = useGroverSceneAssets();
-  const [session, setSession] = useState<Session>(INITIAL);
-  const [hydrated, setHydrated] = useState(false);
+  const { session, setSession, hydrated, storageNote, save } = useLessonSession({
+    key: GROVER_SAVE_KEY, initial: INITIAL, restore: restoreSaved, unreadable: () => fresh(),
+  });
   const [laptopOpen, setLaptopOpen] = useState(false);
   const [activePlace, setActivePlace] = useState<GroverPlace | null>(null);
   const [roomKey, setRoomKey] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-  const [storageNote, setStorageNote] = useState(false);
   const inFlight = useRef(false);
   const alive = useRef(true);
   const [nearbyPlace, setNearbyPlace] = useState<GroverPlace | null>(null);
@@ -125,20 +133,11 @@ export function GroverScenario({ onExit, onRestartGame }: { onExit?: () => void;
     alive.current = true;
     void gameAudio.playMusic("play");
     void useProgress.persist.rehydrate(); void useMedals.persist.rehydrate();
-    try {
-      const saved = JSON.parse(localStorage.getItem(GROVER_SAVE_KEY) ?? "null");
-      if (saved && GROVER_STEPS.includes(saved.step) && PLACES.includes(saved.place)
-        && Number.isInteger(saved.line) && saved.line >= 0) setSession(restoreSession(saved));
-      else setSession(fresh());
-    } catch { setSession(fresh()); }
-    setHydrated(true);
     return () => { alive.current = false; };
   }, []);
 
   useEffect(() => {
     if (!hydrated) return;
-    try { localStorage.setItem(GROVER_SAVE_KEY, JSON.stringify(session)); }
-    catch { setStorageNote(true); }
     if (session.step === "done") useProgress.getState().complete("grover", "grover");
   }, [session, hydrated]);
 
@@ -221,14 +220,14 @@ export function GroverScenario({ onExit, onRestartGame }: { onExit?: () => void;
 
   function leaveHouse() {
     if (inFlight.current || !hydrated) return;
-    try { localStorage.setItem(GROVER_SAVE_KEY, JSON.stringify(session)); } catch { setStorageNote(true); }
+    save(session);
     gameAudio.playSfx("switch");
     if (onExit) onExit(); else window.location.assign("/");
   }
   function restartLesson() {
     if (inFlight.current || !hydrated) return;
     const start = fresh();
-    try { localStorage.setItem(GROVER_SAVE_KEY, JSON.stringify(start)); } catch { setStorageNote(true); }
+    save(start);
     useProgress.getState().reset("grover", "grover");
     setLaptopOpen(false); setActivePlace(null); setNearbyPlace(null); setNearExit(false); setMessage(null);
     setRoomKey((key) => key + 1); setSession(start); setError(null);

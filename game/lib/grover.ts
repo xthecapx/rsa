@@ -1,4 +1,5 @@
-import { serviceError, serviceFetch } from "./transport";
+import { serviceError } from "./transport";
+import { postJson, QUANTUM_ERROR } from "./request";
 export type GroverBlock = "oracle" | "diffuser" | "h" | "x";
 
 export interface GroverCircuit {
@@ -28,27 +29,32 @@ export interface GroverRun {
 
 /** The quantum core refused to collapse this circuit. */
 export class GroverRefusal extends Error {
-  constructor(readonly reason: "circuit" | "rounds") { super(reason); }
+  constructor(readonly reason: "circuit" | "rounds") {
+    super(reason);
+  }
 }
 
 async function post<T>(path: string, body: object): Promise<T> {
-  const response = await serviceFetch(`/api/grover/${path}`, {
-    method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body), signal: AbortSignal.timeout(20000),
+  return postJson<T>(`/api/grover/${path}`, body, {
+    timeout: 20000,
+    error: async (response) => {
+      if (response.status === 409) {
+        const data = await response.json().catch(() => null);
+        const reason = data?.detail?.reason;
+        throw new GroverRefusal(reason === "rounds" ? "rounds" : "circuit");
+      }
+      return serviceError(response, QUANTUM_ERROR);
+    },
   });
-  if (response.status === 409) {
-    const data = await response.json().catch(() => null);
-    const reason = data?.detail?.reason;
-    throw new GroverRefusal(reason === "rounds" ? "rounds" : "circuit");
-  }
-  if (!response.ok) throw await serviceError(response, "The quantum core did not answer. Check the backend and try again.");
-  return response.json();
 }
 
 export const groverApi = {
-  device: (previous?: string) => post<{ token: string }>("device", previous ? { previous } : {}),
-  query: (token: string, guess: string) => post<{ match: boolean }>("query", { token, guess }),
-  run: (token: string, circuit: GroverCircuit) => post<GroverRun>("run", { token, circuit }),
+  device: (previous?: string) =>
+    post<{ token: string }>("device", previous ? { previous } : {}),
+  query: (token: string, guess: string) =>
+    post<{ match: boolean }>("query", { token, guess }),
+  run: (token: string, circuit: GroverCircuit) =>
+    post<GroverRun>("run", { token, circuit }),
 };
 
 /** Probability of the tallest bar, which is the marked PIN once the search works. */

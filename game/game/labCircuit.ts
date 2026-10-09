@@ -13,14 +13,24 @@ export const isRotation = (gate: LabGate) =>
   gate === "ROTATION" || gate === "RY";
 export const rotationAxis = (op: LabOp): RotationAxis =>
   op.gate === "RY" ? "Y" : op.axis!;
-export interface LabOp {
-  gate: LabGate;
+/** Each gate requires its own parameters; legacy RY remains readable. */
+export type LabOp = (
+  | { gate: "X" | "H" | "Z"; wire: number }
+  | { gate: "RY"; wire: number; angle: number; axis?: RotationAxis }
+  | { gate: "ROTATION"; wire: number; angle: number; axis: RotationAxis }
+  | { gate: "CX"; wire: number; control: number }
+  | { gate: "ORACLE" | "PARITY"; bits: string }
+  | { gate: "D" }
+) & {
   wire?: number;
   control?: number;
   angle?: number;
   axis?: RotationAxis;
   bits?: string;
-}
+};
+export type LabOpChange = Partial<
+  Pick<LabOp, "wire" | "control" | "angle" | "axis" | "bits">
+> & { gate?: "ROTATION" };
 export interface LabRecipe {
   qubits: number;
   start: string;

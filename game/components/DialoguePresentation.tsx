@@ -1,7 +1,7 @@
 "use client";
 
 import { gameAudio } from "@/game/audio";
-import { useEffect, useRef, useState, type HTMLAttributes, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type HTMLAttributes, type ReactNode } from "react";
 import clsx from "clsx";
 import type { Speaker } from "@/content/types";
 import { Portrait, SPEAKER_COLOR, SPEAKER_NAME } from "./Portrait";
@@ -47,5 +47,6 @@ export function useDialogueText(text: string) {
     }, 12);
     return () => { if (timer.current) clearInterval(timer.current); };
   }, [text]);
-  return { typed, settled: typed === text, reveal: () => { if (timer.current) clearInterval(timer.current); setTyped(text); } };
+  const reveal = useCallback(() => { if (timer.current) clearInterval(timer.current); setTyped(text); }, [text]);
+  return { typed, settled: typed === text, reveal };
 }

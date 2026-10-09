@@ -1,9 +1,9 @@
 """HTTP transport for the shared Foundry/Hollow teaching registers."""
-from fastapi import APIRouter, Header, HTTPException
+from fastapi import APIRouter, Header
 from pydantic import BaseModel, Field
-from app.core.game_services import register, ServiceError
+from app.core.game_services import register
 from app.quantum.simulators import SimulatorChoice, simulator, display_name
-from app.quantum.worker import run_on_worker, QuantumTimeout
+from app.api.quantum_execution import run_quantum
 
 router = APIRouter()
 
@@ -21,11 +21,4 @@ def circuit(req: RegisterRequest, choice: SimulatorChoice = Header("ideal", alia
         result = register(simulator(choice), "circuit", req.model_dump())
         result["backend"] = display_name(choice)
         return result
-    try:
-        return run_on_worker(run, timeout=15)
-    except ServiceError as exc:
-        raise HTTPException(exc.status, exc.detail) from exc
-    except QuantumTimeout as exc:
-        raise HTTPException(504, str(exc)) from exc
-    except ImportError as exc:
-        raise HTTPException(503, "Qiskit Aer is unavailable") from exc
+    return run_quantum(run, service_errors=True)

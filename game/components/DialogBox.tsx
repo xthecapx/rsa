@@ -115,7 +115,7 @@ export function DialogBox() {
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [phase, choices.length, settled, fullText, blocked]);
+  }, [phase, choices.length, settled, fullText, blocked, reveal]);
 
   // Long cutscenes (packet flight, API) set phase to busy and used to blank the
   // dialog entirely. Keep a status line up so the street does not look frozen.

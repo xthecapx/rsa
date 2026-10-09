@@ -1,4 +1,4 @@
-import { serviceError, serviceFetch } from "./transport";
+import { postJson } from "./request";
 import type { Gate, NamedState } from "@/game/qubit";
 export interface QubitReading {
   counts: { "0": number; "1": number };
@@ -30,17 +30,14 @@ export interface CoinResult {
   probabilities: { "0": number; "1": number };
 }
 
-async function post<T>(path: string, body: object): Promise<T> {
-  const response = await serviceFetch(`/api/coin/${path}`, {
-    method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body), signal: AbortSignal.timeout(20000),
-  });
-  if (!response.ok) throw await serviceError(response, "The experiment could not finish. Check the backend and try again.");
-  return response.json();
-}
+const post = <T>(path: string, body: object) =>
+  postJson<T>(`/api/coin/${path}`, body, { timeout: 20000 });
 
 export const coinApi = {
-  circuit: (starts: NamedState[], gates: Gate[], shots = 256) => post<BenchResult>("circuit", { starts, gates, shots }),
-  classical: (flips: number) => post<ClassicalCoin>("classical", { seed: 42, flips }),
-  simulate: (hadamard: boolean, shots: number, finalChallenge = false) => post<CoinResult>("simulate", { hadamard, shots, finalChallenge }),
+  circuit: (starts: NamedState[], gates: Gate[], shots = 256) =>
+    post<BenchResult>("circuit", { starts, gates, shots }),
+  classical: (flips: number) =>
+    post<ClassicalCoin>("classical", { seed: 42, flips }),
+  simulate: (hadamard: boolean, shots: number, finalChallenge = false) =>
+    post<CoinResult>("simulate", { hadamard, shots, finalChallenge }),
 };

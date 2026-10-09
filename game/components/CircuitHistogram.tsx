@@ -1,5 +1,6 @@
 "use client";
 
+import { HistogramBars } from "./HistogramBars";
 import { t, useLocale } from "@/i18n";
 import type { Measurement } from "@/game/histogram";
 
@@ -11,13 +12,7 @@ export function CircuitHistogram({ counts, probabilities, backend, kind, source,
   keys.sort(hiddenLabels ? (a, b) => Number(a) - Number(b) : undefined);
   return <section className="measurement-result space-y-2" aria-label={t("Observed counts")}>
     <p className="text-xs text-accent-teal">{t("Observed counts")} · {shots} {t("shots")} · {backend} · {t(source === "hardware" ? "Real hardware" : kind === "noise" ? "Noise-model simulator" : "Ideal simulator")}</p>
-    <div className="qubit-odds" style={{ gridTemplateColumns: "auto minmax(32px, 1fr) auto" }}>
-      {keys.map((key) => <div key={key} className="contents">
-        <span>{hiddenLabels ? t("Bar {number}").replace("{number}", String(Number(key) + 1)) : key}</span>
-        <span className="qubit-bar"><span style={{ width: `${shots ? 100 * (counts[key] ?? 0) / shots : 0}%` }} /></span>
-        <span>{counts[key] ?? 0} · {shots ? (100 * (counts[key] ?? 0) / shots).toFixed(1) : 0}%</span>
-      </div>)}
-    </div>
+    <HistogramBars shots={shots} rows={keys.map(key => ({ key, count: counts[key] ?? 0, label: hiddenLabels ? t("Bar {number}").replace("{number}", String(Number(key) + 1)) : key }))} />
     <p className="text-xs text-stage-muted">{t("Each shot starts from a fresh preparation. These bars show returned measurements, not calculated probabilities.")}</p>
     {probabilities && <p className="text-xs text-stage-muted">{t("Ideal prediction:")} {keys.map((key) => `${hiddenLabels ? Number(key) + 1 : key}: ${((probabilities[key] ?? 0) * 100).toFixed(1)}%`).join(" · ")}</p>}
     {(kind === "noise" || source === "hardware") && <p className="text-xs text-accent-amber">{t("Noise can shift these counts away from the ideal prediction.")}</p>}

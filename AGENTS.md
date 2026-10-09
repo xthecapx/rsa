@@ -324,13 +324,41 @@ network-only. Builds generate `NEXT_PUBLIC_PWA_BUILD_ID`; `PWA_BUILD_ID` can ove
 it. New workers clear old `mitm-shell-*` caches and reload clients. Development
 unregisters leftover workers. Preserve this behavior when changing asset delivery.
 
+## Code organization and refactoring
+
+`LabLaptop` coordinates explicit execution and result snapshots. `useLabEditor`
+owns transient selection, focus and drag resets; pure transitions and equipment
+permissions live in `game/game/labEditor.ts`. `LabCircuitEditor`,
+`LabComponentPicker`, `LabRecipes` and `LabStateExplorer` render those concerns.
+Keep the hidden component picker mounted so dnd-kit retains its drag sources.
+`LabBuildGrid`, `LabSupplies` and `LabTransfer` separate the base's controls from
+its scene and placement validation. Gate-specific `LabOp` types require their
+parameters; runtime validation still protects imports and old saves.
+
+`lib/request.ts` shares JSON requests, with endpoint-owned refusal/error policies.
+`useAsyncOperation` gives lab/register runs one synchronous execution lock and
+suppresses results after their owner unmounts; it never retries or cancels jobs.
+RSA still owns its mission generation checks. `useLessonSession` hydrates before
+writing and reports unavailable storage; each lesson keeps its save validation,
+migrations, completion and explicit flush points. Neither hook starts execution
+on mount. `HistogramBars` and `AmplitudeBars` are shared display primitives;
+lesson wrappers retain their captions, backend metadata and ideal references.
+HTTP worker/error translation lives in `backend/app/api/quantum_execution.py`,
+outside the shared Python circuit services and the Qollab upload.
+
 ## Validation
 
-For game changes, run appropriate checks from `game/`: `npm test` for behavior and
-translation integrity, `npx tsc --noEmit` for types, and `npm run build` for
+For game changes, run appropriate checks from `game/`: `npm test` for Node behavior/translation tests and Vitest React regressions,
+`npm run lint` (zero warnings), `npm run typecheck` for types, and `npm run build` for
 production validation. Backend tests live in `backend/tests/` and run with `pytest`
 from `backend/` after installing the development dependencies. Documentation-only
 changes need reference and whitespace checks rather than a full build.
+
+`npm run check` combines lint, types and both frontend test suites. React tests
+cover editor interactions, duplicate execution, stale responses, reopen/language
+changes and blocked-storage hydration. They complement real browser smoke tests.
+Format edited files with `npm run format -- <paths>`; avoid unrelated whole-repo
+formatting.
 
 For UI, prose, or save changes, smoke-test the affected lesson in both languages,
 keyboard and touch interactions, laptop reopen, and refresh/resume. Check that a

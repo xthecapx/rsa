@@ -5,7 +5,12 @@ import { saveStorage } from "./storage";
 import { LAB_ITEMS, itemAvailable } from "@/content/lab";
 import { useMedals } from "./medals";
 import { defaultLayout, validLayout, type Placement } from "./labLayout";
-import { starterRecipe, validRecipe, type LabRecipe } from "./labCircuit";
+import {
+  starterRecipe,
+  validRecipe,
+  type LabRecipe,
+  type LabOp,
+} from "./labCircuit";
 export interface LabData {
   owned: string[];
   installed: string[];
@@ -58,14 +63,17 @@ function cleanLab(data: LabData): LabData {
     qubits: r.qubits,
     start: r.start,
     shots: r.shots,
-    operations: r.operations.map((op) => ({
-      gate: op.gate,
-      ...(op.wire !== undefined ? { wire: op.wire } : {}),
-      ...(op.control !== undefined ? { control: op.control } : {}),
-      ...(op.angle !== undefined ? { angle: op.angle } : {}),
-      ...(op.axis !== undefined ? { axis: op.axis } : {}),
-      ...(op.bits !== undefined ? { bits: op.bits } : {}),
-    })),
+    operations: r.operations.map(
+      (op) =>
+        ({
+          gate: op.gate,
+          ...(op.wire !== undefined ? { wire: op.wire } : {}),
+          ...(op.control !== undefined ? { control: op.control } : {}),
+          ...(op.angle !== undefined ? { angle: op.angle } : {}),
+          ...(op.axis !== undefined ? { axis: op.axis } : {}),
+          ...(op.bits !== undefined ? { bits: op.bits } : {}),
+        }) as LabOp,
+    ),
   });
   return {
     owned: [...data.owned],

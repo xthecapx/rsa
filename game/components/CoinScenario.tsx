@@ -1,6 +1,7 @@
 "use client";
 import { t, localize, useLocale } from "@/i18n";
 
+import { useLessonSession } from "./useLessonSession";
 import { useEffect, useRef, useState } from "react";
 import { COIN_SCENES, COIN_STEPS, type CoinStep, type RoomPlace } from "@/content/coin";
 import { coinApi, type CoinResult } from "@/lib/coin";
@@ -143,17 +144,24 @@ function Results({ result }: { result: CoinResult }) {
   </div>;
 }
 
+function restoreSaved(value: unknown): Session {
+  const saved = value as Partial<Session> | null;
+  if (saved && saved.step && COIN_STEPS.includes(saved.step) && saved.place && ["table", "desk", "board"].includes(saved.place)
+    && Number.isInteger(saved.line) && saved.line! >= 0 && Array.isArray(saved.practice) && Array.isArray(saved.replay) && Array.isArray(saved.batches)) return restoreSession(saved);
+  return { ...INITIAL, codeSlots: { ...EMPTY_CODE }, variants: newVariants() };
+}
+
 export function CoinScenario({ onExit, onRestartGame }: { onExit?: () => void; onRestartGame?: () => void }) {
   useLocale((state) => state.locale);
   const assetStatus = useCoinSceneAssets();
-  const [session, setSession] = useState<Session>(INITIAL);
-  const [hydrated, setHydrated] = useState(false);
+  const { session, setSession, hydrated, storageNote, setStorageNote, save } = useLessonSession({
+    key: SAVE_KEY, initial: INITIAL, restore: restoreSaved, unreadable: () => INITIAL,
+  });
   const [laptopOpen, setLaptopOpen] = useState(false);
   const [activePlace, setActivePlace] = useState<RoomPlace | null>(null);
   const [roomKey, setRoomKey] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [storageNote, setStorageNote] = useState(false);
   const inFlight = useRef(false);
   const alive = useRef(true);
   const [nearbyPlace, setNearbyPlace] = useState<RoomPlace | null>(null);
@@ -174,22 +182,11 @@ export function CoinScenario({ onExit, onRestartGame }: { onExit?: () => void; o
     alive.current = true;
     void gameAudio.playMusic("play");
     void useProgress.persist.rehydrate(); void useMedals.persist.rehydrate();
-    try {
-      const saved = JSON.parse(localStorage.getItem(SAVE_KEY) ?? "null");
-      if (saved && COIN_STEPS.includes(saved.step) && ["table", "desk", "board"].includes(saved.place)
-        && Number.isInteger(saved.line) && saved.line >= 0 && Array.isArray(saved.practice)
-        && Array.isArray(saved.replay) && Array.isArray(saved.batches)) {
-        setSession(restoreSession(saved));
-      } else setSession({ ...INITIAL, codeSlots: { ...EMPTY_CODE }, variants: newVariants() });
-    } catch { /* Missing or invalid local progress starts a fresh lesson. */ }
-    setHydrated(true);
     return () => { alive.current = false; };
   }, []);
 
   useEffect(() => {
     if (!hydrated) return;
-    try { localStorage.setItem(SAVE_KEY, JSON.stringify(session)); }
-    catch { setStorageNote(true); }
     if (session.step === "done") useProgress.getState().complete("coin", "coin");
   }, [session, hydrated]);
 
@@ -236,14 +233,14 @@ export function CoinScenario({ onExit, onRestartGame }: { onExit?: () => void; o
 
   function leaveHouse() {
     if (inFlight.current || !hydrated) return;
-    try { localStorage.setItem(SAVE_KEY, JSON.stringify(session)); } catch { setStorageNote(true); }
+    save(session);
     gameAudio.playSfx("switch");
     if (onExit) onExit(); else window.location.assign("/");
   }
   function restartLesson() {
     if (inFlight.current || !hydrated) return;
     const fresh: Session = { ...INITIAL, codeSlots: { ...EMPTY_CODE }, circuitSlots: { ...EMPTY_CIRCUIT }, variants: newVariants() };
-    try { localStorage.setItem(SAVE_KEY, JSON.stringify(fresh)); } catch { setStorageNote(true); }
+    save(fresh);
     useProgress.getState().reset("coin");
     setLaptopOpen(false); setActivePlace(null); setNearbyPlace(null); setNearExit(false);
     setRoomKey((key) => key + 1); setSession(fresh); setError(null);
