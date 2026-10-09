@@ -185,7 +185,7 @@ Challenge medals expand the cave and unlock free supplies:
 
 | Medal | Acquirable equipment |
 | --- | --- |
-| Quantum Coin | X/H/Z gate modules, Ry(θ), Bloch display, garden |
+| Quantum Coin | X/H/Z gate modules, Rotation R(θ) around X/Y/Z, Bloch display, garden |
 | Amplitude Amplifier | Register kit and Grover algorithm box |
 | Ghost Key | Controlled-gate and phase-kickback box |
 | Four RSA medals | Classical crypto toolkit and quantum period explorer |
@@ -195,18 +195,29 @@ physical furniture. Knowledge cards are optional. Existing town badges also gran
 compatible unlocks; restoring a checkpoint never duplicates an item or changes a
 custom layout. Construction is free and independent of Cipher's mission wallet.
 
-The quantum laptop is a free-play workspace with a circuit builder, inspector,
+The quantum laptop is a free-play workspace with a full-width circuit builder,
 ideal state explorer and measured results. Open the component picker with **+**
 beside the floating Clear/Run buttons, then drag a gate or select it and tap a wire.
+The whole block is draggable, with no separate grip; on a phone, hold the block
+briefly to drag and swipe outside blocks to scroll.
 Tapping a wire's **+** also lets you choose and place a gate directly; loading a
 starter recipe is optional. Select a placed gate and use its **×** button to
 remove only that operation, or press Delete/Backspace on the focused gate. Clear
 cancels any picked-up piece and resets the editor for a fresh circuit.
+Selected blocks show left/right arrows underneath for reordering. Drag a block
+to change its target qubit. Its settings button opens floating rotation-angle,
+control-wire or oracle-bit controls without taking space from the circuit.
 Qubit controls explain equipment unlocks and warn
 that changing the count clears the circuit. It supports 1–4
-qubits, at most 32 operations and 1–1,024 shots. Ry has a Y-axis angle slider,
-numeric radians and presets. The Bloch display is an ideal single-qubit reference;
-returned counts do not reconstruct it. Multi-qubit recipes show register amplitudes.
+qubits, at most 32 operations and 1–1,024 shots. Rotation uses an X/Y/Z axis
+selector and a circular θ angle dial,
+numeric degrees and presets, with a π reference. Turn clockwise for positive
+angles and counterclockwise for negative angles, within ±360°. The saved circuit
+and backend continue to use radians. The Bloch display is an ideal single-qubit
+reference for all three axes; returned counts do not reconstruct it. Complex
+amplitudes retain phase during mixed rotations. Existing Y rotation equipment
+and saved Ry recipes remain compatible. Multi-qubit recipes show register
+amplitudes.
 Grover and phase-kickback boxes load editable oracle/diffuser/helper recipes.
 The period box runs a separate N=15, a=7 Shor experiment.
 

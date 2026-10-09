@@ -5,7 +5,7 @@
   "hardwareSubmissions": true,
   "remoteExecutionPolicy": "one-final-or-lab-job-per-code-run; local-ideal-practice",
   "fileCount": 19,
-  "bytes": 3185646,
+  "bytes": 3197733,
   "assets": {
     "included": [
       "/assets/characters/animal-bat.svg",
@@ -160,8 +160,8 @@
     },
     {
       "path": "core/register_circuit.py",
-      "bytes": 4743,
-      "sha256": "dea0a90f5265a4fb443336329d9092907d5a09c0f3a8f51c1c4281e5417806b4"
+      "bytes": 4956,
+      "sha256": "b17da3571bb48725a870daadb1b290321617f610203fa6f6b16550f8571b3f66"
     },
     {
       "path": "core/rsa.py",
@@ -175,8 +175,8 @@
     },
     {
       "path": "game.js",
-      "bytes": 1762908,
-      "sha256": "be652f210f4c1968eedce4271a2682a691cded8f899ff4a39fb0e10d9ce65155"
+      "bytes": 1772535,
+      "sha256": "01251385f9cfb745ff12d042eaebeaa989a3fed4e5147a1b88da00407d6838a9"
     },
     {
       "path": "index.html",
@@ -185,8 +185,8 @@
     },
     {
       "path": "main.css",
-      "bytes": 85870,
-      "sha256": "5758abd734281673825c21d04b6cee2ad191639f4f07079dfd193f9a7899e26e"
+      "bytes": 88117,
+      "sha256": "d8ddbd86d39f3a1670b24cd9b560fc9cc504e0aa0159494f22b39492e64c79a6"
     },
     {
       "path": "main.js",
@@ -226,7 +226,7 @@
     },
     {
       "path": "i18n/es.json",
-      "bytes": 371394
+      "bytes": 373113
     },
     {
       "path": "node_modules/react-dom/cjs/react-dom-client.production.js",
@@ -234,7 +234,7 @@
     },
     {
       "path": "node_modules/@dnd-kit/dom/index.js",
-      "bytes": 35791
+      "bytes": 35792
     },
     {
       "path": "components/VaultChallenges.tsx",
@@ -246,11 +246,11 @@
     },
     {
       "path": "components/TownScreen.tsx",
-      "bytes": 22026
+      "bytes": 22019
     },
     {
       "path": "components/LabLaptop.tsx",
-      "bytes": 21276
+      "bytes": 20288
     },
     {
       "path": "node_modules/@dnd-kit/dom/utilities.js",
@@ -274,7 +274,7 @@
     },
     {
       "path": "components/VaultScenario.tsx",
-      "bytes": 17799
+      "bytes": 17805
     },
     {
       "path": "content/hollow.ts",

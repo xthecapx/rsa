@@ -19,8 +19,8 @@ export const LAB_ITEMS: LabItem[] = [
   { id: "bloch", title: "Bloch display", glyph: "◎", tier: 1, w: 1, h: 1 },
   ...["X", "H", "Z", "RY"].map((id) => ({
     id,
-    title: id === "RY" ? "Y rotation module" : `${id} gate module`,
-    glyph: id === "RY" ? "Ry" : id,
+    title: id === "RY" ? "Rotation module" : `${id} gate module`,
+    glyph: id === "RY" ? "R(θ)" : id,
     tier: 1,
     module: true,
     w: 1,

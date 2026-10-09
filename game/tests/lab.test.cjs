@@ -2,9 +2,8 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const path = require("node:path");
 const { loadTs } = require("./loadTs.cjs");
-const { labTrace, algorithmRecipe, validRecipe } = loadTs(
-  path.join(__dirname, "../game/labCircuit.ts"),
-);
+const { labTrace, algorithmRecipe, validRecipe, labProbability, labBloch } =
+  loadTs(path.join(__dirname, "../game/labCircuit.ts"));
 const { validLayout, defaultLayout } = loadTs(
   path.join(__dirname, "../game/labLayout.ts"),
 );
@@ -33,7 +32,9 @@ test("Ry ideal references preserve normalization, signs and the Bloch Y rotation
       operations: [{ gate: "RY", wire: 0, angle }],
       shots: 256,
     };
-    const [a, b] = labTrace(recipe).at(-1);
+    const state = labTrace(recipe).at(-1);
+    const [a, b] = state.map((a) => a.re);
+    assert.ok(state.every((a) => a.im === 0));
     assert.ok(Math.abs(a - Math.cos(angle / 2)) < 1e-12);
     assert.ok(Math.abs(b - Math.sin(angle / 2)) < 1e-12);
     assert.ok(Math.abs(2 * a * b - Math.sin(angle)) < 1e-12);
@@ -52,9 +53,7 @@ test("Ry ideal references preserve normalization, signs and the Bloch Y rotation
 });
 test("free-play algorithm recipes expose real components and expected ideal outputs", () => {
   const g = algorithmRecipe("grover", "10", 1),
-    p = labTrace(g)
-      .at(-1)
-      .map((a) => a * a);
+    p = labTrace(g).at(-1).map(labProbability);
   assert.deepEqual(
     g.operations.slice(-2).map((o) => o.gate),
     ["ORACLE", "D"],
@@ -63,8 +62,8 @@ test("free-play algorithm recipes expose real components and expected ideal outp
   const k = algorithmRecipe("kickback", "10"),
     a = labTrace(k).at(-1);
   assert.ok(validRecipe(k));
-  assert.ok(Math.abs(a[4] * a[4] + a[5] * a[5] - 1) < 1e-12);
-  assert.ok(a[4] > 0 && a[5] < 0);
+  assert.ok(Math.abs(labProbability(a[4]) + labProbability(a[5]) - 1) < 1e-12);
+  assert.ok(a[4].re > 0 && a[5].re < 0);
 });
 test("cave placement prevents overlaps, blocked exits and inaccessible equipment", () => {
   assert.ok(validLayout(defaultLayout(), 0));
@@ -169,4 +168,82 @@ test("import and hydration discard runtime fields and cannot replace store metho
   const merged = useLab.persist.getOptions().merge(data.lab, useLab.getState());
   assert.equal(typeof merged.reset, "function");
   assert.equal(merged.counts, undefined);
+});
+
+test("all rotation axes and complex multi-wire traces match Qiskit statevectors", () => {
+  // Golden states generated with Qiskit 2.5.1 Statevector after each circuit prefix.
+  const fixtures = require("./fixtures/lab-rotations.json");
+  for (const { name, recipe, states } of fixtures) {
+    assert.ok(validRecipe(recipe), name);
+    labTrace(recipe).forEach((actual, step) => {
+      assert.ok(
+        Math.abs(actual.reduce((p, a) => p + labProbability(a), 0) - 1) < 1e-10,
+        name,
+      );
+      actual.forEach((a, i) => {
+        assert.ok(
+          Math.abs(a.re - states[step][i][0]) < 1e-10,
+          `${name} step ${step} real ${i}`,
+        );
+        assert.ok(
+          Math.abs(a.im - states[step][i][1]) < 1e-10,
+          `${name} step ${step} imaginary ${i}`,
+        );
+      });
+    });
+  }
+});
+
+test("Bloch references show X rotation on Y and Z rotation on the equator", () => {
+  const rotate = (axis) => ({
+    gate: "ROTATION",
+    axis,
+    angle: Math.PI / 2,
+    wire: 0,
+  });
+  const bloch = (operations) =>
+    labBloch(
+      labTrace({ qubits: 1, start: "0", shots: 256, operations }).at(-1),
+    );
+  const x = bloch([rotate("X")]),
+    y = bloch([rotate("Y")]),
+    z = bloch([{ gate: "H", wire: 0 }, rotate("Z")]);
+  for (const [actual, expected] of [
+    [x, [0, -1, 0]],
+    [y, [1, 0, 0]],
+    [z, [0, 1, 0]],
+  ]) {
+    Object.values(actual).forEach((v, i) =>
+      assert.ok(Math.abs(v - expected[i]) < 1e-10),
+    );
+  }
+});
+
+test("rotation plans retain axes and legacy Y modules across import and hydration", () => {
+  useLab.getState().reset();
+  const old = JSON.parse(exportLab());
+  old.lab.owned.push("RY");
+  old.lab.installed.push("RY");
+  old.lab.recipe.operations = [{ gate: "RY", wire: 0, angle: Math.PI / 4 }];
+  old.lab.recipes = ["X", "Y", "Z"].map((axis) => ({
+    name: axis,
+    recipe: {
+      ...old.lab.recipe,
+      operations: [{ gate: "ROTATION", axis, wire: 0, angle: -Math.PI / 2 }],
+    },
+  }));
+  assert.ok(useLab.getState().importPlan(JSON.stringify(old)));
+  assert.ok(useLab.getState().installed.includes("RY"));
+  assert.deepEqual(parseLab(exportLab()).recipes, old.lab.recipes);
+  const merged = useLab.persist.getOptions().merge(old.lab, useLab.getState());
+  assert.deepEqual(merged.recipes, old.lab.recipes);
+  for (const axis of [undefined, "A", null, 0]) {
+    assert.equal(
+      validRecipe({
+        ...old.lab.recipe,
+        operations: [{ gate: "ROTATION", axis, wire: 0, angle: 0 }],
+      }),
+      false,
+    );
+  }
 });

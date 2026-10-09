@@ -316,3 +316,14 @@ def test_lab_uses_selected_ionq_and_shares_one_job_with_final_challenges():
         assert call("/api/lab/run", recipe, backend)["status"] == 409
         assert call("/api/coin/simulate", {"finalChallenge": True}, backend)["status"] == 409
         submitted.assert_called_once()
+
+
+@pytest.mark.parametrize("axis", ["X", "Y", "Z"])
+def test_lab_rotation_axes_execute_through_qollab_dispatch(axis):
+    import math
+    rotation = {"gate": "ROTATION", "axis": axis, "wire": 0, "angle": math.pi}
+    ops = [{"gate": "H", "wire": 0}, rotation, {"gate": "H", "wire": 0}] if axis == "Z" else [rotation]
+    result = call("/api/lab/run", {"qubits": 1, "start": "0", "operations": ops, "shots": 100})
+    assert result["status"] == 200
+    assert result["data"]["counts"] == {"1": 100}
+    assert result["data"]["backend"] == "basic_simulator"

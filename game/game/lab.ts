@@ -63,6 +63,7 @@ function cleanLab(data: LabData): LabData {
       ...(op.wire !== undefined ? { wire: op.wire } : {}),
       ...(op.control !== undefined ? { control: op.control } : {}),
       ...(op.angle !== undefined ? { angle: op.angle } : {}),
+      ...(op.axis !== undefined ? { axis: op.axis } : {}),
       ...(op.bits !== undefined ? { bits: op.bits } : {}),
     })),
   });

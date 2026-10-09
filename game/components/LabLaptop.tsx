@@ -14,6 +14,11 @@ import { LAB_ITEMS, itemAvailable } from "@/content/lab";
 import {
   algorithmRecipe,
   labTrace,
+  labProbability,
+  labBloch,
+  amplitudeLabel,
+  isRotation,
+  rotationAxis,
   starterRecipe,
   validRecipe,
   type LabRecipe,
@@ -28,6 +33,7 @@ import { t, useLocale } from "@/i18n";
 import { LaptopShell } from "./LaptopShell";
 import { CircuitHistogram } from "./CircuitHistogram";
 import { CircuitActions } from "./CircuitActions";
+import { LabComponentSettings } from "./LabComponentSettings";
 import {
   PuzzleDragDrop,
   PuzzlePiece,
@@ -44,8 +50,8 @@ const clone = <T,>(v: T): T => JSON.parse(JSON.stringify(v));
 const label = (op: LabOp | undefined) =>
   !op
     ? ""
-    : op.gate === "RY"
-      ? `Ry(${(op.angle! / Math.PI).toFixed(2)}π)`
+    : isRotation(op.gate)
+      ? `R(θ=${Number(((op.angle! * 180) / Math.PI).toFixed(1))}° · ${rotationAxis(op)})`
       : op.gate === "ORACLE"
         ? `O(${op.bits})`
         : op.gate === "PARITY"
@@ -58,8 +64,8 @@ const componentLabel = (gate: LabGate) =>
       ? t("Parity oracle")
       : gate === "D"
         ? t("Diffuser")
-        : gate === "RY"
-          ? t("Y rotation module")
+        : isRotation(gate)
+          ? t("Rotation")
           : gate;
 export function LabLaptop({
   open,
@@ -94,6 +100,7 @@ export function LabLaptop({
   const [pendingSlot, setPendingSlot] = useState<string | null>(null);
   const pickerId = useId();
   const puzzleControls = useRef<PuzzleControls>(null);
+  const circuit = useRef<HTMLDivElement>(null);
   const pickerTools = useRef<HTMLDivElement>(null);
   const pickerButton = useRef<HTMLButtonElement>(null);
   const [pickerPosition, setPickerPosition] = useState({
@@ -176,13 +183,13 @@ export function LabLaptop({
   const allowed = (gate: LabGate) =>
     (gate === "H" &&
       (installed("H") || installed("grover") || installed("kickback"))) ||
-    installed(gate) ||
+    (isRotation(gate) ? installed("RY") : installed(gate)) ||
     (gate === "X" && installed("kickback")) ||
     (gate === "CX" && installed("kickback")) ||
     ((gate === "D" || gate === "ORACLE") && installed("grover")) ||
     (gate === "PARITY" && installed("kickback"));
   const available = (
-    ["H", "X", "Z", "RY", "CX", "ORACLE", "D", "PARITY"] as LabGate[]
+    ["H", "X", "Z", "ROTATION", "CX", "ORACLE", "D", "PARITY"] as LabGate[]
   ).filter(allowed);
   const multipleQubits =
     installed("register") || installed("grover") || installed("kickback");
@@ -203,8 +210,16 @@ export function LabLaptop({
       step ?? recipe.operations.length,
       recipe.operations.length,
     ),
-    amplitudes = states[index] ?? [],
-    op = selected === null ? null : recipe.operations[selected];
+    amplitudes = states[index] ?? [];
+  const bloch = labBloch(amplitudes);
+  // Orthographic projection: X and Y cross the equatorial plane; Z points up.
+  const blochPoint = {
+    x: 65 * ((Math.sqrt(3) / 2) * bloch.x - 0.5 * bloch.y),
+    y:
+      65 *
+      (Math.sin(Math.PI / 9) * (0.5 * bloch.x + (Math.sqrt(3) / 2) * bloch.y) -
+        Math.cos(Math.PI / 9) * bloch.z),
+  };
   const selectedBackend =
     runtimeInfo.target === "qollab"
       ? runtimeInfo.backend
@@ -241,6 +256,30 @@ export function LabLaptop({
     );
     pickerButton.current?.focus();
   }
+  function moveComponent(index: number, direction: -1 | 1) {
+    const destination = index + direction;
+    if (
+      inFlight.current ||
+      destination < 0 ||
+      destination >= recipe.operations.length
+    )
+      return;
+    const operations = clone(recipe.operations);
+    [operations[index], operations[destination]] = [
+      operations[destination],
+      operations[index],
+    ];
+    update({ ...recipe, operations }, true);
+    setSelected(destination);
+    requestAnimationFrame(() => {
+      const wire = operations[destination].wire ?? 0;
+      circuit.current
+        ?.querySelector<HTMLButtonElement>(
+          `[data-puzzle-id="op-${destination}-${wire}"]`,
+        )
+        ?.focus();
+    });
+  }
   function editOp(change: Partial<LabOp>) {
     if (selected === null) return;
     update({
@@ -267,13 +306,13 @@ export function LabLaptop({
       next = {
         gate,
         wire,
-        ...(gate === "RY" ? { angle: Math.PI / 2 } : {}),
+        ...(isRotation(gate) ? { angle: Math.PI / 2, axis: "Y" as const } : {}),
         ...(gate === "CX" ? { control: (wire + 1) % recipe.qubits } : {}),
         ...(gate === "ORACLE" ? { bits: "1".repeat(recipe.qubits) } : {}),
         ...(gate === "PARITY" ? { bits: "1".repeat(recipe.qubits - 1) } : {}),
       };
     }
-    if (["H", "X", "Z", "RY", "CX"].includes(next.gate)) {
+    if (["H", "X", "Z", "RY", "ROTATION", "CX"].includes(next.gate)) {
       next.wire = wire;
       if (next.control === wire) next.control = (wire + 1) % recipe.qubits;
     }
@@ -483,6 +522,7 @@ export function LabLaptop({
             </p>
           )}
           <PuzzleDragDrop
+            wholeBlockDrag
             controlsRef={puzzleControls}
             labels={{
               ...Object.fromEntries(
@@ -521,7 +561,7 @@ export function LabLaptop({
               <section className="min-w-0 space-y-3">
                 <h3 className="text-accent-teal">{t("Circuit builder")}</h3>
                 <div className="circuit-workspace has-actions">
-                  <div className="lab-circuit-scroll">
+                  <div ref={circuit} className="lab-circuit-scroll">
                     <table className="lab-circuit">
                       <tbody>
                         {Array.from({ length: recipe.qubits }, (_, wire) => (
@@ -552,6 +592,66 @@ export function LabLaptop({
                                         piece
                                           ? place(`${wire}:${i}`, piece)
                                           : setSelected(i)
+                                      }
+                                      actions={
+                                        wire === (o.wire ?? 0) ? (
+                                          <span
+                                            className="lab-component-actions"
+                                            role="group"
+                                            aria-label={t("Component controls")}
+                                          >
+                                            <button
+                                              type="button"
+                                              aria-label={t("Move left")}
+                                              title={t("Move left")}
+                                              disabled={i === 0}
+                                              onClick={() =>
+                                                moveComponent(i, -1)
+                                              }
+                                            >
+                                              <svg
+                                                aria-hidden="true"
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                strokeWidth="2"
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                              >
+                                                <path d="m10 6-6 6 6 6M4 12h16" />
+                                              </svg>
+                                            </button>
+                                            <button
+                                              type="button"
+                                              aria-label={t("Move right")}
+                                              title={t("Move right")}
+                                              disabled={
+                                                i ===
+                                                recipe.operations.length - 1
+                                              }
+                                              onClick={() =>
+                                                moveComponent(i, 1)
+                                              }
+                                            >
+                                              <svg
+                                                aria-hidden="true"
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                strokeWidth="2"
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                              >
+                                                <path d="m14 6 6 6-6 6M4 12h16" />
+                                              </svg>
+                                            </button>
+                                            <LabComponentSettings
+                                              op={o}
+                                              qubits={recipe.qubits}
+                                              onChange={editOp}
+                                            />
+                                          </span>
+                                        ) : undefined
                                       }
                                     >
                                       <span className="font-mono">
@@ -653,7 +753,7 @@ export function LabLaptop({
                             className="lab-selected-gate"
                             aria-hidden="true"
                           >
-                            {piece === "RY" ? "Ry" : componentLabel(piece)}
+                            {isRotation(piece) ? "R(θ)" : componentLabel(piece)}
                           </span>
                         )}
                       </button>
@@ -695,8 +795,8 @@ export function LabLaptop({
                                 }}
                               >
                                 <span className="font-mono">
-                                  {gate === "RY"
-                                    ? "Ry(θ)"
+                                  {isRotation(gate)
+                                    ? `${t("Rotation")} (θ)`
                                     : componentLabel(gate)}
                                 </span>
                               </PuzzlePiece>
@@ -731,7 +831,7 @@ export function LabLaptop({
                 </p>
                 <p className="text-xs text-stage-muted">
                   {t(
-                    "Select a placed component to edit it; use × to remove it. Delete or Backspace removes a focused component.",
+                    "Select a block to show its arrows and settings. Drag it to change qubits; use × to remove it. Delete or Backspace removes a focused block.",
                   )}
                 </p>
                 <p className="text-xs text-stage-muted">
@@ -743,175 +843,6 @@ export function LabLaptop({
                   {recipe.operations.length}/32 {t("components")} ·{" "}
                   {t("All wires are measured at the end.")}
                 </p>
-              </section>
-              <section className="panel p-3 space-y-3">
-                <h3 className="text-accent-teal">{t("Component inspector")}</h3>
-                {op ? (
-                  <>
-                    <p className="font-mono">{label(op)}</p>
-                    {["H", "X", "Z", "RY", "CX"].includes(op.gate) && (
-                      <label>
-                        {t("Target wire")}
-                        <select
-                          className="lab-input"
-                          value={op.wire}
-                          onChange={(e) => {
-                            const wire = Number(e.target.value);
-                            editOp({
-                              wire,
-                              ...(op.gate === "CX" && op.control === wire
-                                ? { control: (wire + 1) % recipe.qubits }
-                                : {}),
-                            });
-                          }}
-                        >
-                          {Array.from({ length: recipe.qubits }, (_, i) => (
-                            <option key={i} value={i}>
-                              q{recipe.qubits - 1 - i}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                    )}
-                    {op.gate === "CX" && (
-                      <label>
-                        {t("Control wire")}
-                        <select
-                          className="lab-input"
-                          value={op.control}
-                          onChange={(e) =>
-                            editOp({ control: Number(e.target.value) })
-                          }
-                        >
-                          {Array.from({ length: recipe.qubits }, (_, i) =>
-                            i !== op.wire ? (
-                              <option key={i} value={i}>
-                                q{recipe.qubits - 1 - i}
-                              </option>
-                            ) : null,
-                          )}
-                        </select>
-                      </label>
-                    )}
-                    {op.gate === "RY" && (
-                      <>
-                        <label>
-                          {t("Y rotation angle (radians)")}
-                          <input
-                            aria-label={t("Y rotation slider")}
-                            type="range"
-                            min={-2 * Math.PI}
-                            max={2 * Math.PI}
-                            step={Math.PI / 180}
-                            value={op.angle}
-                            onChange={(e) =>
-                              editOp({ angle: Number(e.target.value) })
-                            }
-                          />
-                          <input
-                            className="lab-input"
-                            type="number"
-                            min={-2 * Math.PI}
-                            max={2 * Math.PI}
-                            aria-label={t("Y rotation angle (radians)")}
-                            step="0.01"
-                            key={`${selected}:${op.angle}`}
-                            defaultValue={op.angle}
-                            onBlur={(e) => {
-                              const angle = Number(e.target.value);
-                              if (
-                                e.target.value &&
-                                Number.isFinite(angle) &&
-                                Math.abs(angle) <= 2 * Math.PI
-                              )
-                                editOp({ angle });
-                              else e.target.value = String(op.angle);
-                            }}
-                            onKeyDownCapture={(e) => {
-                              if (e.key === "Enter") e.currentTarget.blur();
-                            }}
-                          />
-                        </label>
-                        <div className="flex flex-wrap gap-1">
-                          {[
-                            0,
-                            Math.PI / 4,
-                            Math.PI / 2,
-                            Math.PI,
-                            Math.PI * 2,
-                          ].map((a) => (
-                            <button
-                              key={a}
-                              className="btn-ghost text-xs"
-                              onClick={() => editOp({ angle: a })}
-                            >
-                              {a === 0 ? "0" : `${a / Math.PI}π`}
-                            </button>
-                          ))}
-                        </div>
-                      </>
-                    )}
-                    {["ORACLE", "PARITY"].includes(op.gate) && (
-                      <label>
-                        {t("Oracle bits")}
-                        <input
-                          className="lab-input"
-                          value={op.bits}
-                          maxLength={
-                            op.gate === "PARITY"
-                              ? recipe.qubits - 1
-                              : recipe.qubits
-                          }
-                          onChange={(e) => editOp({ bits: e.target.value })}
-                        />
-                      </label>
-                    )}
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        className="btn-ghost"
-                        disabled={selected === 0}
-                        onClick={() => {
-                          const operations = clone(recipe.operations);
-                          [operations[selected! - 1], operations[selected!]] = [
-                            operations[selected!],
-                            operations[selected! - 1],
-                          ];
-                          update({ ...recipe, operations });
-                          setSelected(selected! - 1);
-                        }}
-                      >
-                        {t("Move left")}
-                      </button>
-                      <button
-                        className="btn-ghost"
-                        disabled={selected === recipe.operations.length - 1}
-                        onClick={() => {
-                          const operations = clone(recipe.operations);
-                          [operations[selected! + 1], operations[selected!]] = [
-                            operations[selected!],
-                            operations[selected! + 1],
-                          ];
-                          update({ ...recipe, operations });
-                          setSelected(selected! + 1);
-                        }}
-                      >
-                        {t("Move right")}
-                      </button>
-                      <button
-                        className="btn-ghost"
-                        onClick={() =>
-                          selected !== null && removeComponent(selected)
-                        }
-                      >
-                        {t("Remove component")}
-                      </button>
-                    </div>
-                  </>
-                ) : (
-                  <p className="text-xs">
-                    {t("Select a placed component to inspect or change it.")}
-                  </p>
-                )}
               </section>
             </div>
           </PuzzleDragDrop>
@@ -1039,36 +970,50 @@ export function LabLaptop({
                     stroke="#63858a"
                   />
                   <path
-                    d="M25 90h150 M100 15v150 M60 125l80 -70"
+                    d="M44 79l112 22 M100 29v122 M132.5 71l-65 38"
                     stroke="#63858a"
                   />
-                  <text x="178" y="94" fill="#fff">
+                  <text x="164" y="108" fill="#fff">
                     X
                   </text>
-                  <text x="141" y="51" fill="#fff">
+                  <text x="54" y="120" fill="#fff">
                     Y
                   </text>
-                  <text x="106" y="15" fill="#fff">
+                  <text x="106" y="25" fill="#fff">
                     Z
                   </text>
                   <line
                     x1="100"
                     y1="90"
-                    x2={100 + 65 * 2 * amplitudes[0] * amplitudes[1]}
-                    y2={90 - 65 * (amplitudes[0] ** 2 - amplitudes[1] ** 2)}
+                    x2="165"
+                    y2="90"
+                    className="lab-bloch-vector"
+                    style={{
+                      transformOrigin: "100px 90px",
+                      transform: `rotate(${Math.atan2(blochPoint.y, blochPoint.x)}rad) scaleX(${Math.hypot(blochPoint.x, blochPoint.y) / 65})`,
+                    }}
                     stroke="#ffb13d"
                     strokeWidth="4"
                   />
                   <circle
-                    cx={100 + 65 * 2 * amplitudes[0] * amplitudes[1]}
-                    cy={90 - 65 * (amplitudes[0] ** 2 - amplitudes[1] ** 2)}
+                    cx="100"
+                    cy="90"
+                    className="lab-bloch-vector"
+                    style={{
+                      transform: `translate(${blochPoint.x}px, ${blochPoint.y}px)`,
+                    }}
                     r="5"
                     fill="#ffb13d"
                   />
                 </svg>
                 <p className="text-sm">
+                  <span className="block font-mono">
+                    X {Number(bloch.x.toFixed(3)).toFixed(3)} · Y{" "}
+                    {Number(bloch.y.toFixed(3)).toFixed(3)} · Z{" "}
+                    {Number(bloch.z.toFixed(3)).toFixed(3)}
+                  </span>
                   {t(
-                    "Ideal Bloch reference. X/H/Z/Ry from real starting states stay in the X–Z plane; measurement counts do not reconstruct this sphere.",
+                    "Ideal Bloch reference. Rotate around X, Y or Z to explore the whole sphere; measurement counts do not reconstruct this state.",
                   )}
                 </p>
               </div>
@@ -1085,9 +1030,10 @@ export function LabLaptop({
                   <span className="font-mono">
                     |{i.toString(2).padStart(recipe.qubits, "0")}⟩
                   </span>
-                  <meter min={0} max={1} value={a * a} />
+                  <meter min={0} max={1} value={labProbability(a)} />
                   <span className="font-mono">
-                    {a.toFixed(3)} · {(a * a * 100).toFixed(1)}%
+                    {amplitudeLabel(a)} · {(labProbability(a) * 100).toFixed(1)}
+                    %
                   </span>
                 </div>
               ))}

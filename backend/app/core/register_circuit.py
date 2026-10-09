@@ -101,11 +101,14 @@ def lab_circuit(body):
         name = op.get("gate")
         if name in ("X", "Z", "H"):
             getattr(qc, name.lower())(wire(op))
-        elif name == "RY":
+        elif name in ("RY", "ROTATION"):
+            axis = "Y" if name == "RY" else op.get("axis")
+            if axis not in ("X", "Y", "Z"):
+                raise ServiceError(422, "Invalid lab rotation axis.")
             angle = op.get("angle")
             if isinstance(angle, bool) or not isinstance(angle, (int, float)) or not math.isfinite(angle) or abs(angle) > 2 * math.pi:
                 raise ServiceError(422, "Lab rotation must be between -2π and 2π radians.")
-            qc.ry(angle, wire(op))
+            getattr(qc, "r" + axis.lower())(angle, wire(op))
         elif name == "CX":
             control, target = wire(op, "control"), wire(op)
             if control == target:

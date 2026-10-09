@@ -29,14 +29,14 @@ import { t, useLocale } from "@/i18n";
 
 const sensors = [
   PointerSensor.configure({
-    // Reserve the grip for touch dragging; the rest of a block still scrolls
-    // the laptop or selects a piece with a tap. Keyboard uses the whole button.
+    // Builders can use the whole compact block or a dedicated touch grip.
+    // Long press starts touch dragging; a quick tap still selects the piece.
     preventActivation: (event, source) => {
       if (
         event.pointerType === "touch" &&
         !(
           event.target instanceof Element &&
-          event.target.closest(".puzzle-drag-grip")
+          event.target.closest(".puzzle-drag-grip, .puzzle-drag-whole")
         )
       )
         return true;
@@ -58,9 +58,11 @@ const sensors = [
 const PuzzleContext = createContext<{
   instructionsId: string;
   canClick: () => boolean;
+  wholeBlockDrag: boolean;
 }>({
   instructionsId: "",
   canClick: () => true,
+  wholeBlockDrag: false,
 });
 
 export interface PuzzleControls {
@@ -75,6 +77,7 @@ export function PuzzleDragDrop({
   renderPreview,
   children,
   controlsRef,
+  wholeBlockDrag = false,
 }: {
   labels: Record<string, string>;
   targets: Record<string, string>;
@@ -82,6 +85,7 @@ export function PuzzleDragDrop({
   renderPreview: (source: string) => ReactNode;
   children: ReactNode;
   controlsRef?: Ref<PuzzleControls>;
+  wholeBlockDrag?: boolean;
 }) {
   useLocale((state) => state.locale);
   const instructionsId = useId();
@@ -109,6 +113,7 @@ export function PuzzleDragDrop({
       value={{
         instructionsId,
         canClick: input.canClick,
+        wholeBlockDrag,
       }}
     >
       <DragDropProvider
@@ -158,9 +163,13 @@ export function PuzzleDragDrop({
       >
         <div data-puzzle-dragging={dragging}>
           <p className="puzzle-drag-help">
-            {t(
-              "Drag a piece into a slot, or tap the piece and then the slot. On a phone, hold the grip briefly before dragging; swipe elsewhere to scroll.",
-            )}
+            {wholeBlockDrag
+              ? t(
+                  "Drag a block into a slot, or tap the block and then the slot. On a phone, hold the block briefly before dragging; swipe outside blocks to scroll.",
+                )
+              : t(
+                  "Drag a piece into a slot, or tap the piece and then the slot. On a phone, hold the grip briefly before dragging; swipe elsewhere to scroll.",
+                )}
           </p>
           <p id={instructionsId} className="sr-only">
             {t(
@@ -205,7 +214,8 @@ export function PuzzlePiece({
   children: ReactNode;
 }) {
   const { ref, isDragSource } = useDraggable({ id, type: "puzzle-piece" });
-  const { instructionsId, canClick } = useContext(PuzzleContext);
+  const { instructionsId, canClick, wholeBlockDrag } =
+    useContext(PuzzleContext);
   return (
     <button
       ref={ref}
@@ -213,15 +223,17 @@ export function PuzzlePiece({
       aria-label={label}
       aria-pressed={selected}
       aria-describedby={instructionsId}
-      className={`coin-block puzzle-drag-piece ${selected ? "selected" : ""} ${isDragSource ? "is-dragging" : ""} ${className}`}
+      className={`coin-block puzzle-drag-piece ${wholeBlockDrag ? "puzzle-drag-whole" : ""} ${selected ? "selected" : ""} ${isDragSource ? "is-dragging" : ""} ${className}`}
       onClick={(event) => {
         if (!event.defaultPrevented && canClick()) onSelect();
       }}
     >
       {children}
-      <span className="puzzle-drag-grip" aria-hidden="true">
-        ⠿
-      </span>
+      {!wholeBlockDrag && (
+        <span className="puzzle-drag-grip" aria-hidden="true">
+          ⠿
+        </span>
+      )}
     </button>
   );
 }
@@ -265,6 +277,7 @@ export function PuzzleCircuitPiece({
   onSelect,
   onRemove,
   removeLabel,
+  actions,
   children,
 }: {
   id: string;
@@ -274,11 +287,13 @@ export function PuzzleCircuitPiece({
   onSelect: () => void;
   onRemove: () => void;
   removeLabel: string;
+  actions?: ReactNode;
   children: ReactNode;
 }) {
   const source = useDraggable({ id, type: "puzzle-piece" });
   const target = useDroppable({ id: slotId, accept: "puzzle-piece" });
-  const { instructionsId, canClick } = useContext(PuzzleContext);
+  const { instructionsId, canClick, wholeBlockDrag } =
+    useContext(PuzzleContext);
   const ref = useCallback(
     (element: HTMLButtonElement | null) => {
       source.ref(element);
@@ -294,6 +309,7 @@ export function PuzzleCircuitPiece({
         aria-label={label}
         aria-pressed={selected}
         aria-describedby={instructionsId}
+        data-puzzle-id={id}
         onKeyDownCapture={(event) => {
           if (
             (event.key === "Delete" || event.key === "Backspace") &&
@@ -304,15 +320,17 @@ export function PuzzleCircuitPiece({
             onRemove();
           }
         }}
-        className={`lab-wire-slot coin-block puzzle-drag-piece puzzle-drop-slot ${selected ? "selected" : ""} ${source.isDragSource ? "is-dragging" : ""} ${target.isDropTarget ? "is-over" : ""}`}
+        className={`lab-wire-slot coin-block puzzle-drag-piece puzzle-drop-slot ${wholeBlockDrag ? "puzzle-drag-whole" : ""} ${selected ? "selected" : ""} ${source.isDragSource ? "is-dragging" : ""} ${target.isDropTarget ? "is-over" : ""}`}
         onClick={(event) => {
           if (!event.defaultPrevented && canClick()) onSelect();
         }}
       >
         {children}
-        <span className="puzzle-drag-grip" aria-hidden="true">
-          ⠿
-        </span>
+        {!wholeBlockDrag && (
+          <span className="puzzle-drag-grip" aria-hidden="true">
+            ⠿
+          </span>
+        )}
       </button>
       {selected && (
         <button
@@ -334,6 +352,7 @@ export function PuzzleCircuitPiece({
           </svg>
         </button>
       )}
+      {selected && actions}
     </span>
   );
 }

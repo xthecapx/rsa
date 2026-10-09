@@ -84,7 +84,7 @@ footprint validation and connected floor access. The doorway stays reserved.
 Medals or legacy town badges unlock equipment and expand the bounded 8×8 plot
 up to 16×8. Cards are optional; Cipher wallet credits are not spent here.
 
-`content/lab.ts` defines actual acquired items. X/H/Z/Ry and Bloch unlock from
+`content/lab.ts` defines actual acquired items. X/H/Z/Rotation and Bloch unlock from
 Quantum Coin, register/Grover from Amplitude Amplifier, controlled gates/phase
 kickback from Ghost Key, and crypto/period tools from all RSA medals. Players
 acquire supplies for free and install modules inside the laptop. Ownership is
@@ -92,12 +92,19 @@ idempotent; eligibility remains derived from medals even after importing a plan.
 
 `LabLaptop` is free play, not a lesson: no correctness check, reward, or completion
 flow. Its bounded recipes support 1–4 wires, 32 operations and 1–1,024 shots,
-with X/H/Z/Ry/CX, phase oracles, diffusion and parity components. The component
+with X/H/Z/Rotation/CX, phase oracles, diffusion and parity components. The component
 picker opens from + beside the floating Clear/Run controls; an empty wire's +
 also opens it and places the chosen gate directly, without loading a recipe.
-Tap selection, dragging and keyboard placement remain available. A selected
+Tap selection, dragging and keyboard placement remain available. Each
+lab block is draggable from its whole surface, without a separate grip; touch
+uses a brief hold, with scrolling available outside the blocks. Palette and
+circuit blocks keep a minimum 44px target. A selected
 component has a 44px × removal action on the circuit; Delete/Backspace on a
-focused component and the inspector remove action share the same deletion path.
+focused component uses the same deletion path. Selected blocks show left/right
+arrows below the block for reordering. Target wires change by dragging. Rotation axes/angles,
+CNOT control wires and oracle bits use a floating settings panel anchored to the
+block's settings button, clamped to the laptop viewport with Escape/outside-click
+dismissal. The circuit occupies the full width; there is no inspector column.
 Clear, deletion and recipe/wire replacement cancel any picked-up component before
 mutating the circuit, reset pending selections, and invalidate deferred drops.
 `game/puzzleInteraction.ts` owns the shared drag click guard and cancellation
@@ -105,11 +112,17 @@ lifetime. The lab palette stays mounted when closed so selecting a gate cannot
 unregister an active source. Optional starter
 and algorithm recipes live below the workspace. Qubit controls explain installed
 equipment requirements and warn that changing wire count clears the circuit.
-Ry angles are
-finite radians within ±2π, with slider, numeric input and presets. `labCircuit.ts`
-provides continuous real-amplitude ideal states; the single-qubit Bloch display
-is explicitly ideal and limited to the X–Z plane. Algorithm boxes load editable
-Grover and phase-kickback recipes. The period box executes the existing separate
+Rotation components select X/Y/Z axes and store finite radians within ±2π.
+The floating editor uses a circular θ degree dial, exact degree input and
+presets, with a π reference. Pointer dragging unwraps
+zero crossings smoothly within ±360°; keyboard arrows adjust 1° (Shift: 15°).
+`labCircuit.ts` provides complex-amplitude ideal states and full X/Y/Z Bloch
+vectors, with animated projected vectors that respect reduced motion. The sphere
+is explicitly ideal, not reconstructed from measurement counts. The existing
+`RY` equipment ID/save key remains unchanged and unlocks the generic Rotation
+component; legacy `RY` circuit operations still mean Y rotation. New operations
+use `ROTATION` with a validated X/Y/Z axis, shared by both backend targets.
+Algorithm boxes load editable Grover and phase-kickback recipes. The period box executes the existing separate
 N=15/a=7 Shor pipeline; the crypto toolkit is classical.
 
 Explicit Run calls the selected backend through `/api/lab/run`; the HTTP route

@@ -1,7 +1,17 @@
 {
   "Continue": "Continuar",
+  "Y rotation dial": "Dial de rotación Y",
+  "Y rotation angle (degrees)": "Ángulo de rotación Y (grados)",
+  "{degrees} degrees; {radians} radians": "{degrees} grados; {radians} radianes",
+  "Clockwise + · Counterclockwise −": "Sentido horario + · Sentido antihorario −",
+  "Drag around the dial. Arrow keys: 1°; Shift + arrows: 15°.": "Arrastra alrededor del dial. Flechas: 1°; Mayús + flechas: 15°.",
+  "Component controls": "Controles del componente",
+  "Component settings": "Ajustes del componente",
+  "Close settings": "Cerrar ajustes",
+  "Select a block to show its arrows and settings. Drag it to change qubits; use × to remove it. Delete or Backspace removes a focused block.": "Selecciona un bloque para ver sus flechas y ajustes. Arrástralo para cambiar de cúbit; usa × para quitarlo. Supr o Retroceso quita el bloque enfocado.",
   "Show text": "Mostrar texto",
   "Drag a piece into a slot, or tap the piece and then the slot. On a phone, hold the grip briefly before dragging; swipe elsewhere to scroll.": "Arrastra una pieza hasta una casilla, o toca la pieza y luego la casilla. En el teléfono, mantén pulsado un momento el tirador para arrastrar; desliza el dedo fuera de él para desplazarte.",
+  "Drag a block into a slot, or tap the block and then the slot. On a phone, hold the block briefly before dragging; swipe outside blocks to scroll.": "Arrastra un bloque hasta una casilla, o toca el bloque y luego la casilla. En el teléfono, mantén pulsado un momento el bloque antes de arrastrar; desliza el dedo fuera de los bloques para desplazarte.",
   "A missing coin": "Nos falta una moneda",
   "Talk to Ale and Brayan at the game table.": "Habla con Ale y Brayan en la mesa de juego.",
   "The board is ready. Heads, I start. Tails, Brayan starts. Has anyone got a coin?": "El tablero está listo. Si sale cara, empiezo yo; si sale sello, empieza Brayan. ¿Alguien tiene una moneda?",
@@ -2719,5 +2729,11 @@
   "{component} selected. Tap + on a wire to place it.": "{component} seleccionado. Toca + en un cable para colocarlo.",
   "Tap + on a wire or use + in the floating toolbar to add a component.": "Toca + en un cable o usa + en la barra flotante para agregar un componente.",
   "Remove {component} at step {step}": "Quitar {component} del paso {step}",
-  "Select a placed component to edit it; use × to remove it. Delete or Backspace removes a focused component.": "Selecciona un componente colocado para editarlo; usa × para quitarlo. Supr o Retroceso quita el componente enfocado."
+  "Select a placed component to edit it; use × to remove it. Delete or Backspace removes a focused component.": "Selecciona un componente colocado para editarlo; usa × para quitarlo. Supr o Retroceso quita el componente enfocado.",
+  "Rotation": "Rotación",
+  "Rotation module": "Módulo de rotación",
+  "Rotation axis": "Eje de rotación",
+  "Rotation angle dial": "Dial del ángulo de rotación",
+  "Rotation angle θ (degrees)": "Ángulo de rotación θ (grados)",
+  "Ideal Bloch reference. Rotate around X, Y or Z to explore the whole sphere; measurement counts do not reconstruct this state.": "Referencia ideal de Bloch. Rota alrededor de X, Y o Z para explorar toda la esfera; los conteos medidos no reconstruyen este estado."
 }

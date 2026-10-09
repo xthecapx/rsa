@@ -4,9 +4,13 @@ from qiskit.providers.basic_provider import BasicSimulator
 from app.core.game_services import lab, ServiceError
 from app.quantum.simulators import simulator
 
+@pytest.mark.parametrize('axis', [None, 'X', 'Y', 'Z'])
 @pytest.mark.parametrize('angle,one',[ (0,0),(math.pi/2,.5),(math.pi,1),(2*math.pi,0),(-math.pi/2,.5)])
-def test_lab_rotations_match_qiskit_and_return_provider_counts(angle,one):
-    recipe={'qubits':1,'start':'0','operations':[{'gate':'RY','wire':0,'angle':angle}],'shots':256}
+def test_lab_rotations_match_qiskit_and_return_provider_counts(angle,one,axis):
+    rotation = {'gate':'RY','wire':0,'angle':angle} if axis is None else {'gate':'ROTATION','axis':axis,'wire':0,'angle':angle}
+    recipe={'qubits':1,'start':'0','operations':[rotation],'shots':256}
+    if axis == 'Z':
+        one = 0
     for backend in (BasicSimulator(), simulator('ideal'), simulator('noise')):
         result=lab(backend,recipe)
         assert sum(result['counts'].values())==256
@@ -39,10 +43,14 @@ def test_invalid_lab_recipes_never_submit(body):
 
 
 @pytest.mark.parametrize("choice,kind", [("ideal", "ideal"), ("noise", "noise")])
-def test_http_lab_selects_backend_per_request_and_preserves_shared_contract(choice, kind):
+@pytest.mark.parametrize("axis", ["X", "Y", "Z"])
+def test_http_lab_selects_backend_per_request_and_preserves_shared_contract(choice, kind, axis):
     from fastapi.testclient import TestClient
     from app.main import app
-    recipe = {"qubits": 1, "start": "0", "operations": [{"gate": "RY", "wire": 0, "angle": math.pi}], "shots": 256}
+    # H · Rz(π) · H converts phase into a deterministic measured one.
+    rotation = {"gate": "ROTATION", "axis": axis, "wire": 0, "angle": math.pi}
+    ops = [{"gate": "H", "wire": 0}, rotation, {"gate": "H", "wire": 0}] if axis == "Z" else [rotation]
+    recipe = {"qubits": 1, "start": "0", "operations": ops, "shots": 256}
     response = TestClient(app).post("/api/lab/run", json=recipe, headers={"X-Quantum-Simulator": choice})
     assert response.status_code == 200
     result = response.json()
@@ -53,6 +61,14 @@ def test_http_lab_selects_backend_per_request_and_preserves_shared_contract(choi
     assert "M" in result["circuit_text"]
     if choice == "ideal":
         assert result["counts"] == {"1": 256}
+
+
+@pytest.mark.parametrize("axis", [None, "A", 1, True, [], {}])
+def test_invalid_rotation_axes_never_submit(axis):
+    def forbidden(*args, **kwargs):
+        pytest.fail("Invalid rotation reached provider")
+    with pytest.raises(ServiceError):
+        lab(BasicSimulator(), {"operations": [{"gate": "ROTATION", "wire": 0, "axis": axis, "angle": 0}]}, executor=forbidden)
 
 
 def test_http_lab_rejects_invalid_recipe_and_backend():
