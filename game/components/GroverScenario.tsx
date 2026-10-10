@@ -332,10 +332,10 @@ export function GroverScenario({ onExit, onRestartGame }: { onExit?: () => void;
               {session.step === "loop" && <p>{t("Drag the Oracle and the Diffuser into the repeat box, in the order they act, and run one round.")}</p>}
               {session.step === "tuneRun" && <p>{t("Use − and + on the repeat box. Run any count and compare the tallest bar.")}</p>}
               {session.step === "measure" && <p>{t("Drag M to the end of the circuit and collapse it. One shot.")}</p>}
-              <GroverCircuitBuilder slots={session.slots} onChange={(slots) => patch({ slots })}
+              <GroverCircuitBuilder busy={busy} slots={session.slots} onChange={(slots) => patch({ slots, lastRun: null })}
                 tray={trayFor(session.step, session.variants.pieces)} showLoop={session.step !== "init"} showMeasure={session.step === "measure"}
                 repeat={session.step === "loop" ? 1 : session.repeat}
-                onRepeat={session.step === "tuneRun" || session.step === "measure" ? (repeat) => patch({ repeat }) : null}
+                onRepeat={session.step === "tuneRun" || session.step === "measure" ? (repeat) => patch({ repeat, lastRun: null }) : null}
                 measurement={session.step === "measure" && session.lastRun ? groverMeasurement(session.lastRun) : null} />
               <p className="text-xs text-stage-muted">{t("Ideal amplitude illustration, not measured counts.")}</p>
               <QuantumEqualizer run={session.lastRun} runKey={session.runKey} animate={true} />

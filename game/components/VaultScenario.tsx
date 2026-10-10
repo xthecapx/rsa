@@ -79,7 +79,8 @@ function restoreSession(saved: Partial<Session>): Session {
   const tries = Array.isArray(saved.tries) ? saved.tries.filter((key) => MASK.test(key)).slice(0, CANDLES) : [];
   const run = saved.run && typeof saved.run.measured === "string" && MASK.test(saved.run.measured) && Array.isArray(saved.run.frames) ? saved.run : null;
   return {
-    ...base, ...saved, questions, tries, run,
+    // A saved returned measurement needs no replay of its cosmetic reveal timer.
+    ...base, ...saved, questions, tries, run, revealed: !!run,
     candles: Math.min(CANDLES, Math.max(0, Number.isInteger(saved.candles) ? saved.candles! : 0)),
     last: saved.last === "ask" || saved.last === "key" ? saved.last : null,
     quiz: saved.quiz === "9" || saved.quiz === "25" || saved.quiz === "never" ? saved.quiz : null,
@@ -336,7 +337,7 @@ export function VaultScenario({ onExit, onRestartGame }: { onExit?: () => void; 
             </>}
             {session.step === "groverWire" && <>
               <p>{t("Rebuild the workshop search: H on the register, then the Oracle and the Diffuser inside the repeat box.")}</p>
-              <GroverTrapBuilder slots={session.trap} onChange={(trap) => patch({ trap })} repeatLabel="?" locked={false} />
+              <GroverTrapBuilder busy={busy} slots={session.trap} onChange={(trap) => patch({ trap })} repeatLabel="?" locked={false} />
               <p className={trapReady(session.trap) ? "coin-callout" : "text-accent-amber"}>{t(trapHint(session.trap))}</p>
               {trapReady(session.trap) && action("How many rounds? To the table →", () => next("groverBoard"))}
             </>}
@@ -377,7 +378,7 @@ export function VaultScenario({ onExit, onRestartGame }: { onExit?: () => void; 
             </>}
             {(session.step === "bvWire" || session.step === "execute") && <>
               {session.step === "bvWire" && <p>{t("Build the one-question circuit from boxes. The Oracle is the vault itself: it stays sealed in the middle.")}</p>}
-              <BvCircuitBuilder slots={session.bv} onChange={(bv) => patch({ bv })} locked={session.step === "execute"}
+              <BvCircuitBuilder busy={busy} slots={session.bv} onChange={(bv) => patch({ bv })} locked={session.step === "execute"}
                 measurement={session.step === "execute" && session.run && session.revealed ? vaultMeasurement(session.run) : null} />
               {session.step === "bvWire" && <>
                 <p className={problem ? "text-accent-amber" : "coin-callout"}>{t(bvHint(session.bv))}</p>

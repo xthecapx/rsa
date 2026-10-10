@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { PuzzleDragDrop, PuzzlePiece, PuzzleSlot } from "./PuzzleDragDrop";
+import { CircuitActions } from "./CircuitActions";
 import { gameAudio } from "@/game/audio";
 import { tallest, type GroverBlock, type GroverRun } from "@/lib/grover";
 import { t, useLocale } from "@/i18n";
@@ -81,18 +82,23 @@ function Piece({ id }: { id: PieceId }) {
 }
 
 /** One box per block, each spanning all four qubits, with the repeat box in the middle. */
-export function GroverCircuitBuilder({ slots, onChange, tray, showLoop, showMeasure, repeat, onRepeat, measurement }: {
+export function GroverCircuitBuilder({ slots, onChange, tray, showLoop, showMeasure, repeat, onRepeat, measurement, busy = false }: {
   slots: CircuitSlots; onChange: (slots: CircuitSlots) => void; tray: PieceId[];
   showLoop: boolean; showMeasure: boolean; repeat: number; onRepeat: ((repeat: number) => void) | null;
   /** Once the core has collapsed, the M block opens what it read. */
   measurement?: Measurement | null;
+  busy?: boolean;
 }) {
   useLocale((state) => state.locale);
   const [selected, setSelected] = useState<PieceId | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [exploring, setExploring] = useState(false);
   function place(slot: CircuitSlot, piece = selected) {
-    if (!piece) return;
+    if (busy || measurement) return;
+    if (!piece) {
+      if (slots[slot]) { onChange({ ...slots, [slot]: null }); setMessage(null); }
+      return;
+    }
     if (slot === "measure" && piece !== "m") { setMessage("Only M goes at the end: it reads all four qubits."); return; }
     if (slot !== "measure" && piece === "m") { setMessage("Measure last. M belongs after the repeat box."); return; }
     if (slot === "init" && blockOf(piece) !== "h" && piece !== "x") { setMessage("Prepare the register first; the Oracle and Diffuser belong in the repeat box."); return; }
@@ -112,13 +118,14 @@ export function GroverCircuitBuilder({ slots, onChange, tray, showLoop, showMeas
     {slots[id] ? <Piece id={slots[id]} /> : <span className="grover-empty">{index}</span>}
     {inspect(id) && <MeasureInspectBadge />}
   </PuzzleSlot>;
-  return <PuzzleDragDrop labels={labels} targets={targets} onPlace={(target, source) => place(target as CircuitSlot, source as PieceId)}
+  return <PuzzleDragDrop wholeBlockDrag labels={labels} targets={targets} onPlace={(target, source) => place(target as CircuitSlot, source as PieceId)}
     renderPreview={(id) => <Piece id={id as PieceId} />}>
     <div className="coin-challenge space-y-3">
       <div className="coin-block-tray" aria-label={t("Circuit boxes")}>
         {tray.map((id) => <PuzzlePiece key={id} id={id} label={t(PIECE_HELP[id])} selected={selected === id}
-          className="grover-piece" onSelect={() => setSelected(id)}><Piece id={id} /></PuzzlePiece>)}
+          className="grover-piece" onSelect={() => { if (!busy && !measurement) setSelected(selected === id ? null : id); }}><Piece id={id} /></PuzzlePiece>)}
       </div>
+      <div className={`circuit-workspace grover-circuit-workspace ${measurement ? "" : "has-actions"}`}>
       <div className="grover-circuit" role="group" aria-label={t("Four-qubit circuit")}>
         <div className="grover-register" aria-hidden="true">{[3, 2, 1, 0].map((q) => <span key={q}>q{q} <small>|0⟩</small></span>)}</div>
         <div className="grover-track">
@@ -126,10 +133,10 @@ export function GroverCircuitBuilder({ slots, onChange, tray, showLoop, showMeas
           {showLoop && <div className="grover-repeat">
             <div className="grover-repeat-head">
               <span>{t("Repeat")}</span>
-              <button type="button" className="grover-count" disabled={!onRepeat || repeat <= 0} aria-label={t("One round fewer")}
+              <button type="button" className="grover-count" disabled={busy || !!measurement || !onRepeat || repeat <= 0} aria-label={t("One round fewer")}
                 onClick={() => { gameAudio.playSfx("click"); onRepeat?.(repeat - 1); }}>−</button>
               <strong aria-live="polite">×{repeat}</strong>
-              <button type="button" className="grover-count" disabled={!onRepeat || repeat >= 5} aria-label={t("One round more")}
+              <button type="button" className="grover-count" disabled={busy || !!measurement || !onRepeat || repeat >= 5} aria-label={t("One round more")}
                 onClick={() => { gameAudio.playSfx("click"); onRepeat?.(repeat + 1); }}>+</button>
             </div>
             <div className="grover-repeat-body">{slot("loop0", 2)}{slot("loop1", 3)}</div>
@@ -137,10 +144,10 @@ export function GroverCircuitBuilder({ slots, onChange, tray, showLoop, showMeas
           {showMeasure && slot("measure", 4)}
         </div>
       </div>
-      <p className="text-sm text-stage-muted">{t("Each box acts on all four qubits at once. The Oracle is sealed: it knows the PIN and flips the sign of that one answer.")}</p>
-      <div className="flex flex-wrap gap-2">
-        <button className="btn-ghost" onClick={() => { onChange({ ...EMPTY_SLOTS }); setSelected(null); setMessage(null); }}>{t("Clear circuit")}</button>
+      {!measurement && <CircuitActions busy={busy} onClear={() => { onChange({ ...EMPTY_SLOTS }); setSelected(null); setMessage(null); }} />}
       </div>
+      <p className="text-sm text-stage-muted">{t("Each box acts on all four qubits at once. The Oracle is sealed: it knows the PIN and flips the sign of that one answer.")}</p>
+      <p className="text-xs text-stage-muted">{t("Tap a placed box with nothing selected to remove it.")}</p>
       {measurement && <MeasureHint />}
       {message && <p role="status" className="text-accent-amber">{t(message)}</p>}
       {exploring && measurement && <MeasurementExplorer measurement={measurement} title="What the M block read" onClose={() => setExploring(false)} />}

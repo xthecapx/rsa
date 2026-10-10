@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { PuzzleDragDrop, PuzzlePiece, PuzzleSlot } from "./PuzzleDragDrop";
+import { CircuitActions } from "./CircuitActions";
 import { gameAudio } from "@/game/audio";
 import { t, useLocale } from "@/i18n";
 import {
@@ -273,14 +274,18 @@ export function trapHint(s: TrapSlots): string {
 }
 
 /** The Echo Chamber builder, stretched over 25 qubits. The repeat count is set by the board. */
-export function GroverTrapBuilder({ slots, onChange, repeatLabel, locked }: {
-  slots: TrapSlots; onChange: (slots: TrapSlots) => void; repeatLabel: string; locked: boolean;
+export function GroverTrapBuilder({ slots, onChange, repeatLabel, locked, busy = false }: {
+  slots: TrapSlots; onChange: (slots: TrapSlots) => void; repeatLabel: string; locked: boolean; busy?: boolean;
 }) {
   useLocale((state) => state.locale);
   const [selected, setSelected] = useState<TrapPiece | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   function place(slot: TrapSlot, piece = selected) {
-    if (!piece || locked) return;
+    if (locked || busy) return;
+    if (!piece) {
+      if (slots[slot]) { onChange({ ...slots, [slot]: null }); setMessage(null); }
+      return;
+    }
     if (slot === "init" && piece !== "h" && piece !== "x") { setMessage("Prepare the register first; the Oracle and Diffuser belong in the repeat box."); return; }
     const next = { ...slots };
     for (const key of Object.keys(next) as TrapSlot[]) if (next[key] === piece) next[key] = null;
@@ -293,14 +298,15 @@ export function GroverTrapBuilder({ slots, onChange, repeatLabel, locked }: {
     label={`${t(TRAP_SLOTS[id])}: ${slots[id] ? t(TRAP_HELP[slots[id]!]) : t("Empty")}`}>
     {slots[id] ? box(slots[id]!) : <span className="grover-empty">{index}</span>}
   </PuzzleSlot>;
-  return <PuzzleDragDrop labels={Object.fromEntries(TRAP_PIECES.map((id) => [id, t(TRAP_HELP[id])]))}
+  return <PuzzleDragDrop wholeBlockDrag labels={Object.fromEntries(TRAP_PIECES.map((id) => [id, t(TRAP_HELP[id])]))}
     targets={Object.fromEntries((Object.keys(TRAP_SLOTS) as TrapSlot[]).map((id) => [id, t(TRAP_SLOTS[id])]))}
     onPlace={(target, source) => place(target as TrapSlot, source as TrapPiece)} renderPreview={(id) => box(id as TrapPiece)}>
     <div className="coin-challenge space-y-3">
       {!locked && <div className="coin-block-tray" aria-label={t("Circuit boxes")}>
         {TRAP_PIECES.map((id) => <PuzzlePiece key={id} id={id} label={t(TRAP_HELP[id])} selected={selected === id} className="grover-piece"
-          onSelect={() => setSelected(id)}>{box(id)}</PuzzlePiece>)}
+          onSelect={() => { if (!busy) setSelected(selected === id ? null : id); }}>{box(id)}</PuzzlePiece>)}
       </div>}
+      <div className={`circuit-workspace grover-circuit-workspace ${locked ? "" : "has-actions"}`}>
       <div className="grover-circuit" role="group" aria-label={t("25-qubit circuit")}>
         <div className="grover-register" aria-hidden="true"><span>{t("25 qubits")}</span><small>|0…0⟩</small></div>
         <div className="grover-track">
@@ -311,6 +317,9 @@ export function GroverTrapBuilder({ slots, onChange, repeatLabel, locked }: {
           </div>
         </div>
       </div>
+      {!locked && <CircuitActions busy={busy} onClear={() => { if (busy) return; onChange({ ...EMPTY_TRAP }); setSelected(null); setMessage(null); }} />}
+      </div>
+      {!locked && <p className="text-xs text-stage-muted">{t("Tap a placed box with nothing selected to remove it.")}</p>}
       {message && <p role="status" className="text-accent-amber">{t(message)}</p>}
     </div>
   </PuzzleDragDrop>;
@@ -430,17 +439,22 @@ export function bvHint(s: BvSlots): string {
 }
 
 /** Boxes only, like the workshop: the Oracle is the vault itself and stays sealed. */
-export function BvCircuitBuilder({ slots, onChange, locked, measurement }: {
+export function BvCircuitBuilder({ slots, onChange, locked, measurement, busy = false }: {
   slots: BvSlots; onChange: (slots: BvSlots) => void; locked: boolean;
   /** Once the circuit has run, the M block opens what it read. */
   measurement?: Measurement | null;
+  busy?: boolean;
 }) {
   useLocale((state) => state.locale);
   const [selected, setSelected] = useState<BvPiece | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [exploring, setExploring] = useState(false);
   function place(slot: BvSlot, piece = selected) {
-    if (!piece || locked) return;
+    if (locked || busy || measurement) return;
+    if (!piece) {
+      if (slots[slot]) { onChange({ ...slots, [slot]: null }); setMessage(null); }
+      return;
+    }
     const state = piece === "minus" || piece === "plus" || piece === "zero";
     if (slot === "helper" && !state) { setMessage("The helper wire takes a state box: |0⟩, |+⟩ or |−⟩."); return; }
     if (slot !== "helper" && state) { setMessage("State boxes prepare the helper wire, below the data bus."); return; }
@@ -456,19 +470,20 @@ export function BvCircuitBuilder({ slots, onChange, locked, measurement }: {
   const box = (id: BvPiece) => <span className={`grover-box ${id === "h2" ? "h" : id === "minus" || id === "plus" || id === "zero" ? "vault-state" : id}`}>{t(BV_NAMES[id])}</span>;
   const inspect = (id: BvSlot) => id === "measure" && !!measurement && slots.measure === "m";
   const slot = (id: BvSlot, extra = "") => <PuzzleSlot id={id} className={`grover-slot vault-slot ${extra} ${slots[id] ? "filled" : ""} ${inspect(id) ? "measure-inspect" : ""}`}
-    onSelect={() => { if (inspect(id) && !selected) { gameAudio.playSfx("select"); setExploring(true); } else place(id); }}
+    onSelect={() => { if (inspect(id) && !busy) { gameAudio.playSfx("select"); setExploring(true); } else place(id); }}
     label={inspect(id) ? t("Explore what the M block measured") : `${t(BV_SLOTS[id])}: ${slots[id] ? t(BV_HELP[slots[id]!]) : t("Empty")}`}>
     {slots[id] ? box(slots[id]!) : <span className="grover-empty">{id === "repeat" ? t("no loop needed") : "□"}</span>}
     {inspect(id) && <MeasureInspectBadge />}
   </PuzzleSlot>;
-  return <PuzzleDragDrop labels={Object.fromEntries(BV_PIECES.map((id) => [id, t(BV_HELP[id])]))}
+  return <PuzzleDragDrop wholeBlockDrag labels={Object.fromEntries(BV_PIECES.map((id) => [id, t(BV_HELP[id])]))}
     targets={Object.fromEntries((Object.keys(BV_SLOTS) as BvSlot[]).map((id) => [id, t(BV_SLOTS[id])]))}
     onPlace={(target, source) => place(target as BvSlot, source as BvPiece)} renderPreview={(id) => box(id as BvPiece)}>
     <div className="coin-challenge space-y-3">
-      {!locked && <div className="coin-block-tray" aria-label={t("Circuit boxes")}>
+      {!locked && !measurement && <div className="coin-block-tray" aria-label={t("Circuit boxes")}>
         {BV_PIECES.map((id) => <PuzzlePiece key={id} id={id} label={t(BV_HELP[id])} selected={selected === id} className="grover-piece"
-          onSelect={() => setSelected(id)}>{box(id)}</PuzzlePiece>)}
+          onSelect={() => { if (!busy) setSelected(selected === id ? null : id); }}>{box(id)}</PuzzlePiece>)}
       </div>}
+      <div className={`circuit-workspace vault-bv-workspace ${locked || measurement ? "" : "has-actions"}`}>
       <div className="vault-bv" role="group" aria-label={t("Bernstein–Vazirani circuit")}>
         <div className="vault-bv-label"><span>{t("25 qubits")}</span><small>|0…0⟩</small></div>
         <div className="vault-bv-wire data">{slot("prep")}</div>
@@ -479,8 +494,10 @@ export function BvCircuitBuilder({ slots, onChange, locked, measurement }: {
         <div className="vault-bv-wire helper" aria-hidden="true" />
         <div className="vault-bv-repeat">{slot("repeat", "vault-repeat-slot")}</div>
       </div>
+      {!locked && !measurement && <CircuitActions busy={busy} onClear={() => { if (busy) return; onChange({ ...EMPTY_BV }); setSelected(null); setMessage(null); }} />}
+      </div>
       <p className="text-sm text-stage-muted">{t("Each box acts on a whole wire group. The ghost is sealed: you route the wires through it, you don’t open it.")}</p>
-      <button className="btn-ghost" disabled={locked} onClick={() => { onChange({ ...EMPTY_BV }); setSelected(null); setMessage(null); }}>{t("Clear circuit")}</button>
+      {!locked && !measurement && <p className="text-xs text-stage-muted">{t("Tap a placed box with nothing selected to remove it.")}</p>}
       {measurement && <MeasureHint />}
       {message && <p role="status" className="text-accent-amber">{t(message)}</p>}
       {exploring && measurement && <MeasurementExplorer measurement={measurement} title="What the M block read" qubitName="Tumbler" onClose={() => setExploring(false)} />}

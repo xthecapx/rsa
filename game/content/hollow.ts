@@ -110,7 +110,7 @@ export const HOLLOW_NPCS: HollowNpc[] = [
         ], feedback: "Right. The target stayed put and the control changed: the phase kicked back." },
       register("Read the push", "Kickback leaves q₁ in |−⟩. Don Óscar’s lens reads a sign: H turns |−⟩ into |1⟩. Build the push, then read it so q₁ reads 1.", 2, "01", 3, ["h", "CX"],
         { reads: "1" }, "q₁ reads 1 every time.",
-        "H, H, CNOT, then H on q₁: |−⟩ becomes |1⟩. The helper was never measured, and still q₁ carries the answer.", { fill: true }),
+        "H, H, CNOT, then H on q₁: |−⟩ becomes |1⟩. The helper stays |−⟩; q₁ carries the answer.", { fill: true }),
     ],
     outro: [{ speaker: "rocio", text: "The spirit you push pushes back. Ramiro, the gravedigger, can tell you what Anselmo’s ghost really answers. It isn’t what Ofelia thinks." }],
     repeat: [{ speaker: "rocio", text: "Push on |−⟩ and the minus comes back up the rope." }],

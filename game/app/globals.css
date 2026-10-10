@@ -545,6 +545,7 @@ html[data-compact-viewport="true"] .laptop-footer { padding: 4px 8px; font-size:
 .reg-grid { display: grid; flex: 1; min-width: 200px; column-gap: 4px; }
 .reg-label { display: flex; align-items: baseline; gap: 6px; font-size: 16px; font-weight: 700; align-self: center; }
 .reg-label small { font-size: 11px; font-weight: 400; }
+.reg-label.reg-helper-label { flex-direction:column; gap:4px; }
 .reg-wire { position: relative; align-self: center; height: 2px; background: #607b83; }
 .reg-square { display: grid; place-items: center; z-index: 2; }
 .reg-cell { display: grid; place-items: center; width: 58px; height: 100%; min-height: 58px; padding: 0; border: 0; border-radius: 4px; background: transparent; cursor: pointer; }
@@ -598,6 +599,7 @@ html[data-compact-viewport="true"] .laptop-footer { padding: 4px 8px; font-size:
 .ocean-note { grid-column: 2; font-size: 12px; color: #94b8c4; }
 .ocean-note.cancel { color: #2dd4bf; }
 .qiskit-gate.reg-control { width: 22px; height: 22px; min-width: 22px; padding: 0; border-radius: 50%; border-color: #1c2e33; background: #1c2e33; color: transparent; font-size: 0; }
+.coin-operation-tool .qiskit-gate.reg-control { border-color:#84d7cb; background:#84d7cb; }
 .reg-link { justify-self: center; width: 2px; background: #1c2e33; margin: 32px 0; z-index: 1; }
 .reg-target { display: grid; place-items: center; width: 30px; height: 30px; border: 2px solid #1c2e33; border-radius: 50%; background: #f5efe0; color: #1c2e33; font-size: 26px; line-height: 1; }
 .reg-out { align-self: center; justify-self: start; padding-left: 6px; font: 700 15px/1 ui-monospace, monospace; color: #1f7a4d; }
@@ -978,3 +980,9 @@ button.campus-evidence-card { min-height:44px; }
 /* Coin Town uses the same focused experiment flow as the campus. */
 .qubit-preparations { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr)); gap:.65rem; }
 .coin-assembly-workspace .qiskit-circuit { margin-bottom:0; }
+
+/* Foundry practice shows the repeated pair as a single circuit instruction. */
+.foundry-repeat-box { position:relative; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); align-items:stretch; justify-items:center; gap:.35rem; padding:12px 4px 4px; border:2px dashed #90754c; border-radius:8px; z-index:2; }
+.foundry-repeat-count { position:absolute; top:-.65rem; left:50%; transform:translateX(-50%); padding:0 .4rem; background:#e7efef; color:#6b512c; font:bold .85rem monospace; }
+.grover-circuit-workspace.has-actions > .grover-circuit { padding-bottom:76px; }
+.vault-bv-workspace.has-actions > .vault-bv { padding-bottom:76px; }

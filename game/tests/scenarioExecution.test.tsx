@@ -238,3 +238,80 @@ it("preserves Ghost Key's helper refusal and its saved circuit on laptop reopen"
   );
   expect(request).toHaveBeenCalledTimes(1);
 });
+
+it("restores Ghost Key's returned measurement after refresh without resubmission or waiting for its old reveal timer", async () => {
+  const measured = "10101".repeat(5);
+  localStorage.setItem(
+    VAULT_SAVE_KEY,
+    JSON.stringify({
+      step: "execute",
+      place: "desk",
+      line: 999,
+      token: "device",
+      bv: { prep: "h", helper: "minus", out: "h2", measure: "m", repeat: null },
+    }),
+  );
+  let finish!: (result: Awaited<ReturnType<typeof vaultApi.run>>) => void;
+  const request = vi.spyOn(vaultApi, "run").mockImplementation(
+    () =>
+      new Promise((resolve) => {
+        finish = resolve;
+      }),
+  );
+  const view = render(<VaultScenario />);
+  open();
+  fireEvent.click(screen.getByRole("button", { name: "Execute (1 Query)" }));
+  fireEvent.click(screen.getByRole("button", { name: "Execute (1 Query)" }));
+  await act(async () => {});
+  expect(request).toHaveBeenCalledExactlyOnceWith("device", {
+    prep: "h",
+    out: "h",
+    helper: "minus",
+    measure: true,
+    extra: [],
+  });
+  expect((screen.getByText("Close laptop") as HTMLButtonElement).disabled).toBe(
+    true,
+  );
+  expect((screen.getByText("Leave") as HTMLButtonElement).disabled).toBe(true);
+  await act(async () =>
+    finish({
+      measured,
+      queries: 1,
+      shots: 1,
+      counts: { [measured]: 1 },
+      backend: "Selected QPU",
+      source: "hardware",
+      kind: "hardware",
+      frames: [
+        { block: "prep" },
+        { block: "oracle" },
+        { block: "out", bits: measured },
+      ],
+    }),
+  );
+  const saved = JSON.parse(localStorage.getItem(VAULT_SAVE_KEY)!);
+  expect(saved.run.measured).toBe(measured);
+  expect(saved.run.backend).toBe("Selected QPU");
+  expect(saved.revealed).toBe(false);
+  // Refresh while the original cosmetic reveal would still be playing.
+  view.unmount();
+  render(<VaultScenario />);
+  open();
+  expect(
+    screen.getByRole("button", { name: "Take the mask to the vault →" }),
+  ).toBeTruthy();
+  expect(
+    screen.queryByRole("button", { name: "Execute (1 Query)" }),
+  ).toBeNull();
+  fireEvent.click(screen.getByText("Close laptop"));
+  open();
+  act(() => useLocale.setState({ locale: "es" }));
+  expect(
+    screen.getByRole("region", { name: "Conteos observados" }).textContent,
+  ).toContain("Selected QPU");
+  expect(JSON.parse(localStorage.getItem(VAULT_SAVE_KEY)!).run.measured).toBe(
+    measured,
+  );
+  expect(request).toHaveBeenCalledTimes(1);
+});

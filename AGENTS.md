@@ -309,6 +309,21 @@ wire 1 is Qiskit’s highest-index wire, matching the frontend register math.
 Every editable operation has a barrier. Histograms show 256 returned shots;
 amplitude bars, card requirements, and round targets remain ideal references.
 Busy controls, edit invalidation, and close/reopen retention match Coin Town.
+Foundry's six register exercises, Hollow's six register exercises and Vera's rounds dial share the guided
+Math → Assemble → Run → Results presentation through `ExperimentFlow`.
+Assembly owns the whole-block palette or rounds controls; Run shows a read-only
+circuit with explicit final measurements and 256-shot floating actions. A new
+reading opens Results, with backend counts first and optional ideal amplitudes.
+Editing clears the reading and solved state; tabs and language changes never run
+a circuit. `RegisterCircuit` draws both editable and read-only views;
+`game/registerColumns.ts` translates their columns into operations once. There is
+no separate legacy register layout. Hollow retains helper-wire/CNOT behavior,
+including linked-target removal and sealed fixed ghosts. Its practice circuits
+measure all wires, with the helper as the last bit, while the full Ghost Key
+challenge measures only data wires. Ideal per-wire states before measurement
+and signed amplitudes explain phase kickback; counts never reconstruct a phase
+or an ideal single-wire state. Candela reuses `QubitBench`, including its ideal
+Bloch sphere. Unfinished neighbor work remains in memory for the current visit.
 
 - **Echo Chamber**: search sixteen PINs with a four-qubit Grover circuit and
   three classical guesses. One round is the oracle followed by the diffuser;
@@ -317,6 +332,10 @@ Busy controls, edit invalidation, and close/reopen retention match Coin Town.
   in shuffled anonymous bar order. The final collapse remains one shot.
   Device tokens identify the puzzle; the backend validates the
   circuit and round count before the final measurement.
+  Workshop boxes support whole-block drag and tap removal, with floating Clear.
+  Editing a box or round count clears the current preview without rerunning it;
+  collected round peaks remain. Busy execution and a final measurement lock
+  circuit edits, while the final M still opens its saved measurement explorer.
 - **Operation Ghost Key**: recover a 25-bit secret using a parity oracle and a
   helper qubit in |−⟩. Classical questions consume three candles; checking a whole
   key is a separate interaction. Bernstein–Vazirani uses one ideal quantum query.
@@ -325,6 +344,12 @@ Busy controls, edit invalidation, and close/reopen retention match Coin Town.
   In Qollab, ideal phase frames explain the algorithm while the selected
   backend supplies the measurement. Noise can yield a wrong key; retry is
   available without changing the secret. The 24/25-qubit local devices are too small.
+  Casa Ofelia's Grover comparison and BV builders use whole-block drag, tap
+  removal and floating Clear with reserved space below the wires. Locked previews
+  hide editing actions; busy execution refuses edits. The sealed Oracle is never
+  removable, and the final M still opens the saved measurement explorer.
+  Restoring a saved returned key finishes its cosmetic reveal immediately;
+  refresh during the animation cannot strand the player or resubmit the job.
 - **Breaking RSA**: four acts cover letter encoding, Caesar shifts, small RSA,
   and Shor's quantum/classical pipeline. Each act runs prologue → client briefing
   → install a listener → intercept → decode in the laptop → type the plaintext
