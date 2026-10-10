@@ -410,8 +410,8 @@ export function WorldTownScreen({ config, restartOptions, onEnterLab }: { config
         {step.kind === "bench" ? <QubitBench step={step} onSolved={solved} onEdited={() => setActivity({ ...activity, solved: false })} onBusyChange={setActivityBusy} />
           : step.kind === "register" ? <RegisterBench step={step} onSolved={solved} onEdited={() => setActivity({ ...activity, solved: false })} onBusyChange={setActivityBusy} />
           : step.kind === "rounds" ? <RoundsDial step={step} onSolved={solved} onEdited={() => setActivity({ ...activity, solved: false })} onBusyChange={setActivityBusy} />
-          : step.kind === "crypto" ? <CryptoBench step={step} onSolved={solved} />
-          : step.kind === "dial" ? <DialBench step={step} onSolved={solved} />
+          : step.kind === "crypto" ? <CryptoBench step={step} reference={npc.knowledge ? config.cards[npc.knowledge] : undefined} onSolved={solved} onEdited={() => setActivity({ ...activity, solved: false })} />
+          : step.kind === "dial" ? <DialBench step={step} reference={npc.knowledge ? config.cards[npc.knowledge] : undefined} onSolved={solved} />
           : <BenchQuestion step={step} onSolved={solved} idealReference />}
         {activity.solved && <div className="laptop-challenge space-y-2" role="status">
           <p className="text-accent-teal">{t(step.feedback)}</p>

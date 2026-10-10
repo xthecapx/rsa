@@ -394,6 +394,21 @@ active engine, pause movement during overlays, and require a fresh interaction
 press after closing a conversation. Interior lessons share the shell and return
 flow while owning their room and workbench.
 
+Cipher neighbor puzzles and Cero's bounties share Math → Practice → Results tabs
+through `CipherPracticeFlow`, using the same accessible `StepTabs` keyboard behavior
+as quantum experiments. Classical tiles and Caesar dials remain classical: no
+quantum request or measurement histogram is implied. Math offers the relevant
+knowledge reference; checked answers open Results. Editing invalidates completion,
+including bounty collection. Tiles support whole-block drag, tap, keyboard,
+individual removal and a compact Clear action with reserved workspace space.
+Act 4's `ShorPipeline` uses Math → Assemble → Run → Results. Assemble owns only
+data-flow wiring; Run owns base, backend, counting qubits, shots and explicit
+submission. Results show actual counts with their original backend identity,
+then candidate-period checks and decryption. Recorded IBM counts are labeled
+hardware. Restoring a measured pipeline opens Results without submitting; successful
+recovery hides Run/Clear until a setting or wiring change invalidates the result.
+The four RSA acts keep their existing puzzles, story rules and save schema.
+
 RSA scripts use `defineAct` to validate node IDs, reachable exits, choices, and
 checklist effects. Interpolation variables are defined in `content/index.ts`.
 Keep effects typed: backend calls, walking, packets, bubbles, tap glow, panels,

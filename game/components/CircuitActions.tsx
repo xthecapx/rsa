@@ -13,6 +13,7 @@ export function CircuitActions({
   runLabel = "Run circuit",
   shots = 256,
   children,
+  controlsLabel = "Circuit controls",
 }: {
   onClear: () => void;
   onRun?: () => void;
@@ -22,6 +23,7 @@ export function CircuitActions({
   runLabel?: string;
   shots?: number;
   children?: ReactNode;
+  controlsLabel?: string;
 }) {
   useLocale((s) => s.locale);
   const clear = t(clearLabel);
@@ -29,11 +31,7 @@ export function CircuitActions({
     ? t("Running circuit…")
     : `${t(runLabel)} · ${shots} ${t("shots")}`;
   return (
-    <div
-      className="circuit-actions"
-      role="group"
-      aria-label={t("Circuit controls")}
-    >
+    <div className="circuit-actions" role="group" aria-label={t(controlsLabel)}>
       {children}
       <button
         type="button"

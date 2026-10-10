@@ -986,3 +986,8 @@ button.campus-evidence-card { min-height:44px; }
 .foundry-repeat-count { position:absolute; top:-.65rem; left:50%; transform:translateX(-50%); padding:0 .4rem; background:#e7efef; color:#6b512c; font:bold .85rem monospace; }
 .grover-circuit-workspace.has-actions > .grover-circuit { padding-bottom:76px; }
 .vault-bv-workspace.has-actions > .vault-bv { padding-bottom:76px; }
+
+/* Cipher tools reserve the floating action area and keep long sample sets local. */
+.cipher-tile-workspace.has-actions { padding-bottom:76px; }
+.cipher-pipeline-workspace.has-actions { padding-bottom:80px; }
+.shor-counts { max-height:28rem; overflow:auto; padding:4px; }

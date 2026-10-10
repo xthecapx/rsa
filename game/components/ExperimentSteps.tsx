@@ -11,32 +11,26 @@ export const EXPERIMENT_STEPS = [
 export type ExperimentStep = (typeof EXPERIMENT_STEPS)[number]["id"];
 
 /** One accessible sequence for every exhibit, with no execution side effects. */
-export function ExperimentSteps({
+export function StepTabs<Id extends string>({
   id,
   value,
   onChange,
   busy,
-  hasMeasurements,
+  stages,
+  label = "Experiment steps",
 }: {
   id: string;
-  value: ExperimentStep;
-  onChange: (step: ExperimentStep) => void;
+  value: Id;
+  onChange: (step: Id) => void;
   busy: boolean;
-  hasMeasurements: boolean;
+  stages: readonly { id: Id; label: string; disabled?: boolean }[];
+  label?: string;
 }) {
-  const buttons = useRef<
-    Partial<Record<ExperimentStep, HTMLButtonElement | null>>
-  >({});
-  const available = EXPERIMENT_STEPS.filter(
-    (stage) => stage.id !== "results" || hasMeasurements,
-  );
+  const buttons = useRef<Partial<Record<Id, HTMLButtonElement | null>>>({});
+  const available = stages.filter((stage) => !stage.disabled);
   return (
-    <div
-      className="campus-steps"
-      role="tablist"
-      aria-label={t("Experiment steps")}
-    >
-      {EXPERIMENT_STEPS.map((stage, index) => (
+    <div className="campus-steps" role="tablist" aria-label={t(label)}>
+      {stages.map((stage, index) => (
         <button
           key={stage.id}
           type="button"
@@ -48,7 +42,7 @@ export function ExperimentSteps({
           aria-controls={`${id}-panel`}
           aria-selected={value === stage.id}
           tabIndex={value === stage.id ? 0 : -1}
-          disabled={busy || (stage.id === "results" && !hasMeasurements)}
+          disabled={busy || stage.disabled}
           onClick={() => onChange(stage.id)}
           // The laptop stops bubbling keys before they reach the world/React root.
           onKeyDownCapture={(event) => {
@@ -77,5 +71,27 @@ export function ExperimentSteps({
         </button>
       ))}
     </div>
+  );
+}
+
+/** Quantum experiments keep the same four stages across towns. */
+export function ExperimentSteps({
+  hasMeasurements,
+  ...props
+}: {
+  id: string;
+  value: ExperimentStep;
+  onChange: (step: ExperimentStep) => void;
+  busy: boolean;
+  hasMeasurements: boolean;
+}) {
+  return (
+    <StepTabs
+      {...props}
+      stages={EXPERIMENT_STEPS.map((stage) => ({
+        ...stage,
+        disabled: stage.id === "results" && !hasMeasurements,
+      }))}
+    />
   );
 }

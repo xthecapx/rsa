@@ -3254,5 +3254,21 @@
   "Ideal wire states before measurement": "Estados ideales de cada cable antes de medir",
   "Measuring in 0/1 does not reveal a relative minus sign. H can turn that sign into a different reading.": "Medir en 0/1 no revela un signo menos relativo. H puede convertir ese signo en una lectura diferente.",
   "This practice measures the data wires and the helper, in that order. The full Ghost Key circuit reads only the data wires. Run sends this circuit to the backend; editing does not execute it.": "Esta práctica mide los cables de datos y el auxiliar, en ese orden. El circuito completo de Llave Fantasma solo lee los cables de datos. Ejecutar envía este circuito al backend; editar no lo ejecuta.",
-  "Read bitstrings from top wire to bottom wire; the last digit is the helper. Counts come from the backend. Wire states and signed amplitudes are ideal references.": "Lee las cadenas de bits de arriba hacia abajo; el último dígito es el auxiliar. Los conteos vienen del backend. Los estados de los cables y las amplitudes con signo son referencias ideales."
+  "Read bitstrings from top wire to bottom wire; the last digit is the helper. Counts come from the backend. Wire states and signed amplitudes are ideal references.": "Lee las cadenas de bits de arriba hacia abajo; el último dígito es el auxiliar. Los conteos vienen del backend. Los estados de los cables y las amplitudes con signo son referencias ideales.",
+  "Practice": "Práctica",
+  "Try it yourself": "Pruébalo tú",
+  "Checked answers": "Respuestas verificadas",
+  "These are classical calculations, not quantum measurements.": "Estos son cálculos clásicos, no mediciones cuánticas.",
+  "Open the reference": "Abrir la referencia",
+  "Classical tools": "Herramientas clásicas",
+  "Clear tiles": "Vaciar las fichas",
+  "Tile controls": "Controles de las fichas",
+  "Shor pipeline": "Flujo de Shor",
+  "Disconnect pipeline": "Desconectar el flujo",
+  "Classical input": "Entrada clásica",
+  "Classical checks": "Comprobaciones clásicas",
+  "The hidden rhythm": "El ritmo oculto",
+  "Quantum samples suggest a period. Classical checks turn a useful period into factors and a private key.": "Las muestras cuánticas sugieren un período. Las comprobaciones clásicas convierten un período útil en factores y una clave privada.",
+  "The quantum stage returns samples, not primes. The classical PC tests candidate periods before rebuilding the private key.": "La etapa cuántica devuelve muestras, no primos. El PC clásico comprueba los períodos candidatos antes de reconstruir la clave privada.",
+  "Tiny demonstration RSA moduli are for learning; this does not break real RSA keys.": "Los pequeños módulos RSA de demostración son para aprender; esto no rompe claves RSA reales."
 }

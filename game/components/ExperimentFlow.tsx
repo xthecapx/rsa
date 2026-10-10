@@ -13,17 +13,19 @@ export function ExperimentFlow({
   text,
   measurement,
   busy,
+  initialView,
   children,
 }: {
   text: string;
   measurement: object | null;
   busy: boolean;
+  initialView?: ExperimentStep;
   children: (
     view: ExperimentStep,
     changeView: (view: ExperimentStep) => void,
   ) => ReactNode;
 }) {
-  const [view, setView] = useState<ExperimentStep>("math");
+  const [view, setView] = useState<ExperimentStep>(initialView ?? "math");
   const id = useId();
   const panel = useRef<HTMLDivElement>(null);
   const received = useRef(measurement);

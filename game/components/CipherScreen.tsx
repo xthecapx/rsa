@@ -101,7 +101,7 @@ function Bounty({ close }: { close: () => void }) {
   return <LaptopShell open calculator title={`${t("Cero")} · ${t(step.title)}`} status={`${t("Bounties solved")}: ${bounties}`} onClose={close}
     footer={<p>{t(CERO.hello.text)}</p>}>
     <div key={seed} className="space-y-3">
-      {step.kind === "dial" ? <DialBench step={step} onSolved={() => setSolved(true)} /> : <CryptoBench step={step} onSolved={() => setSolved(true)} />}
+      {step.kind === "dial" ? <DialBench step={step} onSolved={() => setSolved(true)} /> : <CryptoBench step={step} onSolved={() => setSolved(true)} onEdited={() => setSolved(false)} />}
       {solved && <div className="laptop-challenge space-y-2" role="status">
         <p className="text-accent-teal">{fill(t(step.feedback), step.vars ?? {})} {t(CERO.paid.text)}</p>
         <button className="btn-primary" autoFocus onClick={() => {
