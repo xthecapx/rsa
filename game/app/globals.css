@@ -866,12 +866,46 @@ html[data-compact-viewport="true"] .laptop-footer { padding: 4px 8px; font-size:
 .campus-exhibit-glyph { flex: 0 0 auto; display: grid; place-items: center; width: 64px; height: 64px; border-radius: 50%; background: #123941; color: #90e0cd; font: 2rem monospace; }
 .campus-choice legend { color: #90e0cd; margin-bottom: .6rem; }
 .campus-choice button[aria-pressed="true"] { border-color: #ffb13d; background: #ffb13d22; }
-.campus-experiment-layout { display: grid; gap: 1.25rem; grid-template-columns: minmax(200px, .7fr) minmax(0, 1.3fr); }
+.campus-steps { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:.5rem; }
+.campus-steps button { display:flex; align-items:center; justify-content:center; gap:.5rem; min-height:44px; padding:.65rem .4rem; border:1px solid #39616b; border-radius:10px; background:#102e38; color:#9bb9c2; }
+.campus-steps button[aria-selected="true"] { border-color:#ffb13d; background:#ffb13d18; color:#ffe0a3; box-shadow:inset 0 -2px #ffb13d; }
+.campus-steps button:disabled { opacity:.45; cursor:default; }
+.campus-steps button:focus-visible { outline:2px solid #90e0cd; outline-offset:3px; }
+.campus-step-number { display:grid; place-items:center; width:24px; height:24px; flex:0 0 auto; border-radius:50%; background:#1c4651; font: .8rem monospace; }
+.campus-device-order { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.75rem; }
+.campus-device-card { display:grid; grid-template-rows:auto 1fr auto; gap:.35rem; min-width:0; padding:.5rem; border:1px solid #39616b; border-radius:10px; background:#0b222b; }
+.campus-device-card[data-device="Control"] { border-color:#4a8c8b; }
+.campus-device-heading { position:relative; display:flex; align-items:center; justify-content:center; gap:.6rem; padding:.2rem 1rem; color:#90e0cd; }
+.campus-device-position { position:absolute; top:0; left:0; font:.7rem monospace; color:#8daab4; }
+.campus-device-icon { display:grid; place-items:center; width:36px; height:36px; flex:0 0 auto; color:#90e0cd; }
+.campus-device-icon svg { width:28px; height:28px; }
+.campus-device-body { display:grid; align-items:center; text-align:center; min-height:64px; }
+.campus-device-caption { font-size:.8rem; color:#a3bdc5; line-height:1.4; }
+.campus-device-gates { display:flex; justify-content:center; gap:.5rem; margin-bottom:.35rem; }
+.campus-device-gates button { width:44px; height:44px; border:1px solid #63858a; border-radius:8px; background:#163e49; font:1.1rem monospace; }
+.campus-device-gates button[aria-pressed="true"] { border-color:#ffb13d; color:#ffe0a3; background:#ffb13d22; box-shadow:inset 0 -2px #ffb13d; }
+.campus-device-reorder { display:flex; justify-content:space-between; border-top:1px solid #274650; padding-top:.35rem; }
+.campus-device-reorder button { display:flex; align-items:center; justify-content:center; gap:.25rem; min-width:44px; height:44px; padding:0 .35rem; font-size:.75rem; border:1px solid #39616b; border-radius:8px; background:#102e38; color:#90e0cd; }
+.campus-device-reorder svg { width:20px; height:20px; }
+.campus-device-reorder button:disabled { opacity:.25; }
+.campus-device-reorder button:not(:disabled):hover, .campus-device-gates button:hover { border-color:#90e0cd; }
+.campus-device-card button:focus-visible { outline:2px solid #ffb13d; outline-offset:2px; }
+@media (max-width:600px) {
+  .campus-device-order { grid-template-columns:1fr; gap:.5rem; }
+  .campus-device-card { grid-template-columns:minmax(90px,1fr) minmax(0,1.2fr) 44px; grid-template-rows:auto; align-items:center; gap:.5rem; padding:.5rem; }
+  .campus-device-heading { flex-direction:column; gap:0; padding:.3rem 0; font-size:.85rem; }
+  .campus-device-body { min-height:0; }
+  .campus-device-reorder { flex-direction:column; gap:.25rem; border:0; padding:0; }
+  .campus-device-reorder svg { transform:rotate(90deg); }
+  .campus-device-reorder button { width:44px; padding:0; }
+  .campus-device-reorder button span { display:none; }
+}
+@media (max-width:600px) { .campus-steps { gap:.3rem; } .campus-steps button { flex-direction:column; gap:.25rem; font-size:.8rem; } }
 .campus-workspace { min-height: 230px; padding: 1rem 1rem 5.5rem; border: 1px solid #39616b; border-radius: 12px; background: #102e38; }
 .campus-tape { display: flex; align-items: center; gap: 1rem; overflow-x: auto; min-height: 72px; padding: .5rem 0; }
 .campus-gate-slot, .campus-gate { display: inline-grid; place-items: center; flex: 0 0 auto; min-width: 48px; min-height: 48px; padding: .4rem; border: 2px solid #63858a; border-radius: 8px; background: #163e49; font-family: monospace; font-size: 1rem; }
 .campus-gate-slot:hover { border-color: #ffb13d; }
-@media (max-width: 850px) { .campus-experiment-layout { grid-template-columns: minmax(0,1fr); } .campus-exhibit-glyph { width: 40px; height: 40px; font-size: 1.5rem; } }
+@media (max-width: 850px) { .campus-exhibit-glyph { width: 40px; height: 40px; font-size: 1.5rem; } }
 .campus-state-passport { display: grid; gap: .5rem; overflow-x: auto; padding: 1rem; border-left: 3px solid #ffb13d; background: #0b1f26; font-size: .85rem; }
 .campus-paired-signals { display: flex; align-items: center; justify-content: space-around; gap: .5rem; padding: 1rem 0; font-size: .85rem; }
 .campus-paired-signals > span { color: #90e0cd; font-size: 2.5rem; }
@@ -891,3 +925,11 @@ button.campus-evidence-card { min-height:44px; }
 .campus-repair-board { padding:.75rem; border:1px solid #39616b; border-radius:8px; background:#0b1f26; }
 .campus-conversation .btn-ghost, .campus-conversation .btn-primary { min-height:44px; white-space:normal; }
 .campus-conversation .dialogue-actions { max-height:calc(var(--game-viewport-height) * .32); overflow-y:auto; }
+
+/* Rosa's preview and reset tool share one compact, wired strip. */
+.campus-workspace.campus-workspace-qubit { min-height:0; padding-bottom:1rem; }
+.campus-circuit-preview { position:relative; border-top:1px solid #39616b; padding:1rem 4.5rem 0 0; }
+.campus-circuit-preview .circuit-actions { bottom:.5rem; right:0; }
+.campus-tape-readonly { position:relative; isolation:isolate; }
+.campus-tape-readonly::before { content:""; position:absolute; z-index:-1; left:0; right:0; top:50%; height:2px; background:#63858a; }
+.campus-tape-readonly > .font-mono { background:#102e38; padding-right:.5rem; }

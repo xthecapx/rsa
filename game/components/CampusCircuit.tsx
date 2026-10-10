@@ -164,7 +164,7 @@ export function CampusCircuit({
           </div>
         </div>
       ) : (
-        <div className="campus-tape">
+        <div className="campus-tape campus-tape-readonly">
           <span className="font-mono">q₀ |0⟩</span>
           {gates.map((label, i) => (
             <span className="campus-gate-slot" key={i}>
@@ -174,7 +174,8 @@ export function CampusCircuit({
           <span className="campus-gate-slot">M</span>
         </div>
       )}
-      {(request.mode === "dephasing" || (correlated && request.pair === "envelopes")) && (
+      {(request.mode === "dephasing" ||
+        (correlated && request.pair === "envelopes")) && (
         <p className="text-xs text-stage-muted">
           {t(
             "E(d) couples an unobserved helper. It is an environmental channel, not a unitary gate on the data alone.",

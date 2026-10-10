@@ -125,10 +125,22 @@ completion awards a new discovery or festival repair; it requires successful
 relevant runs and a correct explanation. No completion rule requires exact noisy
 counts. No-run/failed-run closes offer resume. Notebook/free-play closes never
 start another host's discussion. Reset invalidates stale execution ownership.
-Rosa's numbered device assembly lives inside the circuit workspace. Hide its
-circuit preview, ideal explorer and Run/Reset actions until the devices read
+Every campus exhibit and festival repair shares Math → Assemble → Run → Results
+tabs. Only the active panel is displayed. Assemble integrates device controls,
+parameters and the editable circuit; Run owns shot count and explicit submission.
+Successful execution opens Results with returned histograms and labeled ideal
+references. Single-qubit experiments share `BlochSphere` with the personal lab;
+the quiet room shows the mixed-state reference after its channel and lens.
+Tab changes, language switches and reopening never submit a job. Reopening a
+measured experiment shows its saved results. Editing invalidates current counts
+while retaining the comparison history. Preserve keyboard arrow/Home/End tab
+navigation and mobile touch access. `CampusExperimentControls`,
+`CampusExperimentSteps` and `CampusExperimentResults` own the shared presentation.
+Rosa's icon device cards keep the X/H selector inside Control, with separate
+accessible earlier/later reorder buttons and a compact wired preview. Her
+numbered device assembly and control selection live together inside the
+workspace. Hide its circuit preview and execution actions until the devices read
 Prepare → Control → Measure; show the ordering instruction there instead.
-Correct assembly enables real executions in both delivery targets.
 
 The quiet room uses a gate-only environment dilation for the explicit channel
 E_d(ρ)=(1−d/2)ρ+(d/2)ZρZ, d∈[0,1]. An unobserved helper starts with

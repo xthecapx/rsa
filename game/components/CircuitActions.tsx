@@ -15,7 +15,7 @@ export function CircuitActions({
   children,
 }: {
   onClear: () => void;
-  onRun: () => void;
+  onRun?: () => void;
   busy?: boolean;
   runDisabled?: boolean;
   clearLabel?: string;
@@ -55,34 +55,36 @@ export function CircuitActions({
           <path d="M3 6h18M9 6V4h6v2M5 6l1 14h12l1-14M10 10v6M14 10v6" />
         </svg>
       </button>
-      <button
-        type="button"
-        className="circuit-icon-action run"
-        disabled={busy || runDisabled}
-        onClick={onRun}
-        aria-label={run}
-        title={run}
-      >
-        {busy ? (
-          <svg
-            aria-hidden="true"
-            className="motion-safe:animate-spin"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <path d="M20 12a8 8 0 1 1-8-8" />
-          </svg>
-        ) : (
-          <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M8 4v16l13-8z" />
-          </svg>
-        )}
-        <span className="circuit-shots-badge" aria-hidden="true">
-          {shots}
-        </span>
-      </button>
+      {onRun && (
+        <button
+          type="button"
+          className="circuit-icon-action run"
+          disabled={busy || runDisabled}
+          onClick={onRun}
+          aria-label={run}
+          title={run}
+        >
+          {busy ? (
+            <svg
+              aria-hidden="true"
+              className="motion-safe:animate-spin"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path d="M20 12a8 8 0 1 1-8-8" />
+            </svg>
+          ) : (
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M8 4v16l13-8z" />
+            </svg>
+          )}
+          <span className="circuit-shots-badge" aria-hidden="true">
+            {shots}
+          </span>
+        </button>
+      )}
     </div>
   );
 }

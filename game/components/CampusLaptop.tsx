@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { CAMPUS_EXHIBITS, type CampusActivityId } from "@/content/campus";
 import { CampusVisual } from "./CampusVisual";
 import { useCampus, campusSession } from "@/game/campus";
@@ -10,14 +10,18 @@ import { t, useLocale } from "@/i18n";
 import { useAsyncOperation } from "./useAsyncOperation";
 import { LaptopShell } from "./LaptopShell";
 import { CircuitActions } from "./CircuitActions";
-import { CircuitHistogram } from "./CircuitHistogram";
-import { AngleDial } from "./AngleDial";
-import { LabStateExplorer } from "./LabStateExplorer";
+import { CampusExperimentControls } from "./CampusExperimentControls";
+import {
+  CampusExperimentSteps,
+  CAMPUS_STEPS,
+  type CampusExperimentStep,
+} from "./CampusExperimentSteps";
+import { CampusExperimentResults } from "./CampusExperimentResults";
 import { CampusNotebook } from "./CampusNotebook";
 import { CampusTape, CampusCircuit } from "./CampusCircuit";
 import { CheckpointControl } from "./CheckpointControl";
 import { CAMPUS_STORIES } from "@/content/campusStories";
-import { evidenceLabel, festivalDesign } from "@/game/campusJourney";
+import { festivalDesign } from "@/game/campusJourney";
 
 export function CampusLaptop({
   initial,
@@ -30,11 +34,22 @@ export function CampusLaptop({
 }) {
   useLocale((s) => s.locale);
   const [selected, setSelected] = useState(initial);
+  const [view, setView] = useState<CampusExperimentStep>(() =>
+    initial !== "notebook" && useCampus.getState().sessions[initial]?.result
+      ? "results"
+      : "math",
+  );
+  const tabsId = useId();
+  const panel = useRef<HTMLDivElement>(null);
+  const focusResults = useRef(false);
   const contentTop = useRef<HTMLDivElement>(null);
   useEffect(() => {
     contentTop.current?.scrollIntoView({ block: "start" });
-  }, [selected]);
-  const [view, setView] = useState<"play" | "explain" | "math">("play");
+    if (view === "results" && focusResults.current) {
+      panel.current?.focus({ preventScroll: true });
+      focusResults.current = false;
+    }
+  }, [selected, view]);
   const [error, setError] = useState<string | null>(null);
   const [step, setStep] = useState<number | null>(null);
   const store = useCampus();
@@ -82,13 +97,16 @@ export function CampusLaptop({
         useGame.getState().changeOperations(1);
       },
       settled: () => useGame.getState().changeOperations(-1),
-      success: (result) =>
+      success: (result) => {
         store.record(
           id,
           snapshot,
           result,
           festival ? (design ? `repair${phase}` : "other") : undefined,
-        ),
+        );
+        focusResults.current = true;
+        setView("results");
+      },
       error: (cause) =>
         setError(
           cause instanceof Error
@@ -97,30 +115,6 @@ export function CampusLaptop({
         ),
     });
   }
-  const choose = <T extends string>(
-    label: string,
-    values: readonly T[],
-    value: T,
-    change: (v: T) => void,
-    names?: Record<string, string>,
-  ) => (
-    <fieldset className="campus-choice">
-      <legend>{t(label)}</legend>
-      <div className="flex flex-wrap gap-2">
-        {values.map((v) => (
-          <button
-            type="button"
-            key={v}
-            className="btn-ghost"
-            aria-pressed={v === value}
-            onClick={() => change(v)}
-          >
-            {t(names?.[v] ?? v)}
-          </button>
-        ))}
-      </div>
-    </fieldset>
-  );
   const title =
     selected === "notebook"
       ? "Campus field notebook"
@@ -134,10 +128,27 @@ export function CampusLaptop({
   const switchActivity = (next: CampusActivityId | "notebook") => {
     if (operation.running.current) return;
     setSelected(next);
-    setView("play");
+    setView(
+      next !== "notebook" && store.sessions[next]?.result ? "results" : "math",
+    );
     setStep(null);
     setError(null);
   };
+  const hasMeasurements = session.runs.length > 0;
+  const stageIndex = CAMPUS_STEPS.findIndex((stage) => stage.id === view);
+  function resetExperiment() {
+    update({
+      sequence: [],
+      inverse: false,
+      analyzer: false,
+      minus: false,
+      angle: Math.PI / 2,
+      phase: 0,
+      disturbance: 0,
+      pair: "independent",
+      basis: "Z",
+    });
+  }
   return (
     <LaptopShell
       open
@@ -170,7 +181,7 @@ export function CampusLaptop({
         </p>
       }
     >
-      <div ref={contentTop} className="space-y-5 font-body">
+      <div ref={contentTop} className="space-y-4 font-body">
         <div className="flex flex-wrap gap-2">
           <button
             className="btn-ghost text-sm"
@@ -192,343 +203,38 @@ export function CampusLaptop({
           <CampusNotebook onOpen={switchActivity} />
         ) : (
           <>
-            <section className="campus-exhibit-intro panel p-4">
-              <span className="campus-exhibit-glyph" aria-hidden="true">
-                {exhibit.glyph}
-              </span>
-              <div>
-                <h3 className="text-lg text-accent-amber">{t(title)}</h3>
-                {!(investigation && selected === initial) && (
-                  <p className="mt-2">
-                    {t(
-                      festival
-                        ? "Three repairs, no prerequisites. Build each experiment, run it and answer a visitor. No perfect noisy counts are required."
-                        : investigation && selected === initial
-                          ? investigation
-                          : exhibit.brief,
-                    )}
-                  </p>
+            {view === "math" && !(investigation && selected === initial) && (
+              <p className="text-sm text-stage-muted">
+                {t(
+                  festival
+                    ? "Three repairs, no prerequisites. Build each experiment, run it and answer a visitor. No perfect noisy counts are required."
+                    : exhibit.brief,
                 )}
-              </div>
-            </section>
-            <nav
-              className="flex flex-wrap gap-2"
-              aria-label={t("Exhibit views")}
-            >
-              {(["play", "explain", "math"] as const).map((v) => (
-                <button
-                  key={v}
-                  className="btn-ghost"
-                  aria-pressed={view === v}
-                  onClick={() => setView(v)}
-                >
-                  {t(
-                    v === "play"
-                      ? "Play"
-                      : v === "explain"
-                        ? "Explain"
-                        : "Show the math",
-                  )}
-                </button>
-              ))}
-            </nav>
-            {view !== "play" && (
-              <section className="panel p-4 leading-relaxed">
-                <p>{t(view === "explain" ? exhibit.explain : exhibit.math)}</p>
-              </section>
+              </p>
             )}
+            <CampusExperimentSteps
+              id={tabsId}
+              value={view}
+              onChange={setView}
+              busy={operation.busy}
+              hasMeasurements={hasMeasurements}
+            />
             <p className="text-accent-teal">{t(goal)}</p>
-            <fieldset disabled={operation.busy} className="space-y-4">
-              <div className="campus-experiment-layout">
-                <div className="space-y-4">
-                  {exhibitId === "qubit" && (
-                    <>
-                      {choose(
-                        "Control device",
-                        ["X", "H"] as const,
-                        s.gate as "X" | "H",
-                        (gate) => update({ gate }),
-                        {
-                          X: "Classical flip · X",
-                          H: "Quantum superposition · H",
-                        },
-                      )}
-                    </>
-                  )}
-                  {(exhibitId === "passports" || exhibitId === "rotations") && (
-                    <>
-                      {exhibitId === "rotations" &&
-                        choose(
-                          "Rotation axis",
-                          ["X", "Y", "Z"] as const,
-                          s.axis,
-                          (axis) => update({ axis }),
-                        )}
-                      <div className="flex flex-wrap items-start gap-4">
-                        <div>
-                          <p className="text-accent-teal">θ</p>
-                          <AngleDial
-                            value={s.angle}
-                            onChange={(angle) => update({ angle })}
-                          />
-                        </div>
-                        {exhibitId === "passports" && (
-                          <div>
-                            <p className="text-accent-teal">φ</p>
-                            <AngleDial
-                              symbol="φ"
-                              label="Relative phase dial"
-                              value={s.phase}
-                              onChange={(phase) => update({ phase })}
-                            />
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {[0, 90, 180].map((degrees) => (
-                          <button
-                            key={degrees}
-                            className="btn-ghost text-sm"
-                            onClick={() =>
-                              update({ angle: (degrees * Math.PI) / 180 })
-                            }
-                          >
-                            θ {degrees}°
-                          </button>
-                        ))}
-                        {exhibitId === "passports" && (
-                          <button
-                            className="btn-ghost"
-                            onClick={() => update({ phase: 0 })}
-                          >
-                            φ 0°
-                          </button>
-                        )}
-                      </div>
-                      {exhibitId === "rotations" && (
-                        <label className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
-                            checked={s.inverse}
-                            onChange={(e) =>
-                              update({ inverse: e.target.checked })
-                            }
-                          />
-                          {t("Add inverse rotation")}
-                        </label>
-                      )}
-                    </>
-                  )}
-                  {exhibitId === "fountain" && (
-                    <>
-                      <label className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={s.minus}
-                          onChange={(e) => update({ minus: e.target.checked })}
-                        />
-                        {t("Paint a relative minus with Z")}
-                      </label>
-                      <label className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={s.analyzer}
-                          onChange={(e) =>
-                            update({ analyzer: e.target.checked })
-                          }
-                        />
-                        {t("Add the H measurement lens")}
-                      </label>
-                    </>
-                  )}
-                  {exhibitId === "observatory" && (
-                    <>
-                      {choose(
-                        "Signal preparation",
-                        ["independent", "bell", "envelopes"] as const,
-                        s.pair,
-                        (pair) => update({ pair }),
-                        {
-                          independent: "Independent signals",
-                          bell: "Bell pair",
-                          envelopes: "Matching envelopes model",
-                        },
-                      )}
-                      {choose(
-                        "Both measurement bases",
-                        ["Z", "X"] as const,
-                        s.basis,
-                        (basis) => update({ basis }),
-                      )}
-                      <p className="text-sm text-stage-muted">
-                        {t(
-                          "The envelopes model is a dephased Bell preparation. An unobserved helper removes its coherence; it is not a physical source of paper envelopes.",
-                        )}
-                      </p>
-                    </>
-                  )}
-                  {exhibitId === "quiet" && (
-                    <>
-                      <label className="block">
-                        {t("Teaching disturbance")} ·{" "}
-                        {Math.round(s.disturbance * 100)}%
-                        <input
-                          className="mt-3 block w-full"
-                          type="range"
-                          min={0}
-                          max={1}
-                          step={0.25}
-                          value={s.disturbance}
-                          onChange={(e) =>
-                            update({ disturbance: Number(e.target.value) })
-                          }
-                        />
-                      </label>
-                      <div className="flex gap-2">
-                        {[0, 0.5, 1].map((d) => (
-                          <button
-                            key={d}
-                            className="btn-ghost"
-                            onClick={() => update({ disturbance: d })}
-                          >
-                            {d * 100}%
-                          </button>
-                        ))}
-                      </div>
-                      <label className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={s.analyzer}
-                          onChange={(e) =>
-                            update({ analyzer: e.target.checked })
-                          }
-                        />
-                        {t("Add the H measurement lens")}
-                      </label>
-                      <p className="text-sm text-stage-muted">
-                        {t(
-                          "The helper is unobserved. Only the data qubit appears in counts. Device noise is additional to the teaching channel.",
-                        )}
-                      </p>
-                    </>
-                  )}
-                  <label className="block">
-                    {t("Shots")}
-                    <select
-                      className="ml-3 rounded border border-stage-border bg-stage-bg p-2 text-base"
-                      value={s.shots}
-                      onChange={(e) =>
-                        update({ shots: Number(e.target.value) })
-                      }
-                    >
-                      {[1, 16, 256, 1024].map((n) => (
-                        <option key={n} value={n}>
-                          {n}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                </div>
-                <div className="min-w-0 space-y-3">
+            <div
+              ref={panel}
+              id={`${tabsId}-panel`}
+              role="tabpanel"
+              aria-labelledby={`${tabsId}-${view}`}
+              tabIndex={-1}
+              className="space-y-4 min-w-0"
+            >
+              {view === "math" && (
+                <section className="space-y-4">
+                  <h3 className="text-accent-teal">{t("Show the math")}</h3>
+                  <p className="leading-relaxed">{t(exhibit.explain)}</p>
+                  <p className="panel p-4 leading-relaxed">{t(exhibit.math)}</p>
                   {preparationReady && (
                     <CampusVisual id={exhibitId} settings={s} />
-                  )}
-                  <div className="circuit-workspace campus-workspace">
-                    {exhibitId === "qubit" && (
-                      <section className="mb-4 space-y-3">
-                        <h4 className="text-accent-teal">
-                          {t("Experiment assembly")}
-                        </h4>
-                        <p className="text-sm text-stage-muted">
-                          {t(
-                            "Arrange the experiment. Move a device left to change its order.",
-                          )}
-                        </p>
-                        <ol
-                          className="flex gap-2 overflow-x-auto pb-2"
-                          aria-label={t("Device order")}
-                        >
-                          {s.order.map((device, i) => (
-                            <li
-                              key={device}
-                              className="flex shrink-0 items-center gap-2"
-                            >
-                              <span className="text-stage-muted">{i + 1}.</span>
-                              <button
-                                type="button"
-                                className="btn-ghost"
-                                disabled={i === 0}
-                                onClick={() => {
-                                  const order = [...s.order];
-                                  [order[i - 1], order[i]] = [
-                                    order[i],
-                                    order[i - 1],
-                                  ];
-                                  update({ order });
-                                }}
-                              >
-                                ← {t(device)}
-                              </button>
-                            </li>
-                          ))}
-                        </ol>
-                        {!preparationReady && (
-                          <p className="text-accent-amber" role="status">
-                            {t(
-                              "Arrange Prepare → Control → Measure before running.",
-                            )}
-                          </p>
-                        )}
-                      </section>
-                    )}
-                    {exhibitId === "delivery" ? (
-                      <CampusTape
-                        gates={s.sequence}
-                        onChange={(sequence) => update({ sequence })}
-                      />
-                    ) : preparationReady ? (
-                      <CampusCircuit request={request} />
-                    ) : null}
-                    {preparationReady && (
-                      <CircuitActions
-                        clearLabel={
-                          exhibitId === "delivery"
-                            ? "Clear circuit"
-                            : "Reset experiment"
-                        }
-                        busy={operation.busy}
-                        shots={s.shots}
-                        onRun={run}
-                        onClear={() =>
-                          update({
-                            sequence: [],
-                            inverse: false,
-                            analyzer: false,
-                            minus: false,
-                            angle: Math.PI / 2,
-                            phase: 0,
-                            disturbance: 0,
-                            pair: "independent",
-                            basis: "Z",
-                          })
-                        }
-                      />
-                    )}
-                  </div>
-                  {preparationReady && (
-                    <p className="text-sm text-stage-muted">
-                      {t(
-                        "Run executes this circuit. Editing updates only the ideal reference and clears the current result.",
-                      )}
-                    </p>
-                  )}
-                  {preparationReady && request.mode === "circuit" && (
-                    <LabStateExplorer
-                      recipe={request.recipe}
-                      step={step}
-                      setStep={setStep}
-                      showBloch
-                    />
                   )}
                   {request.mode === "dephasing" && (
                     <section className="panel p-3">
@@ -546,50 +252,166 @@ export function CampusLaptop({
                       </p>
                     </section>
                   )}
-                </div>
-              </div>
-            </fieldset>
-            {error && (
-              <p className="text-accent-amber" role="alert">
-                {t(error)}
-              </p>
-            )}
-            {operation.busy && (
-              <p role="status" aria-live="polite">
-                {t("Running circuit…")}
-              </p>
-            )}
-            {session.result && (
-              <>
-                <CircuitHistogram {...session.result} />
-                {request.mode !== "circuit" && (
-                  <p className="text-sm text-stage-muted">
-                    {t(
-                      "Ideal prediction includes the explicitly selected teaching preparation or channel, without additional device noise.",
-                    )}
-                  </p>
+                </section>
+              )}
+              {view === "assemble" && (
+                <fieldset
+                  disabled={operation.busy}
+                  className="space-y-4 min-w-0"
+                >
+                  <h3 className="text-accent-teal">
+                    {t("Experiment assembly")}
+                  </h3>
+                  <div
+                    className={`circuit-workspace campus-workspace space-y-4 ${exhibitId === "qubit" ? "campus-workspace-qubit" : ""}`}
+                  >
+                    <CampusExperimentControls
+                      id={exhibitId}
+                      settings={s}
+                      update={update}
+                    />
+                    <div
+                      className={
+                        exhibitId === "qubit"
+                          ? "campus-circuit-preview"
+                          : "contents"
+                      }
+                    >
+                      {exhibitId === "delivery" ? (
+                        <CampusTape
+                          gates={s.sequence}
+                          onChange={(sequence) => update({ sequence })}
+                        />
+                      ) : preparationReady ? (
+                        <CampusCircuit request={request} />
+                      ) : null}
+                      {preparationReady && (
+                        <CircuitActions
+                          onClear={resetExperiment}
+                          clearLabel={
+                            exhibitId === "delivery"
+                              ? "Clear circuit"
+                              : "Reset experiment"
+                          }
+                          busy={operation.busy}
+                        />
+                      )}
+                    </div>
+                  </div>
+                </fieldset>
+              )}
+              {view === "run" && (
+                <fieldset disabled={operation.busy} className="space-y-4">
+                  <h3 className="text-accent-teal">{t("Run circuit")}</h3>
+                  {preparationReady ? (
+                    <>
+                      <label className="block">
+                        {t("Shots")}
+                        <select
+                          className="ml-3 rounded border border-stage-border bg-stage-bg p-2 text-base"
+                          value={s.shots}
+                          onChange={(e) =>
+                            update({ shots: Number(e.target.value) })
+                          }
+                        >
+                          {[1, 16, 256, 1024].map((n) => (
+                            <option key={n} value={n}>
+                              {n}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <p className="text-sm text-stage-muted">
+                        {t(
+                          "Each shot starts from a fresh preparation. Increase shots to compare the measured frequencies.",
+                        )}
+                      </p>
+                      <div className="circuit-workspace campus-workspace">
+                        <CampusCircuit request={request} />
+                        <CircuitActions
+                          busy={operation.busy}
+                          shots={s.shots}
+                          onRun={run}
+                          clearLabel={
+                            exhibitId === "delivery"
+                              ? "Clear circuit"
+                              : "Reset experiment"
+                          }
+                          onClear={() => {
+                            resetExperiment();
+                            setView("assemble");
+                          }}
+                        />
+                      </div>
+                      <p className="text-sm text-stage-muted">
+                        {t(
+                          "Run executes this circuit. Editing updates only the ideal reference and clears the current result.",
+                        )}
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-accent-amber" role="status">
+                      {t("Arrange Prepare → Control → Measure before running.")}
+                    </p>
+                  )}
+                  {error && (
+                    <p className="text-accent-amber" role="alert">
+                      {t(error)}
+                    </p>
+                  )}
+                  {operation.busy && (
+                    <p role="status" aria-live="polite">
+                      {t("Running circuit…")}
+                    </p>
+                  )}
+                </fieldset>
+              )}
+              {view === "results" && (
+                <CampusExperimentResults
+                  id={exhibitId}
+                  session={session}
+                  request={request}
+                  step={step}
+                  setStep={setStep}
+                />
+              )}
+              <nav
+                className="flex flex-wrap justify-between gap-3 pt-2"
+                aria-label={t("Step navigation")}
+              >
+                {stageIndex > 0 && (
+                  <button
+                    type="button"
+                    className="btn-ghost"
+                    disabled={operation.busy}
+                    onClick={() => setView(CAMPUS_STEPS[stageIndex - 1].id)}
+                  >
+                    {t("Previous step")}
+                  </button>
                 )}
-              </>
-            )}
-            {session.runs.length > (session.result ? 1 : 0) && (
-              <details className="panel p-3">
-                <summary className="cursor-pointer text-accent-teal">
-                  {t("Compare earlier measurements")}
-                </summary>
-                <div className="mt-3 grid gap-4 md:grid-cols-2">
-                  {session.runs
-                    .slice(0, session.result ? -1 : undefined)
-                    .map((r, i) => (
-                      <section key={i}>
-                        <p className="mb-2 text-sm">
-                          {t(evidenceLabel(exhibitId, r.key))}
-                        </p>
-                        <CircuitHistogram {...r.result} />
-                      </section>
-                    ))}
-                </div>
-              </details>
-            )}
+                {view === "results" ? (
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    onClick={() => setView("assemble")}
+                  >
+                    {t("Edit experiment")}
+                  </button>
+                ) : (
+                  (view !== "assemble" || preparationReady) &&
+                  (view !== "run" || hasMeasurements) && (
+                    <button
+                      type="button"
+                      className="btn-primary ml-auto"
+                      disabled={operation.busy}
+                      onClick={() => setView(CAMPUS_STEPS[stageIndex + 1].id)}
+                    >
+                      {t("Next step")}
+                    </button>
+                  )
+                )}
+              </nav>
+            </div>
             <div className="flex flex-wrap items-center gap-3">
               <button
                 className="btn-primary"
