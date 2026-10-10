@@ -2,10 +2,10 @@ import { readFile, readdir, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-// Exact runtime closure plus one consolidated attribution file. Build reports
+// Exact runtime closure, project license, and consolidated attribution. Build reports
 // belong beside this directory, never inside the platform upload.
 export const QOLLAB_FILES = Object.freeze([
-  'index.html', 'main.js', 'main.css', 'game.js', 'assets.js', 'requirements.txt', 'THIRD-PARTY-NOTICES.txt',
+  'index.html', 'main.js', 'main.css', 'game.js', 'assets.js', 'requirements.txt', 'LICENSE', 'THIRD-PARTY-NOTICES.txt',
   'quantum/__init__.py', 'quantum/services.py', 'vendor/__init__.py', 'vendor/shor.py',
   'core/__init__.py', 'core/alphabet.py', 'core/caesar.py', 'core/rsa.py',
   'core/coin_circuit.py', 'core/register_circuit.py', 'core/game_services.py', 'core/shor_service.py',
@@ -54,6 +54,9 @@ export async function verifyQollab(dir = outputDir) {
   if (/data:(?:font|application\/(?:font|x-font))/i.test(css)) throw new Error('Qollab CSP blocks data: fonts; use HTTPS font URLs with system fallbacks');
   if (/<(?:script|html|head|body)\b/i.test(html)) throw new Error('Qollab index.html must contain body markup without script tags');
   const notices = await readFile(path.join(dir, 'THIRD-PARTY-NOTICES.txt'), 'utf8');
+  const license = await readFile(path.join(dir, 'LICENSE'), 'utf8');
+  const projectLicense = await readFile(new URL('../../LICENSE', import.meta.url), 'utf8');
+  if (license !== projectLicense) throw new Error('Qollab LICENSE must match the project MIT license');
   for (const attribution of ['Kenney', 'react', 'excalibur', 'QWARD', 'dm-sans', 'press-start-2p']) {
     if (!notices.includes(attribution)) throw new Error(`Missing attribution: ${attribution}`);
   }

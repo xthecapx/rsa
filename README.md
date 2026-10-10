@@ -1,5 +1,7 @@
 # Quantum Playground
 
+This effort is supported by Qollab & IonQ
+
 Playable quantum-computing scenarios on a road of small towns: **Who Goes
 First?** in Coin Town, **Echo Chamber** (Grover) in Foundry Town, **Operation
 Ghost Key** (Bernstein–Vazirani) in Hollow Town, and **Breaking RSA** in Cipher Town,
@@ -7,6 +9,24 @@ across plaintext, Caesar, RSA, and Shor. The optional **Quantum Campus** offers
 eight interactive foundations exhibits and a science-festival badge. See [AGENTS.md](AGENTS.md) for the current
 game structure and development context. The separate `frontend/` presentation tool retains its depth tiers
 and IBM batch readout.
+
+## Origin and hackathon work
+
+Quantum Playground began as an idea for teaching quantum computing through
+familiar classical software problems: fair choices, search, hidden information,
+and cryptography. For the hackathon, the existing game was adapted to Qollab with
+shared Python services, selected-backend measurements, and checkpoint codes. The
+adventure also gained the optional Quantum Campus and a customizable quantum lab.
+The [project description](docs/project-description.md) is ready to copy into the
+Qollab project page.
+
+## License
+
+Original project code and documentation, including `game/`, `backend/`, and
+`frontend/`, are released under the [MIT License](LICENSE). Third-party code,
+assets, and fonts retain their respective licenses and notices. The Qollab upload
+includes the project `LICENSE` and a consolidated `THIRD-PARTY-NOTICES.txt`;
+upstream license files remain in the source tree.
 
 ## Live (Cloud Run)
 
@@ -92,6 +112,15 @@ and migrations. HTTP and Qollab still use the same domain services; the shared
 request helper never retries quantum jobs automatically. See `AGENTS.md` for
 ownership boundaries and the required real-browser checks.
 
+## Extend the game
+
+Start with `game/content/` for lessons, dialogue, and town definitions, and
+`game/components/` for laptop experiments. Quantum circuits and classical tools
+belong in `backend/app/core/`, shared by FastAPI and the Qollab adapter. Update
+English and `game/i18n/es.json` together. Run the development checks and rebuild
+the Qollab folder after changing shared services; generated files are not edited
+directly. See [AGENTS.md](AGENTS.md) for progression, saves, and execution rules.
+
 ## Quantum Campus
 
 New games begin in **Coin Town**, where Mayor Cap invites players to visit
@@ -171,8 +200,8 @@ Upload the contents of `game/dist/qollab/` to the project's **Edit Code**
 file browser, preserving subdirectories and replacing matching entry files.
 Upload the complete folder: its Python modules and attribution are required along
 with `index.html`, `main.js`, and `main.css`. Keep `README.md` / the Project Card.
-The upload contains exactly 19 files: five browser files, twelve Python package
-files, `requirements.txt`, and `THIRD-PARTY-NOTICES.txt`. Recorded IBM data is
+The upload contains exactly 20 files: five browser files, twelve Python package
+files, `requirements.txt`, `LICENSE`, and `THIRD-PARTY-NOTICES.txt`. Recorded IBM data is
 bundled into `main.js`; images/audio referenced by the game live in `assets.js`.
 `requirements.txt` explicitly declares `qiskit>=2.5.2,<3.0.0` for Qollab's Python runtime.
 
@@ -183,7 +212,8 @@ It lists file sizes/hashes, included/omitted assets, and the largest JS modules.
 The esbuild production bundle removes unused code and minifies JS/CSS.
 The build refreshes the folder and report without creating a ZIP.
 To replace an older upload, remove its obsolete `recorded.js`, `build-info.json`,
-and separate license files; the current folder contains the combined attribution.
+and obsolete separate third-party license files; keep the new project `LICENSE`
+and consolidated `THIRD-PARTY-NOTICES.txt`.
 Use a fresh project file tree when possible.
 
 Choose a free **IBM noise-model simulator** for the full game. Ghost Key retains

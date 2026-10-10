@@ -616,10 +616,14 @@ Keep the generated Qollab distribution (`game/dist/qollab/` and sibling
 `build-report.json`) ignored by Git; regenerate it with `npm run build:qollab`.
 Commit the source, requirements and build tools. Tests must run without a generated
 distribution in a clean checkout. The platform folder has an
-exact 19-file allowlist in `verify-qollab.mjs`: five browser files, twelve Python
-files, explicit requirements and consolidated attribution. Keep reports out of the upload. Esbuild
+exact 20-file allowlist in `verify-qollab.mjs`: five browser files, twelve Python
+files, explicit requirements, the project MIT `LICENSE`, and consolidated
+third-party attribution. Keep reports out of the upload. Esbuild
 bundles/minifies JS and CSS, filters unused public assets conservatively, and
 bundles recorded data into main.js. Source Python remains copied unchanged.
 Preserve all dependency/asset/font/QWARD license texts in THIRD-PARTY-NOTICES.txt.
 Delivery uses the folder; do not generate or commit a ZIP. The build copies
-`game/qollab/requirements.txt` into the folder and removes any obsolete build ZIP.
+`game/qollab/requirements.txt` and the root `LICENSE` into the folder and removes
+any obsolete build ZIP. Original code and documentation use MIT; preserve all
+third-party licensing unchanged. `docs/project-description.md` contains the
+Qollab project page copy, including "This effort is supported by Qollab & IonQ".

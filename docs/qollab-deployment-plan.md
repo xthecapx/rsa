@@ -1,9 +1,9 @@
 # Quantum Playground: Qollab delivery
 
-Implemented 2026-10-05. The uploadable package is generated locally. Native
-Qiskit tests and a local browser preview have passed; execution inside Qollab's
-Pyodide sandbox still needs the owner's test. The interrupted browser upload
-was not verified, and no published version was created.
+The uploadable package is generated locally. Native Qiskit tests, game checks,
+production builds, and local browser checks have passed. The owner has reported
+successful Qollab runs; each newly uploaded release still needs a platform smoke
+test. Public publication status and the hackathon submission remain owner tasks.
 
 ## Build and upload
 
@@ -23,8 +23,9 @@ Upload the contents of `game/dist/qollab/` to
 3. Open **Run Project**, select a free **IBM noise-model simulator** (Marrakesh
    was tested natively), and run. Publish only after testing.
 
-The folder contains 19 files and is approximately 3.02 MB in total;
-all individual files pass the 2 MB limit. JavaScript entry files alone are insufficient.
+The folder contains 20 files. Its current size and file hashes are recorded in
+`game/dist/build-report.json`; every individual file must pass the 2 MB limit.
+JavaScript entry files alone are insufficient.
 
 | Files | Purpose |
 | --- | --- |
@@ -34,8 +35,15 @@ all individual files pass the 2 MB limit. JavaScript entry files alone are insuf
 | `core/` | Canonical game services, coin circuits, Shor processing, and classical helpers copied from `backend/app/core/` |
 | `vendor/` | Portable QWARD 0.28.1 Shor circuit/analysis |
 | `requirements.txt` | Explicit Qiskit version constraint for the Python runtime |
+| `LICENSE` | MIT license for original project code and documentation |
 | `THIRD-PARTY-NOTICES.txt` | Full dependency, asset, font and QWARD attribution |
 | `../build-report.json` | Review metadata; excluded from the platform upload |
+
+Original project code and documentation use MIT. Third-party materials retain
+their own licenses in the consolidated notices. Copy
+[`project-description.md`](project-description.md) into the Qollab project page,
+including the exact attribution: **This effort is supported by Qollab & IonQ**.
+See the [submission checklist](hackathon-submission-checklist.md) for owner tasks.
 
 The normal `npm run build` and Cloud Run deployment retain FastAPI/Aer. The
 Qollab target needs no hosted Python server, API URL, or provider credential.

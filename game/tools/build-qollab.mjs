@@ -114,6 +114,7 @@ await writeFile(path.join(outputDir, 'main.css'), (await transform(styled.css, {
 const assets = referencedAssets(inventory, assetPatterns);
 await writeFile(path.join(outputDir, 'assets.js'), `globalThis.quantumPlaygroundAssets = ${JSON.stringify(assets)};\n`);
 for (const name of ['index.html', 'requirements.txt']) await cp(path.join(qollab, name), path.join(outputDir, name));
+await cp(path.join(repo, 'LICENSE'), path.join(outputDir, 'LICENSE'));
 await cp(path.join(qollab, 'python'), outputDir, { recursive: true, filter: (file) => !file.includes('__pycache__') && !file.endsWith('.pyc') && !file.endsWith('.txt') });
 for (const name of ['QWARD-LICENSE.txt', 'QWARD-NOTICE.txt']) notices.push(`QWARD — ${name}\n\n${await readFile(path.join(qollab, 'python/vendor', name), 'utf8')}`);
 await cp(path.join(repo, 'backend/app/core'), path.join(outputDir, 'core'), { recursive: true, filter: (file) => !file.includes('__pycache__') && !file.endsWith('.pyc') });

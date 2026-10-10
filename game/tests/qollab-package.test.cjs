@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const path = require('node:path');
-const { mkdtemp, mkdir, writeFile, rm } = require('node:fs/promises');
+const { mkdtemp, mkdir, readFile, writeFile, rm } = require('node:fs/promises');
 const os = require('node:os');
 
 const helpers = import('../tools/qollab-package.mjs');
@@ -22,15 +22,21 @@ test('upload verifier rejects unnecessary files and escaping runtime imports', a
   const { QOLLAB_FILES, verifyQollab } = await verifier;
   const temporary = await mkdtemp(path.join(os.tmpdir(), 'qollab-package-'));
   const fixture = path.join(temporary, 'upload');
+  const license = await readFile(path.resolve(__dirname, '../../LICENSE'), 'utf8');
   try {
     // Test upload validation without requiring ignored build artifacts.
     for (const name of QOLLAB_FILES) {
       const file = path.join(fixture, name);
       await mkdir(path.dirname(file), { recursive: true });
       await writeFile(file, name === 'THIRD-PARTY-NOTICES.txt'
-        ? 'Kenney react excalibur QWARD dm-sans press-start-2p' : '');
+        ? 'Kenney react excalibur QWARD dm-sans press-start-2p' : name === 'LICENSE' ? license : '');
     }
     await verifyQollab(fixture);
+    await rm(path.join(fixture, 'LICENSE'));
+    await assert.rejects(verifyQollab(fixture), /Missing Qollab file: LICENSE/);
+    await writeFile(path.join(fixture, 'LICENSE'), 'MIT');
+    await assert.rejects(verifyQollab(fixture), /LICENSE must match/);
+    await writeFile(path.join(fixture, 'LICENSE'), license);
     await rm(path.join(fixture, 'requirements.txt'));
     await assert.rejects(verifyQollab(fixture), /Missing Qollab file: requirements.txt/);
     await writeFile(path.join(fixture, 'requirements.txt'), 'qiskit>=2.5.2,<3.0.0\n');
