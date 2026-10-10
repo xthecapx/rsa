@@ -1,4 +1,4 @@
-# Quantum Playground: Qollab delivery
+# qWard: A Quantum Computing Adventure: Qollab delivery
 
 The uploadable package is generated locally. Native Qiskit tests, game checks,
 production builds, and local browser checks have passed. The owner has reported
@@ -15,7 +15,7 @@ npm run verify:qollab
 ```
 
 Upload the contents of `game/dist/qollab/` to
-[Quantum Playground](https://qollab.xyz/u/xthecapx/quantum-playground#code):
+[qWard: A Quantum Computing Adventure](https://qollab.xyz/u/xthecapx/quantum-playground#code):
 
 1. Open **Edit Code**, then upload the generated folder's contents.
 2. Replace matching starter files and preserve all subdirectories.

@@ -6,6 +6,7 @@ import clsx from "clsx";
 import { LanguageSwitch } from "./LanguageSwitch";
 
 import { gameAudio, useAudio } from "@/game/audio";
+import { GAME_NAME, GAME_SUBTITLE } from "@/content/branding";
 
 type Phase = "loading" | "ready" | "leaving" | "gone";
 
@@ -72,12 +73,12 @@ export function SplashScreen() {
   return (
     <div
       className={clsx(
-        "fixed inset-0 z-[100] flex flex-col items-center justify-center overflow-hidden bg-stage-bg transition-opacity duration-500",
+        "fixed inset-0 z-[100] flex flex-col items-center overflow-y-auto bg-stage-bg py-6 transition-opacity duration-500",
         phase === "leaving" && "pointer-events-none opacity-0",
       )}
       role="dialog"
       aria-modal="true"
-      aria-label={t("Loading Quantum Playground")}
+      aria-label={t("Loading qWard")}
     >
       <div
         aria-hidden
@@ -90,7 +91,7 @@ export function SplashScreen() {
       <div aria-hidden className="scanline pointer-events-none absolute inset-0 opacity-40" />
 
       <div className="absolute right-5 top-5 z-20"><LanguageSwitch /></div>
-      <div className="relative z-10 flex w-full max-w-lg flex-col items-center px-6 text-center">
+      <div className="game-splash-content relative z-10 my-auto flex w-full max-w-lg shrink-0 flex-col items-center px-6 text-center">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/icons/icon-192.png"
@@ -102,7 +103,8 @@ export function SplashScreen() {
         />
 
         <p className="mt-6 text-[9px] uppercase tracking-[0.4em] text-accent-teal">{t("Learn by playing")}</p>
-        <h1 className="mt-3 text-base leading-relaxed text-accent-amber sm:text-xl">{t("Quantum Playground")}</h1>
+        <h1 className="mt-3 text-2xl leading-relaxed text-accent-amber sm:text-3xl">{GAME_NAME}</h1>
+        <p className="mt-2 text-xs leading-relaxed text-accent-teal sm:text-sm">{t(GAME_SUBTITLE)}</p>
 
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img

@@ -1,4 +1,4 @@
-# Quantum Playground
+# qWard: A Quantum Computing Adventure
 
 This effort is supported by Qollab & IonQ
 
@@ -12,13 +12,16 @@ and IBM batch readout.
 
 ## Origin and hackathon work
 
-Quantum Playground began as an idea for teaching quantum computing through
+qWard: A Quantum Computing Adventure began as an idea for teaching quantum computing through
 familiar classical software problems: fair choices, search, hidden information,
 and cryptography. For the hackathon, the existing game was adapted to Qollab with
 shared Python services, selected-backend measurements, and checkpoint codes. The
 adventure also gained the optional Quantum Campus and a customizable quantum lab.
+The game shares its name with [qWard](https://pypi.org/project/qiskit-qward/), the
+quantum-circuit analysis library developed as part of the author's PhD research.
 The [project description](docs/project-description.md) is ready to copy into the
-Qollab project page.
+Qollab project page. Use the [demo pitch](docs/demo-pitch.md) to practice a
+2–3 minute screen-sharing presentation for the Quantum Unlocked category.
 
 ## License
 

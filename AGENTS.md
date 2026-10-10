@@ -1,4 +1,4 @@
-# Quantum Playground: development context
+# qWard: A Quantum Computing Adventure: development context
 
 This file describes the implemented game and the conventions to preserve when
 changing it. Use the code as the source of truth for exact behavior. Keep this
@@ -455,7 +455,10 @@ and padlocks as metaphors while explaining the quantum idea. Name actual badge
 requirements. Spanish uses broadly understood Latin American phrasing and informal
 singular instructions ("prepara", "arrastra", "mide"); translate idioms by meaning.
 Keep the town names in the table exactly, including **Pueblo cuántico**, and retain
-**Quantum Playground** as the game name.
+**qWard** as the brand, with **A Quantum Computing Adventure** as the English
+subtitle (Spanish: **Una aventura de computación cuántica**). Display names live
+in `game/content/branding.ts`. Preserve legacy storage keys, runtime identifiers,
+and the existing Qollab URL when changing branding.
 
 | English | Spanish |
 | --- | --- |

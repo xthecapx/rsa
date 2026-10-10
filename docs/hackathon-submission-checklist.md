@@ -1,4 +1,4 @@
-# Quantum Playground: hackathon submission checklist
+# qWard: A Quantum Computing Adventure: hackathon submission checklist
 
 Based on the rules supplied by the project owner. This is a preparation checklist,
 not confirmation that the submission is published or eligible. The previous build
@@ -6,7 +6,7 @@ checks validate runtime packaging, not the hackathon's licensing requirements.
 
 ## 1. License and attribution — before submission
 
-Licensing decision: Quantum Playground's original code and documentation use
+Licensing decision: qWard: A Quantum Computing Adventure's original code and documentation use
 MIT. Third-party code, assets, and fonts keep their existing licenses and
 notices; no third-party licensing changes are planned.
 
@@ -60,7 +60,7 @@ Keep the adventure pitch and one phrase per town. Add short sections that cover:
 
 Origin wording reference:
 
-> Quantum Playground grew from my idea for an adventure game that teaches quantum
+> qWard: A Quantum Computing Adventure grew from my idea for an adventure game that teaches quantum
 > computing through familiar problems from classical software development. Players
 > explore those problems, build quantum circuits, and compare what happens when
 > they run them on ideal, noisy, or physical quantum backends.

@@ -1,6 +1,7 @@
 "use client";
 
 import { t, useLocale } from "@/i18n";
+import { GAME_NAME, GAME_SUBTITLE } from "@/content/branding";
 
 /** The same scene-ready screen for every renderer; no simulated percentages. */
 export function SceneLoading({ failed = false }: { failed?: boolean }) {
@@ -10,7 +11,8 @@ export function SceneLoading({ failed = false }: { failed?: boolean }) {
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src="/icons/icon-192.png" alt="" width={72} height={72} className="pixelated mb-5" />
       <p className="text-xs uppercase tracking-widest text-accent-teal">{t("Learn by playing")}</p>
-      <h2 className="mt-2 text-xl font-bold text-accent-amber">{t("Quantum Playground")}</h2>
+      <h2 className="mt-2 text-xl font-bold text-accent-amber">{GAME_NAME}</h2>
+      <p className="mt-2 text-xs leading-relaxed text-accent-teal">{t(GAME_SUBTITLE)}</p>
       <p className="mt-4 text-sm leading-relaxed text-stage-muted">{t(failed ? "The scene could not load. Please try again." : "Preparing the scene…")}</p>
       {failed ? <button className="btn-primary mt-5 text-sm" onClick={() => window.location.reload()}>{t("Try again")}</button>
         : <div aria-hidden="true" className="mt-5 h-2 w-48 overflow-hidden rounded bg-stage-surface"><div className="h-full w-full animate-pulse bg-accent-amber/70 motion-reduce:animate-none" /></div>}

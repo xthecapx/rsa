@@ -1,9 +1,10 @@
 import type { MetadataRoute } from "next";
+import { GAME_NAME, GAME_TITLE } from "@/content/branding";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Quantum Playground",
-    short_name: "Quantum Play",
+    name: GAME_TITLE,
+    short_name: GAME_NAME,
     description:
       "Learn quantum computing through playable stories, from a quantum coin to breaking toy RSA.",
     start_url: "/",

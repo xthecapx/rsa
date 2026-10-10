@@ -1,4 +1,4 @@
-# Quantum Playground
+# qWard: A Quantum Computing Adventure
 
 **Your next adventure starts with a coin toss.**
 
@@ -7,9 +7,12 @@ problems. A coin toss leads to quantum searches, ghostly secrets, and a cryptogr
 
 ## The idea behind the adventure
 
-Quantum Playground grew from my idea to teach quantum computing through familiar
+qWard: A Quantum Computing Adventure grew from my idea to teach quantum computing through familiar
 classical software problems: fair choices, searching, hidden information, and
 cryptography. What changes when we try quantum circuits?
+
+The name connects the adventure to [qWard](https://pypi.org/project/qiskit-qward/),
+the quantum-circuit analysis library I’m developing as part of my PhD research.
 
 For this hackathon, I adapted the existing game to Qollab with shared Python
 services, selected-backend measurements, and checkpoint codes, and added an
@@ -36,11 +39,16 @@ Experiment freely with gates, X/Y/Z rotations, Bloch spheres, and algorithm boxe
 - **Experiments:** Press Run for actual measurements; compare histograms with ideal references.
 - **Checkpoints:** Keep your Save progress code before restarting or changing backends. It restores milestones.
 
-On Qollab, select an **IBM noise-model simulator**, press **Run**, then enter the
-game. No separate server or API keys are needed. Ghost Key needs 26 qubits; the
-Shor demonstration uses N=15, not production-size RSA. IonQ remote simulators and
-physical QPUs use local practice, reserving one remote job per Qollab code run for
-a final challenge or lab experiment.
+On Qollab, choose your preferred backend, press **Run**, then enter the game.
+No separate server or API keys are needed. **Ghost Key requires at least 26 qubits**
+(25 data qubits plus one helper); smaller backends cannot run that challenge.
+The Shor demonstration uses N=15, not production-size RSA.
+
+**IonQ limit:** Qollab allows one remote execution per game run. Practice runs
+locally; the IonQ execution is reserved for a final challenge or lab experiment.
+To submit another remote circuit, keep your Save progress code, then **Stop and
+Run the project in Qollab to reload the game** and restore your milestones.
+Physical QPUs follow the same one-remote-job policy.
 
 **Play in English or Spanish.**
 

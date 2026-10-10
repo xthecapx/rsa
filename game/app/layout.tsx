@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { GAME_NAME, GAME_TITLE } from "@/content/branding";
 import { Press_Start_2P, DM_Sans } from "next/font/google";
 
 import { PwaBootstrap } from "@/components/PwaBootstrap";
@@ -21,14 +22,14 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Quantum Playground",
+  title: GAME_TITLE,
   description:
     "Learn quantum computing through playable stories, from your first quantum coin to breaking toy RSA.",
-  applicationName: "Quantum Playground",
+  applicationName: GAME_TITLE,
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Quantum Playground",
+    title: GAME_NAME,
   },
   formatDetection: {
     telephone: false,

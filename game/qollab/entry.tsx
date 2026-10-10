@@ -41,7 +41,7 @@ function BrowserWorld() {
 export function mountGame(bridge: RuntimeBridge): () => void {
   if (root) root.unmount();
   const host = document.getElementById("quantum-playground");
-  if (!host) throw new Error("Missing Quantum Playground mount element");
+  if (!host) throw new Error("Missing qWard mount element");
   setServiceTransport(bridge.request);
   Object.assign(runtimeInfo, { target: "qollab", backend: bridge.backend, kind: bridge.kind, remoteFinalOnly: bridge.remoteFinalOnly ?? false });
   document.documentElement.dataset.boot = "1";

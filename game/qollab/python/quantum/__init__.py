@@ -1,1 +1,1 @@
-"""Browser services for Quantum Playground; no web server or credentials."""
+"""Browser services for qWard: A Quantum Computing Adventure; no server or credentials."""

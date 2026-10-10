@@ -991,3 +991,9 @@ button.campus-evidence-card { min-height:44px; }
 .cipher-tile-workspace.has-actions { padding-bottom:76px; }
 .cipher-pipeline-workspace.has-actions { padding-bottom:80px; }
 .shor-counts { max-height:28rem; overflow:auto; padding:4px; }
+/* Keep the entry action visible on short landscape screens, with scrolling as a fallback. */
+@media (max-height: 500px) {
+  .game-splash-content > img { display: none; }
+  .game-splash-content > * { margin-top: 0.5rem; }
+  .game-splash-content > h1 { font-size: 1.25rem; }
+}
