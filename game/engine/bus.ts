@@ -26,7 +26,7 @@ export type EngineCommand =
   | { type: "track"; target: TownTarget | "car" | "tap" | "ale" | "brayan" | null }
   /** Smaller towns built on WorldScene: beacon over a place, "!" over neighbors with something to teach, ★ on finished doors. */
   | { type: "worldTrack"; target: string | null }
-  | { type: "worldMarkers"; alerts: string[]; done: string[] }
+  | { type: "worldMarkers"; alerts: string[]; done: string[]; working?: string[]; ready?: string[] }
   | { type: "worldGate"; id: string; open: boolean };
 
 export type BubbleKind = "none" | "question" | "alert" | "success";

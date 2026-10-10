@@ -9,6 +9,7 @@ import {
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { CampusLaptop } from "@/components/CampusLaptop";
+import { useCampusInteraction } from "@/components/useCampusInteraction";
 import { useCampus } from "@/game/campus";
 import { useGame } from "@/game/state";
 import { useProgress } from "@/game/progress";
@@ -172,9 +173,10 @@ it("clearing an empty tape and deleting individual gates leaves every slot usabl
   expect(useCampus.getState().sessions.delivery?.evidence).toEqual([
     "delivery",
   ]);
-  fireEvent.click(screen.getByRole("button", { name: "H X |0⟩" }));
-  fireEvent.click(screen.getByRole("button", { name: "Collect discovery" }));
-  expect(useCampus.getState().completed).toEqual(["delivery"]);
+  expect(
+    screen.queryByRole("button", { name: "Collect discovery" }),
+  ).toBeNull();
+  expect(useCampus.getState().completed).toEqual([]);
 });
 it("busy runs prevent duplicate requests, edits, close and checkpoint restore; stale results are ignored", async () => {
   let finish!: (value: Response) => void;
@@ -198,45 +200,148 @@ it("busy runs prevent duplicate requests, edits, close and checkpoint restore; s
   expect(useGame.getState().operations).toBe(0);
   expect(useCampus.getState().sessions.quiet?.result).toBeFalsy();
 });
-it("the direct festival requires three explicit experiments and grants only its optional badge", async () => {
-  const transport = vi.fn(async (_path: string, _init?: RequestInit) =>
-    Response.json(counts),
+function CampusVisit({ host = "festival" }: { host?: string }) {
+  const interaction = useCampusInteraction();
+  return (
+    <>
+      <button
+        disabled={interaction.locked}
+        onClick={() => interaction.interact(host)}
+      >
+        Talk
+      </button>
+      {interaction.layer}
+    </>
   );
+}
+function choose(name: string) {
+  fireEvent.click(screen.getByRole("button", { name }));
+}
+function beginVisit() {
+  choose("Talk");
+  choose("Let’s investigate");
+  choose("I’m not sure; let’s test it");
+  choose("Open the experiment");
+}
+it("the direct festival requires three explicit experiments, visitor discussions and applied repairs", async () => {
+  const transport = vi.fn(async () => Response.json(counts));
   setServiceTransport(transport);
-  render(<CampusLaptop initial="festival" onClose={vi.fn()} />);
+  render(<CampusVisit />);
+  beginVisit();
   expect(transport).not.toHaveBeenCalled();
   place("H", 1);
   place("H", 2);
   await act(async () => fireEvent.click(run()));
-  fireEvent.click(
-    screen.getByRole("button", {
-      name: "Interference cancels the 1 amplitude",
-    }),
-  );
-  fireEvent.click(screen.getByRole("button", { name: "Next repair" }));
-  fireEvent.click(screen.getByRole("button", { name: "Bell pair" }));
+  choose("Return to host");
+  choose("Interference cancels the 1 amplitude");
+  choose("Describe the experiment and what its evidence supports");
+  choose("Finish this repair");
+  choose("Open the experiment");
+  choose("Bell pair");
   const bases = screen.getByRole("group", { name: "Both measurement bases" });
   fireEvent.click(within(bases).getByRole("button", { name: "X" }));
   await act(async () => fireEvent.click(run()));
-  fireEvent.click(
-    screen.getByRole("button", {
-      name: "No; compare measurement settings and models",
-    }),
-  );
-  fireEvent.click(screen.getByRole("button", { name: "Next repair" }));
-  fireEvent.click(screen.getByRole("button", { name: "0%" }));
+  choose("Return to host");
+  choose("No; compare measurement settings and models");
+  choose("Describe the experiment and what its evidence supports");
+  choose("Finish this repair");
+  choose("Open the experiment");
+  choose("0%");
   fireEvent.click(screen.getByLabelText("Add the H measurement lens"));
   await act(async () => fireEvent.click(run()));
-  fireEvent.click(
-    screen.getByRole("button", { name: "No; more shots improve an estimate" }),
-  );
-  await act(async () =>
-    fireEvent.click(screen.getByRole("button", { name: "Open the Festival" })),
-  );
+  choose("Return to host");
+  choose("No; more shots improve an estimate");
+  choose("Describe the experiment and what its evidence supports");
+  await act(async () => choose("Open the Festival"));
   expect(transport).toHaveBeenCalledTimes(3);
   expect(useCampus.getState().completed).toEqual([]);
   expect(useProgress.getState().completed).toEqual({ campus: ["festival"] });
   expect(Object.keys(useMedals.getState().earned)).toEqual([
     "quantum-explorer",
   ]);
+});
+it("Marisol remembers a wrong prediction, discusses real evidence and resumes an applied response in Spanish", async () => {
+  const transport = vi.fn(async () => Response.json(counts));
+  setServiceTransport(transport);
+  let view = render(<CampusVisit host="fountain" />);
+  choose("Talk");
+  expect(transport).not.toHaveBeenCalled();
+  expect(screen.queryByRole("button", { name: /^Run circuit/ })).toBeNull();
+  choose("Let’s investigate");
+  choose("I expect different probabilities");
+  choose("Open the experiment");
+  await act(async () => fireEvent.click(run()));
+  fireEvent.click(screen.getByLabelText("Paint a relative minus with Z"));
+  await act(async () => fireEvent.click(run()));
+  choose("Return to host");
+  expect(
+    screen.getByText("Your prediction: I expect different probabilities"),
+  ).toBeTruthy();
+  expect(screen.getAllByText("0: 120 · 1: 136")).toHaveLength(2);
+  choose("Collect more of the same Z samples");
+  expect(screen.getByText(/More Z shots estimate/)).toBeTruthy();
+  expect(transport).toHaveBeenCalledTimes(2);
+  choose("Use the H measurement lens");
+  choose("Open the experiment");
+  fireEvent.click(screen.getByLabelText("Add the H measurement lens"));
+  await act(async () => fireEvent.click(run()));
+  fireEvent.click(screen.getByLabelText("Paint a relative minus with Z"));
+  await act(async () => fireEvent.click(run()));
+  choose("Return to host");
+  fireEvent.click(screen.getByRole("button", { name: /Plus state · H lens/ }));
+  fireEvent.click(screen.getByRole("button", { name: /Minus state · H lens/ }));
+  choose("Relative phase changes interference");
+  view.unmount();
+  await act(async () => useCampus.persist.rehydrate());
+  act(() => useLocale.setState({ locale: "es" }));
+  view = render(<CampusVisit host="fountain" />);
+  choose("Talk");
+  expect(
+    screen.getByText("Elige la explicación para colocar junto a la fuente."),
+  ).toBeTruthy();
+  choose(
+    "Las mismas probabilidades en una base pueden ocultar fases distintas",
+  );
+  choose("Ponerlo en práctica");
+  expect(useCampus.getState().completed).toEqual(["fountain"]);
+  expect(transport).toHaveBeenCalledTimes(4);
+  choose("Experimentar libremente");
+  choose("Close");
+  expect(screen.queryByRole("dialog")).toBeNull();
+  expect(transport).toHaveBeenCalledTimes(4);
+});
+it("closing without an execution offers resume, while notebook navigation never debriefs a different host", async () => {
+  const transport = vi.fn(async () => Response.json(counts));
+  setServiceTransport(transport);
+  render(<CampusVisit host="fountain" />);
+  beginVisit();
+  choose("Return to host");
+  expect(
+    screen.getByRole("button", { name: "Open the experiment" }),
+  ).toBeTruthy();
+  choose("Later");
+  choose("Talk");
+  choose("Open the experiment");
+  choose("Campus field notebook");
+  choose("Close");
+  expect(screen.queryByRole("dialog")).toBeNull();
+  expect(useCampus.getState().sessions.fountain?.journey.phase).toBe(
+    "investigate",
+  );
+  expect(transport).not.toHaveBeenCalled();
+});
+it("reset invalidates an in-flight campus experiment even if its laptop owner remains mounted", async () => {
+  let finish!: (value: Response) => void;
+  setServiceTransport(
+    () =>
+      new Promise<Response>((resolve) => {
+        finish = resolve;
+      }),
+  );
+  render(<CampusLaptop initial="fountain" onClose={vi.fn()} />);
+  fireEvent.click(run());
+  act(() => useCampus.getState().reset());
+  await act(async () => finish(Response.json(counts)));
+  expect(useCampus.getState().sessions.fountain).toBeUndefined();
+  expect(useGame.getState().operations).toBe(0);
 });

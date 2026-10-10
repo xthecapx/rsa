@@ -97,6 +97,13 @@ Help students prepare a science festival through eight open exhibits:
 | Quiet room | Introduce environmental dephasing and inspect lost interference. |
 | Reversible machine shop | Explore X/Y/Z rotations and undo them with an inverse. |
 
+Talk to each host to hear their problem, make a prediction, and choose an
+experiment. Close the laptop to discuss your actual measurements, then help with
+a practical repair: match passports, label drawers, fix instructions, advise a
+visitor, or set an inverse rotation. Wrong predictions and answers lead to clues;
+valid measurements remain available without repeating a run. Finished hosts
+welcome free experimentation. The guide can suggest a topic or unfinished visit.
+
 Use **Play**, **Explain**, or **Show the math** at any time. **Open the Festival**
 is a separate three-repair activity that can be attempted directly. Its
 **Quantum Explorer** badge never unlocks or blocks a town or lab equipment.
@@ -117,8 +124,11 @@ Only data qubits are measured. The observatory’s envelopes model likewise uses
 a dephased Bell preparation; comparing its Z/X distributions with a Bell pair
 does not constitute general certification of entanglement.
 
-Browser saves retain unfinished campus settings, explanations, returned results,
-up to six recent measurements per exhibit, discoveries and festival progress.
+Browser saves retain unfinished conversations, predictions, application drafts,
+settings, explanations, returned results, up to six recent measurements per exhibit,
+pinned investigation comparisons, discoveries and festival progress. Older earned
+discoveries and valid results are retained. Short checkpoint codes restore milestones,
+not these exact conversations or experiments.
 Refresh or reopening never resubmits work. When storage is blocked or the runtime
 restarts, use **Save progress**: `qc1` restores campus arrival, `qc2` restores all
 eight discoveries, and `qc3` restores the orientation and festival badge preset.

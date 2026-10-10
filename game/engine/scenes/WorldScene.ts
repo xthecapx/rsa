@@ -7,7 +7,7 @@ import { COIN_TOWN_ANIMALS, COIN_TOWN_DOOR, COIN_TOWN_EAST_SIGN, COIN_TOWN_NORTH
 import { FOUNDRY_ANIMALS, FOUNDRY_BELT, FOUNDRY_DOOR, FOUNDRY_NPCS, FOUNDRY_PROPS, FOUNDRY_SMOKE, FOUNDRY_SPAWN } from "@/content/foundry";
 import { HOLLOW_ANIMALS, HOLLOW_DOOR, HOLLOW_FOG, HOLLOW_NPCS, HOLLOW_PROPS, HOLLOW_SPAWN } from "@/content/hollow";
 import { CIPHER_ANIMALS, CIPHER_BOARD, CIPHER_NORTH_GATE_ROW, CIPHER_NORTH_ROAD, CIPHER_NPCS, CIPHER_PROPS, CIPHER_SPAWN } from "@/content/cipher";
-import { CAMPUS_NPCS, CAMPUS_PROPS, CAMPUS_SPAWN, CAMPUS_FESTIVAL, CAMPUS_NOTEBOOK } from "@/content/campus";
+import { CAMPUS_EXHIBITS, CAMPUS_NPCS, CAMPUS_PROPS, CAMPUS_SPAWN, CAMPUS_FESTIVAL, CAMPUS_NOTEBOOK } from "@/content/campus";
 import { campusMap } from "../maps/campusMap";
 import { LAB_ENTRANCES, type LabTown } from "@/content/labEntrances";
 import { LabEntrance } from "../actors/LabEntrance";
@@ -33,6 +33,8 @@ import { findRoute, walkable, type WorldGrid } from "../maps/grid";
 
 /** Everything a small town needs: terrain, where people stand and which doors open. */
 export interface WorldDef {
+  /** Decorative completion displays on solid pavilion walls; never affect paths. */
+  progressDecor?: { id: string; at: GridPos; sprite: PropSprite }[];
   map: { width: number; height: number; rows: string[]; overlay: string[]; legend: Record<string, { tile: number; solid: boolean }>; overlayLegend: Record<string, { tile: number; solid: boolean } | null> };
   spawn: GridPos;
   labTown: LabTown;
@@ -97,6 +99,9 @@ export class WorldScene extends Scene {
   private grid: WorldGrid;
   private player!: Character;
   private signs: { actor: TownSign; id: string; text: string; done: boolean; alert: boolean }[] = [];
+  private working: string[] = [];
+  private discussions: string[] = [];
+  private progressDecor = new Map<string, Actor>();
   private beacon!: Actor;
   private tracked: GridPos | null = null;
   private inputLocked = true;
@@ -188,6 +193,14 @@ export class WorldScene extends Scene {
       actor.graphics.use(propImages[prop.sprite].toSprite());
       this.add(actor);
     }
+    for (const prop of this.def.progressDecor ?? []) {
+      const at = tileCenter(prop.at);
+      const actor = new Actor({ pos: vec(at.x, at.y), z: 4 });
+      actor.graphics.use(propImages[prop.sprite].toSprite());
+      actor.graphics.visible = false;
+      this.add(actor);
+      this.progressDecor.set(prop.id, actor);
+    }
     if (this.def.belt) {
       const { from, to, y } = this.def.belt;
       for (let x = from; x <= to; x += CRATE_GAP) {
@@ -262,7 +275,7 @@ export class WorldScene extends Scene {
     const locale = useLocale.getState().locale;
     if (locale !== this.locale) {
       this.locale = locale;
-      for (const sign of this.signs) sign.actor.setCaption(`${sign.alert ? "! " : sign.done ? "★ " : ""}${t(sign.text)}`, sign.done && !sign.alert);
+      for (const sign of this.signs) sign.actor.setCaption(`${sign.done ? "★ " : this.discussions.includes(sign.id) ? "? " : this.working.includes(sign.id) ? "… " : sign.alert ? "! " : ""}${t(sign.text)}`, sign.done && !sign.alert);
       for (const gate of this.gates.values()) if (gate.sign && gate.lock) gate.sign.setCaption(`${t("Locked")} · ${t(gate.lock)}`, false, true);
     }
     if (!this.player.isMoving) {
@@ -466,6 +479,9 @@ export class WorldScene extends Scene {
         return;
       case "worldMarkers":
         for (const sign of this.signs) { sign.done = command.done.includes(sign.id); sign.alert = command.alerts.includes(sign.id); }
+        this.working = command.working ?? [];
+        this.discussions = command.ready ?? [];
+        for (const [id, actor] of this.progressDecor) actor.graphics.visible = command.done.includes(id);
         this.locale = "";
         return;
       case "worldGate": {
@@ -549,6 +565,8 @@ export const CAMPUS_WORLD: WorldDef = {
   doors: [{ id: "labDoor", ...LAB_ENTRANCES.campus, label: "Personal quantum lab" },
     { ...CAMPUS_FESTIVAL, label: CAMPUS_FESTIVAL.title }, { ...CAMPUS_NOTEBOOK, label: CAMPUS_NOTEBOOK.title }],
   props: CAMPUS_PROPS,
+  progressDecor: CAMPUS_EXHIBITS.map((e, i) => ({ id: e.id, at: { x: e.at.x + 1, y: e.at.y - 1 },
+    sprite: (["crt", "board", "reel", "neon", "dish", "vending", "lantern", "press-base"] as const)[i] })),
   animals: [{ kind: "cat", home: { x: 12, y: 30 }, radius: 3 }],
 };
 export class CampusScene extends WorldScene { constructor() { super(CAMPUS_WORLD); } }

@@ -3,15 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { CAMPUS_EXHIBITS, type CampusActivityId } from "@/content/campus";
 import { CampusVisual } from "./CampusVisual";
 import { useCampus, campusSession } from "@/game/campus";
-import {
-  campusRequest,
-  campusReady,
-  CAMPUS_EVIDENCE,
-  type CampusSettings,
-} from "@/game/campusExperiment";
+import { campusRequest, type CampusSettings } from "@/game/campusExperiment";
 import { useGame } from "@/game/state";
-import { useProgress } from "@/game/progress";
-import { useMedals } from "@/game/medals";
 import { runCampus } from "@/lib/campus";
 import { t, useLocale } from "@/i18n";
 import { useAsyncOperation } from "./useAsyncOperation";
@@ -21,16 +14,19 @@ import { CircuitHistogram } from "./CircuitHistogram";
 import { AngleDial } from "./AngleDial";
 import { LabStateExplorer } from "./LabStateExplorer";
 import { CampusNotebook } from "./CampusNotebook";
-import { MedalReveal } from "./MedalCase";
 import { CampusTape, CampusCircuit } from "./CampusCircuit";
 import { CheckpointControl } from "./CheckpointControl";
+import { CAMPUS_STORIES } from "@/content/campusStories";
+import { evidenceLabel, festivalDesign } from "@/game/campusJourney";
 
 export function CampusLaptop({
   initial,
   onClose,
+  investigation,
 }: {
   initial: CampusActivityId | "notebook";
-  onClose: () => void;
+  onClose: (selected: CampusActivityId | "notebook") => void;
+  investigation?: string;
 }) {
   useLocale((s) => s.locale);
   const [selected, setSelected] = useState(initial);
@@ -61,46 +57,13 @@ export function CampusLaptop({
   useEffect(() => {
     if (selected !== "notebook") useCampus.getState().open(selected);
   }, [selected]);
-  const badge = useMedals((state) => !!state.earned["quantum-explorer"]);
   function update(patch: Partial<CampusSettings>) {
     if (operation.running.current) return;
     store.update(id, { settings: { ...s, ...patch }, result: null });
     setError(null);
     setStep(null);
   }
-  const festivalQuestions = [
-    "What makes H followed by H return to zero ideally?",
-    "Do matching readings in one basis prove entanglement?",
-    "Can extra shots repair decoherence?",
-  ];
-  const festivalOptions = [
-    [
-      "Interference cancels the 1 amplitude",
-      "The qubit remembers its last measurement",
-      "Every pair of gates is an inverse",
-    ],
-    [
-      "Yes, any matching pair is entangled",
-      "No; compare measurement settings and models",
-      "Yes, if the counts are exactly equal",
-    ],
-    [
-      "Yes, a larger batch restores phase",
-      "No; more shots improve an estimate",
-      "Yes, measuring the qubit resets its old state",
-    ],
-  ];
-  const correct =
-    session.answer === (festival ? (phase === 0 ? 0 : 1) : exhibit.answer);
-  const design =
-    phase === 0
-      ? s.sequence.join() === "H,H"
-      : phase === 1
-        ? s.pair === "bell" && s.basis === "X"
-        : s.disturbance === 0 && s.analyzer;
-  const ready = festival
-    ? session.evidence.includes(`repair${phase}`) && correct && design
-    : campusReady(id, session.evidence, correct);
+  const design = festivalDesign(phase, s);
   const completed = store.completed.includes(exhibit.id);
   function run() {
     if (operation.running.current) return;
@@ -109,7 +72,9 @@ export function CampusLaptop({
       return;
     }
     const snapshot = { ...s };
+    const generation = useCampus.getState().generation;
     void operation.run(() => runCampus(request), {
+      isCurrent: () => generation === useCampus.getState().generation,
       start: () => {
         setError(null);
         useGame.getState().changeOperations(1);
@@ -160,13 +125,10 @@ export function CampusLaptop({
       : festival
         ? "Open the Festival"
         : exhibit.title;
-  const goal = festival
-    ? [
-        "Repair 1: build H → H and explain interference.",
-        "Repair 2: prepare a Bell pair and measure both wires in X.",
-        "Repair 3: protect coherence with 0% disturbance and the H lens.",
-      ][phase]
-    : exhibit.goal;
+  const goal =
+    investigation && selected === initial
+      ? investigation
+      : CAMPUS_STORIES[id].investigations[festival ? phase : 0].question;
   const switchActivity = (next: CampusActivityId | "notebook") => {
     if (operation.running.current) return;
     setSelected(next);
@@ -189,7 +151,7 @@ export function CampusLaptop({
       }
       closeDisabled={operation.busy}
       onClose={() => {
-        if (!operation.running.current) onClose();
+        if (!operation.running.current) onClose(selected);
       }}
       status={
         selected === "notebook"
@@ -234,13 +196,17 @@ export function CampusLaptop({
               </span>
               <div>
                 <h3 className="text-lg text-accent-amber">{t(title)}</h3>
-                <p className="mt-2">
-                  {t(
-                    festival
-                      ? "Three repairs, no prerequisites. Build each experiment, run it and answer a visitor. No perfect noisy counts are required."
-                      : exhibit.brief,
-                  )}
-                </p>
+                {!(investigation && selected === initial) && (
+                  <p className="mt-2">
+                    {t(
+                      festival
+                        ? "Three repairs, no prerequisites. Build each experiment, run it and answer a visitor. No perfect noisy counts are required."
+                        : investigation && selected === initial
+                          ? investigation
+                          : exhibit.brief,
+                    )}
+                  </p>
+                )}
               </div>
             </section>
             <nav
@@ -593,107 +559,32 @@ export function CampusLaptop({
                 </div>
               </details>
             )}
-            <section className="panel space-y-3 p-4">
-              <h3 className="text-accent-amber">{t("A visitor asks")}</h3>
-              <p>{t(festival ? festivalQuestions[phase] : exhibit.question)}</p>
-              <div className="grid gap-2">
-                {(festival ? festivalOptions[phase] : exhibit.options).map(
-                  (option, answer) => (
-                    <button
-                      key={option}
-                      disabled={operation.busy}
-                      className="btn-ghost text-left"
-                      aria-pressed={session.answer === answer}
-                      onClick={() => store.update(id, { answer })}
-                    >
-                      {t(option)}
-                    </button>
-                  ),
-                )}
-              </div>
-              {session.answer !== null && (
-                <p role="status" className="text-sm text-accent-teal">
-                  {t(
-                    correct
-                      ? "Good explanation. Compare the required experiments before collecting your discovery."
-                      : "Try again. Open Explain or Show the math, then test your prediction.",
-                  )}
-                </p>
-              )}
-            </section>
             <div className="flex flex-wrap items-center gap-3">
-              <p className="text-sm text-stage-muted">
-                {t("Experiments compared")} {session.evidence.length}/
-                {CAMPUS_EVIDENCE[id].length}
-              </p>
               <button
                 className="btn-primary"
-                disabled={!ready || operation.busy}
-                onClick={() => {
-                  if (festival) {
-                    if (phase === 2) {
-                      useProgress.getState().complete("campus", "festival");
-                      store.update(id, { stage: 3 });
-                    } else {
-                      store.update(id, {
-                        stage: phase + 1,
-                        answer: null,
-                        result: null,
-                        settings: {
-                          ...s,
-                          pair: "independent",
-                          basis: "Z",
-                          disturbance: 1,
-                          analyzer: false,
-                        },
-                      });
-                      setError(null);
-                    }
-                  } else store.complete(exhibit.id);
-                }}
+                disabled={operation.busy}
+                onClick={() => onClose(selected)}
               >
                 {t(
-                  festival
-                    ? phase === 2
-                      ? "Open the Festival"
-                      : "Next repair"
-                    : completed
-                      ? "Discovery collected"
-                      : "Collect discovery",
+                  investigation && selected === initial
+                    ? "Return to host"
+                    : "Close laptop",
                 )}
               </button>
+              <p className="text-sm text-stage-muted">
+                {t(
+                  "Your measurements stay saved. Discuss them with the host when you return.",
+                )}
+              </p>
             </div>
             {!festival && completed && (
               <p className="panel p-3 text-accent-teal" role="status">
                 {t(exhibit.discovery)}
               </p>
             )}
-            {festival && badge && <MedalReveal id="quantum-explorer" />}
           </>
         )}
       </div>
     </LaptopShell>
   );
-}
-
-function evidenceLabel(id: CampusActivityId, key: string): string {
-  if (id === "fountain")
-    return key === "true:true"
-      ? "Minus state · H lens"
-      : key === "true:false"
-        ? "Minus state · Z measurement"
-        : key === "false:true"
-          ? "Plus state · H lens"
-          : "Plus state · Z measurement";
-  if (id === "quiet")
-    return key === "0:true"
-      ? "No disturbance · H lens"
-      : key === "1:true"
-        ? "Full dephasing · H lens"
-        : "Full dephasing · Z measurement";
-  if (id === "observatory")
-    return `${t(key.startsWith("bell") ? "Bell pair" : key.startsWith("envelopes") ? "Matching envelopes model" : "Independent signals")} · ${key.endsWith("X") ? "X" : "Z"}`;
-  if (id === "arcade")
-    return key === "single" ? "Single shot" : "Batch of fresh preparations";
-  return "Earlier experiment";
 }

@@ -77,6 +77,18 @@ north to south, ending at the festival. Existing saved positions are retained.
 All eight exhibits and the
 three-repair festival are available immediately. `quantum-explorer` is an optional
 badge; it never changes roads, knowledge cards, wallets or lab equipment unlocks.
+Hosts present a problem in a conversation, ask for an ungraded prediction, and
+lend their laptop only when the player chooses an experiment. Returning from a
+guided laptop opens a discussion of saved execution evidence. Players then apply
+the explanation by labeling workshop drawers/passports, fixing a delivery route,
+correcting signs, advising a visitor, protecting a preparation, or turning an
+inverse-rotation dial. Wrong answers receive a specific explanation without
+losing valid runs. Marisol has two investigation stages; the festival has three
+visitor repairs and can still be attempted directly. The laptop no longer owns
+quiz answers or a Collect discovery action. Finished hosts offer free experiments
+and deeper explanations. The guide suggests topics and points to unfinished work.
+Markers distinguish a new problem (!), an investigation (…), a ready discussion
+(?), and completion (★); completed pavilions reveal existing Kenney display props.
 The exhibits cover preparation/control/measurement, kets and amplitudes, circuit
 order, superposition/interference, entanglement versus classical correlation,
 shots/histograms, decoherence, and X/Y/Z rotations/unitaries. Play, Explain and
@@ -84,16 +96,24 @@ Show the math share ideal references and actual returned counts. The searchable
 field notebook also appears as read-only help in shared lesson and lab laptops;
 opening it preserves work and never submits a job.
 
-`content/campus.ts` owns content/IDs; `CampusScreen`, `CampusLaptop`,
-`CampusNotebook` and `CampusVisual` reuse world/laptop/builder/histogram controls.
+`content/campus.ts` owns content/IDs; `content/campusStories.ts` owns bilingual
+story messages and stable choice/milestone IDs. `game/campusJourney.ts` owns pure,
+guarded conversation transitions and evidence/application rules; `campusSave.ts`
+validates and migrates saved sessions. `useCampusInteraction` owns local overlays
+through `WorldTownScreen`'s typed interaction extension. `CampusConversation`,
+`CampusLaptop`, `CampusNotebook` and `CampusVisual` reuse the existing dialogue,
+world/laptop/builder/histogram controls.
 `game/campusExperiment.ts` owns request and design-evidence rules. Only explicit
 Run executes `/api/campus/run`, through shared `core/register_circuit.py` and
 `core/game_services.py`; `api/routes/campus.py` adds the HTTP adapter. Qollab
 copies the same core without a new Python package file. Campus work is practice,
 so IonQ/physical selections use BasicSimulator and leave the remote allowance
 untouched; other selections and HTTP ideal/noise choices follow existing policy.
-Returned metadata identifies the actual execution backend. No completion rule
-requires exact noisy counts.
+Returned metadata identifies the actual execution backend. Only guarded application
+completion awards a new discovery or festival repair; it requires successful
+relevant runs and a correct explanation. No completion rule requires exact noisy
+counts. No-run/failed-run closes offer resume. Notebook/free-play closes never
+start another host's discussion. Reset invalidates stale execution ownership.
 
 The quiet room uses a gate-only environment dilation for the explicit channel
 E_d(ρ)=(1−d/2)ρ+(d/2)ZρZ, d∈[0,1]. An unobserved helper starts with
@@ -104,9 +124,15 @@ data wires appear in returned bitstrings, top wire first. Ideal channel/referenc
 predictions exclude additional backend noise. Z/X comparisons distinguish these
 specific models; the game makes no general entanglement-certification claim.
 
-`quantum-campus-v1` saves exhibit settings, explanations, successful execution
-evidence, latest counts and up to six comparison snapshots per exhibit, festival
-stage, discoveries and exhibit visits. Hydration validates saved results and
+`quantum-campus-v1` (schema version 2) saves exhibit settings, semantic conversation
+phases, predictions, stable explanation IDs, selected evidence, application drafts,
+hints, successful execution evidence, latest counts and six recent snapshots per
+exhibit, festival stage, discoveries and visits. Required comparison snapshots
+are pinned separately with settings and original backend metadata; free play
+cannot evict them. Rotation evidence must use the same nontrivial angle and axis
+with and without the inverse (X/Y from zero for the introductory repair). Legacy
+counts and earned discoveries remain; missing recipe context is never invented.
+Compatible old answers migrate; changed questions require their new response. Hydration validates saved results and
 never repeats a job. Blocked storage retains only current-run memory. Campus
 restart clears its experiments/orientation while retaining the earned badge;
 full-game reset clears campus too and returns to Coin Town. Existing

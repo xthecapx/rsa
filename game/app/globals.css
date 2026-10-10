@@ -880,3 +880,14 @@ html[data-compact-viewport="true"] .laptop-footer { padding: 4px 8px; font-size:
 .campus-register-column { display:grid; gap:1rem; position:relative; grid-template-rows:48px 48px; flex:0 0 auto; align-items:center; }
 .campus-register-column.connected::before { content:""; position:absolute; top:24px; bottom:24px; left:50%; width:2px; background:#90e0cd; }
 .campus-register-column .campus-gate-slot { position:relative; z-index:1; }
+
+/* Campus conversations keep evidence scrollable and actions reachable. */
+.campus-dialogue-layer .game-dialogue { max-height:min(100%, calc(var(--game-viewport-height) * .75), 36rem); }
+.campus-evidence-card { display:block; min-width:0; width:100%; padding:.75rem; border:1px solid #39616b; border-radius:8px; background:#102e38; box-shadow:0 3px 12px #0003; overflow-wrap:anywhere; }
+button.campus-evidence-card { min-height:44px; }
+.campus-evidence-card[aria-pressed="true"], .campus-repair-board button[aria-pressed="true"] { border-color:#ffb13d; background:#ffb13d22; box-shadow:0 0 0 1px #ffb13d; }
+.campus-evidence-card:focus-visible { outline:3px solid #ffb13d; outline-offset:2px; }
+.campus-clue { padding:.75rem; border-left:3px solid #ffb13d; background:#ffb13d12; }
+.campus-repair-board { padding:.75rem; border:1px solid #39616b; border-radius:8px; background:#0b1f26; }
+.campus-conversation .btn-ghost, .campus-conversation .btn-primary { min-height:44px; white-space:normal; }
+.campus-conversation .dialogue-actions { max-height:calc(var(--game-viewport-height) * .32); overflow-y:auto; }

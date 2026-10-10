@@ -70,7 +70,9 @@ export interface WorldMission {
 
 /** Everything that makes one town different from another; the screen does the rest. */
 export interface TownConfig {
-  exploration?: { done: string[]; next: string | null; objective: string };
+  /** Local conversations/tools owned by a town, without tearing down its scene. */
+  interaction?: { handles: (id: string) => boolean; interact: (id: string) => void; locked: boolean; layer: ReactNode };
+  exploration?: { done: string[]; next: string | null; objective: string; working?: string[]; ready?: string[] };
   world: WorldName;
   slot: TownSlot;
   title: string; subtitle: string;
@@ -212,7 +214,7 @@ export function WorldTownScreen({ config, restartOptions, onEnterLab }: { config
   const onError = useCallback(() => setSceneStatus("error"), []);
 
   const sceneReady = hydrated && sceneStatus === "ready";
-  const inputLocked = !!talk || activityVisible || journalOpen || restartOpen || !!panel || !!mission?.talk || !!mission?.locked;
+  const inputLocked = !!talk || activityVisible || journalOpen || restartOpen || !!panel || !!mission?.talk || !!mission?.locked || !!config.interaction?.locked;
   useEffect(() => { if (sceneReady) void bus.send({ type: "lockInput", locked: inputLocked }); }, [sceneReady, inputLocked]);
   useEffect(() => { if (sceneReady) void bus.send({ type: "labEntrance", revealed: labRevealed }); }, [sceneReady, labRevealed]);
   const ready = challenge.complete;
@@ -224,10 +226,12 @@ export function WorldTownScreen({ config, restartOptions, onEnterLab }: { config
   const alerts = [...(config.exploration ? config.npcs.filter(n => !config.exploration!.done.includes(n.id)).map(n => n.id) : []), ...teachers.filter((npc) => !cards.includes(npc.knowledge!)).map((npc) => npc.id), ...(next === greeter.id ? [greeter.id] : [])];
   const done = [...(config.exploration?.done ?? []), ...(challenge.complete ? [challenge.door] : []), ...teachers.filter((npc) => cards.includes(npc.knowledge!)).map((npc) => npc.id), ...(badge ? [greeter.id] : [])];
   const gateKey = Object.entries(config.gates).map(([id, open]) => `${id}:${open}`).join();
-  const markerKey = `${alerts.join()}|${done.join()}|${tracked}|${gateKey}`;
+  const working = config.exploration?.working ?? [];
+  const discussions = config.exploration?.ready ?? [];
+  const markerKey = `${alerts.join()}|${done.join()}|${tracked}|${gateKey}|${working.join()}|${discussions.join()}`;
   useEffect(() => {
     if (!sceneReady) return;
-    void bus.send({ type: "worldMarkers", alerts, done });
+    void bus.send({ type: "worldMarkers", alerts, done, working, ready: discussions });
     void bus.send({ type: "worldTrack", target: tracked });
     for (const [id, open] of Object.entries(config.gates)) void bus.send({ type: "worldGate", id, open });
     // markerKey captures alerts, done, the tracked target and the gates.
@@ -240,6 +244,7 @@ export function WorldTownScreen({ config, restartOptions, onEnterLab }: { config
     setTalk({ title, lines, index: 0, choices, ...extra });
   }
   function talkToGreeter() {
+    if (config.interaction?.handles(greeter.id)) { config.interaction.interact(greeter.id); return; }
     const town = useTown.getState();
     if (badge) return say(greeter.title, [greeter.done], [{ label: "Keep exploring", action: close }]);
     if (ready) {
@@ -273,13 +278,14 @@ export function WorldTownScreen({ config, restartOptions, onEnterLab }: { config
     return () => window.clearTimeout(timer);
   }, [petted]);
   events.current.interact = (id) => {
-    if (talk || activityVisible || panel || mission?.talk) return;
+    if (talk || activityVisible || panel || mission?.talk || config.interaction?.locked || executing) return;
     if (mission?.handles(id)) { mission.interact(id); return; }
     gameAudio.playSfx("select");
     if (id === "labDoor") {
       const reveal = inspectLab(config.slot, () => { if (onEnterLab()) { close(); readyRef.current = false; } }, close);
       if (reveal) say(reveal.title, [{ speaker: reveal.speaker, text: reveal.text }], reveal.choices);
     }
+    else if (config.interaction?.handles(id)) config.interaction.interact(id);
     else if (config.actions?.[id]) { readyRef.current = false; config.actions[id](); }
     else if (config.panels?.[id]) setPanel(id);
     else if (id === challenge.door) say(challenge.title, [{ speaker: "system", text: challenge.blurb }],
@@ -348,10 +354,10 @@ export function WorldTownScreen({ config, restartOptions, onEnterLab }: { config
   return <GameShell restartControl={restartControl} title={t(config.title)} subtitle={missionShell?.subtitle ?? t(config.subtitle)}
     missionProgress={missionShell?.missionProgress}
     backHref="/" backLabel={missionShell?.backLabel ?? t(greeter.title)} backDisabled={executing || activityBusy || missionShell?.backDisabled}
-    onBack={() => { if (missionShell?.onBack) missionShell.onBack(); else if (!talk && !activityVisible && !panel) talkToGreeter(); }}
+    onBack={() => { if (missionShell?.onBack) missionShell.onBack(); else if (!talk && !activityVisible && !panel && !config.interaction?.locked) talkToGreeter(); }}
     sidebar={journal} objectives={journal} onObjectivesOpen={setJournalOpen}
-    sceneReady={sceneReady} sceneFailed={sceneStatus === "error"} laptopOpen={activityVisible || !!missionShell?.laptopOpen} laptopReady={!!activity || !!missionShell?.laptopReady}
-    onOpenLaptop={() => config.exploration ? setPanel("notebook") : missionShell?.onOpenLaptop ? missionShell.onOpenLaptop() : activity ? setActivityOpen(true)
+    sceneReady={sceneReady} sceneFailed={sceneStatus === "error"} laptopOpen={activityVisible || !!missionShell?.laptopOpen || !!config.interaction?.locked} laptopReady={!!activity || !!missionShell?.laptopReady}
+    onOpenLaptop={() => config.interaction?.handles("notebook") ? config.interaction.interact("notebook") : config.exploration ? setPanel("notebook") : missionShell?.onOpenLaptop ? missionShell.onOpenLaptop() : activity ? setActivityOpen(true)
       : say("Your laptop", [{ speaker: "system", text: "Neighbors lend you their benches here. Talk to anyone whose name board starts with !." }], [{ label: "Keep exploring", action: close }])}>
     {hydrated && <GameCanvas world={config.world} onReady={onReady} onError={onError} />}
     {sceneReady && <>
@@ -359,7 +365,7 @@ export function WorldTownScreen({ config, restartOptions, onEnterLab }: { config
         {config.minimap({ position: saved.position, facing: saved.facing, explored: saved.explored, labTown: config.slot, labRevealed, done, pending: [...alerts, ...(challenge.complete ? [] : [challenge.door])], tracked })}
         {config.hud}
       </div>}
-      {!talk && !activityVisible && !journalOpen && !restartOpen && !panel && !missionTalk && !missionShell?.laptopOpen && <div className={`pointer-events-none absolute inset-x-0 bottom-0 flex justify-center p-3 ${mission?.active && mission.dialog ? "z-20 pb-3" : "pb-24 lg:pb-4"}`}>
+      {!talk && !activityVisible && !journalOpen && !restartOpen && !panel && !missionTalk && !missionShell?.laptopOpen && !config.interaction?.locked && <div className={`pointer-events-none absolute inset-x-0 bottom-0 flex justify-center p-3 ${mission?.active && mission.dialog ? "z-20 pb-3" : "pb-24 lg:pb-4"}`}>
         {mission?.active && mission.dialog ? <DialogBox /> : blocked && config.gateNotes?.[blocked] ? <div className="textbox gate-note max-w-lg space-y-1 px-4 py-3 text-center" role="status">
           <p className="text-xs font-bold uppercase tracking-widest text-[#fca5a5]">🔒 {t("Locked")}</p>
           <p className="text-sm">{t(config.gateNotes[blocked].text)}</p>
@@ -379,6 +385,7 @@ export function WorldTownScreen({ config, restartOptions, onEnterLab }: { config
         </DialogueFrame>
       </div>}
       {panel && config.panels?.[panel]?.(() => setPanel(null))}
+      {config.interaction?.layer}
       {talk && line && <div className="absolute inset-0 z-20 flex items-end justify-center bg-black/30 p-3 sm:p-5" role="dialog" aria-modal="true" aria-label={t(talk.title)} ref={talkRef}
         onKeyDown={(event) => { event.stopPropagation(); if (event.key === "Escape") { event.preventDefault(); close(); } }}>
         <DialogueFrame className="max-w-4xl" pageKey={`${talk.title}:${talk.index}`}

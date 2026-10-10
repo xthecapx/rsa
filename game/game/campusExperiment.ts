@@ -142,15 +142,21 @@ export function campusEvidence(
       ? "passport"
       : "other";
   if (id === "delivery")
-    return s.sequence.join() === "X,H" ? "delivery" : "other";
+    return s.sequence.join() === "X,H"
+      ? "delivery"
+      : s.sequence.join() === "H,X"
+        ? "reversed"
+        : "other";
   if (id === "qubit")
-    return s.order.join() === "Prepare,Control,Measure" ? "prepared" : "other";
+    return s.order.join() === "Prepare,Control,Measure"
+      ? `prepared:${s.gate}`
+      : "other";
   return s.sequence.join() === "H,H" ? "festival" : "other";
 }
 export const CAMPUS_EVIDENCE: Record<CampusActivityId, string[]> = {
-  qubit: ["prepared"],
+  qubit: ["prepared:X", "prepared:H"],
   passports: ["passport"],
-  delivery: ["delivery"],
+  delivery: ["delivery", "reversed"],
   fountain: ["false:false", "true:false", "false:true", "true:true"],
   observatory: [
     "independent:Z",

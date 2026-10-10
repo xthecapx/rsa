@@ -16,13 +16,27 @@ import {
 import type { CampusResult } from "@/lib/campus";
 import { useProgress } from "./progress";
 import { saveStorage } from "./storage";
+import {
+  campusJourney,
+  CAMPUS_EXPERIMENT_REVISION,
+  rotationPair,
+  runMatches,
+  transitionCampus,
+  type CampusJourney,
+  type CampusJourneyEvent,
+  type CampusRun,
+} from "./campusJourney";
+import { useGame } from "./state";
+import { readCampusSessions } from "./campusSave";
 export interface CampusSession {
   settings: CampusSettings;
   answer: number | null;
   evidence: string[];
   result: CampusResult | null;
   stage: number;
-  runs: { key: string; result: CampusResult }[];
+  runs: CampusRun[];
+  proofs: Record<string, CampusRun>;
+  journey: CampusJourney;
 }
 export const campusSession = (): CampusSession => ({
   settings: campusDefaults(),
@@ -31,52 +45,16 @@ export const campusSession = (): CampusSession => ({
   result: null,
   stage: 0,
   runs: [],
+  proofs: {},
+  journey: campusJourney(),
 });
 const ids = [
   ...CAMPUS_EXHIBITS.map((e) => e.id),
   "festival",
 ] as CampusActivityId[];
-/** A corrupted browser save must never turn a reference into observed measurements. */
-function validResult(value: unknown): value is CampusResult {
-  if (!value || typeof value !== "object") return false;
-  const r = value as CampusResult;
-  if (
-    (r.bits !== 1 && r.bits !== 2) ||
-    typeof r.backend !== "string" ||
-    typeof r.circuit_text !== "string" ||
-    !Number.isInteger(r.depth) ||
-    r.depth < 0 ||
-    !["simulator", "hardware"].includes(r.source) ||
-    (r.kind !== undefined &&
-      !["ideal", "noise", "hardware"].includes(r.kind)) ||
-    !Number.isInteger(r.shots) ||
-    r.shots < 1 ||
-    r.shots > 1024
-  )
-    return false;
-  const entries = (values: unknown, probability = false): boolean =>
-    !!values &&
-    typeof values === "object" &&
-    !Array.isArray(values) &&
-    Object.entries(values).every(
-      ([key, n]) =>
-        new RegExp(`^[01]{${r.bits}}$`).test(key) &&
-        typeof n === "number" &&
-        Number.isFinite(n) &&
-        n >= 0 &&
-        (probability ? n <= 1 : Number.isInteger(n)),
-    );
-  return (
-    entries(r.counts) &&
-    Object.values(r.counts).reduce((a, b) => a + b, 0) === r.shots &&
-    (r.probabilities === undefined ||
-      (entries(r.probabilities, true) &&
-        Math.abs(
-          Object.values(r.probabilities).reduce((a, b) => a + b, 0) - 1,
-        ) < 1e-8))
-  );
-}
 interface CampusState {
+  /** Transient ownership: reset invalidates an in-flight experiment. */
+  generation: number;
   completed: CampusExhibitId[];
   sessions: Partial<Record<CampusActivityId, CampusSession>>;
   opened: string[];
@@ -89,11 +67,13 @@ interface CampusState {
   ) => void;
   complete: (id: CampusExhibitId) => void;
   open: (id: string) => void;
+  event: (id: CampusActivityId, event: CampusJourneyEvent) => boolean;
   reset: () => void;
 }
 export const useCampus = create<CampusState>()(
   persist(
     (set, get) => ({
+      generation: 0,
       completed: [],
       sessions: {},
       opened: [],
@@ -107,24 +87,97 @@ export const useCampus = create<CampusState>()(
       record: (id, settings, result, evidenceKey) => {
         const prior = get().sessions[id] ?? campusSession();
         const key = evidenceKey ?? campusEvidence(id, settings);
+        const run: CampusRun = {
+          key,
+          result,
+          settings: cleanCampusSettings(settings),
+          revision: CAMPUS_EXPERIMENT_REVISION,
+        };
+        const proofs = { ...prior.proofs };
+        if (CAMPUS_EVIDENCE[id].includes(key) && runMatches(id, key, run))
+          proofs[key] = run;
+        if (id === "rotations") {
+          // Keep the last compatible pair while the player tries unrelated runs.
+          const candidate = rotationPair({
+            ...prior,
+            runs: [...prior.runs, run],
+          });
+          if (candidate) {
+            proofs["rotation:false"] = candidate.first;
+            proofs["rotation:true"] = candidate.inverse;
+          } else if (
+            prior.proofs["rotation:false"] &&
+            prior.proofs["rotation:true"]
+          ) {
+            proofs["rotation:false"] = prior.proofs["rotation:false"];
+            proofs["rotation:true"] = prior.proofs["rotation:true"];
+          }
+        }
         get().update(id, {
           result,
-          runs: [...prior.runs, { key, result }].slice(-6),
+          runs: [...prior.runs, run].slice(-6),
+          proofs,
           evidence: [...new Set([...prior.evidence, key])].filter((k) =>
             CAMPUS_EVIDENCE[id].includes(k),
           ),
         });
       },
       complete: (id) => {
+        if (get().completed.includes(id)) return;
         set((s) => ({ completed: [...new Set([...s.completed, id])] }));
         if (get().completed.length === CAMPUS_EXHIBITS.length)
           useProgress.getState().complete("campus", "orientation");
       },
       open: (id) => set((s) => ({ opened: [...new Set([...s.opened, id])] })),
-      reset: () => set({ completed: [], sessions: {}, opened: [] }),
+      event: (id, event) => {
+        const game = useGame.getState();
+        if (game.operations > 0 || game.phase === "busy" || game.busyLabel)
+          return false;
+        const session = get().sessions[id] ?? campusSession();
+        const journey = transitionCampus(id, session, event);
+        if (journey === session.journey) return false;
+        get().update(id, {
+          journey,
+          ...(id === "festival"
+            ? {
+                stage: journey.phase === "complete" ? 3 : journey.investigation,
+                ...(journey.investigation !== session.journey.investigation
+                  ? {
+                      result: null,
+                      settings: {
+                        ...session.settings,
+                        pair: "independent",
+                        basis: "Z",
+                        disturbance: 1,
+                        analyzer: false,
+                      },
+                    }
+                  : {}),
+              }
+            : {}),
+        });
+        if (event.type === "finish" && journey.phase === "complete") {
+          if (id === "festival")
+            useProgress.getState().complete("campus", "festival");
+          else get().complete(id);
+        }
+        return true;
+      },
+      reset: () =>
+        set((s) => ({
+          completed: [],
+          sessions: {},
+          opened: [],
+          generation: s.generation + 1,
+        })),
     }),
     {
       name: "quantum-campus-v1",
+      version: 2,
+      migrate: (saved) =>
+        (saved && typeof saved === "object"
+          ? saved
+          : {}) as Partial<CampusState>,
       storage: saveStorage(),
       skipHydration: true,
       partialize: (s) => ({
@@ -134,46 +187,7 @@ export const useCampus = create<CampusState>()(
       }),
       merge: (saved, current) => {
         const data = saved as Partial<CampusState> | null;
-        const sessions: CampusState["sessions"] = {};
-        for (const id of ids) {
-          const session = data?.sessions?.[id];
-          if (!session || typeof session !== "object") continue;
-          sessions[id] = {
-            stage:
-              Number.isInteger(session.stage) &&
-              session.stage >= 0 &&
-              session.stage <= 3
-                ? session.stage
-                : 0,
-            runs: Array.isArray(session.runs)
-              ? session.runs
-                  .filter(
-                    (run) =>
-                      run &&
-                      typeof run.key === "string" &&
-                      validResult(run.result),
-                  )
-                  .slice(-6)
-              : [],
-            settings: cleanCampusSettings(session.settings),
-            answer:
-              Number.isInteger(session.answer) &&
-              session.answer! >= 0 &&
-              session.answer! <= 2
-                ? session.answer
-                : null,
-            evidence: Array.isArray(session.evidence)
-              ? [
-                  ...new Set(
-                    session.evidence.filter((k) =>
-                      CAMPUS_EVIDENCE[id].includes(k),
-                    ),
-                  ),
-                ]
-              : [],
-            result: validResult(session.result) ? session.result : null,
-          };
-        }
+        const sessions = readCampusSessions(data);
         return {
           ...current,
           sessions,

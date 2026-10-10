@@ -12,7 +12,8 @@ import { useMedals } from "@/game/medals";
 import { campusMap } from "@/engine/maps/campusMap";
 import { WorldTownScreen, type TownConfig } from "./WorldTownScreen";
 import { WorldMinimap } from "./WorldMinimap";
-import { CampusLaptop } from "./CampusLaptop";
+import { useCampusInteraction } from "./useCampusInteraction";
+import { investigationReady } from "@/game/campusJourney";
 import type { RestartOption } from "./StartOverControl";
 import { t } from "@/i18n";
 export function CampusScreen({
@@ -24,10 +25,26 @@ export function CampusScreen({
   onEnterLab: () => boolean;
   restartOptions: RestartOption[];
 }) {
-  const completed = useCampus((s) => s.completed);
+  const { completed, sessions } = useCampus();
+  const interaction = useCampusInteraction();
   const badge = useMedals((s) => !!s.earned["quantum-explorer"]);
   const line = (text: string) => ({ speaker: "vpcap" as const, text });
-  const next = CAMPUS_EXHIBITS.find((e) => !completed.includes(e.id));
+  const pending = CAMPUS_EXHIBITS.filter(
+    (e) =>
+      !completed.includes(e.id) &&
+      sessions[e.id] &&
+      sessions[e.id]!.journey.phase !== "intro",
+  );
+  const discussions = pending.filter(
+    (e) =>
+      investigationReady(e.id, sessions[e.id]!) ||
+      sessions[e.id]!.journey.phase === "apply",
+  );
+  const next =
+    CAMPUS_EXHIBITS.find((e) => e.id === interaction.suggested) ??
+    discussions[0] ??
+    pending[0] ??
+    CAMPUS_EXHIBITS.find((e) => !completed.includes(e.id));
   const npcs = [
     CAMPUS_GUIDE,
     ...CAMPUS_EXHIBITS.map((e) => ({ id: e.id, title: e.host, at: e.at })),
@@ -44,14 +61,23 @@ export function CampusScreen({
     slot: "campus",
     title: "Quantum Campus",
     subtitle: "Open day · experiment, ask, discover",
+    interaction,
     exploration: {
       done: [...completed, ...(badge ? ["festival"] : [])],
-      next: next?.id ?? (badge ? null : "festival"),
+      working: pending.map((e) => e.id),
+      ready: discussions.map((e) => e.id),
+      next:
+        interaction.suggested === "festival"
+          ? "festival"
+          : (next?.id ?? (badge ? null : "festival")),
       objective: next
-        ? t("Try any exhibit. Suggested next: {exhibit}").replace(
-            "{exhibit}",
-            t(next.title),
+        ? t(
+            discussions.some((e) => e.id === next.id)
+              ? "Bring your evidence back to {host}."
+              : "Find {host} at {exhibit}.",
           )
+            .replace("{host}", t(next.host))
+            .replace("{exhibit}", t(next.title))
         : "Visit the festival or keep experimenting. Coin Town is always open.",
     },
     greeter: {
@@ -105,19 +131,6 @@ export function CampusScreen({
     exits: [
       { test: (at) => at.y === 0 && at.x >= 17 && at.x <= 19, go: onLeave },
     ],
-    panels: Object.fromEntries(
-      [...CAMPUS_EXHIBITS.map((e) => e.id), "festival", "notebook"].map(
-        (id) => [
-          id,
-          (close: () => void) => (
-            <CampusLaptop
-              initial={id as Parameters<typeof CampusLaptop>[0]["initial"]}
-              onClose={close}
-            />
-          ),
-        ],
-      ),
-    ),
     journal: {
       title: "Campus field notebook",
       intro: CAMPUS_WELCOME,
@@ -126,7 +139,14 @@ export function CampusScreen({
         <ul className="space-y-2">
           {CAMPUS_EXHIBITS.map((e) => (
             <li key={e.id}>
-              {completed.includes(e.id) ? "✓" : "◇"} {t(e.title)}
+              {completed.includes(e.id)
+                ? "✓"
+                : discussions.some((d) => d.id === e.id)
+                  ? "?"
+                  : pending.some((p) => p.id === e.id)
+                    ? "…"
+                    : "◇"}{" "}
+              {t(e.title)}
             </li>
           ))}
         </ul>
