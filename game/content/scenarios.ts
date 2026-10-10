@@ -30,4 +30,4 @@ export const SCENARIOS = [
   },
 ] as const;
 
-export type ScenarioId = (typeof SCENARIOS)[number]["id"];
+export type ScenarioId = (typeof SCENARIOS)[number]["id"] | "campus";

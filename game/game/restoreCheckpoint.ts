@@ -1,3 +1,5 @@
+import { CAMPUS_EXHIBITS, CAMPUS_FACING, CAMPUS_SPAWN } from "@/content/campus";
+import { useCampus } from "./campus";
 import { checkpoint, CHECKPOINT_TOWNS } from "./checkpoints";
 import { useTown } from "./town";
 import { useKnowledge } from "./knowledge";
@@ -17,6 +19,23 @@ export function restoreCheckpoint(code: string): boolean {
   const saved = checkpoint(code);
   const game = useGame.getState();
   if (!saved || game.operations > 0 || game.phase === "busy" || game.busyLabel) return false;
+  if (saved.location === "campus") {
+    invalidateMission();
+    if (saved.stage >= 2) {
+      useCampus.setState({ completed: [...new Set([...useCampus.getState().completed, ...CAMPUS_EXHIBITS.map(e => e.id)])] });
+      useProgress.getState().complete("campus", "orientation");
+    }
+    if (saved.stage === 3) {
+      useProgress.getState().complete("campus", "festival");
+      useMedals.getState().award("quantum-explorer");
+      useMedals.getState().dismiss();
+    }
+    useGame.getState().resetRun(1);
+    const town = useTown.getState();
+    town.patch({ location: "campus", campus: { ...town.campus, position: { ...CAMPUS_SPAWN }, facing: CAMPUS_FACING, welcomed: true },
+      labEntrances: { ...town.labEntrances, campus: true }, rsaRunning: false, requestedAct: null, checkpoint: null, interrupted: false, tracked: null });
+    return true;
+  }
   invalidateMission();
   const completed = { ...useProgress.getState().completed };
   for (const [scenario, missions] of Object.entries(saved.completed)) completed[scenario] = [...new Set([...(completed[scenario] ?? []), ...missions])];

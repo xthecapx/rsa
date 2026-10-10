@@ -36,7 +36,10 @@ preference affects only future runs, including Quantum Town replays.
 
 ## World and progression
 
-Players begin in Coin Town. Every teaching town has five knowledge cards and a
+Fresh games and full-game resets start in Coin Town. Mayor Cap introduces the
+optional Quantum Campus for fundamentals via the open south road; there is no
+starting-choice screen. Existing saves stay at their saved location. Every
+teaching town has five knowledge cards and a
 lesson. Knowledge cards are optional practice. Completing each challenge earns
 its medal and opens the next road directly; no neighbor cards or town ceremony
 are required. Each greeter also offers a town badge after its challenge, without
@@ -44,6 +47,7 @@ a card requirement.
 
 | Town | Spanish name | Implemented lesson and role |
 | --- | --- | --- |
+| Quantum Campus | Campus Cuántico | Optional science festival; eight foundations exhibits and **Open the Festival**. |
 | Coin Town | Pueblo Moneda | Mayor Cap; single-qubit cards; **Who Goes First?** in Ale's house. |
 | Foundry Town | Pueblo Forja | VP Cap; register and Grover cards; **Echo Chamber** in Thecap's workshop. |
 | Hollow Town | Pueblo Sepulcral | Keeper Cap; cemetery, CNOT and phase-kickback cards; **Operation Ghost Key** in Casa Ofelia. |
@@ -63,11 +67,61 @@ jobs. Cero offers repeatable generated bounties. The Quantum replay street share
 the Cipher checkpoint and skips the gear check. Older RSA completions retain
 their earned gear.
 
+## Quantum Campus
+
+The optional campus is a science-festival courtyard, joined to Coin Town by a
+permanently open road (campus north, Coin south). Arrivals and campus checkpoint
+shortcuts start at the north gate facing south, beside the guide and notebook.
+Paved aisles run between the pavilions; the suggested exhibit order runs from
+north to south, ending at the festival. Existing saved positions are retained.
+All eight exhibits and the
+three-repair festival are available immediately. `quantum-explorer` is an optional
+badge; it never changes roads, knowledge cards, wallets or lab equipment unlocks.
+The exhibits cover preparation/control/measurement, kets and amplitudes, circuit
+order, superposition/interference, entanglement versus classical correlation,
+shots/histograms, decoherence, and X/Y/Z rotations/unitaries. Play, Explain and
+Show the math share ideal references and actual returned counts. The searchable
+field notebook also appears as read-only help in shared lesson and lab laptops;
+opening it preserves work and never submits a job.
+
+`content/campus.ts` owns content/IDs; `CampusScreen`, `CampusLaptop`,
+`CampusNotebook` and `CampusVisual` reuse world/laptop/builder/histogram controls.
+`game/campusExperiment.ts` owns request and design-evidence rules. Only explicit
+Run executes `/api/campus/run`, through shared `core/register_circuit.py` and
+`core/game_services.py`; `api/routes/campus.py` adds the HTTP adapter. Qollab
+copies the same core without a new Python package file. Campus work is practice,
+so IonQ/physical selections use BasicSimulator and leave the remote allowance
+untouched; other selections and HTTP ideal/noise choices follow existing policy.
+Returned metadata identifies the actual execution backend. No completion rule
+requires exact noisy counts.
+
+The quiet room uses a gate-only environment dilation for the explicit channel
+E_d(ρ)=(1−d/2)ρ+(d/2)ZρZ, d∈[0,1]. An unobserved helper starts with
+Ry(2 asin(sqrt(d/2))) then controls Z on the data; tracing it out shrinks
+coherence by 1−d. d=1 fully dephases, never becomes a deterministic Z.
+The envelopes comparison dephases a Bell pair with an unobserved helper. Only
+data wires appear in returned bitstrings, top wire first. Ideal channel/reference
+predictions exclude additional backend noise. Z/X comparisons distinguish these
+specific models; the game makes no general entanglement-certification claim.
+
+`quantum-campus-v1` saves exhibit settings, explanations, successful execution
+evidence, latest counts and up to six comparison snapshots per exhibit, festival
+stage, discoveries and exhibit visits. Hydration validates saved results and
+never repeats a job. Blocked storage retains only current-run memory. Campus
+restart clears its experiments/orientation while retaining the earned badge;
+full-game reset clears campus too and returns to Coin Town. Existing
+`quantum-town-v1` saves discard the retired `entryChosen` flag without moving the player.
+Independent codes `qc1` (arrival), `qc2` (all eight discoveries) and `qc3` (festival
+badge plus orientation preset) merge campus milestones only. They never grant
+other town completion or encode circuits/results. Busy operations block travel,
+restore, restart and closing the executing laptop.
+
 ## Personal lab
 
 Each outdoor town has a concealed sand-and-stones entrance to one shared, ungated
 personal lab. `content/labEntrances.ts` owns entrance/standing tiles and hints:
-Coin (36,25), Foundry (25,9), Hollow (12,10), Cipher (19,29), Quantum (57,28).
+Campus (34,30), Coin (36,25), Foundry (25,9), Hollow (12,10), Cipher (19,29),
+Quantum (57,28).
 Inspect reveals and saves only that town’s entrance before offering entry; ordinary
 fog exploration never exposes its name or L marker. Revealed passages enter directly.
 The shared Kenney entrance actor updates through the typed bus and respects reduced
@@ -225,6 +279,7 @@ Paths below are relative to the repository root.
 | Interior lessons and room movement | `game/components/{CoinScenario,GroverScenario,VaultScenario}.tsx`, `game/game/*Room.ts` |
 | RSA scripts and validation | `game/content/acts/act1.ts` through `act4.ts`, `game/content/{defineAct,types,index}.ts` |
 | RSA state, dialogue, effects, async ownership | `game/game/{state,dialog,effects,runtime,town}.ts` |
+| Campus foundations and notebook | `game/content/campus.ts`, `game/components/Campus*.tsx`, `game/game/{campus,campusExperiment}.ts`, `game/lib/campus.ts` |
 | Personal lab and free-play experiments | `game/components/{LabScreen,LabLaptop}.tsx`, `game/content/{lab,labEntrances}.ts`, `game/game/{lab,labTravel,labLayout,labCircuit}.ts`, `game/lib/lab.ts` |
 | Progress, cards, badges, economy, checkpoint shortcuts | `game/game/{progress,knowledge,medals,wallet,checkpoints,restoreCheckpoint}.ts` |
 | Shared UI | `game/components/{GameShell,LaptopShell,DialoguePresentation,SceneLoading,TouchControls}.tsx` |

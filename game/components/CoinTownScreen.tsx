@@ -1,6 +1,6 @@
 "use client";
 
-import { COIN_TOWN_DOOR, COIN_TOWN_EAST_SIGN, COIN_TOWN_NORTH_ROAD, COIN_TOWN_NPCS, COIN_TOWN_SIDE_ROAD, COIN_TOWN_WEST_SIGN, CARD_COUNT, KNOWLEDGE, MAYOR, SIGNS, WARDEN,
+import { COIN_TOWN_DOOR, COIN_TOWN_EAST_SIGN, COIN_TOWN_NORTH_ROAD, COIN_TOWN_CAMPUS_ROAD, COIN_TOWN_NPCS, COIN_TOWN_SIDE_ROAD, COIN_TOWN_WEST_SIGN, CARD_COUNT, KNOWLEDGE, MAYOR, SIGNS, WARDEN,
   type CoinTownNpcId } from "@/content/coinTown";
 import { coinTownMap } from "@/engine/maps/coinTownMap";
 import { useTown } from "@/game/town";
@@ -27,13 +27,14 @@ const PLACES: MinimapPlace[] = [
 ];
 const SIDE_ROW = COIN_TOWN_SIDE_ROAD[1] + 0.9;
 
-export function CoinTownScreen({ onLeave, onEast, onWest, onEnterCoin, onEnterLab, restartOptions }: {
+export function CoinTownScreen({ onLeave, onEast, onWest, onEnterCoin, onEnterLab, onCampus, restartOptions }: {
   /** North road to Cipher Town. */
   onLeave: () => void;
   /** East road to Foundry Town. */
   onEast: () => void;
   /** West road to Hollow Town. */
   onWest: () => void;
+  onCampus: () => void;
   onEnterLab: () => boolean;
   onEnterCoin: () => void; restartOptions: RestartOption[];
 }) {
@@ -51,7 +52,7 @@ export function CoinTownScreen({ onLeave, onEast, onWest, onEnterCoin, onEnterLa
     title: "Coin Town", subtitle: "Learn from the neighbors · settle game night",
     greeter: {
       id: "mayor", title: "Mayor Cap", meet: "Meet Mayor Cap by the entrance", thanks: "Thank you, Mayor",
-      welcome: [MAYOR.welcome], guide: MAYOR.guide, count: CARD_COUNT,
+      welcome: [MAYOR.welcome, MAYOR.campus], guide: MAYOR.guide, count: CARD_COUNT,
       waiting: MAYOR.coinWaiting, challengeDone: MAYOR.coinDone, ready: MAYOR.ready, done: MAYOR.done,
     },
     teachers: TEACHERS, cards: KNOWLEDGE, npcs: COIN_TOWN_NPCS,
@@ -75,22 +76,24 @@ export function CoinTownScreen({ onLeave, onEast, onWest, onEnterCoin, onEnterLa
     gates: { north: northOpen, east: eastOpen, west: westOpen },
     gateNotes: { north: WARDEN.closed, east: SIGNS.eastClosed, west: SIGNS.westClosed },
     exits: [
+      { test: (at) => at.y === coinTownMap.height - 1 && COIN_TOWN_CAMPUS_ROAD.includes(at.x), go: onCampus },
       { test: (at) => at.y === 0 && COIN_TOWN_NORTH_ROAD.includes(at.x), go: onLeave },
       { test: (at) => at.x === coinTownMap.width - 1, go: onEast },
       { test: (at) => at.x === 0, go: onWest },
     ],
     journal: {
-      title: "Coin Town journal", intro: "Settle the coin toss to open the east road to Foundry Town. Neighbor lessons are optional; Mayor Cap also offers a town badge after the challenge. A hidden cave lab lies southeast, along the right edge.",
-      roads: [{ label: "Take the east road to Foundry Town", open: eastOpen }, { label: "Take the west road to Hollow Town", open: westOpen }, { label: "Take the north road to Cipher Town", open: northOpen }],
+      title: "Coin Town journal", intro: "Settle the coin toss to open the east road to Foundry Town. Neighbor lessons are optional; Mayor Cap also offers a town badge after the challenge. Visit Quantum Campus down the south road whenever you want to explore quantum fundamentals. A hidden cave lab lies southeast, along the right edge.",
+      roads: [{ label: "Visit Quantum Campus to the south", open: true }, { label: "Take the east road to Foundry Town", open: eastOpen }, { label: "Take the west road to Hollow Town", open: westOpen }, { label: "Take the north road to Cipher Town", open: northOpen }],
     },
     restart: { label: "Restart Coin Town", description: "Forget the five knowledge cards and meet Mayor Cap again. Your medals and the coin lesson stay.", restart: () => {} },
     minimap: (props) => <WorldMinimap {...props} map={coinTownMap} places={PLACES}
       roads={[
+        { at: { x: 20, y: coinTownMap.height + 0.5 }, glyph: "↓", title: "Quantum Campus · always open", locked: false },
         { at: { x: COIN_TOWN_NORTH_ROAD[0] + 1, y: -0.4 }, glyph: "↑", title: "North road to Cipher Town", locked: !northOpen },
         { at: { x: coinTownMap.width + 0.8, y: SIDE_ROW }, glyph: "→", title: "East road to Foundry Town", locked: !eastOpen },
         { at: { x: -0.8, y: SIDE_ROW }, glyph: "←", title: "West road to Hollow Town", locked: !westOpen },
       ]}
-      ariaLabel="Coin Town map: C is the coin house, M is Mayor Cap, 1 to 5 are the neighbors with knowledge cards, and the arrows are the roads north to Cipher Town, east to Foundry Town and west to Hollow Town."
+      ariaLabel="Coin Town map: C is the coin house, M is Mayor Cap, 1 to 5 are the neighbors with knowledge cards, and the arrows are the roads north to Cipher Town, east to Foundry Town and west to Hollow Town, with the open south road to Quantum Campus."
       legend={[`C · ${t("Coin house")}　M · ${t("Mayor Cap")}　B · ${t("Beto")}`, TEACHERS.map((npc, i) => `${i + 1} · ${t(npc.title)}`).join("　")]} />,
   };
   return <WorldTownScreen config={config} restartOptions={restartOptions} onEnterLab={onEnterLab} />;

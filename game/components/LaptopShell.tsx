@@ -6,15 +6,18 @@ import { createPortal } from "react-dom";
 import { BackendLabel } from "./BackendLabel";
 import { LanguageSwitch } from "./LanguageSwitch";
 import { Calculator, useCalculator } from "./Calculator";
+import { CampusReference } from "./CampusNotebook";
 
 /** Shared laptop chrome and controls for every scenario. Contents stay mounted
  * while closed so a player never loses an experiment by lowering the lid. */
-export function LaptopShell({ open, title, status, memory, footer, children, onClose, closeDisabled = false, restartControl, calculator = false, selectedBackend = false }: {
+export function LaptopShell({ open, title, status, memory, footer, children, onClose, closeDisabled = false, restartControl, calculator = false, selectedBackend = false, foundations = true }: {
   open: boolean; title: string; status?: ReactNode; memory?: ReactNode;
   restartControl?: ReactNode;
   footer?: ReactNode; children: ReactNode; onClose: () => void; closeDisabled?: boolean;
   /** Offer the whole-number calculator, for benches with sums to work out. */
   calculator?: boolean; selectedBackend?: boolean;
+  /** Campus laptops already provide the full notebook in their navigation. */
+  foundations?: boolean;
 }) {
   useLocale((state) => state.locale);
   const calculatorOpen = useCalculator((state) => state.open);
@@ -76,7 +79,7 @@ export function LaptopShell({ open, title, status, memory, footer, children, onC
               <div className="flex flex-wrap items-center justify-end gap-2">{calculator && <button type="button" className="btn-ghost" aria-pressed={calculatorOpen}
                 onClick={() => useCalculator.getState().toggle()}>🧮 {t("Calculator")}</button>}{restartControl}<LanguageSwitch /><button className="btn-ghost" disabled={closeDisabled} onClick={onClose}>{t("Close laptop")}</button></div>
             </header>
-            <div className="laptop-scroll">{calculator && calculatorOpen && <Calculator />}{localize(memory && <div className="laptop-memory">{localize(memory)}</div>)}{localize(children)}</div>
+            <div className="laptop-scroll">{calculator && calculatorOpen && <Calculator />}{localize(memory && <div className="laptop-memory">{localize(memory)}</div>)}{foundations && <CampusReference />}{localize(children)}</div>
             <footer className="laptop-footer">{localize(footer ?? <p>{t("Results stay here when you close the laptop.")}</p>)}</footer>
           </div>
         </div>

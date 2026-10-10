@@ -42,7 +42,7 @@ test("inspection reveals only its town, saves before entry, and repeat inspectio
   assert.equal(discoverLab("foundry"), false);
 });
 
-test("all five passages share lab contents and return to safe origin tiles after rehydration", async () => {
+test("all passages share lab contents and return to safe origin tiles after rehydration", async () => {
   reset();
   const inventory = useLab.getState().owned,
     recipe = useLab.getState().recipe;

@@ -14,12 +14,13 @@ export interface TeachingCheckpoint {
   code: string;
   title: string;
   stage: 1 | 2 | 3;
-  location: "coinTown" | "foundry" | "hollow" | "cipher" | "town";
+  location: "campus" | "coinTown" | "foundry" | "hollow" | "cipher" | "town";
   cards: KnowledgeId[];
   completed: Partial<Record<ScenarioId, string[]>>;
 }
 export function checkpoint(code: string): TeachingCheckpoint | null {
   const normalized = code.trim().toLowerCase();
+  if (/^qc[123]$/.test(normalized)) return { code: normalized, title: "Quantum Campus", stage: Number(normalized.at(-1)) as 1 | 2 | 3, location: "campus", cards: [], completed: {} };
   const hub = normalized === "qt1";
   const index = hub ? 4 : CHECKPOINT_TOWNS.findIndex((town) => new RegExp(`^${town.prefix}[123]$`).test(normalized));
   if (index < 0) return null;
@@ -34,6 +35,7 @@ export function checkpoint(code: string): TeachingCheckpoint | null {
   return { code: normalized, title: hub ? "Quantum Town" : town.title, stage, location: hub ? "town" : town.location, cards, completed };
 }
 export function currentCheckpoint(location: string, cards: readonly KnowledgeId[], completed: Record<string, string[]>, earned: Partial<Record<MedalId, string>> = {}, labFrom: LabTown = "coinTown"): string {
+  if (location === "campus") return earned["quantum-explorer"] ? "qc3" : completed.campus?.includes("orientation") ? "qc2" : "qc1";
   if (location === "town") return "qt1";
   if (location === "lab") return currentCheckpoint(labFrom, cards, completed, earned);
   const town = CHECKPOINT_TOWNS.find((item) => item.location === location || (location === "coin" && item.scenario === "coin") || (location === "grover" && item.scenario === "grover") || (location === "vault" && item.scenario === "vault")) ?? CHECKPOINT_TOWNS[0];

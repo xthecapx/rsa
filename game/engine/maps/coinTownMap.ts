@@ -1,5 +1,5 @@
 import { townMap } from "./townMap";
-import { COIN_TOWN_DOOR, COIN_TOWN_EAST_SIGN, COIN_TOWN_NORTH_ROAD, COIN_TOWN_NPCS, COIN_TOWN_SIDE_ROAD, COIN_TOWN_WEST_SIGN } from "@/content/coinTown";
+import { COIN_TOWN_DOOR, COIN_TOWN_EAST_SIGN, COIN_TOWN_NORTH_ROAD, COIN_TOWN_CAMPUS_ROAD, COIN_TOWN_NPCS, COIN_TOWN_SIDE_ROAD, COIN_TOWN_WEST_SIGN } from "@/content/coinTown";
 
 /**
  * Coin Town terrain, drawn with the same Kenney legend as Quantum Town. The
@@ -59,6 +59,7 @@ for (let y = 1; y < height - 1; y++) for (let x = 1; x < width - 1; x++) {
 for (const sign of [COIN_TOWN_EAST_SIGN, COIN_TOWN_WEST_SIGN]) if (ground[sign.at.y][sign.at.x] === "I" || overlay[sign.at.y][sign.at.x] !== ".") throw new Error("A signpost stands on a solid tile");
 for (const npc of COIN_TOWN_NPCS) if (ground[npc.at.y][npc.at.x] === "I" || overlay[npc.at.y][npc.at.x] !== ".") throw new Error(`${npc.id} stands on a solid tile`);
 
+for (const x of COIN_TOWN_CAMPUS_ROAD) ground[height - 1][x] = "p"; // Always-open campus road.
 // A secluded path stays inside the wall, away from the east travel gate.
 fill(21, 27, 15, 1, "q"); fill(35, 25, 2, 3, "v");
 // Move the tree out of the path; keep the cave screened on either side.

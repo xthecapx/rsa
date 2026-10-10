@@ -3,7 +3,8 @@
 Playable quantum-computing scenarios on a road of small towns: **Who Goes
 First?** in Coin Town, **Echo Chamber** (Grover) in Foundry Town, **Operation
 Ghost Key** (Bernstein–Vazirani) in Hollow Town, and **Breaking RSA** in Cipher Town,
-across plaintext, Caesar, RSA, and Shor. See [AGENTS.md](AGENTS.md) for the current
+across plaintext, Caesar, RSA, and Shor. The optional **Quantum Campus** offers
+eight interactive foundations exhibits and a science-festival badge. See [AGENTS.md](AGENTS.md) for the current
 game structure and development context. The separate `frontend/` presentation tool retains its depth tiers
 and IBM batch readout.
 
@@ -73,6 +74,58 @@ and migrations. HTTP and Qollab still use the same domain services; the shared
 request helper never retries quantum jobs automatically. See `AGENTS.md` for
 ownership boundaries and the required real-browser checks.
 
+## Quantum Campus
+
+New games begin in **Coin Town**, where Mayor Cap invites players to visit
+**Quantum Campus** for optional quantum fundamentals. Returning saves continue
+where they left off. Walk south from Coin Town to visit the campus;
+you arrive at its north gate beside the guide and notebook. Start with Rosa’s
+workshop to the left and follow the exhibits south toward the festival. The north
+road leads back freely, with no badge requirement. The disturbed sand
+near the campus’s eastern wall hides another entrance to your shared personal lab.
+
+Help students prepare a science festival through eight open exhibits:
+
+| Exhibit | Try it |
+| --- | --- |
+| Quantum workshop | Arrange preparation, control and measurement; compare X and H. |
+| State passports | Connect the Bloch picture, ket and vector using θ and φ. |
+| Circuit delivery line | Place and reorder gates; compare circuit and matrix order. |
+| Superposition fountain | Compare plus/minus states before and after the H lens. |
+| Entangled observatory | Compare independent, Bell and classical-correlated models in Z/X. |
+| Measurement arcade | Run one shot and batches of fresh preparations. |
+| Quiet room | Introduce environmental dephasing and inspect lost interference. |
+| Reversible machine shop | Explore X/Y/Z rotations and undo them with an inverse. |
+
+Use **Play**, **Explain**, or **Show the math** at any time. **Open the Festival**
+is a separate three-repair activity that can be attempted directly. Its
+**Quantum Explorer** badge never unlocks or blocks a town or lab equipment.
+The searchable **Campus field notebook** is also available inside lesson
+and personal-lab laptops without leaving the current experiment.
+
+Only **Run** executes a circuit. Histograms show returned measurements; Bloch,
+ket/vector, density-matrix and interference displays are labeled ideal references.
+The Python version uses your ideal/noisy Aer selection. Qollab uses its selected
+local simulator; when IonQ or a physical QPU is selected, campus practice uses
+BasicSimulator, preserving the remote job for a final challenge or lab experiment.
+Completion depends on the intended experiment and explanation, not perfect noisy counts.
+
+The quiet room explicitly models E_d(ρ)=(1−d/2)ρ+(d/2)ZρZ for d between zero
+and one, with a coupled, unobserved helper. Coherence decreases monotonically;
+100% means full dephasing. This teaching channel is separate from device noise.
+Only data qubits are measured. The observatory’s envelopes model likewise uses
+a dephased Bell preparation; comparing its Z/X distributions with a Bell pair
+does not constitute general certification of entanglement.
+
+Browser saves retain unfinished campus settings, explanations, returned results,
+up to six recent measurements per exhibit, discoveries and festival progress.
+Refresh or reopening never resubmits work. When storage is blocked or the runtime
+restarts, use **Save progress**: `qc1` restores campus arrival, `qc2` restores all
+eight discoveries, and `qc3` restores the orientation and festival badge preset.
+These independent shortcuts merge existing progress without granting other towns’
+medals, cards, money or equipment. They do not encode experiment results.
+Campus restart retains the earned badge; full-game reset clears campus progress.
+
 ## Qollab bundle
 
 The same game supports a Qollab export alongside the existing Next.js/FastAPI
@@ -140,7 +193,7 @@ The server game includes a persistent **Simulation** selector for ideal Aer or
 depolarization, and 2% readout error; it does not claim to reproduce a device’s
 calibration. Selection is carried per request, so players do not change one
 another’s backend. Coin, Foundry/Hollow register benches, Grover, Ghost Key, and
-live RSA simulations and personal-lab experiments use this preference. Saved
+live RSA simulations, campus exhibits and personal-lab experiments use this preference. Saved
 results retain their original backend metadata. Full game resets retain this
 preference, like language and sound.
 Qollab uses its external QPU selection, including authorized live hardware runs.

@@ -128,3 +128,65 @@ def lab_circuit(body):
     qc.measure(range(n), range(n))
     text = str(qc.draw(output="text", reverse_bits=True))
     return qc, ideal, shots, text
+
+
+def campus_circuit(body):
+    """Campus channels via a traced-out environment: portable gate-only dilation.
+
+    Disturbance d in [0,1] realizes (1-d/2)ρ + (d/2)ZρZ. Thus
+    off-diagonals shrink by 1-d; d=1 is complete dephasing, not a Z gate.
+    Only the data qubits are measured; the helper is never in returned bitstrings.
+    """
+    import math
+    from qiskit import QuantumCircuit
+    from qiskit.quantum_info import Statevector
+    from .game_services import ServiceError, integer
+    mode = body.get("mode")
+    if mode == "circuit":
+        recipe = body.get("recipe")
+        if not isinstance(recipe, dict):
+            raise ServiceError(422, "Invalid campus circuit")
+        return lab_circuit(recipe)
+    shots = integer(body, "shots", 256, 1, 1024)
+    basis = body.get("basis", "Z")
+    if basis not in ("Z", "X"):
+        raise ServiceError(422, "Invalid measurement basis")
+    if mode == "dephasing":
+        d = body.get("disturbance", 0)
+        if isinstance(d, bool) or not isinstance(d, (float, int)) or not math.isfinite(d) or not 0 <= d <= 1:
+            raise ServiceError(422, "Disturbance must be between 0 and 1")
+        qc = QuantumCircuit(2, 1)
+        qc.h(1)
+        qc.barrier()
+        qc.ry(2 * math.asin(math.sqrt(d / 2)), 0)
+        qc.cz(0, 1)
+        data = [1]
+    elif mode == "correlation":
+        pair = body.get("pair")
+        if pair not in ("independent", "bell", "envelopes"):
+            raise ServiceError(422, "Invalid correlation preparation")
+        qc = QuantumCircuit(3 if pair == "envelopes" else 2, 2)
+        data = [1, 0]
+        qc.h(1)
+        qc.barrier()
+        if pair == "independent":
+            qc.h(0)
+        else:
+            qc.cx(1, 0)
+            if pair == "envelopes":
+                qc.barrier()
+                qc.h(2)
+                qc.cz(2, 1)
+    else:
+        raise ServiceError(422, "Unknown campus experiment")
+    qc.barrier()
+    if basis == "X":
+        qc.h(data)
+        qc.barrier()
+    state = Statevector.from_instruction(qc)
+    # qargs are least-significant first. UI wire zero is the leftmost output bit.
+    probabilities = state.probabilities(qargs=list(reversed(data)))
+    ideal = {format(i, f"0{len(data)}b"): round(float(p), 12) for i, p in enumerate(probabilities)}
+    for i, q in enumerate(reversed(data)):
+        qc.measure(q, i)
+    return qc, ideal, shots, str(qc.draw(output="text", reverse_bits=True))

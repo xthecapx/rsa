@@ -15,9 +15,12 @@ export interface Medal {
   hint: string;
 }
 
-export type MedalId = "quantum-coin" | "coin-town" | "codebook" | "key-ring" | "prime-cutter" | "period-lens" | "amplifier" | "foundry-town" | "ghost-key" | "hollow-town" | "cipher-town";
+export type MedalId = "quantum-explorer" | "quantum-coin" | "coin-town" | "codebook" | "key-ring" | "prime-cutter" | "period-lens" | "amplifier" | "foundry-town" | "ghost-key" | "hollow-town" | "cipher-town";
 
 export const MEDALS: readonly Medal[] = [
+  { id: "quantum-explorer", scenario: "campus", mission: "festival", glyph: "✦", title: "Quantum Explorer", skill: "Quantum foundations",
+    description: "You repaired the festival exhibits and explained superposition, entanglement and decoherence. The campus is always optional.",
+    ability: "Field Notes: connect circuits, states and observed measurements.", hint: "Open the Festival in Quantum Campus. No other exhibit is required." },
   {
     id: "quantum-coin", scenario: "coin", mission: "coin", glyph: "◐",
     title: "Quantum Coin", skill: "Superposition",

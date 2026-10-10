@@ -12,9 +12,13 @@ import { t, useLocale } from "@/i18n";
 export function AngleDial({
   value,
   onChange,
+  symbol = "θ",
+  label = "Rotation angle dial",
 }: {
   value: number;
   onChange: (radians: number) => void;
+  symbol?: "θ" | "φ";
+  label?: string;
 }) {
   const locale = useLocale((s) => s.locale);
   const help = useId();
@@ -70,7 +74,7 @@ export function AngleDial({
         tabIndex={0}
         className="lab-angle-dial"
         data-active={active}
-        aria-label={t("Rotation angle dial")}
+        aria-label={t(label)}
         aria-describedby={help}
         aria-valuemin={-360}
         aria-valuemax={360}
@@ -178,7 +182,7 @@ export function AngleDial({
           />
           <circle className="lab-angle-knob" cx={outer.x} cy={outer.y} r="8" />
           <text className="lab-angle-value" x="110" y="105" textAnchor="middle">
-            θ {display}°
+            {symbol} {display}°
           </text>
           <text
             className="lab-angle-radians"

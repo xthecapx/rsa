@@ -12,6 +12,7 @@ import { townMap } from "@/engine/maps/townMap";
 import { COIN_TOWN_SPAWN } from "@/content/coinTown";
 import { FOUNDRY_SPAWN } from "@/content/foundry";
 import { HOLLOW_SPAWN } from "@/content/hollow";
+import { CAMPUS_FACING, CAMPUS_SPAWN } from "@/content/campus";
 import { CIPHER_SPAWN } from "@/content/cipher";
 import { cleanLabDiscoveries, isLabTown, type LabDiscoveries, type LabTown } from "@/content/labEntrances";
 
@@ -26,7 +27,8 @@ export function exploreAround(explored: number[], at: { x: number; y: number }):
   }
   return cells.size === explored.length ? explored : [...cells];
 }
-export type TownSlot = "coinTown" | "foundry" | "hollow" | "cipher";
+export type TownSlot = "campus" | "coinTown" | "foundry" | "hollow" | "cipher";
+const CAMPUS_START = (): TownPlace => ({ position: { ...CAMPUS_SPAWN }, facing: CAMPUS_FACING, welcomed: false, explored: [] });
 const COIN_TOWN_START = (): TownPlace => ({ position: { ...COIN_TOWN_SPAWN }, facing: "up", welcomed: false, explored: [] });
 const FOUNDRY_START = (): TownPlace => ({ position: { ...FOUNDRY_SPAWN }, facing: "right", welcomed: false, explored: [] });
 const HOLLOW_START = (): TownPlace => ({ position: { ...HOLLOW_SPAWN }, facing: "left", welcomed: false, explored: [] });
@@ -38,7 +40,7 @@ function townPlace(value: Partial<TownPlace> | undefined, fallback: () => TownPl
       explored: Array.isArray(value!.explored) ? value!.explored.filter((cell) => Number.isInteger(cell) && cell >= 0) : [] }
     : fallback();
 }
-const LOCATIONS = ["town", "coinTown", "foundry", "hollow", "cipher", "coin", "grover", "vault", "lab"] as const;
+const LOCATIONS = ["campus", "town", "coinTown", "foundry", "hollow", "cipher", "coin", "grover", "vault", "lab"] as const;
 
 const CHECKPOINT_KEYS = ["act", "phase", "suspicion", "nodeId", "lineIndex", "lines", "choicesVisible", "waitingFor", "feedback", "panel", "terminal", "flags", "vars", "tasks", "pendingTravel", "capture", "reportError", "completedActs", "labMemory"] as const;
 export type RsaCheckpoint = Pick<GameState, (typeof CHECKPOINT_KEYS)[number]>;
@@ -59,6 +61,7 @@ export function restoreRsa(checkpoint: RsaCheckpoint) {
 }
 
 interface TownState {
+  campus: TownPlace;
   labFrom: LabTown;
   labEntrances: LabDiscoveries;
   welcomed: boolean;
@@ -94,7 +97,7 @@ export let townStorageUnavailable = false;
 const storage = saveStorage<TownState>(() => { townStorageUnavailable = true; });
 
 export const useTown = create<TownState>()(persist((set) => ({
-  labFrom: "coinTown", labEntrances: {}, welcomed: false, location: "coinTown", position: { ...TOWN_SPAWN }, facing: "up", tracked: "coin", coinTown: COIN_TOWN_START(), foundry: FOUNDRY_START(), hollow: HOLLOW_START(), cipher: CIPHER_START(), groverFrom: "foundry", vaultFrom: "hollow", rsaFrom: "cipher",
+  campus: CAMPUS_START(), labFrom: "coinTown", labEntrances: {}, welcomed: false, location: "coinTown", position: { ...TOWN_SPAWN }, facing: "up", tracked: "coin", coinTown: COIN_TOWN_START(), foundry: FOUNDRY_START(), hollow: HOLLOW_START(), cipher: CIPHER_START(), groverFrom: "foundry", vaultFrom: "hollow", rsaFrom: "cipher",
   discovered: [], explored: [], checkpoint: null, rsaPosition: null, requestedAct: null, interrupted: false, rsaRunning: false,
   patch: (values) => set(values),
   discover: (id) => set((state) => ({ discovered: Array.from(new Set([...state.discovered, id])) })),
@@ -106,15 +109,18 @@ export const useTown = create<TownState>()(persist((set) => ({
     }
     return cells.size === state.explored.length ? state : { explored: [...cells] };
   }),
-  reset: () => set({ labFrom: "coinTown", labEntrances: {}, welcomed: false, location: "coinTown", position: { ...TOWN_SPAWN }, facing: "up", tracked: "coin", coinTown: COIN_TOWN_START(), foundry: FOUNDRY_START(), hollow: HOLLOW_START(), cipher: CIPHER_START(), groverFrom: "foundry", vaultFrom: "hollow", rsaFrom: "cipher",
+  reset: () => set({ campus: CAMPUS_START(), labFrom: "coinTown", labEntrances: {}, welcomed: false, location: "coinTown", position: { ...TOWN_SPAWN }, facing: "up", tracked: "coin", coinTown: COIN_TOWN_START(), foundry: FOUNDRY_START(), hollow: HOLLOW_START(), cipher: CIPHER_START(), groverFrom: "foundry", vaultFrom: "hollow", rsaFrom: "cipher",
     discovered: [], explored: [], checkpoint: null, rsaPosition: null, requestedAct: null, interrupted: false, rsaRunning: false }),
 }), {
   name: "quantum-town-v1", version: 1, storage, skipHydration: true,
   merge: (saved, current) => {
-    const data = saved as Partial<TownState> | undefined;
-    if (!data || typeof data !== "object") return current;
+    if (!saved || typeof saved !== "object") return current;
+    const data = { ...saved } as Partial<TownState> & { entryChosen?: unknown };
+    // The retired starting-choice screen must never intercept a saved visit.
+    delete data.entryChosen;
     return {
       ...current, ...data, patch: current.patch, discover: current.discover, explore: current.explore, reset: current.reset,
+      campus: townPlace(data.campus, CAMPUS_START),
       labFrom: isLabTown(data.labFrom) ? data.labFrom : "coinTown",
       labEntrances: cleanLabDiscoveries(data.labEntrances),
       welcomed: data.welcomed === true,

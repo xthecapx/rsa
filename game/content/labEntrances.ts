@@ -1,5 +1,7 @@
 /** One passage per outdoor town; all lead to the same personal lab. */
 export const LAB_ENTRANCES = {
+  campus: { at: { x: 34, y: 30 }, stand: { x: 34, y: 31 }, facing: "down", title: "Quantum Campus",
+    hint: "Disturbed sand beside the campus’s eastern wall hides a passage." },
   coinTown: {
     at: { x: 36, y: 25 },
     stand: { x: 36, y: 26 },

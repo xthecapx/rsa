@@ -7,6 +7,8 @@ import { COIN_TOWN_ANIMALS, COIN_TOWN_DOOR, COIN_TOWN_EAST_SIGN, COIN_TOWN_NORTH
 import { FOUNDRY_ANIMALS, FOUNDRY_BELT, FOUNDRY_DOOR, FOUNDRY_NPCS, FOUNDRY_PROPS, FOUNDRY_SMOKE, FOUNDRY_SPAWN } from "@/content/foundry";
 import { HOLLOW_ANIMALS, HOLLOW_DOOR, HOLLOW_FOG, HOLLOW_NPCS, HOLLOW_PROPS, HOLLOW_SPAWN } from "@/content/hollow";
 import { CIPHER_ANIMALS, CIPHER_BOARD, CIPHER_NORTH_GATE_ROW, CIPHER_NORTH_ROAD, CIPHER_NPCS, CIPHER_PROPS, CIPHER_SPAWN } from "@/content/cipher";
+import { CAMPUS_NPCS, CAMPUS_PROPS, CAMPUS_SPAWN, CAMPUS_FESTIVAL, CAMPUS_NOTEBOOK } from "@/content/campus";
+import { campusMap } from "../maps/campusMap";
 import { LAB_ENTRANCES, type LabTown } from "@/content/labEntrances";
 import { LabEntrance } from "../actors/LabEntrance";
 import { cipherMap } from "../maps/cipherMap";
@@ -34,7 +36,7 @@ export interface WorldDef {
   map: { width: number; height: number; rows: string[]; overlay: string[]; legend: Record<string, { tile: number; solid: boolean }>; overlayLegend: Record<string, { tile: number; solid: boolean } | null> };
   spawn: GridPos;
   labTown: LabTown;
-  npcs: { id: NpcSprite; at: GridPos; label: string }[];
+  npcs: { id: string; sprite?: NpcSprite; at: GridPos; label: string }[];
   doors: { id: string; at: GridPos; stand: GridPos; label: string }[];
   animals?: AnimalSpec[];
   /** Barriers React can lift, e.g. the road to the next town. Closed until told otherwise; `lock` names what opens it. */
@@ -140,7 +142,7 @@ export class WorldScene extends Scene {
     for (const npc of this.def.npcs) {
       const at = tileCenter(npc.at);
       const actor = new Actor({ name: npc.id, pos: vec(at.x, at.y), width: TILE_SIZE, height: TILE_SIZE, z: 10 });
-      const sprite = npcImages[npc.id].toSprite();
+      const sprite = npcImages[npc.sprite ?? npc.id as NpcSprite].toSprite();
       actor.graphics.use(sprite);
       this.add(actor);
       this.idlers.push({ actor, sprite, seed: this.idlers.length * 1.7, glance: 2000 + Math.random() * 5000 });
@@ -539,3 +541,14 @@ export const CIPHER_WORLD: WorldDef = {
 export class CipherScene extends WorldScene {
   constructor() { super(CIPHER_WORLD); }
 }
+
+
+export const CAMPUS_WORLD: WorldDef = {
+  labTown: "campus", map: campusMap, spawn: CAMPUS_SPAWN,
+  npcs: CAMPUS_NPCS.map(n => ({ ...n, label: n.title })),
+  doors: [{ id: "labDoor", ...LAB_ENTRANCES.campus, label: "Personal quantum lab" },
+    { ...CAMPUS_FESTIVAL, label: CAMPUS_FESTIVAL.title }, { ...CAMPUS_NOTEBOOK, label: CAMPUS_NOTEBOOK.title }],
+  props: CAMPUS_PROPS,
+  animals: [{ kind: "cat", home: { x: 12, y: 30 }, radius: 3 }],
+};
+export class CampusScene extends WorldScene { constructor() { super(CAMPUS_WORLD); } }

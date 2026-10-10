@@ -327,3 +327,29 @@ def test_lab_rotation_axes_execute_through_qollab_dispatch(axis):
     assert result["status"] == 200
     assert result["data"]["counts"] == {"1": 100}
     assert result["data"]["backend"] == "basic_simulator"
+
+@pytest.mark.parametrize("provider", ["ionq", "hardware"])
+def test_campus_repeated_practice_never_uses_remote_allowance(provider):
+    from unittest.mock import patch
+    class Remote(BasicSimulator):
+        @property
+        def simulator(self):
+            return provider != "hardware"
+    if provider == "ionq":
+        Remote.__module__ = "qiskit_ionq.ionq_backend"
+    backend = Remote()
+    backend.name = "ionq_simulator" if provider == "ionq" else "ibm_hardware"
+    assert services.describe(backend)["remote_final_only"]
+    with patch.object(backend, "run", wraps=backend.run) as submitted:
+        for body in [
+            {"mode": "dephasing", "disturbance": 0, "basis": "X"},
+            {"mode": "dephasing", "disturbance": 1, "basis": "X"},
+            {"mode": "correlation", "pair": "envelopes", "basis": "X"},
+            {"mode": "circuit", "recipe": {"qubits": 1, "start": "0", "operations": [{"gate": "H", "wire": 0}], "shots": 16}},
+        ]:
+            result = call("/api/campus/run", body, backend)
+            assert result["status"] == 200, result
+            assert result["data"]["backend"] == "basic_simulator"
+            assert sum(result["data"]["counts"].values()) == result["data"]["shots"]
+        submitted.assert_not_called()
+        assert not services._used.get(backend)

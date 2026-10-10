@@ -58,7 +58,7 @@ export function CheckpointControl({ disabled: parentDisabled, onOpenChange }: { 
         <label className="block text-sm text-accent-teal">{t("Your checkpoint code")}
           <input className="mt-2 w-full bg-stage-bg p-3 font-mono text-lg text-accent-amber" readOnly value={code} onFocus={(event) => event.target.select()} />
         </label>
-        <p className="text-sm text-stage-muted">{t(checkpoint(code)!.title)} · {t(code === "qt1" ? "Quantum Town replay hub" : STAGES[checkpoint(code)!.stage - 1])}</p>
+        <p className="text-sm text-stage-muted">{t(checkpoint(code)!.title)} · {t(code.startsWith("qc") ? ["Campus arrival", "Campus orientation complete", "Quantum Explorer badge earned"][checkpoint(code)!.stage - 1] : code === "qt1" ? "Quantum Town replay hub" : STAGES[checkpoint(code)!.stage - 1])}</p>
         <p className="text-xs text-stage-muted">{t("Codes restore town milestones: completed neighbor lessons, challenges, and earlier town badges. Unfinished conversations, circuits, and measurement results are not included.")}</p>
         <p className="text-xs text-stage-muted">{t("These are lesson shortcuts, not exact saves. Restoring a challenge-complete code also grants that town’s optional knowledge cards and town badge.")}</p>
         <div className="space-y-2">
@@ -77,6 +77,7 @@ export function CheckpointControl({ disabled: parentDisabled, onOpenChange }: { 
           <div className="grid gap-1">{STAGES.map((stage, index) => <button key={stage} type="button" className="btn-ghost flex items-center gap-3 p-2 text-left text-xs" disabled={disabled}
             onClick={() => restore(`${town.prefix}${index + 1}`)}><code className="text-accent-amber">{town.prefix}{index + 1}</code><span>{t(stage)}</span></button>)}</div>
         </section>)}</div>
+        <section><h4 className="mb-2 text-sm">{t("Quantum Campus · independent shortcuts")}</h4>{["Campus arrival", "Campus orientation complete", "Quantum Explorer badge earned"].map((label, i) => <button key={label} className="btn-ghost mb-1 block w-full text-left text-sm" disabled={disabled} onClick={() => restore(`qc${i + 1}`)}><code>qc{i + 1}</code> · {t(label)}</button>)}</section>
         <button type="button" className="btn-ghost w-full text-left text-sm" disabled={disabled} onClick={() => restore("qt1")}><code className="text-accent-amber">qt1</code> · {t("Quantum Town replay hub")}</button>
       </div>
     </div>, document.body)}

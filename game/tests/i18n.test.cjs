@@ -18,8 +18,8 @@ test('Spanish preserves every runtime placeholder', () => {
   }
 });
 test('all scenario dialogue, choices, objectives and catalog entries have translations', () => {
-  const fields = new Set(['text', 'label', 'title', 'subtitle', 'brief', 'feedback', 'objective', 'wrong', 'description', 'setting', 'difficulty', 'lessons', 'scheme', 'skill', 'ability', 'hint']);
-  const files = ['content/labEntrances.ts', 'content/lab.ts', 'content/coin.ts', 'content/coinTown.ts', 'content/foundry.ts', 'content/hollow.ts', 'content/cipher.ts', 'content/grover.ts', 'content/vault.ts', 'content/town.ts', 'content/scenarios.ts', 'content/medals.ts', ...[1, 2, 3, 4].map((n) => `content/acts/act${n}.ts`)];
+  const fields = new Set(['text', 'brief', 'explain', 'math', 'question', 'goal', 'discovery', 'label', 'title', 'subtitle', 'brief', 'feedback', 'objective', 'wrong', 'description', 'setting', 'difficulty', 'lessons', 'scheme', 'skill', 'ability', 'hint']);
+  const files = ['content/campus.ts', 'content/labEntrances.ts', 'content/lab.ts', 'content/coin.ts', 'content/coinTown.ts', 'content/foundry.ts', 'content/hollow.ts', 'content/cipher.ts', 'content/grover.ts', 'content/vault.ts', 'content/town.ts', 'content/scenarios.ts', 'content/medals.ts', ...[1, 2, 3, 4].map((n) => `content/acts/act${n}.ts`)];
   let checked = 0;
   for (const file of files) {
     const ast = ts.createSourceFile(file, fs.readFileSync(path.join(root, file), 'utf8'), ts.ScriptTarget.Latest, true);
@@ -62,4 +62,12 @@ test('every literal UI message has a translation or is an explicit technical sym
   }
   scan(path.join(root, 'components'));
   scan(path.join(root, 'app'));
+});
+
+test('every campus exhibit option and notebook explanation has Spanish copy', () => {
+  const { loadTs } = require('./loadTs.cjs');
+  const { CAMPUS_EXHIBITS, CAMPUS_NOTEBOOK_ENTRIES, CAMPUS_WELCOME } = loadTs(path.join(root, 'content/campus.ts'));
+  for (const exhibit of CAMPUS_EXHIBITS) for (const text of [exhibit.title, exhibit.brief, exhibit.explain, exhibit.math, exhibit.question, exhibit.goal, exhibit.discovery, ...exhibit.options]) assert.ok(catalog[text], text);
+  for (const entry of CAMPUS_NOTEBOOK_ENTRIES) for (const text of [entry.title, entry.text]) assert.ok(catalog[text], text);
+  assert.ok(catalog[CAMPUS_WELCOME]);
 });

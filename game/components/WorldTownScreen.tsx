@@ -70,6 +70,7 @@ export interface WorldMission {
 
 /** Everything that makes one town different from another; the screen does the rest. */
 export interface TownConfig {
+  exploration?: { done: string[]; next: string | null; objective: string };
   world: WorldName;
   slot: TownSlot;
   title: string; subtitle: string;
@@ -142,6 +143,7 @@ export function WorldTownScreen({ config, restartOptions, onEnterLab }: { config
   useLocale((state) => state.locale);
   const labRevealed = useTown((state) => !!state.labEntrances[config.slot]);
   const saved = useTown((state) => state[config.slot]);
+  const executing = useGame(s => s.operations > 0 || s.phase === "busy" || !!s.busyLabel);
   const walking = useGame((state) => state.walking);
   const allCards = useKnowledge((state) => state.cards);
   const badge = useMedals((state) => !!state.earned[config.badge.medal]);
@@ -218,9 +220,9 @@ export function WorldTownScreen({ config, restartOptions, onEnterLab }: { config
   const next: string | null = !saved.welcomed || (ready && !badge) ? greeter.id : badge ? config.afterBadge()
     : config.route.find((id) => (stageById(id) ? !stageById(id)!.complete : id === challenge.door ? !challenge.complete : !cards.includes(npcById(id)!.knowledge!))) ?? greeter.id;
   const nextStage = next ? stageById(next) : undefined;
-  const tracked = mission?.active ? mission.track : nextStage ? nextStage.target : next;
-  const alerts = [...teachers.filter((npc) => !cards.includes(npc.knowledge!)).map((npc) => npc.id), ...(next === greeter.id ? [greeter.id] : [])];
-  const done = [...(challenge.complete ? [challenge.door] : []), ...teachers.filter((npc) => cards.includes(npc.knowledge!)).map((npc) => npc.id), ...(badge ? [greeter.id] : [])];
+  const tracked = mission?.active ? mission.track : config.exploration ? config.exploration.next : nextStage ? nextStage.target : next;
+  const alerts = [...(config.exploration ? config.npcs.filter(n => !config.exploration!.done.includes(n.id)).map(n => n.id) : []), ...teachers.filter((npc) => !cards.includes(npc.knowledge!)).map((npc) => npc.id), ...(next === greeter.id ? [greeter.id] : [])];
+  const done = [...(config.exploration?.done ?? []), ...(challenge.complete ? [challenge.door] : []), ...teachers.filter((npc) => cards.includes(npc.knowledge!)).map((npc) => npc.id), ...(badge ? [greeter.id] : [])];
   const gateKey = Object.entries(config.gates).map(([id, open]) => `${id}:${open}`).join();
   const markerKey = `${alerts.join()}|${done.join()}|${tracked}|${gateKey}`;
   useEffect(() => {
@@ -304,7 +306,7 @@ export function WorldTownScreen({ config, restartOptions, onEnterLab }: { config
     } },
     ...(mission?.restartOptions ?? []),
     ...restartOptions,
-  ]} disabled={!sceneReady || activityBusy || !!mission?.shell.backDisabled} onOpenChange={setRestartOpen} />;
+  ]} disabled={!sceneReady || executing || activityBusy || !!mission?.shell.backDisabled} onOpenChange={setRestartOpen} />;
 
   const npc = activity ? npcById(activity.npc)! : null;
   const step = npc && activity ? npc.steps[activity.step] : null;
@@ -321,10 +323,10 @@ export function WorldTownScreen({ config, restartOptions, onEnterLab }: { config
     </ul>
     <p className="text-stage-muted">{t(LAB_ENTRANCES[config.slot].hint)}</p>
     {config.journal.extra}
-    <section className="panel space-y-2 p-3" aria-label={t("Knowledge cards")}>
+    {cardIds.length > 0 && <section className="panel space-y-2 p-3" aria-label={t("Knowledge cards")}>
       <div className="flex items-baseline justify-between gap-2"><h3 className="text-accent-amber">{t("Knowledge cards")}</h3><span className="text-xs text-stage-muted">{cards.length} / {cardIds.length}</span></div>
       <ul className="knowledge-grid">{cardIds.map((id) => <KnowledgeCardView key={id} card={config.cards[id]} teacher={teacherFor(id)} learned={cards.includes(id)} />)}</ul>
-    </section>
+    </section>}
     <MedalCase compact />
   </div>;
   const nearNpc = near ? npcById(near) : undefined;
@@ -333,6 +335,7 @@ export function WorldTownScreen({ config, restartOptions, onEnterLab }: { config
   const nearLabel = near === "labDoor" ? (labRevealed ? "Enter the lab" : "Inspect the disturbed sand") : near && mission?.nearLabel(near) ? mission.nearLabel(near) : near === challenge.door ? challenge.enter : near && config.nearLabels[near] ? config.nearLabels[near] : nearNpc ? `${t("Talk to")} ${t(nearNpc.title)}` : petAction ? nearPet === "dog" ? "Pet the dog" : "Pet the cat" : null;
   const nextNpc = next ? npcById(next) : undefined;
   const objective = mission?.active ? mission.objective
+    : config.exploration ? config.exploration.objective
     : nextStage ? nextStage.objective
     : next === greeter.id ? (badge ? null : ready ? t(`Optional: ${t(config.badge.collect)}`) : greeter.meet)
     : next === challenge.door ? challenge.objective
@@ -344,11 +347,11 @@ export function WorldTownScreen({ config, restartOptions, onEnterLab }: { config
   const missionTalk = mission?.talk;
   return <GameShell restartControl={restartControl} title={t(config.title)} subtitle={missionShell?.subtitle ?? t(config.subtitle)}
     missionProgress={missionShell?.missionProgress}
-    backHref="/" backLabel={missionShell?.backLabel ?? t(greeter.title)} backDisabled={activityBusy || missionShell?.backDisabled}
-    onBack={() => { if (missionShell?.onBack) missionShell.onBack(); else if (!talk && !activityVisible) talkToGreeter(); }}
+    backHref="/" backLabel={missionShell?.backLabel ?? t(greeter.title)} backDisabled={executing || activityBusy || missionShell?.backDisabled}
+    onBack={() => { if (missionShell?.onBack) missionShell.onBack(); else if (!talk && !activityVisible && !panel) talkToGreeter(); }}
     sidebar={journal} objectives={journal} onObjectivesOpen={setJournalOpen}
     sceneReady={sceneReady} sceneFailed={sceneStatus === "error"} laptopOpen={activityVisible || !!missionShell?.laptopOpen} laptopReady={!!activity || !!missionShell?.laptopReady}
-    onOpenLaptop={() => missionShell?.onOpenLaptop ? missionShell.onOpenLaptop() : activity ? setActivityOpen(true)
+    onOpenLaptop={() => config.exploration ? setPanel("notebook") : missionShell?.onOpenLaptop ? missionShell.onOpenLaptop() : activity ? setActivityOpen(true)
       : say("Your laptop", [{ speaker: "system", text: "Neighbors lend you their benches here. Talk to anyone whose name board starts with !." }], [{ label: "Keep exploring", action: close }])}>
     {hydrated && <GameCanvas world={config.world} onReady={onReady} onError={onError} />}
     {sceneReady && <>

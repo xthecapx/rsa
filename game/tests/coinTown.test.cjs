@@ -67,7 +67,7 @@ function solidGrid(map, extra = []) {
   for (const at of extra) grid[at.y][at.x] = true;
   return grid;
 }
-test('Coin Town: every neighbor, the coin house and all three roads are reachable from the start', () => {
+test('Coin Town: every neighbor, the coin house and all four roads are reachable from the start', () => {
   const signs = [COIN_TOWN_EAST_SIGN.at, COIN_TOWN_WEST_SIGN.at];
   const grid = solidGrid(coinTownMap, [...COIN_TOWN_NPCS.map((npc) => npc.at), ...signs]);
   const beside = (at) => [{ x: 0, y: 1 }, { x: 0, y: -1 }, { x: 1, y: 0 }, { x: -1, y: 0 }].map((d) => ({ x: at.x + d.x, y: at.y + d.y }));
@@ -81,7 +81,14 @@ test('Coin Town: every neighbor, the coin house and all three roads are reachabl
     assert.ok(findRoute(grid, COIN_TOWN_SPAWN, { x: 0, y }), `west road row ${y}`);
   }
   // The roads are the only ways out, and each gate closes its road completely.
-  assert.ok(grid[coinTownMap.height - 1].every((solid) => solid), 'south wall is closed');
+  grid[coinTownMap.height - 1].forEach((solid, x) => assert.equal(!solid, [19, 20, 21].includes(x), `campus road ${x}`));
+  for (const x of [19, 20, 21]) assert.ok(findRoute(gatedGrid(), COIN_TOWN_SPAWN, { x, y: coinTownMap.height - 1 }));
+  function gatedGrid() {
+    const closed = grid.map(row => [...row]);
+    for (const x of COIN_TOWN_NORTH_ROAD) closed[NORTH_GATE_ROW][x] = true;
+    for (const y of COIN_TOWN_SIDE_ROAD) for (const x of [EAST_GATE_COL, WEST_GATE_COL]) closed[y][x] = true;
+    return closed;
+  }
   grid[0].forEach((solid, x) => assert.equal(!solid, COIN_TOWN_NORTH_ROAD.includes(x), `top edge ${x}`));
   grid.forEach((row, y) => {
     assert.equal(!row[0], COIN_TOWN_SIDE_ROAD.includes(y), `left edge ${y}`);

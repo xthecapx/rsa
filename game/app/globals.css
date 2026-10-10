@@ -860,3 +860,23 @@ html[data-compact-viewport="true"] .laptop-footer { padding: 4px 8px; font-size:
 .lab-rotation-axes button[aria-pressed="true"] { border-color:#efbe67; color:#ffe5aa; background:#4a4430; }
 .lab-bloch-vector { transition:transform 180ms ease-out; }
 @media (prefers-reduced-motion: reduce) { .lab-bloch-vector { transition:none; } }
+
+/* Campus exhibits share laptop tools and reserve a clear work area on small screens. */
+.campus-exhibit-intro { display: flex; align-items: center; gap: 1rem; }
+.campus-exhibit-glyph { flex: 0 0 auto; display: grid; place-items: center; width: 64px; height: 64px; border-radius: 50%; background: #123941; color: #90e0cd; font: 2rem monospace; }
+.campus-choice legend { color: #90e0cd; margin-bottom: .6rem; }
+.campus-choice button[aria-pressed="true"] { border-color: #ffb13d; background: #ffb13d22; }
+.campus-experiment-layout { display: grid; gap: 1.25rem; grid-template-columns: minmax(200px, .7fr) minmax(0, 1.3fr); }
+.campus-workspace { min-height: 230px; padding: 1rem 1rem 5.5rem; border: 1px solid #39616b; border-radius: 12px; background: #102e38; }
+.campus-tape { display: flex; align-items: center; gap: 1rem; overflow-x: auto; min-height: 72px; padding: .5rem 0; }
+.campus-gate-slot, .campus-gate { display: inline-grid; place-items: center; flex: 0 0 auto; min-width: 48px; min-height: 48px; padding: .4rem; border: 2px solid #63858a; border-radius: 8px; background: #163e49; font-family: monospace; font-size: 1rem; }
+.campus-gate-slot:hover { border-color: #ffb13d; }
+@media (max-width: 850px) { .campus-experiment-layout { grid-template-columns: minmax(0,1fr); } .campus-exhibit-glyph { width: 40px; height: 40px; font-size: 1.5rem; } }
+.campus-state-passport { display: grid; gap: .5rem; overflow-x: auto; padding: 1rem; border-left: 3px solid #ffb13d; background: #0b1f26; font-size: .85rem; }
+.campus-paired-signals { display: flex; align-items: center; justify-content: space-around; gap: .5rem; padding: 1rem 0; font-size: .85rem; }
+.campus-paired-signals > span { color: #90e0cd; font-size: 2.5rem; }
+
+.campus-register { display:flex; gap:1rem; overflow-x:auto; padding:.75rem 0; }
+.campus-register-column { display:grid; gap:1rem; position:relative; grid-template-rows:48px 48px; flex:0 0 auto; align-items:center; }
+.campus-register-column.connected::before { content:""; position:absolute; top:24px; bottom:24px; left:50%; width:2px; background:#90e0cd; }
+.campus-register-column .campus-gate-slot { position:relative; z-index:1; }

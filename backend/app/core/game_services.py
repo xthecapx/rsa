@@ -310,6 +310,8 @@ def vault(backend, action, body, *, read_device=read_token, write_device=token, 
 
 
 def dispatch(backend, path, body, *, shor_handler=None, executor=execute):
+    if path == "/api/campus/run":
+        return campus(backend, body, executor=executor)
     if path == "/api/lab/run":
         return lab(backend, body, executor=executor)
     if path == "/api/health":
@@ -388,9 +390,19 @@ def register(backend, action, body, *, executor=execute):
 
 def lab(backend, body, *, executor=execute):
     from .register_circuit import lab_circuit
-    circuit, ideal, shots, text = lab_circuit(body)
+    return measured_circuit(backend, lab_circuit(body), executor=executor)
+
+
+def campus(backend, body, *, executor=execute):
+    from .register_circuit import campus_circuit
+    return measured_circuit(backend, campus_circuit(body), executor=executor)
+
+
+def measured_circuit(backend, built, *, executor=execute):
+    """One result contract for lab and campus, excluding any unmeasured helper."""
+    circuit, ideal, shots, text = built
     counts, _, compiled, info = executor(backend, circuit, shots)
-    return {"bits": circuit.num_qubits, "shots": shots, "counts": counts,
+    return {"bits": circuit.num_clbits, "shots": shots, "counts": counts,
             "probabilities": ideal, "backend": info["backend"], "kind": info["kind"],
             "source": "hardware" if info["kind"] == "hardware" else "simulator",
             "circuit_text": text, "depth": compiled.depth()}

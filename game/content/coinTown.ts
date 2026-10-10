@@ -164,6 +164,7 @@ export function coinTownNpc(id: CoinTownNpcId): CoinTownNpc {
 /** Mayor Cap's lines, picked from the player's progress. Every town is welcomed by a Cap; Professor Thecap in Quantum Town is her cousin. */
 export const MAYOR = {
   welcome: { speaker: "mayor", text: "Welcome to Coin Town! I’m Cap, the mayor. Everyone here knows one small piece of how a qubit works. Settle Ale and Brayan’s coin toss in the house up north to earn the Quantum Coin and open the east road to Foundry Town. The neighbors are here if you want to practice first." },
+  campus: { speaker: "mayor", text: "If quantum is new to you, head south to Quantum Campus. You can explore qubits, circuits, superposition, entanglement and decoherence there. It’s optional, and you’re welcome anytime." },
   guide: { speaker: "mayor", text: "Luz is by the lamps, Don Óscar at his lens shop, Tomás at the east house, Nico at the weathervane and Marisol at the fountain. Their knowledge cards are optional. You can go straight to the coin challenge; finishing it opens the east road. Come back to me afterward for the town badge." },
   coinWaiting: { speaker: "mayor", text: "The coin toss is still waiting in the house up north." },
   coinDone: { speaker: "mayor", text: "Ale and Brayan’s coin toss is settled." },
@@ -227,3 +228,7 @@ export const COIN_TOWN_ANIMALS: AnimalSpec[] = [
   { kind: "duck", home: { x: 9, y: 23 }, radius: 3, ground: "v" },
   { kind: "duck", home: { x: 11, y: 22 }, radius: 3, ground: "v" },
 ];
+
+/** The optional campus road is never gated by a medal. */
+export const COIN_TOWN_CAMPUS_ROAD = [19, 20, 21];
+export const COIN_TOWN_FROM_CAMPUS = { x: 20, y: 28 };
