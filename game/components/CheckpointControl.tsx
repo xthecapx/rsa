@@ -20,7 +20,8 @@ export function CheckpointControl({ disabled: parentDisabled, onOpenChange }: { 
   const cards = useKnowledge((state) => state.cards);
   const completed = useProgress((state) => state.completed);
   const earned = useMedals((state) => state.earned);
-  const code = currentCheckpoint(location, cards, completed, earned);
+  const labFrom = useTown((state) => state.labFrom);
+  const code = currentCheckpoint(location, cards, completed, earned, labFrom);
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [error, setError] = useState(false);

@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
+import { LAB_ENTRANCES, type LabTown } from "@/content/labEntrances";
 import { LAB_ITEMS, itemAvailable, labTier } from "@/content/lab";
 import { useLab } from "@/game/lab";
 import { useMedals } from "@/game/medals";
@@ -29,9 +30,11 @@ import { LabRoomArt } from "./LabArt";
 
 export function LabScreen({
   onExit,
+  returnTown,
   onRestartGame,
 }: {
   onExit: () => void;
+  returnTown: LabTown;
   onRestartGame: () => void;
 }) {
   useLocale((s) => s.locale);
@@ -185,7 +188,7 @@ export function LabScreen({
           <LanguageSwitch />
           <MuteButton />
           <button className="btn-ghost" disabled={busy} onClick={onExit}>
-            {t("Return to Coin Town")}
+            {t(`Return to ${t(LAB_ENTRANCES[returnTown].title)}`)}
           </button>
         </div>
       </header>

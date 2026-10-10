@@ -256,6 +256,8 @@ export function ShorPipeline({ armed }: { armed: boolean }) {
         if (alive()) setStage(null);
       }
     }, {
+      start: () => useGame.setState((state) => ({ operations: state.operations + 1 })),
+      settled: () => useGame.setState((state) => ({ operations: Math.max(0, state.operations - 1) })),
       isCurrent: () => token === missionGeneration(),
       success() {},
       error(cause) {

@@ -65,9 +65,20 @@ their earned gear.
 
 ## Personal lab
 
-A hidden cave at (36,25) in southeast Coin Town opens an ungated personal lab;
-leave to (36,26). Its marker appears on discovery. `LabScreen` uses the shared
-React/SVG HouseRoom for exploration; the outdoor Excalibur engine is paused.
+Each outdoor town has a concealed sand-and-stones entrance to one shared, ungated
+personal lab. `content/labEntrances.ts` owns entrance/standing tiles and hints:
+Coin (36,25), Foundry (25,9), Hollow (12,10), Cipher (19,29), Quantum (57,28).
+Inspect reveals and saves only that town’s entrance before offering entry; ordinary
+fog exploration never exposes its name or L marker. Revealed passages enter directly.
+The shared Kenney entrance actor updates through the typed bus and respects reduced
+motion. `game/labTravel.ts` owns discovery and guarded travel; `town.ts` persists
+validated `labFrom` and per-town `labEntrances` under its existing save key. After
+both stores hydrate, legacy lab discovery migrates to Coin only. Invalid/missing
+origins default to Coin. Return controls and the physical lab exit use the same
+registry standing tile and face away, requiring a fresh interaction press. RSA
+pauses to its safe checkpoint; returning never replays effects or submits work.
+Shor setup and execution hold the shared operation lock throughout.
+`LabScreen` uses the shared React/SVG HouseRoom for exploration; the outdoor Excalibur engine is paused.
 Exploration has a bounded viewport and follows the player with the shared camera
 clamp. Supplies and Build mode scroll independently of the scene. A collapsible
 minimap shows the player and visible area whenever the cave exceeds the viewport;
@@ -140,7 +151,10 @@ and checkpoint restoration. Full reset clears the lab. Export/import JSON includ
 only validated lab data, never medals, jobs or an execution allowance. Short
 codes restore progress/unlocks separately. Locked imported equipment remains
 unavailable until its medal is restored. Reset lab layout retains ownership,
-recipes and medals. Save progress inside the lab reports the furthest milestone.
+recipes and medals. Save progress inside the lab reports its entrance town’s milestone. Restoring a
+short code reveals only its destination entrance and merges existing discoveries;
+it never enters the lab, acquires supplies or executes a circuit. Full-game reset
+clears discoveries/origin; lesson and layout resets retain them.
 
 ## Lessons
 
@@ -211,7 +225,7 @@ Paths below are relative to the repository root.
 | Interior lessons and room movement | `game/components/{CoinScenario,GroverScenario,VaultScenario}.tsx`, `game/game/*Room.ts` |
 | RSA scripts and validation | `game/content/acts/act1.ts` through `act4.ts`, `game/content/{defineAct,types,index}.ts` |
 | RSA state, dialogue, effects, async ownership | `game/game/{state,dialog,effects,runtime,town}.ts` |
-| Personal lab and free-play experiments | `game/components/{LabScreen,LabLaptop}.tsx`, `game/content/lab.ts`, `game/game/{lab,labLayout,labCircuit}.ts`, `game/lib/lab.ts` |
+| Personal lab and free-play experiments | `game/components/{LabScreen,LabLaptop}.tsx`, `game/content/{lab,labEntrances}.ts`, `game/game/{lab,labTravel,labLayout,labCircuit}.ts`, `game/lib/lab.ts` |
 | Progress, cards, badges, economy, checkpoint shortcuts | `game/game/{progress,knowledge,medals,wallet,checkpoints,restoreCheckpoint}.ts` |
 | Shared UI | `game/components/{GameShell,LaptopShell,DialoguePresentation,SceneLoading,TouchControls}.tsx` |
 | Tools and math | `game/components/` benches/workbenches, `game/game/{qubit,register,crypto,calc,histogram}.ts` |

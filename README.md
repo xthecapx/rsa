@@ -187,9 +187,14 @@ retained; restoration never executes a circuit or changes the selected backend.
 ### Personal quantum lab
 
 From Coin Town's southern arrival area, follow the narrow path east to the hidden
-cave on the right side of the map. No medal is required to enter or run the starter
-experiment. The cave marker appears as the player approaches; leaving returns to
-the cave entrance in Coin Town.
+cave on the right side of the map. Every later town also has a passage into this
+same lab. No medal is required to enter or run the starter experiment. Inspect
+disturbed sand or loose stones to reveal a passage, then choose **Enter the lab**.
+Discovery saves
+immediately, even if you keep exploring. An **L** marker appears only after
+discovery. Leaving returns to the town and passage you entered from.
+The journal offers a directional hint in each town. Checkpoint codes reveal the
+destination town’s passage; the code shown inside the lab follows its entry town.
 
 The scene stays within the visible screen and its camera follows the player.
 Equipment supplies scroll separately. Larger caves show a minimap with the player

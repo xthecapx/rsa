@@ -18,6 +18,7 @@ export type EngineCommand =
   | { type: "packet"; style: PacketStyle; from: Landmark; to: Landmark; intercept: boolean }
   | { type: "bubble"; actor: "ale" | "brayan" | "hacker"; face: BubbleKind }
   | { type: "tapGlow"; on: boolean }
+  | { type: "labEntrance"; revealed: boolean }
   | { type: "lockInput"; locked: boolean }
   | { type: "reset" }
   | { type: "placePlayer"; at: { x: number; y: number }; facing: WorldFacing }

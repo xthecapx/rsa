@@ -7,8 +7,6 @@ import { useTown } from "@/game/town";
 import { useProgress } from "@/game/progress";
 import { useMedals } from "@/game/medals";
 import { openRoads, roadBadges } from "@/game/roads";
-import { LAB_DOOR } from "@/content/lab";
-import { useLab } from "@/game/lab";
 import { t } from "@/i18n";
 import type { RestartOption } from "./StartOverControl";
 import { WorldMinimap, type MinimapPlace } from "./WorldMinimap";
@@ -36,10 +34,9 @@ export function CoinTownScreen({ onLeave, onEast, onWest, onEnterCoin, onEnterLa
   onEast: () => void;
   /** West road to Hollow Town. */
   onWest: () => void;
-  onEnterLab: () => void;
+  onEnterLab: () => boolean;
   onEnterCoin: () => void; restartOptions: RestartOption[];
 }) {
-  const discovered = useLab((s) => s.discovered);
   const completed = useProgress((state) => state.completed);
   const earned = useMedals((state) => state.earned);
   const metThecap = useTown((state) => state.welcomed);
@@ -74,8 +71,7 @@ export function CoinTownScreen({ onLeave, onEast, onWest, onEnterCoin, onEnterLa
       eastSign: () => ({ title: "Foundry Town", lines: [eastOpen ? SIGNS.eastOpen : SIGNS.eastClosed] }),
       westSign: () => ({ title: "Hollow Town", lines: [westOpen ? SIGNS.westOpen : SIGNS.westClosed] }),
     },
-    actions: { labDoor: () => { useLab.getState().discover(); onEnterLab(); } },
-    nearLabels: { labDoor: "Enter your cave lab", eastSign: "Read the signpost", westSign: "Read the signpost" },
+    nearLabels: { eastSign: "Read the signpost", westSign: "Read the signpost" },
     gates: { north: northOpen, east: eastOpen, west: westOpen },
     gateNotes: { north: WARDEN.closed, east: SIGNS.eastClosed, west: SIGNS.westClosed },
     exits: [
@@ -88,7 +84,7 @@ export function CoinTownScreen({ onLeave, onEast, onWest, onEnterCoin, onEnterLa
       roads: [{ label: "Take the east road to Foundry Town", open: eastOpen }, { label: "Take the west road to Hollow Town", open: westOpen }, { label: "Take the north road to Cipher Town", open: northOpen }],
     },
     restart: { label: "Restart Coin Town", description: "Forget the five knowledge cards and meet Mayor Cap again. Your medals and the coin lesson stay.", restart: () => {} },
-    minimap: (props) => <WorldMinimap {...props} map={coinTownMap} explored={discovered ? [...props.explored, LAB_DOOR.at.y * 100 + LAB_DOOR.at.x] : props.explored} places={[...PLACES, ...(discovered || props.explored.includes(LAB_DOOR.at.y * 100 + LAB_DOOR.at.x) ? [{ id: "labDoor", at: LAB_DOOR.at, label: "Personal quantum lab", symbol: "L" }] : [])]}
+    minimap: (props) => <WorldMinimap {...props} map={coinTownMap} places={PLACES}
       roads={[
         { at: { x: COIN_TOWN_NORTH_ROAD[0] + 1, y: -0.4 }, glyph: "↑", title: "North road to Cipher Town", locked: !northOpen },
         { at: { x: coinTownMap.width + 0.8, y: SIDE_ROW }, glyph: "→", title: "East road to Foundry Town", locked: !eastOpen },
@@ -97,5 +93,5 @@ export function CoinTownScreen({ onLeave, onEast, onWest, onEnterCoin, onEnterLa
       ariaLabel="Coin Town map: C is the coin house, M is Mayor Cap, 1 to 5 are the neighbors with knowledge cards, and the arrows are the roads north to Cipher Town, east to Foundry Town and west to Hollow Town."
       legend={[`C · ${t("Coin house")}　M · ${t("Mayor Cap")}　B · ${t("Beto")}`, TEACHERS.map((npc, i) => `${i + 1} · ${t(npc.title)}`).join("　")]} />,
   };
-  return <WorldTownScreen config={config} restartOptions={restartOptions} />;
+  return <WorldTownScreen config={config} restartOptions={restartOptions} onEnterLab={onEnterLab} />;
 }

@@ -13,6 +13,7 @@ import { COIN_TOWN_SPAWN } from "@/content/coinTown";
 import { FOUNDRY_SPAWN } from "@/content/foundry";
 import { HOLLOW_SPAWN } from "@/content/hollow";
 import { CIPHER_SPAWN } from "@/content/cipher";
+import { cleanLabDiscoveries, isLabTown, type LabDiscoveries, type LabTown } from "@/content/labEntrances";
 
 /** Where the player stands in a small town, whether its greeter has met them, and which tiles they have seen (y * 100 + x). */
 interface TownPlace { position: { x: number; y: number }; facing: WorldFacing; welcomed: boolean; explored: number[] }
@@ -58,6 +59,8 @@ export function restoreRsa(checkpoint: RsaCheckpoint) {
 }
 
 interface TownState {
+  labFrom: LabTown;
+  labEntrances: LabDiscoveries;
   welcomed: boolean;
   /** A new game starts in Coin Town; Foundry Town is east of it, Hollow Town west, Cipher Town north, and Quantum Town ("town") is the final town, north of Cipher Town. */
   location: (typeof LOCATIONS)[number];
@@ -91,7 +94,7 @@ export let townStorageUnavailable = false;
 const storage = saveStorage<TownState>(() => { townStorageUnavailable = true; });
 
 export const useTown = create<TownState>()(persist((set) => ({
-  welcomed: false, location: "coinTown", position: { ...TOWN_SPAWN }, facing: "up", tracked: "coin", coinTown: COIN_TOWN_START(), foundry: FOUNDRY_START(), hollow: HOLLOW_START(), cipher: CIPHER_START(), groverFrom: "foundry", vaultFrom: "hollow", rsaFrom: "cipher",
+  labFrom: "coinTown", labEntrances: {}, welcomed: false, location: "coinTown", position: { ...TOWN_SPAWN }, facing: "up", tracked: "coin", coinTown: COIN_TOWN_START(), foundry: FOUNDRY_START(), hollow: HOLLOW_START(), cipher: CIPHER_START(), groverFrom: "foundry", vaultFrom: "hollow", rsaFrom: "cipher",
   discovered: [], explored: [], checkpoint: null, rsaPosition: null, requestedAct: null, interrupted: false, rsaRunning: false,
   patch: (values) => set(values),
   discover: (id) => set((state) => ({ discovered: Array.from(new Set([...state.discovered, id])) })),
@@ -103,7 +106,7 @@ export const useTown = create<TownState>()(persist((set) => ({
     }
     return cells.size === state.explored.length ? state : { explored: [...cells] };
   }),
-  reset: () => set({ welcomed: false, location: "coinTown", position: { ...TOWN_SPAWN }, facing: "up", tracked: "coin", coinTown: COIN_TOWN_START(), foundry: FOUNDRY_START(), hollow: HOLLOW_START(), cipher: CIPHER_START(), groverFrom: "foundry", vaultFrom: "hollow", rsaFrom: "cipher",
+  reset: () => set({ labFrom: "coinTown", labEntrances: {}, welcomed: false, location: "coinTown", position: { ...TOWN_SPAWN }, facing: "up", tracked: "coin", coinTown: COIN_TOWN_START(), foundry: FOUNDRY_START(), hollow: HOLLOW_START(), cipher: CIPHER_START(), groverFrom: "foundry", vaultFrom: "hollow", rsaFrom: "cipher",
     discovered: [], explored: [], checkpoint: null, rsaPosition: null, requestedAct: null, interrupted: false, rsaRunning: false }),
 }), {
   name: "quantum-town-v1", version: 1, storage, skipHydration: true,
@@ -112,6 +115,8 @@ export const useTown = create<TownState>()(persist((set) => ({
     if (!data || typeof data !== "object") return current;
     return {
       ...current, ...data, patch: current.patch, discover: current.discover, explore: current.explore, reset: current.reset,
+      labFrom: isLabTown(data.labFrom) ? data.labFrom : "coinTown",
+      labEntrances: cleanLabDiscoveries(data.labEntrances),
       welcomed: data.welcomed === true,
       location: LOCATIONS.includes(data.location!) ? data.location! : "town",
       coinTown: townPlace(data.coinTown, COIN_TOWN_START),

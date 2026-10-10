@@ -7,6 +7,8 @@ import type { MedalId } from "@/content/medals";
 import type { Speaker } from "@/content/types";
 import type { WorldFacing } from "@/content/town";
 import type { WorldName } from "@/engine/createGame";
+import { LAB_ENTRANCES, type LabTown } from "@/content/labEntrances";
+import { inspectLab } from "@/game/labTravel";
 import { bus } from "@/engine/bus";
 import type { PetKind } from "@/engine/petting";
 import { exploreAround, useTown, type TownSlot } from "@/game/town";
@@ -42,6 +44,8 @@ export interface MinimapProps {
   done: string[]; pending: string[]; tracked: string | null;
   /** Tiles seen so far (y * 100 + x); the rest of the map stays dark. */
   explored: number[];
+  labTown?: LabTown;
+  labRevealed?: boolean;
 }
 
 /** A story that plays out on the town map itself (Cipher Town's RSA jobs), driven by the town screen's owner. */
@@ -134,8 +138,9 @@ export function KnowledgeCardView({ card, teacher, learned = true }: { card: Kno
  * hands out the badge, and roads to the next towns. React owns every
  * conversation; the WorldScene only walks and draws markers.
  */
-export function WorldTownScreen({ config, restartOptions }: { config: TownConfig; restartOptions: RestartOption[] }) {
+export function WorldTownScreen({ config, restartOptions, onEnterLab }: { config: TownConfig; restartOptions: RestartOption[]; onEnterLab: () => boolean }) {
   useLocale((state) => state.locale);
+  const labRevealed = useTown((state) => !!state.labEntrances[config.slot]);
   const saved = useTown((state) => state[config.slot]);
   const walking = useGame((state) => state.walking);
   const allCards = useKnowledge((state) => state.cards);
@@ -207,6 +212,7 @@ export function WorldTownScreen({ config, restartOptions }: { config: TownConfig
   const sceneReady = hydrated && sceneStatus === "ready";
   const inputLocked = !!talk || activityVisible || journalOpen || restartOpen || !!panel || !!mission?.talk || !!mission?.locked;
   useEffect(() => { if (sceneReady) void bus.send({ type: "lockInput", locked: inputLocked }); }, [sceneReady, inputLocked]);
+  useEffect(() => { if (sceneReady) void bus.send({ type: "labEntrance", revealed: labRevealed }); }, [sceneReady, labRevealed]);
   const ready = challenge.complete;
   const stageById = (id: string) => challenge.stages?.find((stage) => stage.id === id);
   const next: string | null = !saved.welcomed || (ready && !badge) ? greeter.id : badge ? config.afterBadge()
@@ -268,7 +274,11 @@ export function WorldTownScreen({ config, restartOptions }: { config: TownConfig
     if (talk || activityVisible || panel || mission?.talk) return;
     if (mission?.handles(id)) { mission.interact(id); return; }
     gameAudio.playSfx("select");
-    if (config.actions?.[id]) { readyRef.current = false; config.actions[id](); }
+    if (id === "labDoor") {
+      const reveal = inspectLab(config.slot, () => { if (onEnterLab()) { close(); readyRef.current = false; } }, close);
+      if (reveal) say(reveal.title, [{ speaker: reveal.speaker, text: reveal.text }], reveal.choices);
+    }
+    else if (config.actions?.[id]) { readyRef.current = false; config.actions[id](); }
     else if (config.panels?.[id]) setPanel(id);
     else if (id === challenge.door) say(challenge.title, [{ speaker: "system", text: challenge.blurb }],
       [{ label: challenge.complete ? challenge.resume : challenge.enter, action: () => { close(); readyRef.current = false; challenge.onEnter(); } }, { label: "Later", action: close }]);
@@ -294,7 +304,7 @@ export function WorldTownScreen({ config, restartOptions }: { config: TownConfig
     } },
     ...(mission?.restartOptions ?? []),
     ...restartOptions,
-  ]} disabled={!sceneReady || activityBusy} onOpenChange={setRestartOpen} />;
+  ]} disabled={!sceneReady || activityBusy || !!mission?.shell.backDisabled} onOpenChange={setRestartOpen} />;
 
   const npc = activity ? npcById(activity.npc)! : null;
   const step = npc && activity ? npc.steps[activity.step] : null;
@@ -309,6 +319,7 @@ export function WorldTownScreen({ config, restartOptions }: { config: TownConfig
       <li>{badge ? "★ " : "◇ "}{t(`Optional: ${t(config.badge.journal)}`)}</li>
       {config.journal.roads.map((road) => <li key={road.label}>{road.open ? "◆ " : "◇ "}{t(road.label)}</li>)}
     </ul>
+    <p className="text-stage-muted">{t(LAB_ENTRANCES[config.slot].hint)}</p>
     {config.journal.extra}
     <section className="panel space-y-2 p-3" aria-label={t("Knowledge cards")}>
       <div className="flex items-baseline justify-between gap-2"><h3 className="text-accent-amber">{t("Knowledge cards")}</h3><span className="text-xs text-stage-muted">{cards.length} / {cardIds.length}</span></div>
@@ -318,7 +329,8 @@ export function WorldTownScreen({ config, restartOptions }: { config: TownConfig
   </div>;
   const nearNpc = near ? npcById(near) : undefined;
   const petAction = !near && !!nearPet;
-  const nearLabel = near && mission?.nearLabel(near) ? mission.nearLabel(near) : near === challenge.door ? challenge.enter : near && config.nearLabels[near] ? config.nearLabels[near] : nearNpc ? `${t("Talk to")} ${t(nearNpc.title)}` : petAction ? nearPet === "dog" ? "Pet the dog" : "Pet the cat" : null;
+  const inspecting = near === "labDoor" && !labRevealed;
+  const nearLabel = near === "labDoor" ? (labRevealed ? "Enter the lab" : "Inspect the disturbed sand") : near && mission?.nearLabel(near) ? mission.nearLabel(near) : near === challenge.door ? challenge.enter : near && config.nearLabels[near] ? config.nearLabels[near] : nearNpc ? `${t("Talk to")} ${t(nearNpc.title)}` : petAction ? nearPet === "dog" ? "Pet the dog" : "Pet the cat" : null;
   const nextNpc = next ? npcById(next) : undefined;
   const objective = mission?.active ? mission.objective
     : nextStage ? nextStage.objective
@@ -341,7 +353,7 @@ export function WorldTownScreen({ config, restartOptions }: { config: TownConfig
     {hydrated && <GameCanvas world={config.world} onReady={onReady} onError={onError} />}
     {sceneReady && <>
       {!inputLocked && <div className="absolute right-3 top-3 z-10 flex max-w-[calc(100%-1.5rem)] flex-col items-end gap-2">
-        {config.minimap({ position: saved.position, facing: saved.facing, explored: saved.explored, done, pending: [...alerts, ...(challenge.complete ? [] : [challenge.door])], tracked })}
+        {config.minimap({ position: saved.position, facing: saved.facing, explored: saved.explored, labTown: config.slot, labRevealed, done, pending: [...alerts, ...(challenge.complete ? [] : [challenge.door])], tracked })}
         {config.hud}
       </div>}
       {!talk && !activityVisible && !journalOpen && !restartOpen && !panel && !missionTalk && !missionShell?.laptopOpen && <div className={`pointer-events-none absolute inset-x-0 bottom-0 flex justify-center p-3 ${mission?.active && mission.dialog ? "z-20 pb-3" : "pb-24 lg:pb-4"}`}>
@@ -351,7 +363,7 @@ export function WorldTownScreen({ config, restartOptions }: { config: TownConfig
         </div> : <div className={`map-hint textbox max-w-lg space-y-2 px-4 py-3 text-center transition-opacity ${walking ? "opacity-30" : ""}`}>
           {petted ? <p className="text-sm" role="status" aria-live="polite"><span className="text-[#ff91ab]" aria-hidden="true">♥ </span>{t(petted.kind === "dog" ? "The dog wags its tail." : "The cat purrs happily.")}</p>
             : <p className="text-sm">{t(objective ?? config.idle)}</p>}
-          {nearLabel && <p className="text-xs text-accent-amber">{t(nearLabel)}{" · "}{t(petAction ? "Press Space or tap Pet" : "Press Space or tap Talk")}</p>}
+          {nearLabel && <p className="text-xs text-accent-amber">{t(nearLabel)}{" · "}{t(inspecting ? "Press Space or tap Inspect" : petAction ? "Press Space or tap Pet" : "Press Space or tap Talk")}</p>}
         </div>}
       </div>}
       {missionTalk && <div className="absolute inset-0 z-20 flex items-end justify-center bg-black/30 p-3 sm:p-5" role="dialog" aria-modal="true" aria-label={t(missionTalk.title)} ref={talkRef}
@@ -380,7 +392,7 @@ export function WorldTownScreen({ config, restartOptions }: { config: TownConfig
           {talk.index === talk.lines.length - 1 && talk.medal && <MedalReveal id={talk.medal} />}
         </DialogueFrame>
       </div>}
-      <TouchControls canInteract={!!near || !!nearPet} label={petAction ? "Pet" : "Talk"} visible={!inputLocked} />
+      <TouchControls canInteract={!!near || !!nearPet} label={inspecting ? "Inspect" : petAction ? "Pet" : "Talk"} visible={!inputLocked} />
     </>}
     {npc && step && activity && <LaptopShell open={activityOpen} calculator={npc.steps.some((candidate) => candidate.kind === "crypto")} title={`${t(npc.title)} · ${t(step.title)}`} status={`${t("Step ")}${activity.step + 1}/${npc.steps.length}`}
       closeDisabled={activityBusy} onClose={() => { if (!activityBusy) setActivityOpen(false); }} footer={<p>{t("Results stay here when you close the laptop.")} {t("The card is yours once every step is done.")}</p>}>

@@ -139,12 +139,12 @@ test("lab plan round-trips layouts, installed items and angles without progress 
   assert.equal(exportLab(), before);
   assert.equal(parseLab(text.replace('"RY"', '"UNKNOWN"')), null);
 });
-test("save progress in the lab keeps the furthest milestone and lesson reset keeps equipment", () => {
+test("save progress in the lab follows its entrance and lesson reset keeps equipment", () => {
   useMedals.getState().reset();
   useProgress.getState().reset();
   useMedals.getState().award("ghost-key");
   assert.equal(
-    currentCheckpoint("lab", [], {}, useMedals.getState().earned),
+    currentCheckpoint("lab", [], {}, useMedals.getState().earned, "hollow"),
     "ht3",
   );
   const owned = [...useLab.getState().owned];

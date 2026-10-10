@@ -114,9 +114,10 @@ function Bounty({ close }: { close: () => void }) {
   </LaptopShell>;
 }
 
-export function CipherScreen({ onSouth, onNorth, restartOptions }: {
+export function CipherScreen({ onSouth, onNorth, restartOptions, onEnterLab }: {
   /** South road back to Coin Town, north road on to Quantum Town. */
   onSouth: () => void; onNorth: () => void;
+  onEnterLab: () => boolean;
   restartOptions: RestartOption[];
 }) {
   useLocale((state) => state.locale);
@@ -226,5 +227,5 @@ export function CipherScreen({ onSouth, onNorth, restartOptions }: {
       ariaLabel="Cipher Town map: C is the client’s car, R is Root Cap, $ is Chispa’s gear stall, B is the bounty board, 1 to 5 are the neighbors with knowledge cards, and the arrows are the south road to Coin Town and the north road to Quantum Town."
       legend={[`C · ${t("The client")}　R · ${t("Root Cap")}　$ · ${t("Chispa")}　B · ${t("Bounty board")}`, TEACHERS.map((npc, i) => `${i + 1} · ${t(npc.title)}`).join("　")]} />,
   };
-  return <WorldTownScreen config={config} restartOptions={restartOptions} />;
+  return <WorldTownScreen config={config} restartOptions={restartOptions} onEnterLab={() => mission.pause() && onEnterLab()} />;
 }

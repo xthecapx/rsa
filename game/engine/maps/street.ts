@@ -186,7 +186,7 @@ export function buildSolidGrid(): boolean[][] {
       }
     }
   }
-  for (const key of ["guide", "sign"] as const) {
+  for (const key of ["guide", "sign", "labDoor"] as const) {
     const { at } = TOWN_LOCATIONS[key];
     grid[at.y][at.x] = true;
   }

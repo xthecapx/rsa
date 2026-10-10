@@ -18,10 +18,10 @@ const PLACES: MinimapPlace[] = [
   ...TEACHERS.map((npc, i) => ({ id: npc.id, at: npc.at, label: npc.title, symbol: String(i + 1) })),
 ];
 
-export function FoundryScreen({ onWest, onEnterWorkshop, restartOptions }: {
+export function FoundryScreen({ onWest, onEnterWorkshop, restartOptions, onEnterLab }: {
   /** West road back to Coin Town. */
   onWest: () => void;
-  onEnterWorkshop: () => void; restartOptions: RestartOption[];
+  onEnterWorkshop: () => void; restartOptions: RestartOption[]; onEnterLab: () => boolean;
 }) {
   const groverComplete = useProgress((state) => !!state.completed.grover?.includes("grover"));
 
@@ -59,5 +59,5 @@ export function FoundryScreen({ onWest, onEnterWorkshop, restartOptions }: {
       ariaLabel="Foundry Town map: W is Thecap’s workshop, V is VP Cap, 1 to 5 are the crew with knowledge cards, and the arrow on the left is the west road to Coin Town."
       legend={[`W · ${t("Thecap’s workshop")}　V · ${t("VP Cap")}`, TEACHERS.map((npc, i) => `${i + 1} · ${t(npc.title)}`).join("　")]} />,
   };
-  return <WorldTownScreen config={config} restartOptions={restartOptions} />;
+  return <WorldTownScreen config={config} restartOptions={restartOptions} onEnterLab={onEnterLab} />;
 }

@@ -19,7 +19,7 @@ export function terrainPaths(rows: string[]): Map<string, string> {
   }));
   return paths;
 }
-const places = [
+const basePlaces = [
   { id: "coinDoor", at: TOWN_LOCATIONS.coinDoor.at, label: "Who Goes First?", symbol: "1", scenario: "coin" },
   { id: "rsa", at: CLIENT_POSITION, label: "RSA client", symbol: "2", scenario: "rsa" },
   { id: "guide", at: TOWN_LOCATIONS.guide.at, label: "Professor Thecap", symbol: "P", scenario: null },
@@ -32,7 +32,8 @@ const places = [
 /** The map stays legible without loading another game engine or canvas. */
 export function TownMinimap() {
   useLocale((state) => state.locale);
-  const { position, facing, tracked, discovered, explored } = useTown();
+  const { position, facing, tracked, discovered, explored, labEntrances } = useTown();
+  const places = [...basePlaces, ...(labEntrances.town ? [{ id: "labDoor", at: TOWN_LOCATIONS.labDoor.at, label: "Personal quantum lab", symbol: "L", scenario: null }] : [])];
   const completed = useProgress((state) => state.completed);
   const [collapsed, setCollapsed] = useState(() =>
     typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches,
@@ -56,7 +57,7 @@ export function TownMinimap() {
   const rsaDone = ["1", "2", "3", "4"].every((act) => completed.rsa?.includes(act));
   const groverDone = !!completed.grover?.includes("grover");
   const vaultDone = !!completed.vault?.includes("vault");
-  const visitedCount = places.filter((place) => discovered.includes(place.id) || (place.scenario === "coin" && coinDone) || (place.scenario === "rsa" && rsaDone) || (place.scenario === "grover" && groverDone) || (place.scenario === "vault" && vaultDone)).length;
+  const visitedCount = places.filter((place) => place.id === "labDoor" || discovered.includes(place.id) || (place.scenario === "coin" && coinDone) || (place.scenario === "rsa" && rsaDone) || (place.scenario === "grover" && groverDone) || (place.scenario === "vault" && vaultDone)).length;
 
   return <aside className={`town-minimap panel bg-stage-bg/95 p-2 ${collapsed ? "w-36" : "w-44 sm:w-56"}`} aria-label={t("Town minimap")}>
     <button type="button" className="minimap-toggle flex w-full items-center justify-between gap-2 text-xs text-accent-teal" aria-expanded={!collapsed} aria-controls={mapId}
@@ -70,7 +71,7 @@ export function TownMinimap() {
         <path d={fog} fill="#07161f" opacity={0.88} />
         {places.map((place) => {
           const done = place.scenario === "coin" ? coinDone : place.scenario === "rsa" ? rsaDone : place.scenario === "grover" ? groverDone : place.scenario === "vault" ? vaultDone : false;
-          const visited = discovered.includes(place.id) || done;
+          const visited = place.id === "labDoor" || discovered.includes(place.id) || done;
           const selected = place.scenario !== null && tracked === place.scenario;
           const color = done ? "#90e0cd" : visited ? "#a9cbd4" : "#f2c983";
           const status = done ? "Completed" : visited ? "Visited" : "Not visited yet";

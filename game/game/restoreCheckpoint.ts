@@ -37,6 +37,6 @@ export function restoreCheckpoint(code: string): boolean {
   const spawns = { coinTown: COIN_TOWN_SPAWN, foundry: FOUNDRY_SPAWN, hollow: HOLLOW_SPAWN, cipher: CIPHER_SPAWN };
   const placement = location === "town" ? { welcomed: true, position: { ...QUANTUM_SOUTH_GATE }, facing: "up" as const }
     : { [location]: { ...town[location], position: { ...spawns[location] }, facing: "up", welcomed: true } };
-  town.patch({ ...placement, location, rsaRunning: false, requestedAct: null, checkpoint: null, interrupted: false, tracked: null });
+  town.patch({ ...placement, labEntrances: { ...town.labEntrances, [location]: true }, location, rsaRunning: false, requestedAct: null, checkpoint: null, interrupted: false, tracked: null });
   return true;
 }

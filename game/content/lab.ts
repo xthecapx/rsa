@@ -1,5 +1,4 @@
 import type { MedalId } from "./medals";
-export const LAB_DOOR = { at: { x: 36, y: 25 }, stand: { x: 36, y: 26 } };
 export interface LabItem {
   id: string;
   title: string;

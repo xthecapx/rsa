@@ -18,10 +18,10 @@ const PLACES: MinimapPlace[] = [
   ...TEACHERS.map((npc, i) => ({ id: npc.id, at: npc.at, label: npc.title, symbol: String(i + 1) })),
 ];
 
-export function HollowScreen({ onEast, onEnterVault, restartOptions }: {
+export function HollowScreen({ onEast, onEnterVault, restartOptions, onEnterLab }: {
   /** East road back to Coin Town. */
   onEast: () => void;
-  onEnterVault: () => void; restartOptions: RestartOption[];
+  onEnterVault: () => void; restartOptions: RestartOption[]; onEnterLab: () => boolean;
 }) {
   const vaultComplete = useProgress((state) => !!state.completed.vault?.includes("vault"));
 
@@ -59,5 +59,5 @@ export function HollowScreen({ onEast, onEnterVault, restartOptions }: {
       ariaLabel="Hollow Town map: O is Casa Ofelia, K is Keeper Cap, 1 to 5 are the neighbors with knowledge cards, and the arrow on the right is the east road to Coin Town."
       legend={[`O · ${t("Casa Ofelia")}　K · ${t("Keeper Cap")}`, TEACHERS.map((npc, i) => `${i + 1} · ${t(npc.title)}`).join("　")]} />,
   };
-  return <WorldTownScreen config={config} restartOptions={restartOptions} />;
+  return <WorldTownScreen config={config} restartOptions={restartOptions} onEnterLab={onEnterLab} />;
 }

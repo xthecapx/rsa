@@ -1,5 +1,8 @@
+import { LAB_ENTRANCES } from "./labEntrances";
+
 /** Adding a lesson only needs a world entry and start/resume behavior. */
 export const TOWN_LOCATIONS = {
+  labDoor: { ...LAB_ENTRANCES.town, title: "Personal quantum lab", prompt: "Enter the lab", kind: "lab" },
   coinDoor: { at: { x: 8, y: 12 }, stand: { x: 8, y: 13 }, title: "Who Goes First?", prompt: "Enter the coin house", kind: "coin" },
   groverDoor: { at: { x: 8, y: 5 }, stand: { x: 8, y: 6 }, title: "Echo Chamber", prompt: "Enter Thecap’s workshop", kind: "grover" },
   vaultDoor: { at: { x: 21, y: 5 }, stand: { x: 21, y: 6 }, title: "Operation Ghost Key", prompt: "Knock on Doña Ofelia’s door", kind: "vault" },

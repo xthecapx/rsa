@@ -2735,5 +2735,16 @@
   "Rotation axis": "Eje de rotación",
   "Rotation angle dial": "Dial del ángulo de rotación",
   "Rotation angle θ (degrees)": "Ángulo de rotación θ (grados)",
-  "Ideal Bloch reference. Rotate around X, Y or Z to explore the whole sphere; measurement counts do not reconstruct this state.": "Referencia ideal de Bloch. Rota alrededor de X, Y o Z para explorar toda la esfera; los conteos medidos no reconstruyen este estado."
+  "Ideal Bloch reference. Rotate around X, Y or Z to explore the whole sphere; measurement counts do not reconstruct this state.": "Referencia ideal de Bloch. Rota alrededor de X, Y o Z para explorar toda la esfera; los conteos medidos no reconstruyen este estado.",
+  "Inspect": "Inspeccionar",
+  "Inspect the disturbed sand": "Inspecciona la arena removida",
+  "Press Space or tap Inspect": "Presiona Espacio o toca Inspeccionar",
+  "Enter the lab": "Entrar al laboratorio",
+  "There’s a passage under the sand. It leads to your quantum lab. Every town’s passage reaches this same room.": "Hay un pasadizo bajo la arena. Lleva a tu laboratorio cuántico. Los pasadizos de todos los pueblos llegan a esta misma sala.",
+  "Look for disturbed sand along the southeast edge of town.": "Busca arena removida en el extremo sureste del pueblo.",
+  "Loose gravel beside the workshop yard hides a passage.": "La grava suelta junto al patio del taller esconde un pasadizo.",
+  "Look for loose stones outside the cemetery’s west fence.": "Busca piedras sueltas junto a la cerca oeste del cementerio.",
+  "A dusty hatch hides near the southern district’s west edge.": "Hay una escotilla cubierta de polvo en el extremo oeste del distrito sur.",
+  "Disturbed sand near the park’s east edge hides a passage.": "La arena removida en el extremo este del parque esconde un pasadizo.",
+  "Return to {town}": "Volver a {town}"
 }

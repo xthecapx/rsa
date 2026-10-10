@@ -15,6 +15,7 @@ import { t, useLocale } from "@/i18n";
 
 import { Character } from "../actors/Character";
 import { RsaStreet, isStreetCommand } from "../actors/RsaStreet";
+import { LabEntrance } from "../actors/LabEntrance";
 import { TownSign } from "../actors/TownSign";
 import { bus } from "../bus";
 import type { EngineCommand, Landmark } from "../bus";
@@ -55,6 +56,7 @@ const NEIGHBOURS: GridPos[] = [
 
 export class CityScene extends Scene {
   private solid = buildSolidGrid();
+  private lab!: LabEntrance;
   private player!: Character;
   private rsaStreet!: RsaStreet;
   // Stay locked through asset loading and the opening story setup.
@@ -99,6 +101,10 @@ export class CityScene extends Scene {
     for (const [key, location] of Object.entries(TOWN_LOCATIONS)) {
       // The south road is an open path, marked by the signpost instead of a board.
       if (location.kind === "path") continue;
+      if (location.kind === "lab") {
+        this.lab = new LabEntrance("town"); this.add(this.lab); this.add(this.lab.sign);
+        continue;
+      }
       const at = tileCenter(location.at);
       const mounted = location.kind === "coin" || location.kind === "grover" || location.kind === "vault";
       const label = new TownSign(at.x - (key === "guide" ? 44 : 0), at.y + (mounted ? -9 : 8), mounted);
@@ -312,6 +318,7 @@ export class CityScene extends Scene {
   private async handle(command: EngineCommand): Promise<void> {
     if (isStreetCommand(command)) return this.rsaStreet.handle(command, (goal) => findPath(this.solid, this.player.grid, goal));
     switch (command.type) {
+      case "labEntrance": this.lab.setRevealed(command.revealed); return;
       case "lockInput":
         this.inputLocked = command.locked;
         if (command.locked) this.player.stop();

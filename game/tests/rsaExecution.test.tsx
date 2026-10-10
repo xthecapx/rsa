@@ -9,6 +9,7 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { PlaintextWorkbench } from "@/components/PlaintextWorkbench";
 import { ShorPipeline } from "@/components/ShorPipeline";
 import { useGame } from "@/game/state";
+import { restoreCheckpoint } from "@/game/restoreCheckpoint";
 import { invalidateMission } from "@/game/runtime";
 import { api } from "@/lib/api";
 import { RAIL } from "@/game/pipeline";
@@ -88,6 +89,8 @@ it.each(["mission change", "unmount"])(
     const view = render(<ShorPipeline armed />);
     fireEvent.click(screen.getByRole("button", { name: "Run the pipeline" }));
     await act(async () => vi.advanceTimersByTimeAsync(100));
+    expect(useGame.getState().operations).toBe(1);
+    expect(restoreCheckpoint("ct1")).toBe(false);
     if (reason === "unmount") view.unmount();
     else invalidateMission();
     const before = useGame.getState().terminal.length;
@@ -134,6 +137,7 @@ it("submits a wired pipeline once and saves counts with their original backend m
   const saved = useGame.getState().labMemory.shor4 as {
     run: { qpu: string; kind: string; counts: Record<string, number> };
   };
+  expect(useGame.getState().operations).toBe(0);
   expect(saved.run.qpu).toBe("Noisy device");
   expect(saved.run.kind).toBe("noise");
   expect(saved.run.counts).toEqual({ "0000": 512 });

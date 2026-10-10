@@ -13,7 +13,8 @@ import { townStorageUnavailable, useTown } from "@/game/town";
 import { invalidateMission, missionGeneration } from "@/game/runtime";
 import { LabScreen } from "./LabScreen";
 import { useLab } from "@/game/lab";
-import { LAB_DOOR } from "@/content/lab";
+import { LAB_ENTRANCES, type LabTown } from "@/content/labEntrances";
+import { enterLab, leaveLab, inspectLab, migrateLabEntrance } from "@/game/labTravel";
 import { restoreCheckpoint } from "@/game/restoreCheckpoint";
 import { useProgress } from "@/game/progress";
 import { useMedals } from "@/game/medals";
@@ -156,6 +157,7 @@ export function TownScreen({ initialAct, initialCoin = false, initialGrover = fa
     void (async () => {
       await Promise.all([useTown.persist.rehydrate(), useProgress.persist.rehydrate(), useMedals.persist.rehydrate(), useKnowledge.persist.rehydrate(), useWallet.persist.rehydrate(), useLab.persist.rehydrate()]);
       if (cancelled) return;
+      migrateLabEntrance();
       const saved = useTown.getState();
       useGame.setState({ laptopOpen: false, walking: false, near: null, operations: 0, busyLabel: null });
       try { setCoinSaved(localStorage.getItem(COIN_SAVE) !== null); setGroverSaved(localStorage.getItem(GROVER_SAVE) !== null); setVaultSaved(localStorage.getItem(VAULT_SAVE) !== null); } catch { /* In-memory play remains available. */ }
@@ -185,7 +187,7 @@ export function TownScreen({ initialAct, initialCoin = false, initialGrover = fa
       // The only tiles on the bottom row are the southern entrance.
       if (event.at.y === QUANTUM_SOUTH_ROW) events.current.travelSouth();
     }
-    if (event.type === "townMoved") { setTownNear(event.near); if (event.near) useTown.getState().discover(event.near); }
+    if (event.type === "townMoved") { setTownNear(event.near); if (event.near && event.near !== "labDoor") useTown.getState().discover(event.near); }
     if (event.type === "moved") { useGame.getState().setNear(event.near); if (event.near === "car") useTown.getState().discover("rsa"); }
     if (event.type === "walking") useGame.getState().setWalking(event.walking);
     if (event.type === "townInteract") events.current.interactTown(event.target);
@@ -226,6 +228,13 @@ export function TownScreen({ initialAct, initialCoin = false, initialGrover = fa
   }, [conversation]);
 
   const saveAndPause = mission.pause;
+  function visitLab(where: LabTown): boolean {
+    if (!enterLab(where, saveAndPause)) return false;
+    closeConversation(); readyRef.current = false; setSceneStatus("loading"); setTownNear(null);
+    gameAudio.playSynth("door");
+    return true;
+  }
+  useEffect(() => { if (sceneReady) void bus.send({ type: "labEntrance", revealed: !!town.labEntrances.town }); }, [sceneReady, town.labEntrances.town]);
   function trackDestination(id: Challenge) {
     if (!saveAndPause()) return;
     useTown.getState().patch({ tracked: id }); closeConversation();
@@ -375,7 +384,7 @@ export function TownScreen({ initialAct, initialCoin = false, initialGrover = fa
     enterVault(useTown.getState().location === "hollow" ? "hollow" : useTown.getState().vaultFrom);
   }
   function restartGame() {
-    if (activeRef.current && (mission.startingRef.current || useGame.getState().phase === "busy" || useGame.getState().operations > 0 || !!useGame.getState().busyLabel)) return;
+    if (useGame.getState().phase === "busy" || useGame.getState().operations > 0 || !!useGame.getState().busyLabel || (activeRef.current && mission.startingRef.current)) return;
     mission.stop();
     readyRef.current = false; setSceneStatus("loading");
     setJournalOpen(false); setRestartOpen(false); setTownNear(null);
@@ -398,7 +407,11 @@ export function TownScreen({ initialAct, initialCoin = false, initialGrover = fa
     interactTown: (target) => {
       if (conversation || journalOpen || (rsaActive && blocked)) return;
       const location = TOWN_LOCATIONS[target];
-      if (location.kind === "coin") setConversation({ title: "Who Goes First?", text: "Nobody’s home. A note on the door: “Game night moved to Coin Town. Take the south road. — Ale & Brayan”", choices: [{ label: "Walk south to Coin Town", action: enterCoinTown }, { label: "Later", action: closeConversation }] });
+      if (location.kind === "lab") {
+        const reveal = inspectLab("town", () => { visitLab("town"); }, closeConversation);
+        if (reveal) setConversation(reveal);
+      }
+      else if (location.kind === "coin") setConversation({ title: "Who Goes First?", text: "Nobody’s home. A note on the door: “Game night moved to Coin Town. Take the south road. — Ale & Brayan”", choices: [{ label: "Walk south to Coin Town", action: enterCoinTown }, { label: "Later", action: closeConversation }] });
       else if (location.kind === "path") enterCipherFromNorth();
       else if (location.kind === "grover") setConversation({ title: "Echo Chamber", text: "Emergency · Intermediate. An old drone core has locked itself with a 4-bit PIN and three tries. Build Grover’s search on the quantum core and disarm it.", choices: [{ label: groverSaved || groverComplete ? "Resume in the workshop" : "Enter the workshop", action: () => enterGrover("town") }, { label: "Later", action: closeConversation }] });
       else if (location.kind === "vault") {
@@ -417,17 +430,17 @@ export function TownScreen({ initialAct, initialCoin = false, initialGrover = fa
   };
 
   if (!hydrated) return <main className="relative h-dvh bg-stage-bg"><SceneLoading /></main>;
-  if (town.location === "lab") return <LabScreen onExit={() => { useTown.getState().patch({ location: "coinTown", coinTown: { ...useTown.getState().coinTown, position: { ...LAB_DOOR.stand }, facing: "down" } }); setWorldKey((k) => k + 1); }} onRestartGame={restartGame} />;
+  if (town.location === "lab") return <LabScreen returnTown={town.labFrom} onExit={() => { if (!leaveLab()) return; readyRef.current = false; setSceneStatus("loading"); setTownNear(null); setWorldKey((k) => k + 1); }} onRestartGame={restartGame} />;
   if (town.location === "coin") return <CoinScenario onExit={leaveCoin} onRestartGame={restartGame} />;
-  if (town.location === "foundry") return <FoundryScreen key={worldKey} onWest={leaveFoundry} onEnterWorkshop={() => enterGrover("foundry")}
+  if (town.location === "foundry") return <FoundryScreen key={worldKey} onEnterLab={() => visitLab("foundry")} onWest={leaveFoundry} onEnterWorkshop={() => enterGrover("foundry")}
     restartOptions={[{ label: "Restart Echo Chamber", description: "Clear the workshop lesson, its circuit, runs, and completion. Start inside the workshop.", restart: restartGrover },
       { label: "Start the whole game over", description: "Clear every lesson, your medal case, town progress, and your personal lab. Return to Mayor Cap’s welcome in Coin Town.", restart: restartGame }]} />;
-  if (town.location === "hollow") return <HollowScreen key={worldKey} onEast={leaveHollow} onEnterVault={() => enterVault("hollow")}
+  if (town.location === "hollow") return <HollowScreen key={worldKey} onEnterLab={() => visitLab("hollow")} onEast={leaveHollow} onEnterVault={() => enterVault("hollow")}
     restartOptions={[{ label: "Restart Operation Ghost Key", description: "Clear the vault lesson: a new mask, fresh candles, empty circuits, and no completion. Start inside Casa Ofelia.", restart: restartVault },
       { label: "Start the whole game over", description: "Clear every lesson, your medal case, town progress, and your personal lab. Return to Mayor Cap’s welcome in Coin Town.", restart: restartGame }]} />;
-  if (town.location === "cipher") return <CipherScreen key={worldKey} onSouth={leaveCipherSouth} onNorth={leaveCipherNorth}
+  if (town.location === "cipher") return <CipherScreen key={worldKey} onEnterLab={() => visitLab("cipher")} onSouth={leaveCipherSouth} onNorth={leaveCipherNorth}
     restartOptions={[{ label: "Start the whole game over", description: "Clear every lesson, your medal case, town progress, and your personal lab. Return to Mayor Cap’s welcome in Coin Town.", restart: restartGame }]} />;
-  if (town.location === "coinTown") return <CoinTownScreen key={worldKey} onLeave={enterCipher} onEast={enterFoundry} onWest={enterHollow} onEnterCoin={enterCoin} onEnterLab={() => { if (!saveAndPause()) return; useLab.getState().discover(); useTown.getState().patch({ location: "lab" }); }}
+  if (town.location === "coinTown") return <CoinTownScreen key={worldKey} onLeave={enterCipher} onEast={enterFoundry} onWest={enterHollow} onEnterCoin={enterCoin} onEnterLab={() => visitLab("coinTown")}
     restartOptions={[{ label: "Restart Who Goes First?", description: "Clear the coin lesson, its puzzles, experiments, and completion. Start inside the house.", restart: restartCoin },
       { label: "Start the whole game over", description: "Clear every lesson, your medal case, town progress, and your personal lab. Return to Mayor Cap’s welcome in Coin Town.", restart: restartGame }]} />;
   if (town.location === "grover") return <GroverScenario onExit={leaveGrover} onRestartGame={restartGame} />;
@@ -446,6 +459,7 @@ export function TownScreen({ initialAct, initialCoin = false, initialGrover = fa
       <button className="btn-ghost" disabled={rsaActive && blocked} onClick={() => trackDestination(id)}>{t(TRACK_LABELS[id])}</button>
       <p className="text-xs text-stage-muted">{t(town.discovered.includes(VISIT_KEYS[id]) || done ? "Visited" : "Not visited yet")}</p>
     </div>; })}
+    <p>{t(LAB_ENTRANCES.town.hint)}</p>
     <MedalCase />
     {townStorageUnavailable && <p role="status">{t("Browser storage is unavailable. Progress will last for this visit only.")}</p>}
   </div>;
@@ -466,7 +480,7 @@ export function TownScreen({ initialAct, initialCoin = false, initialGrover = fa
       {!conversation && !journalOpen && !restartOpen && !(rsaActive && game.laptopOpen) && <div className={`pointer-events-none absolute inset-x-0 bottom-0 flex justify-center p-3 ${rsaActive && game.phase !== "exploring" ? "z-20 pb-3" : "pb-24 lg:pb-4"}`}>
         {rsaActive && game.phase !== "exploring" ? <DialogBox /> : <div className={`map-hint textbox max-w-lg space-y-2 px-4 py-3 text-center transition-opacity ${game.walking ? "opacity-30" : ""}`}>
           <p className="text-sm">{t(rsaActive && game.pendingTravel ? game.pendingTravel.objective : town.tracked ? town.tracked === "coin" ? "First challenge: Who Goes First?" : town.tracked === "rsa" ? "RSA client" : town.tracked === "grover" ? "Thecap’s workshop" : "Casa Ofelia" : "Explore Quantum Town")}</p>
-          {canInteract && <p className="text-xs text-accent-amber">{t(townNear ? TOWN_LOCATIONS[townNear].prompt : game.near === "car" ? "Talk to the RSA client" : game.near === "tap" ? "Inspect the junction box" : "Talk")}{" · "}{t("Press Space or tap Talk")}</p>}
+          {canInteract && <p className="text-xs text-accent-amber">{t(townNear === "labDoor" ? (town.labEntrances.town ? "Enter the lab" : "Inspect the disturbed sand") : townNear ? TOWN_LOCATIONS[townNear].prompt : game.near === "car" ? "Talk to the RSA client" : game.near === "tap" ? "Inspect the junction box" : "Talk")}{" · "}{t(townNear === "labDoor" && !town.labEntrances.town ? "Press Space or tap Inspect" : "Press Space or tap Talk")}</p>}
         </div>}
       </div>}
       {conversation && <div className="absolute inset-0 z-20 flex items-end justify-center bg-black/30 p-3 sm:p-5" role="dialog" aria-modal="true" aria-label={t(conversation.title)} ref={conversationRef} onKeyDown={(event) => { event.stopPropagation(); if (event.key === "Escape" && town.welcomed) { event.preventDefault(); closeConversation(); }
@@ -485,12 +499,12 @@ export function TownScreen({ initialAct, initialCoin = false, initialGrover = fa
             </button>)}
           </div>}>
           {conversation.rsaAct && <div className="shrink-0"><RsaProgress act={conversation.rsaAct} /></div>}
-          <DialogueLine speaker={conversation.title === "Professor Thecap" ? "guide" : conversation.title === "Operation Ghost Key" ? "ofelia" : "boss"} label={t(conversation.title)}>
+          <DialogueLine speaker={conversation.speaker ?? (conversation.title === "Professor Thecap" ? "guide" : conversation.title === "Operation Ghost Key" ? "ofelia" : "boss")} label={t(conversation.title)}>
             {conversation.parts ? conversation.parts.map((part) => t(part)).join(" ") : t(conversation.text)}
           </DialogueLine>
         </DialogueFrame>
       </div>}
-      <TouchControls canInteract={canInteract} visible={!inputLocked} />
+      <TouchControls canInteract={canInteract} label={townNear === "labDoor" && !town.labEntrances.town ? "Inspect" : "Talk"} visible={!inputLocked} />
       {mission.layer(restartControl)}
     </>}
   </GameShell>;

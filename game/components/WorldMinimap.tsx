@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useMemo, useState } from "react";
+import { LAB_ENTRANCES } from "@/content/labEntrances";
 import type { MinimapProps } from "./WorldTownScreen";
 import { terrainPaths } from "./TownMinimap";
 import { t, useLocale } from "@/i18n";
@@ -10,7 +11,7 @@ export interface MinimapPlace { id: string; at: { x: number; y: number }; label:
 export interface MinimapRoad { at: { x: number; y: number }; glyph: string; title: string; locked?: boolean }
 
 /** The town as far as the player has walked: unseen tiles stay dark, and places appear once seen. */
-export function WorldMinimap({ map, places, roads, ariaLabel, legend, position, facing, done, pending, tracked, explored }: MinimapProps & {
+export function WorldMinimap({ map, places, roads, ariaLabel, legend, position, facing, done, pending, tracked, explored, labTown, labRevealed }: MinimapProps & {
   map: { width: number; height: number; rows: string[] };
   places: MinimapPlace[]; roads: MinimapRoad[]; ariaLabel: string;
   /** Short legend lines under the map, e.g. "C · Coin house". */
@@ -20,6 +21,8 @@ export function WorldMinimap({ map, places, roads, ariaLabel, legend, position, 
   const [collapsed, setCollapsed] = useState(() =>
     typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches,
   );
+  const lab = labTown ? LAB_ENTRANCES[labTown] : null;
+  const mapPlaces = [...places.filter((place) => place.id !== "labDoor"), ...(lab && labRevealed ? [{ id: "labDoor", at: lab.at, label: "Personal quantum lab", symbol: "L" }] : [])];
   const mapId = useId();
   const [terrain] = useState(() => terrainPaths(map.rows));
   const { width, height } = map;
@@ -46,7 +49,7 @@ export function WorldMinimap({ map, places, roads, ariaLabel, legend, position, 
         <path d={fog} fill="#07161f" opacity={0.92} />
         {roads.filter((road) => visible(road.at)).map((road) => <text key={road.title} x={road.at.x} y={road.at.y} textAnchor="middle" fontFamily="monospace" fontSize={2.6}
           fill={road.locked ? "#f87171" : "#f2c983"}>{road.locked ? "✕" : road.glyph}<title>{`${t(road.title)}${road.locked ? ` · ${t("Locked")}` : ""}`}</title></text>)}
-        {places.filter((place) => visible(place.at) || done.includes(place.id)).map((place) => {
+        {mapPlaces.filter((place) => place.id === "labDoor" || visible(place.at) || done.includes(place.id)).map((place) => {
           const finished = done.includes(place.id), waiting = pending.includes(place.id);
           const color = finished ? "#90e0cd" : waiting ? "#f2c983" : "#a9cbd4";
           return <g key={place.id} transform={`translate(${place.at.x + 0.5} ${place.at.y + 0.5})`}>

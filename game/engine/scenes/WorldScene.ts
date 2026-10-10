@@ -7,7 +7,8 @@ import { COIN_TOWN_ANIMALS, COIN_TOWN_DOOR, COIN_TOWN_EAST_SIGN, COIN_TOWN_NORTH
 import { FOUNDRY_ANIMALS, FOUNDRY_BELT, FOUNDRY_DOOR, FOUNDRY_NPCS, FOUNDRY_PROPS, FOUNDRY_SMOKE, FOUNDRY_SPAWN } from "@/content/foundry";
 import { HOLLOW_ANIMALS, HOLLOW_DOOR, HOLLOW_FOG, HOLLOW_NPCS, HOLLOW_PROPS, HOLLOW_SPAWN } from "@/content/hollow";
 import { CIPHER_ANIMALS, CIPHER_BOARD, CIPHER_NORTH_GATE_ROW, CIPHER_NORTH_ROAD, CIPHER_NPCS, CIPHER_PROPS, CIPHER_SPAWN } from "@/content/cipher";
-import { LAB_DOOR } from "@/content/lab";
+import { LAB_ENTRANCES, type LabTown } from "@/content/labEntrances";
+import { LabEntrance } from "../actors/LabEntrance";
 import { cipherMap } from "../maps/cipherMap";
 import type { PropSpec, PropSprite } from "@/content/knowledge";
 import { foundryMap } from "../maps/foundryMap";
@@ -32,6 +33,7 @@ import { findRoute, walkable, type WorldGrid } from "../maps/grid";
 export interface WorldDef {
   map: { width: number; height: number; rows: string[]; overlay: string[]; legend: Record<string, { tile: number; solid: boolean }>; overlayLegend: Record<string, { tile: number; solid: boolean } | null> };
   spawn: GridPos;
+  labTown: LabTown;
   npcs: { id: NpcSprite; at: GridPos; label: string }[];
   doors: { id: string; at: GridPos; stand: GridPos; label: string }[];
   animals?: AnimalSpec[];
@@ -71,6 +73,8 @@ export function worldGrid(def: WorldDef): WorldGrid {
     !!def.map.legend[tile]?.solid || !!def.map.overlayLegend[def.map.overlay[y][x]]?.solid));
   for (const npc of def.npcs) grid[npc.at.y][npc.at.x] = true;
   for (const prop of def.props ?? []) grid[prop.at.y][prop.at.x] = true;
+  const entrance = LAB_ENTRANCES[def.labTown].at;
+  grid[entrance.y][entrance.x] = true;
   if (def.street) RsaStreet.block(grid);
   return grid;
 }
@@ -114,6 +118,7 @@ export class WorldScene extends Scene {
   private wisps: { actor: Actor; from: GridPos; offset: number }[] = [];
   private glows: { actor: Actor; seed: number }[] = [];
   private street: RsaStreet | null = null;
+  private lab!: LabEntrance;
 
   constructor(private readonly def: WorldDef) {
     super();
@@ -145,11 +150,9 @@ export class WorldScene extends Scene {
     }
     for (const door of this.def.doors) {
       if (door.id === "labDoor") {
-        const rock = new Actor({ pos: vec(tileCenter(door.at).x, tileCenter(door.at).y), z: 2 });
-        rock.graphics.use(new Circle({ radius: 21, color: Color.fromHex("#50656a"), strokeColor: Color.fromHex("#95a29c"), lineWidth: 3 }));
-        const opening = new Actor({ pos: vec(tileCenter(door.at).x, tileCenter(door.at).y), z: 3 });
-        opening.graphics.use(new Circle({ radius: 11, color: Color.fromHex("#08171d"), strokeColor: Color.fromHex("#dfbc72"), lineWidth: 2 }));
-        this.add(rock); this.add(opening);
+        this.lab = new LabEntrance(this.def.labTown);
+        this.add(this.lab); this.add(this.lab.sign);
+        continue;
       }
       const at = tileCenter(door.at);
       const sign = new TownSign(at.x, at.y - 9, true);
@@ -432,6 +435,7 @@ export class WorldScene extends Scene {
   private async handle(command: EngineCommand): Promise<void> {
     if (this.street && isStreetCommand(command)) return this.street.handle(command, (goal) => findRoute(this.grid, this.player.grid, goal));
     switch (command.type) {
+      case "labEntrance": this.lab.setRevealed(command.revealed); return;
       case "lockInput":
         this.inputLocked = command.locked;
         this.petApproach = null;
@@ -478,9 +482,9 @@ export class WorldScene extends Scene {
 }
 
 export const COIN_TOWN_WORLD: WorldDef = {
-  map: coinTownMap, spawn: COIN_TOWN_SPAWN,
+  labTown: "coinTown", map: coinTownMap, spawn: COIN_TOWN_SPAWN,
   npcs: COIN_TOWN_NPCS.map((npc) => ({ id: npc.id, at: npc.at, label: npc.title })),
-  doors: [{ id: "labDoor", ...LAB_DOOR, label: "Personal quantum lab" }, { id: "coinDoor", ...COIN_TOWN_DOOR, label: "Coin house" },
+  doors: [{ id: "labDoor", ...LAB_ENTRANCES.coinTown, label: "Personal quantum lab" }, { id: "coinDoor", ...COIN_TOWN_DOOR, label: "Coin house" },
     { id: "eastSign", ...COIN_TOWN_EAST_SIGN, label: "Foundry Town →" }, { id: "westSign", ...COIN_TOWN_WEST_SIGN, label: "← Hollow Town" }],
   animals: COIN_TOWN_ANIMALS,
   gates: [{ id: "north", tiles: COIN_TOWN_NORTH_ROAD.map((x) => ({ x, y: NORTH_GATE_ROW })), lock: "Hollow Badge" },
@@ -494,9 +498,9 @@ export class CoinTownScene extends WorldScene {
 }
 
 export const FOUNDRY_WORLD: WorldDef = {
-  map: foundryMap, spawn: FOUNDRY_SPAWN,
+  labTown: "foundry", map: foundryMap, spawn: FOUNDRY_SPAWN,
   npcs: FOUNDRY_NPCS.map((npc) => ({ id: npc.id, at: npc.at, label: npc.title })),
-  doors: [{ id: "workshopDoor", ...FOUNDRY_DOOR, label: "Thecap’s workshop" }],
+  doors: [{ id: "labDoor", ...LAB_ENTRANCES.foundry, label: "Personal quantum lab" }, { id: "workshopDoor", ...FOUNDRY_DOOR, label: "Thecap’s workshop" }],
   animals: FOUNDRY_ANIMALS,
   props: FOUNDRY_PROPS, belt: FOUNDRY_BELT, smoke: FOUNDRY_SMOKE,
 };
@@ -506,9 +510,9 @@ export class FoundryScene extends WorldScene {
 }
 
 export const HOLLOW_WORLD: WorldDef = {
-  map: hollowMap, spawn: HOLLOW_SPAWN,
+  labTown: "hollow", map: hollowMap, spawn: HOLLOW_SPAWN,
   npcs: HOLLOW_NPCS.map((npc) => ({ id: npc.id, at: npc.at, label: npc.title })),
-  doors: [{ id: "vaultDoor", ...HOLLOW_DOOR, label: "Casa Ofelia" }],
+  doors: [{ id: "labDoor", ...LAB_ENTRANCES.hollow, label: "Personal quantum lab" }, { id: "vaultDoor", ...HOLLOW_DOOR, label: "Casa Ofelia" }],
   animals: HOLLOW_ANIMALS,
   props: HOLLOW_PROPS, fog: HOLLOW_FOG,
   night: { glow: ["lantern", "candles", "pumpkin"] },
@@ -519,9 +523,9 @@ export class HollowScene extends WorldScene {
 }
 
 export const CIPHER_WORLD: WorldDef = {
-  map: cipherMap, spawn: CIPHER_SPAWN,
+  labTown: "cipher", map: cipherMap, spawn: CIPHER_SPAWN,
   npcs: CIPHER_NPCS.map((npc) => ({ id: npc.id, at: npc.at, label: npc.title })),
-  doors: [{ id: "bountyBoard", ...CIPHER_BOARD, label: "Bounty board" }],
+  doors: [{ id: "labDoor", ...LAB_ENTRANCES.cipher, label: "Personal quantum lab" }, { id: "bountyBoard", ...CIPHER_BOARD, label: "Bounty board" }],
   animals: CIPHER_ANIMALS,
   gates: [{ id: "north", tiles: CIPHER_NORTH_ROAD.map((x) => ({ x, y: CIPHER_NORTH_GATE_ROW })), lock: "Cipher Badge" }],
   props: CIPHER_PROPS,
