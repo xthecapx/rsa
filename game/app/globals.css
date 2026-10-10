@@ -926,10 +926,51 @@ button.campus-evidence-card { min-height:44px; }
 .campus-conversation .btn-ghost, .campus-conversation .btn-primary { min-height:44px; white-space:normal; }
 .campus-conversation .dialogue-actions { max-height:calc(var(--game-viewport-height) * .32); overflow-y:auto; }
 
-/* Rosa's preview and reset tool share one compact, wired strip. */
-.campus-workspace.campus-workspace-qubit { min-height:0; padding-bottom:1rem; }
+/* Assembly previews and their reset tool share one compact, wired strip. */
+.campus-workspace.campus-assembly-workspace { min-height:0; padding-bottom:1rem; }
 .campus-circuit-preview { position:relative; border-top:1px solid #39616b; padding:1rem 4.5rem 0 0; }
 .campus-circuit-preview .circuit-actions { bottom:.5rem; right:0; }
 .campus-tape-readonly { position:relative; isolation:isolate; }
 .campus-tape-readonly::before { content:""; position:absolute; z-index:-1; left:0; right:0; top:50%; height:2px; background:#63858a; }
 .campus-tape-readonly > .font-mono { background:#102e38; padding-right:.5rem; }
+
+/* Campus settings share the assembly-card language without adding another sidebar. */
+.campus-control-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.75rem; align-items:start; }
+.campus-control-card { display:flex; flex-direction:column; gap:.75rem; min-width:0; padding:.85rem; border:1px solid #39616b; border-radius:10px; background:#0b222b; }
+.campus-control-heading { display:flex; align-items:center; gap:.65rem; color:#90e0cd; }
+.campus-control-icon { display:inline-grid; place-items:center; width:36px; height:36px; flex:0 0 auto; border-radius:9px; background:#163e49; color:#90e0cd; font:1rem monospace; }
+.campus-control-help { display:block; color:#a3bdc5; font-size:.8rem; line-height:1.5; }
+.campus-toggle-card { cursor:pointer; }
+.campus-toggle-card[data-active="true"] { border-color:#ffb13d; background:#ffb13d0d; }
+.campus-toggle-card input { width:22px; height:22px; flex:0 0 auto; margin-left:auto; accent-color:#ffb13d; }
+.campus-toggle-card:focus-within { outline:2px solid #ffb13d; outline-offset:2px; }
+.campus-choice-cards { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.65rem; }
+.campus-choice-cards button { text-align:left; min-height:44px; }
+.campus-choice-cards button > span:not(.campus-control-icon) { display:block; }
+.campus-choice-buttons, .campus-angle-presets { display:flex; flex-wrap:wrap; gap:.5rem; }
+.campus-choice-buttons button, .campus-angle-presets button { min-width:44px; min-height:44px; }
+.campus-angle-presets { justify-content:center; }
+.campus-angle-presets button[aria-pressed="true"], .campus-choice-buttons button[aria-pressed="true"] { border-color:#ffb13d; background:#ffb13d22; color:#ffe0a3; }
+.campus-angle-setting .lab-angle-control { width:100%; max-width:196px; margin:0 auto .5rem; }
+.campus-angle-setting .lab-angle-dial { width:100%; height:auto; aspect-ratio:1; }
+.campus-disturbance { display:flex; align-items:center; gap:.75rem; }
+.campus-disturbance-value { min-width:4ch; color:#ffe0a3; font:1.5rem monospace; }
+.campus-disturbance input { width:100%; min-width:0; min-height:44px; accent-color:#ffb13d; }
+.campus-editable-preview { padding-right:0; padding-bottom:4.5rem; }
+.campus-editable-preview .circuit-actions { bottom:0; }
+.campus-sequence-cards { display:flex; gap:.5rem; overflow-x:auto; padding:2px 2px .5rem; }
+.campus-sequence-card { display:grid; grid-template-columns:auto 1fr; align-items:center; gap:.25rem; flex:0 0 auto; padding:.35rem; border:1px solid #39616b; border-radius:8px; background:#0b222b; text-align:center; }
+.campus-sequence-card > div { display:flex; grid-column:1 / -1; gap:.25rem; }
+.campus-sequence-card button { display:grid; place-items:center; width:44px; height:44px; border-radius:6px; border:1px solid #39616b; color:#90e0cd; }
+.campus-sequence-card button:disabled { opacity:.25; }
+.campus-sequence-card svg { width:20px; height:20px; }
+.campus-sequence-card button:focus-visible, .campus-choice-cards button:focus-visible { outline:2px solid #ffb13d; outline-offset:2px; }
+@media (max-width:600px) {
+  .campus-control-grid, .campus-choice-cards { grid-template-columns:1fr; }
+  .campus-choice-cards .campus-control-card { display:grid; grid-template-columns:36px 1fr; gap:.5rem .75rem; }
+  .campus-choice-cards .campus-control-help { grid-column:2; }
+  .campus-circuit-preview { padding-right:0; padding-bottom:4rem; }
+  .campus-circuit-preview .circuit-actions { bottom:0; }
+}
+
+.campus-angle-grid .campus-control-card > .campus-control-help { min-height:3em; }

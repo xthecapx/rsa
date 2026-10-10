@@ -139,7 +139,12 @@ navigation and mobile touch access. `CampusExperimentControls`,
 Rosa's icon device cards keep the X/H selector inside Control, with separate
 accessible earlier/later reorder buttons and a compact wired preview. Her
 numbered device assembly and control selection live together inside the
-workspace. Hide its circuit preview and execution actions until the devices read
+workspace. Other exhibits share `CampusControlCard`, `CampusToggleCard` and
+`CampusChoice`: presets stay with their θ/φ dials, phase/lens/inverse controls
+are tappable native-checkbox cards, and source choices explain their model.
+The arcade explains its fixed preparation and puts batch size in Run; delivery
+keeps drag/tap placement and per-gate left/right controls. All assembly previews
+reserve space beside or below their reset tool, including festival repairs. Hide its circuit preview and execution actions until the devices read
 Prepare → Control → Measure; show the ordering instruction there instead.
 
 The quiet room uses a gate-only environment dilation for the explicit channel

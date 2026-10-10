@@ -381,6 +381,17 @@ it("clearing an empty tape and deleting individual gates leaves every slot usabl
     "X",
     "H",
   ]);
+  fireEvent.click(screen.getByRole("button", { name: "Move gate 1 right" }));
+  expect(useCampus.getState().sessions.delivery?.settings.sequence).toEqual([
+    "H",
+    "X",
+  ]);
+  fireEvent.click(screen.getByRole("button", { name: "Move gate 2 left" }));
+  expect(useCampus.getState().sessions.delivery?.settings.sequence).toEqual([
+    "X",
+    "H",
+  ]);
+  expect(transport).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole("button", { name: "Circuit slot 1" }));
   expect(useCampus.getState().sessions.delivery?.settings.sequence).toEqual([
     "H",
@@ -571,3 +582,93 @@ it("reset invalidates an in-flight campus experiment even if its laptop owner re
   expect(useCampus.getState().sessions.fountain).toBeUndefined();
   expect(useGame.getState().operations).toBe(0);
 });
+
+it.each([
+  {
+    id: "passports" as const,
+    edit: () => {
+      fireEvent.click(screen.getByRole("button", { name: "θ 180°" }));
+      fireEvent.click(screen.getByRole("button", { name: "φ 90°" }));
+    },
+    settings: { angle: Math.PI, phase: Math.PI / 2 },
+  },
+  {
+    id: "rotations" as const,
+    edit: () => {
+      fireEvent.click(
+        within(screen.getByRole("group", { name: "Rotation axis" })).getByRole(
+          "button",
+          { name: "Z" },
+        ),
+      );
+      fireEvent.click(
+        screen.getByRole("checkbox", { name: "Add inverse rotation" }),
+      );
+    },
+    settings: { axis: "Z", inverse: true },
+  },
+  {
+    id: "fountain" as const,
+    edit: () => {
+      fireEvent.click(
+        screen.getByRole("checkbox", { name: "Paint a relative minus with Z" }),
+      );
+      fireEvent.click(
+        screen.getByRole("checkbox", { name: "Add the H measurement lens" }),
+      );
+    },
+    settings: { minus: true, analyzer: true },
+  },
+  {
+    id: "observatory" as const,
+    edit: () => {
+      fireEvent.click(
+        screen.getByRole("button", { name: "Matching envelopes model" }),
+      );
+      fireEvent.click(
+        within(
+          screen.getByRole("group", { name: "Both measurement bases" }),
+        ).getByRole("button", { name: "X" }),
+      );
+    },
+    settings: { pair: "envelopes", basis: "X" },
+  },
+  {
+    id: "quiet" as const,
+    edit: () => {
+      fireEvent.change(
+        screen.getByRole("slider", { name: "Teaching disturbance" }),
+        { target: { value: "0.75" } },
+      );
+      fireEvent.click(
+        screen.getByRole("checkbox", { name: "Add the H measurement lens" }),
+      );
+    },
+    settings: { disturbance: 0.75, analyzer: true },
+  },
+])(
+  "$id setting cards preserve edits through language changes and reopen without submitting",
+  async ({ id, edit, settings }) => {
+    const transport = vi.fn(async () => Response.json(counts));
+    setServiceTransport(transport);
+    let view = render(<CampusLaptop initial={id} onClose={vi.fn()} />);
+    assemble();
+    edit();
+    expect(useCampus.getState().sessions[id]?.settings).toMatchObject(settings);
+    act(() => useLocale.setState({ locale: "es" }));
+    expect(useCampus.getState().sessions[id]?.settings).toMatchObject(settings);
+    view.unmount();
+    await act(async () => useCampus.persist.rehydrate());
+    act(() => useLocale.setState({ locale: "en" }));
+    view = render(<CampusLaptop initial={id} onClose={vi.fn()} />);
+    assemble();
+    expect(useCampus.getState().sessions[id]?.settings).toMatchObject(settings);
+    expect(transport).not.toHaveBeenCalled();
+    await execute();
+    expect(transport).toHaveBeenCalledTimes(1);
+    expect(
+      useCampus.getState().sessions[id]?.runs.at(-1)?.settings,
+    ).toMatchObject(settings);
+    view.unmount();
+  },
+);

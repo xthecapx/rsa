@@ -262,20 +262,14 @@ export function CampusLaptop({
                   <h3 className="text-accent-teal">
                     {t("Experiment assembly")}
                   </h3>
-                  <div
-                    className={`circuit-workspace campus-workspace space-y-4 ${exhibitId === "qubit" ? "campus-workspace-qubit" : ""}`}
-                  >
+                  <div className="circuit-workspace campus-workspace campus-assembly-workspace space-y-4">
                     <CampusExperimentControls
                       id={exhibitId}
                       settings={s}
                       update={update}
                     />
                     <div
-                      className={
-                        exhibitId === "qubit"
-                          ? "campus-circuit-preview"
-                          : "contents"
-                      }
+                      className={`campus-circuit-preview ${exhibitId === "delivery" ? "campus-editable-preview" : ""}`}
                     >
                       {exhibitId === "delivery" ? (
                         <CampusTape

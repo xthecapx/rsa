@@ -3,11 +3,57 @@ import type { CampusExhibitId } from "@/content/campus";
 import type { CampusSettings } from "@/game/campusExperiment";
 import { AngleDial } from "./AngleDial";
 import { CampusDeviceAssembly } from "./CampusDeviceAssembly";
+import {
+  CampusChoice,
+  CampusControlCard,
+  CampusToggleCard,
+} from "./CampusControlCard";
 import { t } from "@/i18n";
+
+/** Presets belong to their dial, so θ and φ never share an ambiguous button row. */
+function CampusAngle({
+  symbol,
+  value,
+  onChange,
+}: {
+  symbol: "θ" | "φ";
+  value: number;
+  onChange: (angle: number) => void;
+}) {
+  return (
+    <div className="campus-angle-setting">
+      <AngleDial
+        symbol={symbol}
+        label={symbol === "φ" ? "Relative phase dial" : "Rotation angle dial"}
+        value={value}
+        onChange={onChange}
+      />
+      <div
+        className="campus-angle-presets"
+        role="group"
+        aria-label={t(
+          symbol === "θ" ? "Rotation angle presets" : "Relative phase presets",
+        )}
+      >
+        {[0, 90, 180].map((degrees) => (
+          <button
+            type="button"
+            key={degrees}
+            className="btn-ghost text-sm"
+            aria-pressed={Math.abs(value - (degrees * Math.PI) / 180) < 0.001}
+            onClick={() => onChange((degrees * Math.PI) / 180)}
+          >
+            {symbol} {degrees}°
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 /** Each exhibit owns its parameters; the laptop owns execution and navigation. */
 export function CampusExperimentControls({
-  id: exhibitId,
+  id,
   settings: s,
   update,
 }: {
@@ -15,144 +61,154 @@ export function CampusExperimentControls({
   settings: CampusSettings;
   update: (patch: Partial<CampusSettings>) => void;
 }) {
-  const choose = <T extends string>(
-    label: string,
-    values: readonly T[],
-    value: T,
-    change: (v: T) => void,
-    names?: Record<string, string>,
-  ) => (
-    <fieldset className="campus-choice">
-      <legend>{t(label)}</legend>
-      <div className="flex flex-wrap gap-2">
-        {values.map((v) => (
-          <button
-            type="button"
-            key={v}
-            className="btn-ghost"
-            aria-pressed={v === value}
-            onClick={() => change(v)}
-          >
-            {t(names?.[v] ?? v)}
-          </button>
-        ))}
-      </div>
-    </fieldset>
+  const lens = (
+    <CampusToggleCard
+      icon="H"
+      label="Add the H measurement lens"
+      description="Read in X instead of Z to reveal phase differences."
+      checked={s.analyzer}
+      onChange={(analyzer) => update({ analyzer })}
+    />
   );
-  return (
-    <div className="space-y-4">
-      {exhibitId === "qubit" && (
-        <CampusDeviceAssembly settings={s} update={update} />
-      )}
-      {(exhibitId === "passports" || exhibitId === "rotations") && (
-        <>
-          {exhibitId === "rotations" &&
-            choose("Rotation axis", ["X", "Y", "Z"] as const, s.axis, (axis) =>
-              update({ axis }),
+  if (id === "qubit")
+    return <CampusDeviceAssembly settings={s} update={update} />;
+  if (id === "delivery") return null; // The editable tape owns its gate palette.
+  if (id === "passports")
+    return (
+      <div className="campus-control-grid campus-angle-grid">
+        <CampusControlCard icon="θ" title="State angle">
+          <p className="campus-control-help">
+            {t("Turn from |0⟩ toward |1⟩ with θ.")}
+          </p>
+          <CampusAngle
+            symbol="θ"
+            value={s.angle}
+            onChange={(angle) => update({ angle })}
+          />
+        </CampusControlCard>
+        <CampusControlCard icon="φ" title="Relative phase">
+          <p className="campus-control-help">
+            {t(
+              "Turn the relative phase with φ; Z-basis probabilities stay the same.",
             )}
-          <div className="flex flex-wrap items-start gap-4">
-            <div>
-              <p className="text-accent-teal">θ</p>
-              <AngleDial
-                value={s.angle}
-                onChange={(angle) => update({ angle })}
-              />
-            </div>
-            {exhibitId === "passports" && (
-              <div>
-                <p className="text-accent-teal">φ</p>
-                <AngleDial
-                  symbol="φ"
-                  label="Relative phase dial"
-                  value={s.phase}
-                  onChange={(phase) => update({ phase })}
-                />
-              </div>
+          </p>
+          <CampusAngle
+            symbol="φ"
+            value={s.phase}
+            onChange={(phase) => update({ phase })}
+          />
+        </CampusControlCard>
+      </div>
+    );
+  if (id === "rotations")
+    return (
+      <div className="campus-control-grid">
+        <CampusControlCard icon="R" title="Rotation">
+          <CampusChoice
+            label="Rotation axis"
+            options={(["X", "Y", "Z"] as const).map((value) => ({
+              value,
+              label: value,
+            }))}
+            value={s.axis}
+            onChange={(axis) => update({ axis })}
+          />
+          <CampusAngle
+            symbol="θ"
+            value={s.angle}
+            onChange={(angle) => update({ angle })}
+          />
+        </CampusControlCard>
+        <CampusToggleCard
+          icon="U†"
+          label="Add inverse rotation"
+          description="Apply the opposite angle after the first rotation."
+          checked={s.inverse}
+          onChange={(inverse) => update({ inverse })}
+        />
+      </div>
+    );
+  if (id === "fountain")
+    return (
+      <div className="campus-control-grid">
+        <CampusToggleCard
+          icon="Z"
+          label="Paint a relative minus with Z"
+          description="Switch |+⟩ to |−⟩ without changing the Z-basis probabilities."
+          checked={s.minus}
+          onChange={(minus) => update({ minus })}
+        />
+        {lens}
+      </div>
+    );
+  if (id === "observatory")
+    return (
+      <div className="space-y-3">
+        <CampusChoice
+          label="Signal preparation"
+          cards
+          options={
+            [
+              {
+                value: "independent",
+                label: "Independent signals",
+                icon: "⊗",
+                description: "Two separately prepared |+⟩ states.",
+              },
+              {
+                value: "bell",
+                label: "Bell pair",
+                icon: "∞",
+                description: "One joint state, prepared with H and CNOT.",
+              },
+              {
+                value: "envelopes",
+                label: "Matching envelopes model",
+                icon: "▤",
+                description: "Matching Z outcomes with coherence removed.",
+              },
+            ] as const
+          }
+          value={s.pair}
+          onChange={(pair) => update({ pair })}
+        />
+        <CampusControlCard icon="M" title="Measurement">
+          <CampusChoice
+            label="Both measurement bases"
+            options={
+              [
+                { value: "Z", label: "Z" },
+                { value: "X", label: "X" },
+              ] as const
+            }
+            value={s.basis}
+            onChange={(basis) => update({ basis })}
+          />
+          <p className="campus-control-help">
+            {t(
+              "Both detectors use the selected basis. Compare their joint outcomes.",
             )}
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {[0, 90, 180].map((degrees) => (
-              <button
-                key={degrees}
-                className="btn-ghost text-sm"
-                onClick={() => update({ angle: (degrees * Math.PI) / 180 })}
-              >
-                θ {degrees}°
-              </button>
-            ))}
-            {exhibitId === "passports" && (
-              <button
-                className="btn-ghost"
-                onClick={() => update({ phase: 0 })}
-              >
-                φ 0°
-              </button>
-            )}
-          </div>
-          {exhibitId === "rotations" && (
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={s.inverse}
-                onChange={(e) => update({ inverse: e.target.checked })}
-              />
-              {t("Add inverse rotation")}
-            </label>
-          )}
-        </>
-      )}
-      {exhibitId === "fountain" && (
-        <>
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={s.minus}
-              onChange={(e) => update({ minus: e.target.checked })}
-            />
-            {t("Paint a relative minus with Z")}
-          </label>
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={s.analyzer}
-              onChange={(e) => update({ analyzer: e.target.checked })}
-            />
-            {t("Add the H measurement lens")}
-          </label>
-        </>
-      )}
-      {exhibitId === "observatory" && (
-        <>
-          {choose(
-            "Signal preparation",
-            ["independent", "bell", "envelopes"] as const,
-            s.pair,
-            (pair) => update({ pair }),
-            {
-              independent: "Independent signals",
-              bell: "Bell pair",
-              envelopes: "Matching envelopes model",
-            },
-          )}
-          {choose(
-            "Both measurement bases",
-            ["Z", "X"] as const,
-            s.basis,
-            (basis) => update({ basis }),
-          )}
-          <p className="text-sm text-stage-muted">
+          </p>
+        </CampusControlCard>
+        {s.pair === "envelopes" && (
+          <p className="campus-control-help">
             {t(
               "The envelopes model is a dephased Bell preparation. An unobserved helper removes its coherence; it is not a physical source of paper envelopes.",
             )}
           </p>
-        </>
-      )}
-      {exhibitId === "quiet" && (
-        <>
-          <label className="block">
-            {t("Teaching disturbance")} · {Math.round(s.disturbance * 100)}%
+        )}
+      </div>
+    );
+  if (id === "quiet")
+    return (
+      <div className="campus-control-grid">
+        <CampusControlCard icon="E(d)" title="Teaching disturbance">
+          <label className="campus-disturbance">
+            <span className="campus-disturbance-value">
+              {Math.round(s.disturbance * 100)}%
+            </span>
             <input
-              className="mt-3 block w-full"
+              aria-label={t("Teaching disturbance")}
               type="range"
               min={0}
               max={1}
@@ -161,32 +217,42 @@ export function CampusExperimentControls({
               onChange={(e) => update({ disturbance: Number(e.target.value) })}
             />
           </label>
-          <div className="flex gap-2">
-            {[0, 0.5, 1].map((d) => (
+          <div className="campus-choice-buttons">
+            {[0, 0.5, 1].map((disturbance) => (
               <button
-                key={d}
+                type="button"
+                key={disturbance}
                 className="btn-ghost"
-                onClick={() => update({ disturbance: d })}
+                aria-pressed={s.disturbance === disturbance}
+                onClick={() => update({ disturbance })}
               >
-                {d * 100}%
+                {disturbance * 100}%
               </button>
             ))}
           </div>
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={s.analyzer}
-              onChange={(e) => update({ analyzer: e.target.checked })}
-            />
-            {t("Add the H measurement lens")}
-          </label>
-          <p className="text-sm text-stage-muted">
+          <p className="campus-control-help">
             {t(
               "The helper is unobserved. Only the data qubit appears in counts. Device noise is additional to the teaching channel.",
             )}
           </p>
-        </>
-      )}
+        </CampusControlCard>
+        {lens}
+      </div>
+    );
+  return (
+    <div className="campus-control-grid">
+      <CampusControlCard icon="H" title="Prepare">
+        <p className="campus-control-help">
+          {t("H prepares a balanced superposition from |0⟩.")}
+        </p>
+      </CampusControlCard>
+      <CampusControlCard icon="M" title="Measure">
+        <p className="campus-control-help">
+          {t(
+            "Choose the batch size in Run. Each shot prepares and measures a fresh qubit.",
+          )}
+        </p>
+      </CampusControlCard>
     </div>
   );
 }

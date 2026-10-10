@@ -77,26 +77,70 @@ export function CampusTape({
         <span className="campus-gate-slot">M</span>
       </div>
       {gates.length > 1 && (
-        <div className="mt-3 flex flex-wrap gap-2">
-          {gates.map((g, i) => (
-            <button
-              key={i}
-              className="btn-ghost text-xs"
-              disabled={i === 0}
-              aria-label={t("Move gate {number} left").replace(
-                "{number}",
-                String(i + 1),
-              )}
-              onClick={() => {
-                const next = [...gates];
-                [next[i - 1], next[i]] = [next[i], next[i - 1]];
-                onChange(next);
-              }}
-            >
-              ← {g} {i + 1}
-            </button>
-          ))}
-        </div>
+        <fieldset className="campus-sequence-order">
+          <legend className="mb-2 text-sm text-stage-muted">
+            {t("Gate order")}
+          </legend>
+          <div className="campus-sequence-cards">
+            {gates.map((gate, index) => (
+              <div
+                key={index}
+                className="campus-sequence-card"
+                role="group"
+                aria-label={t("Gate {number}: {gate}")
+                  .replace("{number}", String(index + 1))
+                  .replace("{gate}", gate)}
+              >
+                <span className="text-xs text-stage-muted">{index + 1}</span>
+                <span className="font-mono">{gate}</span>
+                <div>
+                  {([-1, 1] as const).map((offset) => {
+                    const label = t(
+                      offset === -1
+                        ? "Move gate {number} left"
+                        : "Move gate {number} right",
+                    ).replace("{number}", String(index + 1));
+                    return (
+                      <button
+                        type="button"
+                        key={offset}
+                        aria-label={label}
+                        title={label}
+                        disabled={
+                          index + offset < 0 || index + offset >= gates.length
+                        }
+                        onClick={() => {
+                          const next = [...gates];
+                          [next[index], next[index + offset]] = [
+                            next[index + offset],
+                            next[index],
+                          ];
+                          onChange(next);
+                        }}
+                      >
+                        <svg
+                          aria-hidden="true"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path
+                            d={
+                              offset === -1 ? "m14 6-6 6 6 6" : "m10 6 6 6-6 6"
+                            }
+                          />
+                        </svg>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </fieldset>
       )}
     </PuzzleDragDrop>
   );
