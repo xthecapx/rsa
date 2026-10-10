@@ -353,3 +353,23 @@ def test_campus_repeated_practice_never_uses_remote_allowance(provider):
             assert sum(result["data"]["counts"].values()) == result["data"]["shots"]
         submitted.assert_not_called()
         assert not services._used.get(backend)
+
+
+@pytest.mark.parametrize("gate", ["X", "H"])
+@pytest.mark.parametrize("device", ["basic", "fake_pittsburgh"])
+def test_rosa_workshop_returns_measurements_on_qollab(device, gate):
+    from unittest.mock import patch
+    from qiskit_ibm_runtime.fake_provider import FakePittsburgh
+    backend = FakePittsburgh() if device == "fake_pittsburgh" else BasicSimulator()
+    body = {"mode": "circuit", "recipe": {
+        "qubits": 1, "start": "0", "operations": [{"gate": gate, "wire": 0}], "shots": 256,
+    }}
+    with patch.object(backend, "run", wraps=backend.run) as submitted:
+        response = call("/api/campus/run", body, backend)
+    assert response["status"] == 200, response
+    submitted.assert_called_once()
+    result = response["data"]
+    assert result["backend"] == ("fake_pittsburgh" if device == "fake_pittsburgh" else "basic_simulator")
+    assert result["kind"] == ("noise" if device == "fake_pittsburgh" else "ideal")
+    assert result["bits"] == 1 and sum(result["counts"].values()) == 256
+    assert result["probabilities"] == ({"0": 0.0, "1": 1.0} if gate == "X" else {"0": 0.5, "1": 0.5})

@@ -54,6 +54,8 @@ export function CampusLaptop({
     festival && phase === 0 ? "festival" : exhibitId,
     s,
   );
+  const preparationReady =
+    exhibitId !== "qubit" || s.order.join() === "Prepare,Control,Measure";
   useEffect(() => {
     if (selected !== "notebook") useCampus.getState().open(selected);
   }, [selected]);
@@ -67,7 +69,7 @@ export function CampusLaptop({
   const completed = store.completed.includes(exhibit.id);
   function run() {
     if (operation.running.current) return;
-    if (exhibitId === "qubit" && s.order.join() !== "Prepare,Control,Measure") {
+    if (!preparationReady) {
       setError("Arrange Prepare → Control → Measure before running.");
       return;
     }
@@ -241,30 +243,6 @@ export function CampusLaptop({
                 <div className="space-y-4">
                   {exhibitId === "qubit" && (
                     <>
-                      <p>
-                        {t(
-                          "Arrange the experiment. Move a device left to change its order.",
-                        )}
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {s.order.map((device, i) => (
-                          <button
-                            key={device}
-                            className="btn-ghost"
-                            disabled={i === 0}
-                            onClick={() => {
-                              const order = [...s.order];
-                              [order[i - 1], order[i]] = [
-                                order[i],
-                                order[i - 1],
-                              ];
-                              update({ order });
-                            }}
-                          >
-                            ← {t(device)}
-                          </button>
-                        ))}
-                      </div>
                       {choose(
                         "Control device",
                         ["X", "H"] as const,
@@ -452,46 +430,99 @@ export function CampusLaptop({
                   </label>
                 </div>
                 <div className="min-w-0 space-y-3">
-                  <CampusVisual id={exhibitId} settings={s} />
+                  {preparationReady && (
+                    <CampusVisual id={exhibitId} settings={s} />
+                  )}
                   <div className="circuit-workspace campus-workspace">
+                    {exhibitId === "qubit" && (
+                      <section className="mb-4 space-y-3">
+                        <h4 className="text-accent-teal">
+                          {t("Experiment assembly")}
+                        </h4>
+                        <p className="text-sm text-stage-muted">
+                          {t(
+                            "Arrange the experiment. Move a device left to change its order.",
+                          )}
+                        </p>
+                        <ol
+                          className="flex gap-2 overflow-x-auto pb-2"
+                          aria-label={t("Device order")}
+                        >
+                          {s.order.map((device, i) => (
+                            <li
+                              key={device}
+                              className="flex shrink-0 items-center gap-2"
+                            >
+                              <span className="text-stage-muted">{i + 1}.</span>
+                              <button
+                                type="button"
+                                className="btn-ghost"
+                                disabled={i === 0}
+                                onClick={() => {
+                                  const order = [...s.order];
+                                  [order[i - 1], order[i]] = [
+                                    order[i],
+                                    order[i - 1],
+                                  ];
+                                  update({ order });
+                                }}
+                              >
+                                ← {t(device)}
+                              </button>
+                            </li>
+                          ))}
+                        </ol>
+                        {!preparationReady && (
+                          <p className="text-accent-amber" role="status">
+                            {t(
+                              "Arrange Prepare → Control → Measure before running.",
+                            )}
+                          </p>
+                        )}
+                      </section>
+                    )}
                     {exhibitId === "delivery" ? (
                       <CampusTape
                         gates={s.sequence}
                         onChange={(sequence) => update({ sequence })}
                       />
-                    ) : (
+                    ) : preparationReady ? (
                       <CampusCircuit request={request} />
+                    ) : null}
+                    {preparationReady && (
+                      <CircuitActions
+                        clearLabel={
+                          exhibitId === "delivery"
+                            ? "Clear circuit"
+                            : "Reset experiment"
+                        }
+                        busy={operation.busy}
+                        shots={s.shots}
+                        onRun={run}
+                        onClear={() =>
+                          update({
+                            sequence: [],
+                            inverse: false,
+                            analyzer: false,
+                            minus: false,
+                            angle: Math.PI / 2,
+                            phase: 0,
+                            disturbance: 0,
+                            pair: "independent",
+                            basis: "Z",
+                          })
+                        }
+                      />
                     )}
-                    <CircuitActions
-                      clearLabel={
-                        exhibitId === "delivery"
-                          ? "Clear circuit"
-                          : "Reset experiment"
-                      }
-                      busy={operation.busy}
-                      shots={s.shots}
-                      onRun={run}
-                      onClear={() =>
-                        update({
-                          sequence: [],
-                          inverse: false,
-                          analyzer: false,
-                          minus: false,
-                          angle: Math.PI / 2,
-                          phase: 0,
-                          disturbance: 0,
-                          pair: "independent",
-                          basis: "Z",
-                        })
-                      }
-                    />
                   </div>
-                  <p className="text-sm text-stage-muted">
-                    {t(
-                      "Run executes this circuit. Editing updates only the ideal reference and clears the current result.",
-                    )}
-                  </p>
-                  {request.mode === "circuit" && (
+                  {preparationReady && (
+                    <p className="text-sm text-stage-muted">
+                      {t(
+                        "Run executes this circuit. Editing updates only the ideal reference and clears the current result.",
+                      )}
+                    </p>
+                  )}
+                  {preparationReady && request.mode === "circuit" && (
                     <LabStateExplorer
                       recipe={request.recipe}
                       step={step}

@@ -125,6 +125,10 @@ completion awards a new discovery or festival repair; it requires successful
 relevant runs and a correct explanation. No completion rule requires exact noisy
 counts. No-run/failed-run closes offer resume. Notebook/free-play closes never
 start another host's discussion. Reset invalidates stale execution ownership.
+Rosa's numbered device assembly lives inside the circuit workspace. Hide its
+circuit preview, ideal explorer and Run/Reset actions until the devices read
+Prepare → Control → Measure; show the ordering instruction there instead.
+Correct assembly enables real executions in both delivery targets.
 
 The quiet room uses a gate-only environment dilation for the explicit channel
 E_d(ρ)=(1−d/2)ρ+(d/2)ZρZ, d∈[0,1]. An unobserved helper starts with

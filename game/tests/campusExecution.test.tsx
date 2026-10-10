@@ -108,11 +108,84 @@ it("all eight exhibits open without submitting any operation", () => {
       <CampusLaptop initial={exhibit.id} onClose={vi.fn()} />,
     );
     expect(screen.getByText(exhibit.brief)).toBeTruthy();
-    expect(run()).toBeTruthy();
+    if (exhibit.id === "qubit") {
+      expect(
+        screen.queryByRole("group", { name: "Circuit controls" }),
+      ).toBeNull();
+    } else {
+      expect(run()).toBeTruthy();
+    }
     view.unmount();
   }
   expect(transport).not.toHaveBeenCalled();
 });
+it.each(["web", "qollab"] as const)(
+  "Rosa shows Run only after assembly, then returns measurements in %s without resubmitting on reopen",
+  async (target) => {
+    runtimeInfo.target = target;
+    const transport = vi.fn(async (_path: string, _init?: RequestInit) =>
+      Response.json(counts),
+    );
+    setServiceTransport(transport);
+    let view = render(<CampusLaptop initial="qubit" onClose={vi.fn()} />);
+    expect(
+      screen.queryByRole("group", { name: "Circuit controls" }),
+    ).toBeNull();
+    expect(screen.queryByText("Circuit builder")).toBeNull();
+    expect(screen.queryByText("Ideal state explorer")).toBeNull();
+    expect(screen.getByRole("status").textContent).toBe(
+      "Arrange Prepare → Control → Measure before running.",
+    );
+    fireEvent.click(screen.getByRole("button", { name: "← Prepare" }));
+    expect(
+      screen.queryByRole("group", { name: "Circuit controls" }),
+    ).toBeNull();
+    act(() => useLocale.setState({ locale: "es" }));
+    expect(screen.getByRole("status").textContent).toBe(
+      "Ordena Preparar → Controlar → Medir antes de ejecutar.",
+    );
+    fireEvent.click(screen.getByRole("button", { name: "← Controlar" }));
+    expect(useCampus.getState().sessions.qubit?.settings.order).toEqual([
+      "Prepare",
+      "Control",
+      "Measure",
+    ]);
+    expect(transport).not.toHaveBeenCalled();
+    act(() => useLocale.setState({ locale: "en" }));
+    expect(screen.getByText("Circuit builder")).toBeTruthy();
+    await act(async () => fireEvent.click(run()));
+    expect(transport.mock.calls[0][0]).toBe("/api/campus/run");
+    expect(JSON.parse(transport.mock.calls[0][1]?.body as string)).toEqual({
+      mode: "circuit",
+      recipe: {
+        qubits: 1,
+        start: "0",
+        operations: [{ gate: "H", wire: 0 }],
+        shots: 256,
+      },
+    });
+    expect(screen.getByText("120 · 46.9%")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Classical flip · X" }));
+    await act(async () => fireEvent.click(run()));
+    expect(useCampus.getState().sessions.qubit?.evidence).toEqual([
+      "prepared:H",
+      "prepared:X",
+    ]);
+    view.unmount();
+    await act(async () => useCampus.persist.rehydrate());
+    view = render(<CampusLaptop initial="qubit" onClose={vi.fn()} />);
+    expect(run()).toBeTruthy();
+    expect(screen.getAllByText("120 · 46.9%")).toHaveLength(2);
+    expect(transport).toHaveBeenCalledTimes(2);
+    // Making the assembly invalid again hides execution and clears stale counts.
+    fireEvent.click(screen.getByRole("button", { name: "← Measure" }));
+    expect(
+      screen.queryByRole("group", { name: "Circuit controls" }),
+    ).toBeNull();
+    expect(useCampus.getState().sessions.qubit?.result).toBeNull();
+    expect(transport).toHaveBeenCalledTimes(2);
+  },
+);
 it("Run honors the per-player backend; language, help, refresh and reopen never resubmit", async () => {
   const transport = vi.fn(async (_path: string, _init?: RequestInit) =>
     Response.json(counts),
