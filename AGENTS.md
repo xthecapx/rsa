@@ -278,6 +278,14 @@ Shor processing in `backend/app/core/shor_service.py`, and the circuit builder i
 Marisol's H→H during transpilation. Histograms display returned counts and backend
 identity; ideal state traces, probabilities, and waves are labeled references.
 Exercise correctness comes from the ideal designed state, never noisy counts.
+All five Coin neighbors use Math → Assemble → Run → Results, sharing
+`ExperimentSteps` and `ExperimentControlCard` with the campus (whose named exports
+remain compatibility aliases). Assembly shows each starting state and target;
+Run previews the circuit and submits 256 shots per case only on an explicit press.
+Results keep each case's counts separate and show a labeled ideal Bloch reference
+before measurement. Tabs, keyboard navigation, language changes and laptop reopen
+never submit a job. Gate blocks support whole-block drag, tap and keyboard input;
+Clear and edit invalidate measurements and restore the execution controls.
 Editing clears the previous result and solved state. Laptop close and next/reset
 actions are disabled during execution; closing/reopening retains the current
 neighbor's circuit and counts without resubmitting. Neighbor activity state is
@@ -290,6 +298,8 @@ count histogram and retains simulator kind in the measurement explorer.
   instruction IDs; compare Ale and Brayan's five-call sequences and inspect the
   sixth call; measure a fresh zero; build H followed by measurement; compare
   100 and 1,000 shots; make one final measured toss (0 = Ale, 1 = Brayan).
+  The H/measurement assembly uses floating Clear/Check tools; Check validates
+  ordering locally, and the following story step explicitly runs the circuit.
   The scaffold never executes arbitrary player Python. The private PRNG starts
   with seed 42 per backend request. Aer runs a real one-qubit circuit, with at
   most 1,024 shots. The final decision is saved and is not rerolled on refresh.

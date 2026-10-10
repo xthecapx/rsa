@@ -7,6 +7,7 @@ import { t, useLocale } from "@/i18n";
 import type { CoinResult } from "@/lib/coin";
 import type { Measurement } from "@/game/histogram";
 import { MeasureInspect } from "./MeasurementExplorer";
+import { CircuitActions } from "./CircuitActions";
 
 export type CodeBlock = "seed" | "reset" | "return";
 export type CodeSlot = "setup" | "body";
@@ -58,7 +59,7 @@ export function CodePuzzle({ slots, order, onChange, onSolved }: {
     else if (slots.body !== "return") setMessage("Inside flip_coin(), return the next bit from coin.");
     else onSolved();
   }
-  return <PuzzleDragDrop labels={CODE_BLOCKS} targets={{ setup: t(CODE_LABELS.setup), body: t(CODE_LABELS.body) }}
+  return <PuzzleDragDrop wholeBlockDrag labels={CODE_BLOCKS} targets={{ setup: t(CODE_LABELS.setup), body: t(CODE_LABELS.body) }}
     onPlace={(slot, block) => place(slot as CodeSlot, block as CodeBlock)}
     renderPreview={(id) => <code>{CODE_BLOCKS[id as CodeBlock]}</code>}>
     <div className="coin-challenge space-y-3">
@@ -111,24 +112,43 @@ export function coinMeasurement(result: CoinResult): Measurement {
   return { bits: 1, counts: { ...result.counts }, probabilities: { ...result.probabilities }, source: result.source, backend: result.backend, kind: result.kind };
 }
 
-export function CircuitPuzzle({ slots, onChange, onSolved }: { slots: CircuitSlots; onChange: (slots: CircuitSlots) => void; onSolved: () => void }) {
+export function CircuitPuzzle({
+  slots,
+  onChange,
+  onSolved,
+}: {
+  slots: CircuitSlots;
+  onChange: (slots: CircuitSlots) => void;
+  onSolved: () => void;
+}) {
   useLocale((state) => state.locale);
   const [selected, setSelected] = useState<CircuitOperation | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   function place(position: CircuitPosition, operation = selected) {
     if (!operation) return;
     const next = { ...slots };
-    for (const key of ["first", "second"] as const) if (next[key] === operation) next[key] = null;
+    for (const key of ["first", "second"] as const)
+      if (next[key] === operation) next[key] = null;
     next[position] = operation;
-    onChange(next); setSelected(null); setMessage(null);
+    onChange(next);
+    setSelected(null);
+    setMessage(null);
   }
   function hint() {
     if (slots.first === "M" && slots.second === "H")
-      setMessage("H after measurement cannot change a result that was already read. Swap the operations.");
+      setMessage(
+        "H after measurement cannot change a result that was already read. Swap the operations.",
+      );
     else if (slots.first === "M" || (slots.second === "M" && !slots.first))
-      setMessage("Measuring |0⟩ without H always returns zero. Add H before measurement to make both outcomes possible.");
-    else if (slots.first === "H" && !slots.second) setMessage("Add measurement after H so the circuit produces a bit.");
-    else setMessage("Build the circuit from left to right: prepare |0⟩, apply H, then measure.");
+      setMessage(
+        "Measuring |0⟩ without H always returns zero. Add H before measurement to make both outcomes possible.",
+      );
+    else if (slots.first === "H" && !slots.second)
+      setMessage("Add measurement after H so the circuit produces a bit.");
+    else
+      setMessage(
+        "Build the circuit from left to right: prepare |0⟩, apply H, then measure.",
+      );
   }
   function check() {
     if (slots.first === "H" && slots.second === "M") onSolved();
@@ -139,46 +159,154 @@ export function CircuitPuzzle({ slots, onChange, onSolved }: { slots: CircuitSlo
     if (operation === "H") codeLines.push("circuit.h(0)");
     if (operation === "M") codeLines.push("circuit.measure(0, 0)");
   }
-  return <PuzzleDragDrop labels={{ H: t("Hadamard · H"), M: t("Measurement · M") }}
-    targets={{ first: t("First operation"), second: t("Second operation") }}
-    onPlace={(position, operation) => place(position as CircuitPosition, operation as CircuitOperation)}
-    renderPreview={(operation) => <span className="coin-operation-tool">
-      <span className={`qiskit-gate ${operation === "H" ? "hadamard" : "measure"}`}>{operation === "H" ? "H" : <MeasurementIcon />}</span>
-      <span>{t(operation === "H" ? "Hadamard · H" : "Measurement · M")}</span>
-    </span>}>
-    <div className="coin-challenge space-y-3">
-    <p>{t("Build a one-qubit circuit. Select or drag H and measurement onto the wire in the order they should run.")}</p>
-    <div className="coin-block-tray" aria-label={t("Circuit operations")}>
-      {(["H", "M"] as const).map((operation) => <PuzzlePiece key={operation} id={operation} label={t(operation === "H" ? "Hadamard · H" : "Measurement · M")}
-        className="coin-operation-tool" onSelect={() => setSelected(operation)} selected={selected === operation}>
-        <span className={`qiskit-gate ${operation === "H" ? "hadamard" : "measure"}`}>{operation === "H" ? "H" : <MeasurementIcon />}</span>
-        <span>{t(operation === "H" ? "Hadamard · H" : "Measurement · M")}</span>
-      </PuzzlePiece>)}
-    </div>
-    <div className="qiskit-circuit" role="group" aria-label={t("Single-qubit circuit editor")}>
-      <div className="qiskit-register-labels"><span>q₀ <small>|0⟩</small></span><span>c₀</span></div>
-      <div className="qiskit-tracks">
-        <div className="qiskit-quantum-wire">
-          {(["first", "second"] as const).map((position, index) => <PuzzleSlot key={position} id={position}
-            className={`qiskit-wire-slot ${slots[position] ? "filled" : ""}`}
-            onSelect={() => place(position)}
-            label={`${t(index === 0 ? "First operation" : "Second operation")}: ${slots[position] ? t(slots[position] === "H" ? "Hadamard" : "Measurement") : t("Empty")}`}>
-            {slots[position] === "H" ? <span className="qiskit-gate hadamard">H</span>
-              : slots[position] === "M" ? <span className="qiskit-gate measure"><MeasurementIcon /></span>
-                : <span className="qiskit-empty">{index + 1}</span>}
-          </PuzzleSlot>)}
+  return (
+    <PuzzleDragDrop
+      wholeBlockDrag
+      labels={{ H: t("Hadamard · H"), M: t("Measurement · M") }}
+      targets={{ first: t("First operation"), second: t("Second operation") }}
+      onPlace={(position, operation) =>
+        place(position as CircuitPosition, operation as CircuitOperation)
+      }
+      renderPreview={(operation) => (
+        <span className="coin-operation-tool">
+          <span
+            className={`qiskit-gate ${operation === "H" ? "hadamard" : "measure"}`}
+          >
+            {operation === "H" ? "H" : <MeasurementIcon />}
+          </span>
+          <span>
+            {t(operation === "H" ? "Hadamard · H" : "Measurement · M")}
+          </span>
+        </span>
+      )}
+    >
+      <div className="coin-challenge space-y-3">
+        <p>
+          {t(
+            "Build a one-qubit circuit. Select or drag H and measurement onto the wire in the order they should run.",
+          )}
+        </p>
+        <div className="coin-block-tray" aria-label={t("Circuit operations")}>
+          {(["H", "M"] as const).map((operation) => (
+            <PuzzlePiece
+              key={operation}
+              id={operation}
+              label={t(operation === "H" ? "Hadamard · H" : "Measurement · M")}
+              className="coin-operation-tool"
+              onSelect={() => setSelected(operation)}
+              selected={selected === operation}
+            >
+              <span
+                className={`qiskit-gate ${operation === "H" ? "hadamard" : "measure"}`}
+              >
+                {operation === "H" ? "H" : <MeasurementIcon />}
+              </span>
+              <span>
+                {t(operation === "H" ? "Hadamard · H" : "Measurement · M")}
+              </span>
+            </PuzzlePiece>
+          ))}
         </div>
-        <div className="qiskit-classical-wire" />
-        {(["first", "second"] as const).map((position) => slots[position] === "M" && <span key={position}
-          className={`qiskit-measure-link ${position}`} aria-hidden="true" />)}
+        <div className="circuit-workspace coin-assembly-workspace has-actions">
+          <div
+            className="qiskit-circuit"
+            role="group"
+            aria-label={t("Single-qubit circuit editor")}
+          >
+            <div className="qiskit-register-labels">
+              <span>
+                q₀ <small>|0⟩</small>
+              </span>
+              <span>c₀</span>
+            </div>
+            <div className="qiskit-tracks">
+              <div className="qiskit-quantum-wire">
+                {(["first", "second"] as const).map((position, index) => (
+                  <PuzzleSlot
+                    key={position}
+                    id={position}
+                    className={`qiskit-wire-slot ${slots[position] ? "filled" : ""}`}
+                    onSelect={() => place(position)}
+                    label={`${t(index === 0 ? "First operation" : "Second operation")}: ${slots[position] ? t(slots[position] === "H" ? "Hadamard" : "Measurement") : t("Empty")}`}
+                  >
+                    {slots[position] === "H" ? (
+                      <span className="qiskit-gate hadamard">H</span>
+                    ) : slots[position] === "M" ? (
+                      <span className="qiskit-gate measure">
+                        <MeasurementIcon />
+                      </span>
+                    ) : (
+                      <span className="qiskit-empty">{index + 1}</span>
+                    )}
+                  </PuzzleSlot>
+                ))}
+              </div>
+              <div className="qiskit-classical-wire" />
+              {(["first", "second"] as const).map(
+                (position) =>
+                  slots[position] === "M" && (
+                    <span
+                      key={position}
+                      className={`qiskit-measure-link ${position}`}
+                      aria-hidden="true"
+                    />
+                  ),
+              )}
+            </div>
+          </div>
+          <CircuitActions
+            onClear={() => {
+              onChange({ ...EMPTY_CIRCUIT });
+              setSelected(null);
+              setMessage(null);
+            }}
+          >
+            <button
+              type="button"
+              className="circuit-icon-action run"
+              aria-label={t("Check circuit")}
+              title={t("Check circuit")}
+              onClick={check}
+            >
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="m5 12 4 4L19 6" />
+              </svg>
+            </button>
+          </CircuitActions>
+        </div>
+        <p className="text-sm text-stage-muted">
+          {t(
+            "The top wire carries the qubit. Measurement writes its result to the classical bit below.",
+          )}
+        </p>
+        <details className="panel p-3">
+          <summary className="cursor-pointer text-accent-teal">
+            {t("View circuit code")}
+          </summary>
+          <pre className="mt-3">{codeLines.join("\n")}</pre>
+        </details>
+        <p className="text-xs text-stage-muted">
+          {t(
+            "Check verifies the order. It does not execute the circuit; Run comes next.",
+          )}
+        </p>
+        <button type="button" className="btn-ghost" onClick={hint}>
+          {t("Hint")}
+        </button>
+        {message && (
+          <p role="status" className="text-accent-amber">
+            {t(message)}
+          </p>
+        )}
       </div>
-    </div>
-    <p className="text-sm text-stage-muted">{t("The top wire carries the qubit. Measurement writes its result to the classical bit below.")}</p>
-    <pre>{codeLines.join("\n")}</pre>
-    <div className="flex flex-wrap gap-2"><button className="btn-ghost" onClick={() => { onChange({ ...EMPTY_CIRCUIT }); setSelected(null); setMessage(null); }}>{t("Clear circuit")}</button>
-      <button className="btn-ghost" onClick={hint}>{t("Hint")}</button>
-      <button className="btn-primary" onClick={check}>{t("Check circuit")}</button></div>
-    {message && <p role="status" className="text-accent-amber">{t(message)}</p>}
-    </div>
-  </PuzzleDragDrop>;
+    </PuzzleDragDrop>
+  );
 }
