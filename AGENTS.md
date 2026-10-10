@@ -69,10 +69,10 @@ their earned gear.
 
 ## Quantum Campus
 
-The optional campus is a science-festival courtyard, joined to Coin Town by a
+The optional campus is a science fair in a park, joined to Coin Town by a
 permanently open road (campus north, Coin south). Arrivals and campus checkpoint
 shortcuts start at the north gate facing south, beside the guide and notebook.
-Paved aisles run between the pavilions; the suggested exhibit order runs from
+Paved aisles run between open demonstration stands; the suggested exhibit order runs from
 north to south, ending at the festival. Existing saved positions are retained.
 All eight exhibits and the
 three-repair festival are available immediately. `quantum-explorer` is an optional
@@ -88,7 +88,13 @@ visitor repairs and can still be attempted directly. The laptop no longer owns
 quiz answers or a Collect discovery action. Finished hosts offer free experiments
 and deeper explanations. The guide suggests topics and points to unfinished work.
 Markers distinguish a new problem (!), an investigation (…), a ready discussion
-(?), and completion (★); completed pavilions reveal existing Kenney display props.
+(?), and completion (★); completed stands reveal existing Kenney display props.
+The stands reuse the cave's Kenney tables, plants, lamps and stools, with distinct
+colored rugs, bunting and apparatus for each experiment. `content/campusStands.ts`
+owns fixed furniture footprints; `engine/actors/CampusStand.ts` caches the art once.
+There are no roof or facade tiles. Furniture stays inside the former wall footprint
+to preserve saved player positions, while paved approaches, host IDs and interactions
+stay the same. Shared furniture crop metadata lives in `content/labArtwork.ts`.
 The exhibits cover preparation/control/measurement, kets and amplitudes, circuit
 order, superposition/interference, entanglement versus classical correlation,
 shots/histograms, decoherence, and X/Y/Z rotations/unitaries. Play, Explain and

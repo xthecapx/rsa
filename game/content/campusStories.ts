@@ -712,7 +712,7 @@ export const CAMPUS_STORIES = {
   },
   festival: {
     intro:
-      "Three exhibits need repairs before the open day. You can help directly, even if you have not visited the other pavilions. Ready to hear the first visitor?",
+      "Three exhibits need repairs before the open day. You can help directly, even if you have not visited the other stands. Ready to hear the first visitor?",
     prediction: "How would you start checking a visitor’s claim?",
     predictions: [
       {

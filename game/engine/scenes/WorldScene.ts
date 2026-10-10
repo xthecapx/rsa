@@ -9,6 +9,8 @@ import { HOLLOW_ANIMALS, HOLLOW_DOOR, HOLLOW_FOG, HOLLOW_NPCS, HOLLOW_PROPS, HOL
 import { CIPHER_ANIMALS, CIPHER_BOARD, CIPHER_NORTH_GATE_ROW, CIPHER_NORTH_ROAD, CIPHER_NPCS, CIPHER_PROPS, CIPHER_SPAWN } from "@/content/cipher";
 import { CAMPUS_EXHIBITS, CAMPUS_NPCS, CAMPUS_PROPS, CAMPUS_SPAWN, CAMPUS_FESTIVAL, CAMPUS_NOTEBOOK } from "@/content/campus";
 import { campusMap } from "../maps/campusMap";
+import { CAMPUS_STANDS, campusFurniture, type CampusStandSpec } from "@/content/campusStands";
+import { CampusStand } from "../actors/CampusStand";
 import { LAB_ENTRANCES, type LabTown } from "@/content/labEntrances";
 import { LabEntrance } from "../actors/LabEntrance";
 import { cipherMap } from "../maps/cipherMap";
@@ -33,13 +35,15 @@ import { findRoute, walkable, type WorldGrid } from "../maps/grid";
 
 /** Everything a small town needs: terrain, where people stand and which doors open. */
 export interface WorldDef {
-  /** Decorative completion displays on solid pavilion walls; never affect paths. */
+  /** Decorative completion displays on fixed furniture; never affect paths. */
   progressDecor?: { id: string; at: GridPos; sprite: PropSprite }[];
+  /** Open-house tables with their own permanent furniture footprints. */
+  stands?: CampusStandSpec[];
   map: { width: number; height: number; rows: string[]; overlay: string[]; legend: Record<string, { tile: number; solid: boolean }>; overlayLegend: Record<string, { tile: number; solid: boolean } | null> };
   spawn: GridPos;
   labTown: LabTown;
-  npcs: { id: string; sprite?: NpcSprite; at: GridPos; label: string }[];
-  doors: { id: string; at: GridPos; stand: GridPos; label: string }[];
+  npcs: { id: string; sprite?: NpcSprite; at: GridPos; label: string; labelOffsetY?: number }[];
+  doors: { id: string; at: GridPos; stand: GridPos; label: string; labelOffsetY?: number }[];
   animals?: AnimalSpec[];
   /** Barriers React can lift, e.g. the road to the next town. Closed until told otherwise; `lock` names what opens it. */
   gates?: { id: string; tiles: GridPos[]; lock?: string }[];
@@ -77,6 +81,7 @@ export function worldGrid(def: WorldDef): WorldGrid {
     !!def.map.legend[tile]?.solid || !!def.map.overlayLegend[def.map.overlay[y][x]]?.solid));
   for (const npc of def.npcs) grid[npc.at.y][npc.at.x] = true;
   for (const prop of def.props ?? []) grid[prop.at.y][prop.at.x] = true;
+  for (const stand of def.stands ?? []) for (const at of campusFurniture(stand.at)) grid[at.y][at.x] = true;
   const entrance = LAB_ENTRANCES[def.labTown].at;
   grid[entrance.y][entrance.x] = true;
   if (def.street) RsaStreet.block(grid);
@@ -136,6 +141,7 @@ export class WorldScene extends Scene {
     engine.backgroundColor = Color.fromHex("#0b1f26");
     this.add(this.layer("rows", 0));
     this.add(this.layer("overlay", 1));
+    for (const stand of this.def.stands ?? []) this.add(new CampusStand(stand));
     this.player = new Character("hacker", this.def.spawn, "up");
     if (this.def.street) {
       this.street = new RsaStreet(this, this.player); this.street.mountGround();
@@ -152,7 +158,7 @@ export class WorldScene extends Scene {
       this.add(actor);
       this.idlers.push({ actor, sprite, seed: this.idlers.length * 1.7, glance: 2000 + Math.random() * 5000 });
       // The name board floats over the neighbor, clear of the tile the player talks from.
-      const sign = new TownSign(at.x, at.y - 9, true);
+      const sign = new TownSign(at.x, at.y + (npc.labelOffsetY ?? -9), true);
       this.add(sign); this.signs.push({ actor: sign, id: npc.id, text: npc.label, done: false, alert: false });
     }
     for (const door of this.def.doors) {
@@ -162,7 +168,7 @@ export class WorldScene extends Scene {
         continue;
       }
       const at = tileCenter(door.at);
-      const sign = new TownSign(at.x, at.y - 9, true);
+      const sign = new TownSign(at.x, at.y + (door.labelOffsetY ?? -9), true);
       this.add(sign); this.signs.push({ actor: sign, id: door.id, text: door.label, done: false, alert: false });
     }
     for (const gate of this.def.gates ?? []) {
@@ -561,10 +567,11 @@ export class CipherScene extends WorldScene {
 
 export const CAMPUS_WORLD: WorldDef = {
   labTown: "campus", map: campusMap, spawn: CAMPUS_SPAWN,
-  npcs: CAMPUS_NPCS.map(n => ({ ...n, label: n.title })),
+  npcs: CAMPUS_NPCS.map(n => ({ ...n, label: n.title, ...(n.id !== "vpcap" ? { labelOffsetY: -55 } : {}) })),
   doors: [{ id: "labDoor", ...LAB_ENTRANCES.campus, label: "Personal quantum lab" },
-    { ...CAMPUS_FESTIVAL, label: CAMPUS_FESTIVAL.title }, { ...CAMPUS_NOTEBOOK, label: CAMPUS_NOTEBOOK.title }],
+    { ...CAMPUS_FESTIVAL, label: CAMPUS_FESTIVAL.title, labelOffsetY: -55 }, { ...CAMPUS_NOTEBOOK, label: CAMPUS_NOTEBOOK.title }],
   props: CAMPUS_PROPS,
+  stands: CAMPUS_STANDS,
   progressDecor: CAMPUS_EXHIBITS.map((e, i) => ({ id: e.id, at: { x: e.at.x + 1, y: e.at.y - 1 },
     sprite: (["crt", "board", "reel", "neon", "dish", "vending", "lantern", "press-base"] as const)[i] })),
   animals: [{ kind: "cat", home: { x: 12, y: 30 }, radius: 3 }],

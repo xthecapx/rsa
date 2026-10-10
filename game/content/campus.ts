@@ -197,7 +197,7 @@ export const CAMPUS_NOTEBOOK = {
   stand: { x: 14, y: 4 },
 };
 export const CAMPUS_WELCOME =
-  "The open day starts soon, and our exhibits need a hand! Try any pavilion, ask questions, or head straight to Coin Town. The festival badge is optional. Nothing here blocks your adventure.";
+  "The open day starts soon, and our exhibits need a hand! Try any stand, ask questions, or head straight to Coin Town. The festival badge is optional. Nothing here blocks your adventure.";
 export const CAMPUS_NOTEBOOK_ENTRIES = [
   {
     title: "Oracle",

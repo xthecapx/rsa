@@ -84,7 +84,9 @@ workshop to the left and follow the exhibits south toward the festival. The nort
 road leads back freely, with no badge requirement. The disturbed sand
 near the campus’s eastern wall hides another entrance to your shared personal lab.
 
-Help students prepare a science festival through eight open exhibits:
+Help students prepare a science festival through eight open-air demonstration
+stands. Decorated tables, laptops, colorful rugs, experiment apparatus and picnic
+seating make the campus a quantum fair in a park:
 
 | Exhibit | Try it |
 | --- | --- |

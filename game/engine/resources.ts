@@ -1,9 +1,11 @@
 import { ImageSource, Loader, SpriteSheet } from "excalibur";
 
 import { SHEET_COLUMNS, TILE_SIZE } from "./tiles";
+import { LAB_SHEETS } from "@/content/labArtwork";
 
 export const images = {
-  caves: new ImageSource("/assets/kenney/lab/caves.png"),
+  caves: new ImageSource(LAB_SHEETS.caves.href),
+  indoors: new ImageSource(LAB_SHEETS.indoors.href),
   city: new ImageSource("/assets/kenney/city_tiles.png"),
   characters: new ImageSource("/assets/kenney/characters.png"),
   doctor: new ImageSource("/assets/characters/town-doctor.svg"),

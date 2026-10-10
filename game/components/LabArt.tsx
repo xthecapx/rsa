@@ -1,15 +1,11 @@
 "use client";
 
 import { LAB_ITEMS } from "@/content/lab";
+import { LAB_SHEETS, LAB_TILES } from "@/content/labArtwork";
 import { LAB_ENTRY, LAB_HEIGHT, type Placement } from "@/game/labLayout";
 
 // Original Kenney CC0 sheets, 16px tiles with 1px gutters. Keep crop metadata
 // separate from footprints: art updates must never change collisions or saves.
-const SHEETS = {
-  indoors: { href: "/assets/kenney/lab/indoors.png", width: 458, height: 305 },
-  caves: { href: "/assets/kenney/lab/caves.png", width: 492, height: 305 },
-};
-
 function Tile({
   sheet = "indoors",
   col,
@@ -19,7 +15,7 @@ function Tile({
   width = 28,
   height = 28,
 }: {
-  sheet?: keyof typeof SHEETS;
+  sheet?: keyof typeof LAB_SHEETS;
   col: number;
   row: number;
   x?: number;
@@ -27,7 +23,7 @@ function Tile({
   width?: number;
   height?: number;
 }) {
-  const source = SHEETS[sheet];
+  const source = LAB_SHEETS[sheet];
   return (
     <svg
       x={x}
@@ -62,8 +58,8 @@ function ItemDrawing({ id }: { id: string }) {
     case "desk":
       return (
         <>
-          <Tile col={0} row={1} />
-          <Tile col={2} row={1} x={28} />
+          <Tile {...LAB_TILES.desk[0]} />
+          <Tile {...LAB_TILES.desk[2]} x={28} />
         </>
       );
     case "laptop":
@@ -86,15 +82,15 @@ function ItemDrawing({ id }: { id: string }) {
         </>
       );
     case "lamp":
-      return <Tile col={19} row={5} />;
+      return <Tile {...LAB_TILES.lamp} />;
     case "storage":
       return <Tile sheet="caves" col={6} row={6} />;
     case "stool":
-      return <Tile col={17} row={3} />;
+      return <Tile {...LAB_TILES.stool} />;
     case "plant":
       return (
         <>
-          <Tile col={16} row={0} />
+          <Tile {...LAB_TILES.plant} />
           <Tile
             sheet="caves"
             col={1}

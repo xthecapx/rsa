@@ -201,7 +201,7 @@ export function useCampusInteraction(): NonNullable<
               >
                 <DialogueLine speaker="vpcap">
                   {t(
-                    "Welcome to our open day! Every pavilion has a problem you can help investigate. Ask questions, make a prediction, and bring back what you find. Nothing here blocks your trip to Coin Town.",
+                    "Welcome to our open day! Every stand has a problem you can help investigate. Ask questions, make a prediction, and bring back what you find. Nothing here blocks your trip to Coin Town.",
                   )}
                 </DialogueLine>
                 <p className="mt-3 text-sm text-stage-muted">

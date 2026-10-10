@@ -147,6 +147,7 @@ test('the festival badge can be earned directly and opens no progression road', 
 
 test('the north entrance welcomes players before the first exhibit and paved aisles reach every activity', () => {
   const { campusMap } = load('engine/maps/campusMap');
+  const { CAMPUS_FURNITURE } = load('content/campusStands');
   const { findRoute } = load('engine/maps/grid');
   assert.equal(CAMPUS_FACING, 'down');
   assert.ok(CAMPUS_SPAWN.y > 0 && CAMPUS_SPAWN.y < CAMPUS_GUIDE.at.y);
@@ -155,6 +156,16 @@ test('the north entrance welcomes players before the first exhibit and paved ais
   assert.ok(CAMPUS_EXHIBITS[0].at.x < CAMPUS_SPAWN.x);
   const grid = campusMap.rows.map((row, y) => [...row].map((tile, x) => !['p', 'q'].includes(tile) || !!campusMap.legend[tile]?.solid || !!campusMap.overlayLegend[campusMap.overlay[y][x]]?.solid));
   for (const item of [...CAMPUS_NPCS, ...CAMPUS_PROPS]) grid[item.at.y][item.at.x] = true;
+  for (const at of CAMPUS_FURNITURE) grid[at.y][at.x] = true;
   for (const exhibit of CAMPUS_EXHIBITS) assert.ok(findRoute(grid, CAMPUS_SPAWN, { x: exhibit.at.x, y: exhibit.at.y + 1 }), exhibit.id);
   for (const at of [CAMPUS_FESTIVAL.stand, CAMPUS_NOTEBOOK.stand, { x: CAMPUS_GUIDE.at.x - 1, y: CAMPUS_GUIDE.at.y }, { x: 18, y: 0 }, load('content/labEntrances').LAB_ENTRANCES.campus.stand]) assert.ok(findRoute(grid, CAMPUS_SPAWN, at));
+  // Open lawns replace every old facade. New furniture occupies only tiles that
+  // were already walls, so a saved player position cannot end up inside a table.
+  for (const exhibit of CAMPUS_EXHIBITS) {
+    assert.ok(!campusMap.legend[campusMap.rows[exhibit.at.y - 3][exhibit.at.x]].solid);
+    for (const at of CAMPUS_FURNITURE.filter(at => Math.abs(at.x - exhibit.at.x) <= 3 && Math.abs(at.y - exhibit.at.y) <= 3)) {
+      assert.ok(at.y < exhibit.at.y && at.y >= exhibit.at.y - 2);
+      assert.ok(Math.abs(at.x - exhibit.at.x) <= 2);
+    }
+  }
 });
