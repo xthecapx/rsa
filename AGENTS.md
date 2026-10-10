@@ -15,6 +15,11 @@ Markdown files. See [README.md](README.md) for setup, deployment, and IBM data.
 - `frontend/`: a separate presentation app on port 7013, with depth tiers and IBM
   batch results. It is not the game's UI.
 - `docker-compose.yml` and `deploy-cloudrun.sh`: local services and Cloud Run deployment.
+  Game images use Node 22 and a public-npm lockfile; keep esbuild compatible with
+  Vite's peer range. Deployment checks the clean game install before cloud mutations.
+  BuildKit caches npm/pip downloads and Next compilation. Backend production copies
+  only runtime dependencies and `app`; Compose explicitly uses the development
+  stage for pytest/httpx. Preserve dependency layers across source-only changes.
 - `game/qollab/`: browser entry and thin Python adapter for the Qollab target.
   `npm run build:qollab` produces the upload folder `game/dist/qollab/`;
   `npm run build` retains the Next.js/HTTP target. Qollab injects the selected

@@ -24,6 +24,24 @@ Redeploy after code changes:
 ./deploy-cloudrun.sh
 ```
 
+Docker builds use public npm/PyPI, with Node 22 for the game. The script checks
+the game's clean dependency install before deploying either service. Keep
+`game/package.json` and `game/package-lock.json` together; the lockfile must use
+public npm tarballs. Vite and the Qollab bundler share a compatible esbuild version.
+
+BuildKit caches npm/pip downloads and Next's compilation cache. Source-only edits
+reuse dependency layers. The backend production image contains runtime packages
+and application code; compilers, tests, and development dependencies are excluded.
+Docker Compose selects its separate development stage, retaining pytest and httpx.
+The game already ships Next's standalone output, not the full build environment;
+generated Qollab exports are excluded from its Docker context.
+
+If the backend deployed successfully but the game failed, retry only the game:
+
+```bash
+./deploy-cloudrun.sh game
+```
+
 The script builds `linux/amd64` images, deploys both services, and prunes older
 Artifact Registry images. Cleanup requires Python 3 and Docker Buildx. By default,
 it retains two complete image versions (`KEEP_IMAGES=2`), along with tagged releases

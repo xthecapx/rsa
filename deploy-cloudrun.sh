@@ -76,6 +76,14 @@ fi
 # arm64 and the deploy fails with "must support amd64/linux".
 PLATFORM="${PLATFORM:-linux/amd64}"
 
+if [[ "${TARGET}" == "all" || "${TARGET}" == "game" ]]; then
+  # Validate the clean install before deploying anything. The full game build
+  # reuses this cached stage; a broken lockfile fails before backend deployment.
+  echo "==> Checking game dependencies (${PLATFORM})"
+  docker buildx build --platform="${PLATFORM}" --target dependencies \
+    --output=type=cacheonly "${ROOT}/game"
+fi
+
 if [[ "${TARGET}" == "all" || "${TARGET}" == "backend" ]]; then
   echo "==> Building and pushing backend (${PLATFORM})"
   docker build --platform="${PLATFORM}" -t "${BACKEND_IMAGE}" "${ROOT}/backend"

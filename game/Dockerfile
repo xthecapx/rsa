@@ -1,10 +1,13 @@
-FROM node:20-alpine AS dependencies
+FROM node:22-alpine AS dependencies
 
 WORKDIR /app
+ENV NEXT_TELEMETRY_DISABLED=1
+ARG TARGETARCH
 
 # Force public npm; host ~/.npmrc / Artifactory must not affect the image.
 COPY .npmrc package.json package-lock.json ./
-RUN npm ci --registry=https://registry.npmjs.org/
+RUN --mount=type=cache,id=rsa-game-npm-${TARGETARCH},target=/root/.npm,sharing=locked \
+    npm ci --registry=https://registry.npmjs.org/ --no-audit --no-fund
 
 # Compose bind-mounts source and runs Next in development mode. Stop here so
 # local rebuilds do not run an unused production build.
@@ -20,13 +23,15 @@ COPY . .
 # URL; the local development stage reads BACKEND_URL at runtime instead.
 ARG BACKEND_URL=http://localhost:7001
 ENV BACKEND_URL=$BACKEND_URL
-RUN npm run build
+RUN --mount=type=cache,id=rsa-game-next-${TARGETARCH},target=/app/.next/cache \
+    npm run build
 
-FROM node:20-alpine AS production
+FROM node:22-alpine AS production
 WORKDIR /app
 ENV NODE_ENV=production
 ENV HOSTNAME=0.0.0.0
 ENV PORT=8080
+ENV NEXT_TELEMETRY_DISABLED=1
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public

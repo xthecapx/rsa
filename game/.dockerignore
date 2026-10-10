@@ -9,3 +9,5 @@ tsconfig.tsbuildinfo
 README.md
 tests
 tools
+dist
+qollab
