@@ -21,6 +21,7 @@ import { Wanderer } from "../actors/Wanderer";
 import { canPet, nearestPet, type PetKind } from "../petting";
 import { coinTownMap } from "../maps/coinTownMap";
 import { Character } from "../actors/Character";
+import { QwardCompanion } from "../actors/QwardCompanion";
 import { RsaStreet, isStreetCommand } from "../actors/RsaStreet";
 import { TownSign } from "../actors/TownSign";
 import { bus } from "../bus";
@@ -103,6 +104,7 @@ export function worldTargetAt(def: WorldDef, pos: GridPos): string | null {
 export class WorldScene extends Scene {
   private grid: WorldGrid;
   private player!: Character;
+  private qward!: QwardCompanion;
   private signs: { actor: TownSign; id: string; text: string; done: boolean; alert: boolean }[] = [];
   private working: string[] = [];
   private discussions: string[] = [];
@@ -246,6 +248,8 @@ export class WorldScene extends Scene {
     const ground = (pos: GridPos) => this.def.map.rows[pos.y]?.[pos.x] ?? "";
     for (const spec of this.def.animals ?? []) { const animal = new Wanderer(spec, this.grid, ground); this.animals.push(animal); this.add(animal); }
     this.add(this.player);
+    this.qward = new QwardCompanion(this.player, (at) => walkable(this.grid, at));
+    this.add(this.qward);
     this.street?.mountPeople();
     this.beacon = new Actor({ z: this.def.night ? 30 : 5 });
     this.beacon.graphics.use(new Circle({ radius: 10, color: Color.Transparent, strokeColor: Color.fromHex("#efbe67"), lineWidth: 2 }));
@@ -276,6 +280,7 @@ export class WorldScene extends Scene {
   }
 
   override onPreUpdate(engine: Engine, elapsed: number): void {
+    this.qward.tick(elapsed);
     this.reportWalking(elapsed);
     this.animateLife(elapsed);
     const locale = useLocale.getState().locale;
@@ -456,6 +461,7 @@ export class WorldScene extends Scene {
   private async handle(command: EngineCommand): Promise<void> {
     if (this.street && isStreetCommand(command)) return this.street.handle(command, (goal) => findRoute(this.grid, this.player.grid, goal));
     switch (command.type) {
+      case "qwardCompanion": this.qward.setEnabled(command.enabled); return;
       case "labEntrance": this.lab.setRevealed(command.revealed); return;
       case "lockInput":
         this.inputLocked = command.locked;
@@ -470,6 +476,7 @@ export class WorldScene extends Scene {
         this.player.stop(); this.player.grid = { ...at };
         this.player.pos = vec(tileCenter(at).x, tileCenter(at).y);
         this.player.face(command.facing);
+        this.qward.reset();
         this.lastNear = null; this.lastPosition = "";
         return;
       }

@@ -144,6 +144,7 @@ export function KnowledgeCardView({ card, teacher, learned = true }: { card: Kno
 export function WorldTownScreen({ config, restartOptions, onEnterLab }: { config: TownConfig; restartOptions: RestartOption[]; onEnterLab: () => boolean }) {
   useLocale((state) => state.locale);
   const labRevealed = useTown((state) => !!state.labEntrances[config.slot]);
+  const qwardFound = useTown((state) => state.qwardFound);
   const saved = useTown((state) => state[config.slot]);
   const executing = useGame(s => s.operations > 0 || s.phase === "busy" || !!s.busyLabel);
   const walking = useGame((state) => state.walking);
@@ -217,6 +218,7 @@ export function WorldTownScreen({ config, restartOptions, onEnterLab }: { config
   const inputLocked = !!talk || activityVisible || journalOpen || restartOpen || !!panel || !!mission?.talk || !!mission?.locked || !!config.interaction?.locked;
   useEffect(() => { if (sceneReady) void bus.send({ type: "lockInput", locked: inputLocked }); }, [sceneReady, inputLocked]);
   useEffect(() => { if (sceneReady) void bus.send({ type: "labEntrance", revealed: labRevealed }); }, [sceneReady, labRevealed]);
+  useEffect(() => { if (sceneReady) void bus.send({ type: "qwardCompanion", enabled: qwardFound }); }, [sceneReady, qwardFound]);
   const ready = challenge.complete;
   const stageById = (id: string) => challenge.stages?.find((stage) => stage.id === id);
   const next: string | null = !saved.welcomed || (ready && !badge) ? greeter.id : badge ? config.afterBadge()

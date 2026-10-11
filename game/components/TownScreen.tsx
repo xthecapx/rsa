@@ -21,6 +21,7 @@ import { enterLab, leaveLab, inspectLab, migrateLabEntrance } from "@/game/labTr
 import { restoreCheckpoint } from "@/game/restoreCheckpoint";
 import { useProgress } from "@/game/progress";
 import { useMedals } from "@/game/medals";
+import { canFindQward, findQward, QWARD_DISCOVERY } from "@/game/qward";
 import { MedalCase } from "./MedalCase";
 import { gameAudio } from "@/game/audio";
 import { t, useLocale } from "@/i18n";
@@ -63,7 +64,7 @@ const TRACK_LABELS: Record<Challenge, string> = { coin: "Track the south road", 
 const VISIT_KEYS: Record<Challenge, string> = { coin: "coinDoor", rsa: "rsa", grover: "groverDoor", vault: "vaultDoor" };
 /** Thecap's greeting is composed from progress: first meeting, all done, or "so far" + "next". */
 const GREETING_FIRST = "Welcome to Quantum Town! I’m Professor Thecap, the town doctor and, on weekends, the town tinkerer. My cousins, Mayor Cap in Coin Town, VP Cap in Foundry Town, Keeper Cap in Hollow Town and Root Cap in Cipher Town, wrote that you were coming. Every lesson on the road has a door here too, so you can replay any of them, and the street to the north-east replays the client’s jobs from Cipher Town. Each challenge uses what the last one taught you.";
-const GREETING_ALL = "Coin, codes, a disarmed core and a ghost laid to rest. You’ve seen both kinds of quantum speed-up. Replay anything you like; your medals stay.";
+const GREETING_ALL = "The qWard is coming along for your next discovery. Replay any challenge, visit the campus, or try something new in your lab. Your quantum journey has just begun.";
 const GREETING_COUNT = ["", "One challenge down, three to go.", "Two challenges down, two to go.", "Three down, one to go."];
 const GREETING_SKIPPED = "You jumped ahead. Bold! The earlier lessons still teach what the later ones assume.";
 const GREETING_NEXT: Record<Challenge, string> = {
@@ -143,6 +144,11 @@ export function TownScreen({ initialAct, initialCoin = false, initialGrover = fa
     return [GREETING_COUNT[count], ...(skipped ? [GREETING_SKIPPED] : []), GREETING_NEXT[next]];
   }
   function greet() {
+    if (!useTown.getState().qwardFound && canFindQward(useProgress.getState().completed, useMedals.getState().earned)) {
+      setConversation({ title: "Professor Thecap", text: QWARD_DISCOVERY,
+        choices: [{ label: "Come along, qWard!", action: () => { if (findQward()) closeConversation(); } }] });
+      return;
+    }
     const done = doneChallenges();
     const parts = greetingParts(done);
     setConversation({ title: "Professor Thecap", text: parts.join(" "), parts,
@@ -218,6 +224,7 @@ export function TownScreen({ initialAct, initialCoin = false, initialGrover = fa
     if (!sceneReady) return;
     void bus.send({ type: "lockInput", locked: inputLocked });
   }, [sceneReady, inputLocked]);
+  useEffect(() => { if (sceneReady) void bus.send({ type: "qwardCompanion", enabled: town.qwardFound }); }, [sceneReady, town.qwardFound]);
   useEffect(() => {
     if (!sceneReady) return;
     const target = rsaActive ? game.pendingTravel?.at ?? null : town.tracked ? TRACK_TARGETS[town.tracked] : null;
@@ -512,6 +519,9 @@ export function TownScreen({ initialAct, initialCoin = false, initialGrover = fa
             </button>)}
           </div>}>
           {conversation.rsaAct && <div className="shrink-0"><RsaProgress act={conversation.rsaAct} /></div>}
+          {conversation.text === QWARD_DISCOVERY && <div className="mb-3 flex justify-center" aria-hidden="true">
+            <svg width="64" height="56" viewBox="0 0 16 14"><image href="/assets/characters/qward.svg" width="16" height="14" /></svg>
+          </div>}
           <DialogueLine speaker={conversation.speaker ?? (conversation.title === "Professor Thecap" ? "guide" : conversation.title === "Operation Ghost Key" ? "ofelia" : "boss")} label={t(conversation.title)}>
             {conversation.parts ? conversation.parts.map((part) => t(part)).join(" ") : t(conversation.text)}
           </DialogueLine>

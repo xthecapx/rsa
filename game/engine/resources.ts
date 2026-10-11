@@ -4,6 +4,7 @@ import { SHEET_COLUMNS, TILE_SIZE } from "./tiles";
 import { LAB_SHEETS } from "@/content/labArtwork";
 
 export const images = {
+  qward: new ImageSource("/assets/characters/qward.svg"),
   caves: new ImageSource(LAB_SHEETS.caves.href),
   indoors: new ImageSource(LAB_SHEETS.indoors.href),
   city: new ImageSource("/assets/kenney/city_tiles.png"),

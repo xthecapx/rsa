@@ -3270,5 +3270,8 @@
   "The hidden rhythm": "El ritmo oculto",
   "Quantum samples suggest a period. Classical checks turn a useful period into factors and a private key.": "Las muestras cuánticas sugieren un período. Las comprobaciones clásicas convierten un período útil en factores y una clave privada.",
   "The quantum stage returns samples, not primes. The classical PC tests candidate periods before rebuilding the private key.": "La etapa cuántica devuelve muestras, no primos. El PC clásico comprueba los períodos candidatos antes de reconstruir la clave privada.",
-  "Tiny demonstration RSA moduli are for learning; this does not break real RSA keys.": "Los pequeños módulos RSA de demostración son para aprender; esto no rompe claves RSA reales."
+  "Tiny demonstration RSA moduli are for learning; this does not break real RSA keys.": "Los pequeños módulos RSA de demostración son para aprender; esto no rompe claves RSA reales.",
+  "Congratulations! You found the qWard. You’re ready to begin your quantum journey. This little companion will follow you as you explore. There’s always another experiment to try.": "¡Felicidades! Encontraste al qWard. Ya puedes comenzar tu aventura cuántica. Este pequeño compañero te seguirá mientras exploras. Siempre hay otro experimento por probar.",
+  "Come along, qWard!": "¡Ven conmigo, qWard!",
+  "The qWard is coming along for your next discovery. Replay any challenge, visit the campus, or try something new in your lab. Your quantum journey has just begun.": "El qWard te acompañará en tu próximo descubrimiento. Repite cualquier desafío, visita el campus o prueba algo nuevo en tu laboratorio. Tu aventura cuántica apenas comienza."
 }

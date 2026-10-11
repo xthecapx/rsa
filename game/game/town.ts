@@ -61,6 +61,8 @@ export function restoreRsa(checkpoint: RsaCheckpoint) {
 }
 
 interface TownState {
+  /** Claimed from Professor Thecap after the four main challenges; retained on replays. */
+  qwardFound: boolean;
   campus: TownPlace;
   labFrom: LabTown;
   labEntrances: LabDiscoveries;
@@ -97,6 +99,7 @@ export let townStorageUnavailable = false;
 const storage = saveStorage<TownState>(() => { townStorageUnavailable = true; });
 
 export const useTown = create<TownState>()(persist((set) => ({
+  qwardFound: false,
   campus: CAMPUS_START(), labFrom: "coinTown", labEntrances: {}, welcomed: false, location: "coinTown", position: { ...TOWN_SPAWN }, facing: "up", tracked: "coin", coinTown: COIN_TOWN_START(), foundry: FOUNDRY_START(), hollow: HOLLOW_START(), cipher: CIPHER_START(), groverFrom: "foundry", vaultFrom: "hollow", rsaFrom: "cipher",
   discovered: [], explored: [], checkpoint: null, rsaPosition: null, requestedAct: null, interrupted: false, rsaRunning: false,
   patch: (values) => set(values),
@@ -109,7 +112,7 @@ export const useTown = create<TownState>()(persist((set) => ({
     }
     return cells.size === state.explored.length ? state : { explored: [...cells] };
   }),
-  reset: () => set({ campus: CAMPUS_START(), labFrom: "coinTown", labEntrances: {}, welcomed: false, location: "coinTown", position: { ...TOWN_SPAWN }, facing: "up", tracked: "coin", coinTown: COIN_TOWN_START(), foundry: FOUNDRY_START(), hollow: HOLLOW_START(), cipher: CIPHER_START(), groverFrom: "foundry", vaultFrom: "hollow", rsaFrom: "cipher",
+  reset: () => set({ qwardFound: false, campus: CAMPUS_START(), labFrom: "coinTown", labEntrances: {}, welcomed: false, location: "coinTown", position: { ...TOWN_SPAWN }, facing: "up", tracked: "coin", coinTown: COIN_TOWN_START(), foundry: FOUNDRY_START(), hollow: HOLLOW_START(), cipher: CIPHER_START(), groverFrom: "foundry", vaultFrom: "hollow", rsaFrom: "cipher",
     discovered: [], explored: [], checkpoint: null, rsaPosition: null, requestedAct: null, interrupted: false, rsaRunning: false }),
 }), {
   name: "quantum-town-v1", version: 1, storage, skipHydration: true,
@@ -123,6 +126,7 @@ export const useTown = create<TownState>()(persist((set) => ({
       campus: townPlace(data.campus, CAMPUS_START),
       labFrom: isLabTown(data.labFrom) ? data.labFrom : "coinTown",
       labEntrances: cleanLabDiscoveries(data.labEntrances),
+      qwardFound: data.qwardFound === true,
       welcomed: data.welcomed === true,
       location: LOCATIONS.includes(data.location!) ? data.location! : "town",
       coinTown: townPlace(data.coinTown, COIN_TOWN_START),

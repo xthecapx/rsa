@@ -284,6 +284,12 @@ four RSA acts opens Quantum Town. Challenge medals unlock these roads directly;
 the greeters' extra town badges require only the challenge, and older earned
 town badges still unlock their roads.
 
+Finish the four main challenges, then talk to Professor Thecap in Quantum Town
+to find the **qWard**, a little duck that follows you outdoors. Optional knowledge
+cards and the campus badge are not required. The companion stays with your local
+save through lesson replays; a full-game reset clears it. After restoring `qt1`
+in a fresh session, visit the professor to invite it along again.
+
 **Save progress** in the top bar or laptop shows a short checkpoint code to keep
 before restarting or changing backends. The same codes work in both the Python
 server and Qollab versions. Enter one in the same menu after restarting, or

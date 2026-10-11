@@ -14,6 +14,7 @@ import { TOWN_LOCATIONS, townTargetAt, type TownTarget } from "@/content/town";
 import { t, useLocale } from "@/i18n";
 
 import { Character } from "../actors/Character";
+import { QwardCompanion } from "../actors/QwardCompanion";
 import { RsaStreet, isStreetCommand } from "../actors/RsaStreet";
 import { LabEntrance } from "../actors/LabEntrance";
 import { TownSign } from "../actors/TownSign";
@@ -58,6 +59,7 @@ export class CityScene extends Scene {
   private solid = buildSolidGrid();
   private lab!: LabEntrance;
   private player!: Character;
+  private qward!: QwardCompanion;
   private rsaStreet!: RsaStreet;
   // Stay locked through asset loading and the opening story setup.
   private inputLocked = true;
@@ -90,6 +92,8 @@ export class CityScene extends Scene {
     this.rsaStreet = new RsaStreet(this, this.player);
     this.rsaStreet.mountGround();
     this.add(this.player);
+    this.qward = new QwardCompanion(this.player, (at) => isWalkable(this.solid, at));
+    this.add(this.qward);
     this.rsaStreet.mountPeople();
 
     const worldWidth = street.width * TILE_SIZE;
@@ -168,6 +172,7 @@ export class CityScene extends Scene {
   }
 
   override onPreUpdate(engine: Engine, elapsed: number): void {
+    this.qward.tick(elapsed);
     this.reportWalking(elapsed);
     const locale = useLocale.getState().locale;
     if (locale !== this.markerLocale) {
@@ -318,6 +323,7 @@ export class CityScene extends Scene {
   private async handle(command: EngineCommand): Promise<void> {
     if (isStreetCommand(command)) return this.rsaStreet.handle(command, (goal) => findPath(this.solid, this.player.grid, goal));
     switch (command.type) {
+      case "qwardCompanion": this.qward.setEnabled(command.enabled); return;
       case "labEntrance": this.lab.setRevealed(command.revealed); return;
       case "lockInput":
         this.inputLocked = command.locked;
@@ -332,6 +338,7 @@ export class CityScene extends Scene {
         this.player.stop(); this.player.grid = { ...at };
         this.player.pos = vec(tileCenter(at).x, tileCenter(at).y);
         this.player.face(command.facing);
+        this.qward.reset();
         this.lastNear = null; this.lastTownNear = null; this.lastPosition = "";
         return;
       }

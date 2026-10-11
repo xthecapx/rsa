@@ -66,6 +66,19 @@ also unlock their roads, and saves that reached the hub retain access. Short che
 codes provide explicit lesson shortcuts; URL travel passes have been removed.
 See `game/game/roads.ts`.
 
+After all four main challenges (including every RSA act), Professor Thecap in
+Quantum Town offers the qWard duck companion. Optional cards, town ceremonies
+and campus work are not required. The explicit “Come along, qWard!” choice claims
+`qwardFound` in the existing town save; older saves default to false. Earned
+challenge medals also qualify after lesson resets. The companion follows the
+player's actual walked path outdoors in every town and campus, without blocking
+movement, interaction or jobs. Scene placement resets its trail. Lesson replays
+and checkpoint travel retain it; full-game reset clears it. A `qt1` shortcut
+restores eligibility, and players still claim the duck from the professor.
+`game/qward.ts` owns the reward rules; `engine/actors/QwardCompanion.ts` and
+`engine/companionTrail.ts` own the decorative follower. The single-color sprite
+uses the approved duck silhouette from `docs/concepts/`.
+
 Cipher's client pays an advance and a fee per completed act, each once. Chispa
 sells the sniffer, shift wheel, factor kit, and QPU voucher required by the four
 jobs. Cero offers repeatable generated bounties. The Quantum replay street shares

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="title description">
+  <title id="title">qWard — duck mark</title>
+  <desc id="description">A simple teal duck silhouette with an amber bill and a circular eye cutout. Two flat colors on a transparent background.</desc>
+  <path id="bill" fill="#E9A83B" d="M355 180h51a16 16 0 0 1 0 32h-51z"/>
+  <path id="duck" fill="#174C53" fill-rule="evenodd" d="M104 258c21 15 40 25 65 25 34 0 64-13 87-34-15-16-24-36-24-58a70 70 0 1 1 86 68c25 14 38 34 38 58 0 48-53 80-121 80-79 0-139-47-139-121 0-14 1-23 8-18zm236-75a18 18 0 1 0-36 0 18 18 0 1 0 36 0z"/>
+</svg>
