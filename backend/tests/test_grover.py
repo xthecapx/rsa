@@ -107,3 +107,13 @@ def test_measurement_only_for_three_rounds_of_the_full_search():
 ])
 def test_work_is_bounded(circuit):
     assert run(make_token(0, 0), **circuit).status_code == 422
+
+
+@pytest.mark.parametrize("secret", [0, 15])
+def test_every_pin_runs_including_all_zeros_and_all_ones(secret):
+    # 1111 has no zero bits to flip around the oracle; that used to be a 500.
+    token = make_token(secret, 99)
+    response = run(token, **SEARCH, repeat=3)
+    assert response.status_code == 200
+    final = by_state(response.json()["steps"][-1], 99)
+    assert final[secret] ** 2 == pytest.approx(EXPECTED[3], abs=1e-3)

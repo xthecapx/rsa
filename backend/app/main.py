@@ -1,13 +1,16 @@
 """FastAPI entrypoint for the RSA teaching game."""
 
+import asyncio
 import logging
 import os
+from contextlib import asynccontextmanager
 from time import perf_counter
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes import classical, coin, grover, ibm, rsa, shor, vault, register, lab, campus
+from app.quantum import warmup
 from app.quantum.worker import request_timings
 
 # Without this the only record of anything is uvicorn's access log, which says
@@ -17,7 +20,19 @@ logging.basicConfig(
     format="%(asctime)s %(levelname)-7s %(name)s: %(message)s",
 )
 
-app = FastAPI(title="RSA Quantum Teaching Game", version="0.1.0")
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    # Not awaited: the server must listen at once, and requests that arrive
+    # during warm-up simply queue behind it on the single quantum worker.
+    task = asyncio.create_task(warmup.warm_up()) if warmup.enabled() else None
+    try:
+        yield
+    finally:
+        if task and not task.done():
+            task.cancel()
+
+
+app = FastAPI(title="RSA Quantum Teaching Game", version="0.1.0", lifespan=lifespan)
 
 # Local ports plus any Cloud Run / custom origins. The game normally proxies
 # /api through Next rewrites (no browser CORS), but allow direct calls too.

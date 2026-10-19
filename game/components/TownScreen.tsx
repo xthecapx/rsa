@@ -9,6 +9,7 @@ import type { ActNumber } from "@/content/types";
 import { CLIENT_POSITION, TOWN_LOCATIONS, type TownTarget } from "@/content/town";
 import { bus, type Landmark } from "@/engine/bus";
 import { useGame } from "@/game/state";
+import { warmBackend } from "@/lib/warmup";
 import { townStorageUnavailable, useTown } from "@/game/town";
 import { invalidateMission, missionGeneration } from "@/game/runtime";
 import { CampusScreen } from "./CampusScreen";
@@ -163,6 +164,8 @@ export function TownScreen({ initialAct, initialCoin = false, initialGrover = fa
   }
 
   useEffect(() => {
+    // Wake a scale-to-zero backend while the player reads and walks. No job.
+    warmBackend();
     let cancelled = false;
     void (async () => {
       await Promise.all([useTown.persist.rehydrate(), useProgress.persist.rehydrate(), useMedals.persist.rehydrate(), useKnowledge.persist.rehydrate(), useWallet.persist.rehydrate(), useLab.persist.rehydrate(), useCampus.persist.rehydrate()]);

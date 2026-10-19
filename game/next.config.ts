@@ -58,6 +58,14 @@ const nextConfig: NextConfig = {
     ];
   },
 
+  experimental: {
+    // Next's rewrite proxy gives up after 30 s by default and surfaces a generic
+    // failure. The slowest allowed simulation (Shor) may run up to the server's
+    // 150 s limit and the client waits 165 s, so keep the proxy above both and
+    // let the backend answer with its own translated 504.
+    proxyTimeout: 170_000,
+  },
+
   async rewrites() {
     return [
       {

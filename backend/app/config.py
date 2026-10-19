@@ -67,7 +67,7 @@ class Settings(BaseSettings):
     ibm_mode: Literal["auto", "live", "recorded"] = "auto"
 
     # Ceiling for one circuit build plus simulation on the quantum worker.
-    quantum_timeout: float = 120.0
+    quantum_timeout: float = 150.0
 
     # Signs the Grover lesson's device tokens so the page never holds the PIN.
     # The fallback only keeps puzzles honest against casual inspection; set a

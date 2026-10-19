@@ -6,3 +6,5 @@ export const STOPPED_ERROR =
   "Stopped waiting. The server may still finish this run, but its result will not be applied. Your circuit is unchanged. Press Run to try again.";
 export const QUEUED_CANCELLED_ERROR =
   "The queued run was cancelled before execution. Your circuit is unchanged. Press Run to try again.";
+export const REMOTE_DECLINED_ERROR =
+  "The run was not started. Press Run when you are ready to wait for the quantum backend.";

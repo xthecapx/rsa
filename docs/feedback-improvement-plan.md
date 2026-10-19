@@ -31,28 +31,65 @@ The table gives the default implementation order. Effort is relative: S is a
 focused change, M spans several components, and L affects execution or transport
 lifecycle. These are planning estimates, not delivery dates.
 
-| Order / ID | Priority | Work item | Effort | Why this comes here |
-| --- | --- | --- | --- | --- |
-| F01 | P1 | Diagnose slow runs and implement safe timeout/recovery feedback — implemented | L | Failures and long waits interrupt every experiment surface. |
-| F02 | P1 | Invalidate Grover results on every configuration change | M | A graph under the wrong round count teaches the wrong relationship. |
-| F03 | P1 | Scope RSA notes to their act and label mathematical values | M | Unrelated or mislabeled values undermine puzzle reasoning. |
-| F04 | P1 | Make movement focus explicit and recoverable | M | Keyboard users must be able to resume exploration. |
-| F05 | P1 | Summarize large Shor histograms accessibly | M | Hundreds of entries obstruct access to the useful result. |
-| F06 | P2 | Add an obvious route from the professor to the campus | S–M | The current recommendation lacks a corresponding action. |
-| F07 | P2 | Correct translations, grammar, and misleading directions | M | Fixes comprehension across the existing game. |
-| F08 | P2 | Clarify festival markers and synchronize completion displays | S–M | Players should know when their work is finished. |
-| F09 | P2 | Give repeated controls contextual accessible names | M | Makes circuit editing understandable without visual position. |
-| F10 | P2 | Reduce minimap obstruction and clarify pointer behavior | M | Restores usable exploration space, especially on mobile. |
-| F11 | P2 | Improve typewriter text and reveal controls | S–M | Makes dialogue readable without discovering a hidden workaround. |
-| F12 | P2 | Explain public-key authentication and textbook RSA limits | M | Corrects conceptual omissions at the relevant story moments. |
-| F13 | P2 | Optimize measured simulation/setup bottlenecks | M–L | Requires F01 measurements; avoid speculative caching. |
-| F14 | P2 | Distinguish sound preference from successful audio activation | M | The interface should accurately describe audible behavior. |
-| F15 | P2 | Investigate engine initialization warnings | M | Repair lifecycle problems if reproduced, rather than hiding warnings. |
-| F16 | P3 | Add an optional post-quantum migration epilogue | S–M | Extends the lesson without adding progression requirements. |
+| Order / ID | Priority | Status | Work item | Effort | Why this comes here |
+| --- | --- | --- | --- | --- | --- |
+| F01 | P1 | Done | Diagnose slow runs and implement safe timeout/recovery feedback | L | Failures and long waits interrupt every experiment surface. |
+| F01b | P1 | Done | Close F01 gaps: cold start, proxy ceiling, per-circuit estimates, remote notice | S–M | F01 added feedback but not the likely cause of the 20 s+ waits (see review below). |
+| F02 | P1 | Open | Invalidate Grover results on every configuration change | S | Cause located (see F02); a one-line state fix plus a regression test. |
+| F03 | P1 | Open | Scope RSA notes to their act and label mathematical values | M | Unrelated or mislabeled values undermine puzzle reasoning. |
+| F04 | P1 | Open | Make movement focus explicit and recoverable | M | Keyboard users must be able to resume exploration. |
+| F05 | P1 | Open | Summarize large Shor histograms accessibly | M | Hundreds of entries obstruct access to the useful result. |
+| F06 | P2 | Open | Add a small, discreet signpost to the campus in Quantum Town | S | The professor's recommendation lacks a findable pointer; no teleport. |
+| F07 | P2 | Open | Correct translations, grammar, and misleading directions | M | Fixes comprehension across the existing game. |
+| F08 | P2 | Open | Clarify festival markers and synchronize completion displays | S–M | Players should know when their work is finished. |
+| F09 | P2 | Open | Give repeated controls contextual accessible names | M | Makes circuit editing understandable without visual position. |
+| F10 | P2 | Open | Reduce minimap obstruction and clarify pointer behavior | M | Restores usable exploration space, especially on mobile. |
+| F11 | P2 | Open | Improve typewriter text and reveal controls | S–M | Makes dialogue readable without discovering a hidden workaround. |
+| F12 | P2 | Open | Clarify that the game breaks a simplified protocol, not real RSA (authentication content deferred) | S | Prevents a false impression; larger lessons wait. |
+| F13 | P2 | Open (mostly absorbed by F01b) | Optimize measured simulation/setup bottlenecks | M–L | Requires F01 measurements; avoid speculative caching. |
+| F14 | P2 | Open | Distinguish sound preference from successful audio activation | M | The interface should accurately describe audible behavior. |
+| F15 | P2 | Open | Investigate engine initialization warnings | M | Repair lifecycle problems if reproduced, rather than hiding warnings. |
+| F16 | P3 | Deferred | Optional post-quantum migration epilogue | S–M | Revisit after F12's note and the deferred authentication content. |
+| F17 | P2 | Open | Client-side simulator for a backend-free local build | L | Lets the full game run on one machine; waiting times can then be produced in the client. |
+
+## Status: what is done and must not be redone
+
+Legend: **Done** is implemented, tested, and documented; do not re-plan or
+re-implement it. **Open** is still to do. **Deferred** is intentionally postponed.
+A Done item is reopened only by a new, reproduced defect, which becomes a new ID
+(for example F01c) instead of editing the finished work package.
+
+**Done — F01 and F01b (October 17–19, 2026).** Settled decisions and results:
+
+- Shared elapsed-time feedback, translated timeout/unavailable messages, explicit
+  retry, Stop waiting on HTTP practice runs, queued-run cancellation on Qollab, and
+  “Wait in background” in the laptop. No automatic retry, no claim to cancel
+  active native work, and the remote-job allowance is never refunded.
+- Server queue/worker timing, browser User Timing, and the repeatable benchmark
+  (`backend/tools/benchmark_quantum.py`).
+- Backend boot warm-up, one health ping from the first town, proxy timeout raised
+  above the longest server timeout, Shor limit 150 s (client 165 s, proxy 170 s).
+- Per-circuit measured estimates (`backend/tools/measure_run_estimates.py`,
+  `game/lib/runEstimates.json`), per-run timers/labels, first-run “waking up”
+  hint, abandoned-run warning, and the one-time remote-run notice. No countdown
+  for remote jobs.
+- Hosting stays as is: scale-to-zero, no paid always-on instances. Do not propose
+  changing `--min-instances`, CPU or memory.
+- Side fix: Echo Chamber 500 for PIN 1111 (with tests).
+
+**Done but not yet verified (verification, not new work):** deployed cold/warm
+latency on Cloud Run; a >30 s response through the Next proxy; a browser and
+screen-reader pass over the new panel and notice; a real physical-QPU wait.
+
+**Open:** F02–F11, F12 (small clarification only), F13 (only if deployed
+measurement shows a cause other than cold start and noisy Shor), F14, F15, F17.
+
+**Deferred:** F16 (post-quantum epilogue) and the authentication/man-in-the-middle
+lesson originally in F12.
 
 ## Ordered work packages
 
-### F01 — Execution latency, timeout messages, and recovery
+### F01 — Execution latency, timeout messages, and recovery (Done)
 
 **Feedback covered:** empty-circuit timeout after more than 20 seconds; small runs
 taking 6–12 seconds; 16-shot campus runs taking 22–24 seconds; disabled controls;
@@ -152,14 +189,142 @@ with a temporary 15-second response delay confirmed walking and changing languag
 during execution, completion without reopening, a compact phone layout, and
 keyboard return to fresh measurements without a second request.
 
+**F01 review (October 19, 2026):** the client/server mechanics are sound: the
+HTTP wait is aborted without claiming to stop native work, queued futures are
+cancelled, late results are rejected twice (`throwIfAborted` after fetch and after
+`json()`), and Qollab cancels only before Python starts. Client timeouts (20/40/165 s)
+exceed the matching server timeouts (15/30/150 s), so the server's 504 normally
+arrives first with a translated message. Gaps that keep the reviewer's report open:
+
+1. **The reported waits were not explained.** "signal timed out" is the message of
+   the old `AbortSignal.timeout(20000)`, so the empty-circuit failure was most
+   likely the previous client timeout, not a server error. 22–24 s for 16 shots
+   with 6–12 s typical is not compute cost (local warm median is ~17–41 ms). The
+   deploy script runs the backend at `--cpu=1 --memory=512Mi --min-instances=0`
+   and the backend has no startup warm-up (`app/main.py`, `worker.py`: no
+   lifespan/import preload). A cold Cloud Run instance importing Qiskit/Aer on the
+   first request, plus 512 Mi pressure, fits the data. The local benchmark cannot
+   see this, and the plan deferred it to F13. Treat it as F01b, not optimization.
+2. **Proxy ceiling is unverified.** The game reaches the backend through a Next
+   `rewrites()` proxy (`game/next.config.ts`). Next's rewrite proxy has its own
+   default timeout (documented as 30 s; confirm for the installed version and set
+   `experimental.proxyTimeout` if needed). Shor requests allow 150–165 s, so the
+   proxy could cut them first and surface as a generic failure, bypassing the
+   translated 504 path. Add a test or manual check with a >30 s response.
+3. **Late result still burns the single worker.** After "Stop waiting" or a client
+   timeout of an *active* job, the next Run queues behind the abandoned work on
+   the one-thread worker, so a retry can look like another timeout. The UI should
+   say "the server may still be finishing the previous run" on retry, or the
+   server should expose queue depth in `Server-Timing`/status so the wait is
+   truthful.
+4. **Phase labels are partly invented on the web target.** `labels` in
+   `QuantumJobProgress.tsx` only ever receive `waiting`/`retrieving` over HTTP, so
+   the reviewer's "queue → submit → simulate → postprocess" request is still not
+   met for web. The plan's rule (only show phases instrumentation supplies) is
+   right; either accept that, or add a lightweight status/streaming endpoint.
+5. **Acceptance was never run against a deployed backend.** The 126-request
+   baseline is local. F01b must record cold and warm numbers on the actual Cloud
+   Run services.
+
+### F01b — Cold start and transport ceilings (Done)
+
+**Constraint (owner decision, October 19, 2026):** no added hosting cost. Keep
+`--min-instances=0`, current CPU/memory, and the current deploy flags; do not
+propose paid always-on instances or larger sizes. Only code-side mitigations.
+
+**Plan:** (a) if the deployed service is reachable, measure first-request and
+idle-then-request latency with the existing benchmark and `Server-Timing`;
+otherwise rely on local cold-start measurement (fresh process, first request) and
+state that deployed numbers are unverified; (b) preload Qiskit/Aer and run one tiny
+circuit on the worker at startup (FastAPI lifespan) so the first player request is
+not the import; this shifts cost to instance boot, which Cloud Run already pays;
+(c) have the game fire one harmless warm-up request when the player reaches the
+first town (no circuit data, no job, no allowance) so a cold instance wakes while
+they walk; (d) confirm or raise the Next proxy timeout above the longest server
+timeout; (e) show a "waking up the server" message when the first response exceeds
+a few seconds; (f) warn on retry when a stopped run may still be occupying the
+worker. Document that cold starts remain possible on a scale-to-zero service.
+
+**Slow-run communication (owner decisions, October 19, 2026):**
+
+- **Stay in the laptop.** The status panel inside the laptop is the main surface.
+  Elapsed time and an expected-time hint are shown there. Leaving is the player's
+  choice: keep “Wait in background”/Escape as an opt-out, never nudge it.
+- **Per-circuit estimate, measured not guessed.** Run the benchmark on the owner's
+  local machine across the real lesson circuits, with the largest ones prioritised:
+  Breaking RSA / Shor (N, a, counting qubits, ideal vs noise), Grover (rounds 0–5,
+  4 qubits), Ghost Key (25 data qubits, stabilizer ideal / MPS noisy), register
+  benches (2–4 qubits), Coin, campus and lab sizes. Store median and p95 per
+  circuit class in a small checked-in table (for example `game/lib/runEstimates.ts`)
+  keyed by endpoint plus qubits/depth/shots/simulator. The panel shows “Usually
+  about X–Y s” from it, and “Taking longer than usual” once past p95. Apply a
+  documented safety multiplier and label it as an estimate from a faster local
+  machine, because the deployed service has one slow CPU and may cold-start.
+  Regenerate the table with a script when circuits change; no circuit data or
+  results are stored.
+- **Each circuit is a new wait.** The elapsed timer and estimate belong to one run
+  of one circuit and reset for the next circuit or Run. Never carry a previous
+  circuit's time over; the panel names the circuit/lesson it is waiting for.
+- **Physical QPU / remote simulator (Qollab).** Local numbers do not apply. Show
+  provider state, job ID, elapsed time, and a static “can take several minutes”
+  range; show queue position only if the provider returns one. No countdown.
+- **One-time notice, then per-run reminders.** Before the first remote Run in a
+  session, show a short EN/ES dialog: remote execution is asynchronous, can take
+  minutes, keep the game open and be patient, it cannot be cancelled once started,
+  and one remote job is allowed per session (merge with the existing checkpoint
+  warning). Do not repeat the dialog for later circuits; each later remote Run
+  instead shows its own panel with a fresh timer and “this is a new circuit, new
+  wait”. In-memory only, never persisted, never submits a job.
+
+**Acceptance:** cold first run and warm runs recorded before/after (deployed if
+reachable, otherwise local fresh-process); no request is cut by the proxy before
+the server's own 504; Shor simulation near the server limit returns the translated
+timeout message; the warm-up request submits no job and touches no allowance.
+
+**Implementation status — October 19, 2026:** implemented, with no hosting change.
+
+- Backend boot warm-up (`backend/app/quantum/warmup.py`, non-blocking, on the
+  single worker, `QUANTUM_WARMUP=0` disables): the first Shor request after boot
+  fell from 1646 ms to 245 ms locally; warm-up itself takes ~2.7 s at boot.
+- One `GET /api/health` when the first town mounts (`game/lib/warmup.ts`); web
+  only, no job, no status entry.
+- Confirmed Next 15.5's rewrite proxy defaults to 30 s and set
+  `experimental.proxyTimeout` to 170 s (Shor limit later raised from 120 s to 150 s, client wait 165 s). Configuration and build verified; a
+  >30 s response through the proxy was not exercised end to end.
+- In-laptop panel: circuit label, elapsed time, “Usually about X–Y s” from
+  `game/lib/runEstimates.json`, “taking longer than usual” past the bound, a
+  first-run “server may be waking up” hint, and a warning when a stopped/timed-out
+  run may still occupy the worker. Each run has its own timer and label.
+- Remote Qollab runs: static asynchronous/“several minutes” text (no countdown) and
+  a one-time EN/ES notice before the first remote submission; declining submits
+  nothing; later circuits are not lectured again.
+- Measured on the owner's machine (5 warm runs per case; median / p95 ms):
+  Shor N=15, ideal 130–191 / 137–198 for 3–10 counting qubits; **noise 1492/1635
+  (3), 776/936 (4), 2023/2369 (6), 5973/6630 (8), 18672/22225 (10)**. Grover,
+  register, Coin, campus, lab, and Ghost Key all stay under ~260 ms locally. The
+  slowest lesson-reachable case is noisy Shor, so a deployed single slow CPU is
+  the most plausible source of the reviewer's 20 s+ waits for that case; ordinary
+  16-shot runs are not explained by compute cost.
+- **Bug found while measuring and fixed:** Echo Chamber returned HTTP 500 on every
+  Run when the secret PIN was 1111 (about 1 device in 16), because the oracle
+  applied X to an empty qubit list. Regression test added (PINs 0000 and 1111).
+- Not done / unverified: deployed cold/warm numbers; real physical-QPU
+  waits; queue position from a provider; a browser or screen-reader smoke test of
+  the new panel and notice.
+
 ### F02 — Grover result ownership
 
 **Feedback covered:** changing four rounds to three leaves the old graph visible.
 
-**Source evidence:** `game/components/GroverScenario.tsx` already clears `lastRun`
-in the round-control callback. However, the transition to the measurement step
-sets `repeat: 3` without explicitly clearing `lastRun`. This is a concrete path
-to investigate, alongside the exact reported interaction and deployed version.
+**Source evidence (verified):** `game/components/GroverScenario.tsx` clears
+`lastRun` in the round-control callback (line ~340, `onRepeat`) and on slot
+changes. The measure-step button `next("measure", { repeat: 3 })` (line ~373)
+changes `repeat` to 3 without clearing `lastRun`, so after a ×4 run the circuit
+header shows ×3 while `QuantumEqualizer`, `CircuitHistogram`, and the circuit's
+`measurement` prop (line ~341) still render the ×4 result. This matches the
+report exactly and is the primary suspect; the plan's earlier "investigate" hedge
+is no longer needed. Also check `onRepeat` is `null` outside `tuneRun`/`measure`,
+so no other step can change rounds.
 
 **Plan:** audit every circuit/round transition, restored session, and animated
 view in `GroverScenario.tsx` and `game/components/GroverChallenges.tsx`. Clear the
@@ -178,10 +343,15 @@ Closing/reopening, changing language, and refresh do not submit another job.
 **Feedback covered:** unexplained `k=20` in plaintext, `k=12` in RSA, and notes
 persisting across acts.
 
-**Source evidence:** `MemoryRail` in `game/components/LaptopScene.tsx` renders
-`k = vars.shift` whenever a recovered value and shift exist, without an act check.
-This supports investigating unrelated Caesar values in other acts. It does not
-prove that the reported 12 was intended to be φ(N).
+**Source evidence (verified):** `MemoryRail` in `game/components/LaptopScene.tsx`
+(line ~92) renders `k = vars.shift` whenever `vars.recovered && vars.shift`, with
+no act check. `vars` is a single global store (`game/state.ts`), `setVars` merges,
+`pick()` writes `{recovered, shift}`, and `vars` resets only on a full reset
+(line ~255). So an act-2 Caesar shift (default `shift: 3`, or the picked one)
+stays on the act-3/4 rail as `k = 12`, which explains the reviewer's "k=12 where
+φ(N)=12 was expected". The `k=20` in the plaintext act is probably the unlabeled
+`k=` candidate rows of the shift list (line ~253); label them "shift". Note the
+default of 3 is truthy, so `vars.recovered` is the only guard.
 
 **Plan:** derive displayed notes from the current act and validated evidence.
 Label Caesar shift, modulus N, totient φ(N), public exponent e, and private
@@ -199,9 +369,13 @@ the correct meaning and provenance. Missing legacy context is not invented.
 **Feedback covered:** W fails after focusing the minimap; no obvious canvas focus;
 typing must not move the player; request for keyboard destination navigation.
 
-**Source evidence:** `game/components/GameCanvas.tsx` returns a host without an
-explicit focus target or accessible name. The exact keyboard failure still needs
-reproduction through the engine and surrounding controls.
+**Source evidence (verified):** `game/components/GameCanvas.tsx` returns a plain
+`div` host with no `tabIndex`, role, or label. Movement is bound through
+Excalibur `Keys.W/Arrow*` in `engine/scenes/WorldScene.ts` (and `CityScene.ts`),
+i.e. engine keyboard input rather than a React handler, which explains why focus
+on the minimap button does not move the player. Confirm in-browser whether
+Excalibur listens on `window` (then the cause is the button consuming/ignoring
+keys or the engine pausing) or on the canvas (then focus is required).
 
 **Plan:** provide a named, focusable play area with a visible focus indicator and
 concise movement instructions. Give players an obvious keyboard route back from
@@ -244,19 +418,35 @@ returns focus predictably. Smaller lesson histograms remain clear.
 **Feedback covered:** the professor recommends the campus, but the reviewer found
 only the `qc1` checkpoint route.
 
-**Source evidence:** `TownScreen.tsx` includes the campus in the professor's prose
-but not in his choices. Ordinary travel already exists through Coin Town's south
+**Source evidence (verified):** `TownScreen.tsx` includes the campus in the
+professor's prose (`GREETING_ALL`) but his choices are only the challenge tracks
+plus "Keep exploring". `travelCampus(true)` already exists but is wired only to
+Coin Town's `onCampus`. Ordinary travel already exists through Coin Town's south
 road; the problem is discoverability from the hub, not a missing campus entrance.
 
-**Plan:** add an explicit “Visit Quantum Campus” choice that performs guarded
-travel to the campus arrival point. Explain that the campus is optional and also
-reachable from Coin Town's south road. Reuse normal travel behavior, not checkpoint
-restoration. Keep the qWard reward conversation reachable and make the campus
-choice available on the subsequent normal greeting.
+**Decision (owner, October 19, 2026):** no teleport choice in the professor's
+menu. Add a small, understated in-world sign, in the spirit of the concealed lab
+entrances, that points toward the campus. It rewards noticing and keeps the
+journey through Coin Town's south road.
 
-**Acceptance:** a player finishing the four challenges can reach the campus from
-the professor without opening Save progress. No medals, discoveries, circuits,
-equipment, or remote allowance change. Travel remains blocked during active work.
+**Plan:** place a small signpost in Quantum Town (candidate: the south exit toward
+Cipher/Coin, or beside the plaza) using existing Kenney sign art. Inspecting it
+shows a short bilingual line: the Quantum Campus is an optional science fair,
+reached by the south roads through Coin Town. It does not travel, grant anything,
+or change progress. Keep the professor's existing prose mention, and tweak it to
+hint at the sign (for example “look for a signpost”). Use the standard inspect/talk
+interaction so it works with keyboard, mouse and touch, and show a marker only if
+it does not break the “secret” intent (decide at implementation; the minimap
+should not label it). No new save field: the sign is always inspectable.
+
+**Open point:** a sign that is too hidden recreates the reported problem. Keep it
+on the main path and mention it in the professor's line so a player who asks can
+find it. Re-test with the original reviewer's path.
+
+**Acceptance:** a player finishing the four challenges can learn where the campus
+is from the professor's line plus the sign, without opening Save progress. No
+medals, discoveries, circuits, equipment, or remote allowance change. The sign
+does not move the player.
 
 ### F07 — Translation, grammar, and directions
 
@@ -265,9 +455,19 @@ equipment, or remote allowance change. Travel remains blocked during active work
 portátil”, “1 cúbits”, “1 ejecuciones”, “Escáner de el portátil”, “Cierral portátil”,
 and a Foundry instruction pointing to Quantum Town.
 
-**Source evidence:** several exact typos exist in `game/i18n/es.json`, and
-`game/components/RsaWorkbench.tsx` constructs “Backend agrees” dynamically.
-Other strings and the wrong-town instruction need contextual reproduction.
+**Source evidence (verified):** `game/i18n/es.json` line ~276 “Cierral portátil”,
+~1273 “Escáner de el portátil”, ~2211 “paral portátil”.
+`RsaWorkbench.tsx:143` builds `Backend agrees/disagrees: ${res.equation}` with no
+catalog template, so it stays English. There is no plural helper in
+`i18n/translate.ts`; counts come from templates such as `{n} qubits` /
+`{shots} shots` (es.json ~517, 526, 951, 955; `ShorPipeline.tsx` ~645, 681), so
+“1 cúbits / 1 ejecuciones” needs a singular template or a small plural helper,
+not only a string fix. “Measure -> Classical PC”, “reconstruida mediante hand”,
+and the Foundry wrong-town line were not found by grep and need contextual
+reproduction (the Grover exit hint at `GroverScenario.tsx:274` says “return to
+Quantum Town”, which is correct only for replay entry, so it is the likely
+source of the Foundry report). The “palabra en inglés” strings are faithful
+translations; the issue is the prompt design, as the plan says.
 
 **Plan:** audit source text and runtime interpolation in `game/i18n/translate.ts`,
 `es.json`, RSA tools, Shor wiring labels, and lesson content. Translate complete
@@ -349,25 +549,32 @@ readers are not flooded with per-character announcements.
 **Feedback covered:** key substitution misses a teaching opportunity; direct
 letter-to-number RSA lacks an explanation of real encoding and padding.
 
-**Plan:** add brief bilingual explanations near the key-substitution decision and
-the small-RSA workbench, with optional deeper reading. Explain that encryption
-alone does not establish who owns a public key. A certificate, trusted signature,
-or authenticated channel needs a trusted verification basis; an attacker signing
-their own replacement key does not solve the problem.
+**Scope decision (owner, October 19, 2026):** for now, only clarify the
+simplification. Do not add authentication, certificate, or padding lessons yet.
 
-Label the small integer/letter exercise as textbook arithmetic. Explain that
-practical RSA encryption uses an encoding scheme such as RSAES-OAEP, often to
-protect key material, rather than independently encrypting letters. RFC 8017
-requires OAEP support for new applications within its scope. Keep these
-explanations separate from claims about resistance to quantum attacks.
+**Plan:** add one brief bilingual note, at the small-RSA workbench and again where
+Act 4 concludes, saying plainly that: (1) the game breaks a toy protocol with tiny
+numbers and a letter-by-letter encoding, not real RSA; (2) real RSA keys are far
+larger and real systems do not encrypt single letters, they use an encoding scheme
+(RSAES-OAEP in RFC 8017) usually to protect key material; (3) a quantum computer
+running Shor's algorithm is a threat to real RSA only at a scale far beyond the
+game's demonstration. Keep these three claims separate and do not imply that the
+game's small Shor run endangers production RSA. Label the letter/number exercise
+“textbook arithmetic”. Spanish and English kept in sync.
 See [RFC 8017, section 7](https://www.rfc-editor.org/rfc/rfc8017.html#section-7).
+
+**Deferred (revisit after the core fixes):** the key-substitution and
+authentication teaching moment (certificates, signatures, authenticated channels,
+man-in-the-middle). Keep the original review item as a backlog idea; do not drop
+it.
 
 **Likely locations:** `game/content/acts/act3.ts`, `game/content/acts/act4.ts`,
 `game/components/RsaWorkbench.tsx`, knowledge content, and `game/i18n/es.json`.
 
-**Acceptance:** the story distinguishes confidentiality, key authentication,
-encoding, and quantum vulnerability without adding a new required puzzle or
-changing RSA answers, arithmetic, rewards, or save structure.
+**Acceptance:** the two notes state that the game attacks a simplified protocol,
+distinguish the toy letter encoding from real padded RSA, and make no claim that
+production RSA is broken. No new required puzzle, and no change to RSA answers,
+arithmetic, rewards, or save structure.
 
 ### F13 — Performance optimization after measurement
 
@@ -400,6 +607,12 @@ Tests demonstrate fresh execution per Run and separation between ideal/noise mod
 **Feedback covered:** Excalibur cannot unlock the audio context while the UI says
 sound is enabled.
 
+**Source evidence (verified):** `AudioManager.unlock()` in `game/game/audio.ts`
+sets `unlocked = true` unconditionally on the first call and never checks the
+`AudioContext` state; `synth.ts` resumes its own context only opportunistically.
+Excalibur creates a separate context, so the warning and a truthful “sound on”
+UI can coexist. This supports the report.
+
 **Plan:** reproduce first load, mute/unmute, background/resume, and Qollab iframe
 entry. Inspect `game/game/audio.ts`, `game/game/synth.ts`,
 `game/components/MuteButton.tsx`, and engine audio ownership. Distinguish stored
@@ -430,7 +643,9 @@ cause and impact rather than being silently filtered.
 
 **Feedback covered:** introduce migration after Shor and RSA.
 
-**Dependency:** F12 establishes the distinction between encryption and signatures.
+**Status (owner, October 19, 2026):** deferred. The F12 clarification note is
+enough for now. F16 depends on the deferred authentication content (distinction
+between encryption and signatures), so build that first if this is revived.
 
 **Plan:** add an optional final conversation or notebook entry explaining why
 organizations prepare for migration, inventory vulnerable cryptography, and plan
@@ -444,6 +659,50 @@ and recheck current guidance when writing the final lesson.
 **Acceptance:** short bilingual content is available after the RSA lesson without
 a new medal, mandatory task, cryptographic implementation, or provider job.
 Any migration dates or standards-status claims have current primary sources.
+
+### F17 — Backend-free local build with a client-side simulator
+
+**Owner request (October 19, 2026):** remove the dependency on the Python
+backend for local play by adding a mock/simulator layer in the frontend, so the
+complete application runs on the owner's machine with a simulated backend. Wait
+times (and therefore the progress panel, estimates, timeouts and cancellation)
+can then be created entirely in the client.
+
+**Starting points:** `game/lib/transport.ts` already has a pluggable
+`setServiceTransport`, and Qollab already supplies a non-HTTP transport with the
+same `path/init/progress` contract. A third transport (for example `mock`)
+should reuse that seam instead of touching lesson code. `runtimeInfo.target`
+currently distinguishes `web` and `qollab`; decide whether `mock` is a new
+target or a flag on `web` before building.
+
+**Plan:**
+
+1. Define the scope: which endpoints must work offline (lab, campus, coin,
+   register, Grover, Ghost Key, Shor, classical RSA/Caesar tools, recorded IBM
+   data) and which can return a recorded or approximate result.
+2. Choose the engine. Options to evaluate: reuse the Qollab Pyodide Python
+   (`game/qollab/python`, already shares `backend/app/core`), a JavaScript
+   state-vector simulator, or canned deterministic responses. Pyodide gives the
+   same circuits and counts as the real backend; canned responses are simplest
+   but do not teach real measurement. Record the trade-off before choosing.
+3. Keep the real contract: returned counts must be sampled fresh per Run, carry
+   backend metadata (name the mock honestly, never as Aer or IBM), and keep the
+   ideal-reference versus observation distinction.
+4. Make the delay a controllable setting (fixed, by estimate table, or random
+   within the measured median/p95) so the status panel, "taking longer than
+   usual", timeouts, Stop waiting, and the remote-run notice can be tested and
+   demonstrated without a real slow backend. Also allow injecting failures
+   (timeout, unavailable, 409 refusals).
+5. Keep it out of production: select the mock only by an explicit build or
+   environment flag; the deployed web game and the Qollab upload stay unchanged
+   and the 20-file Qollab allowlist is not affected.
+6. Tests must run without a Python backend in a clean checkout, and the existing
+   HTTP and Qollab suites keep passing.
+
+**Acceptance:** with the mock selected, every lesson that needs a quantum or
+classical service completes without a running backend; simulated waits show the
+same panel, estimate, cancellation and error messages as HTTP; no job reaches
+IBM, IonQ or any provider; the mock is unreachable in normal production builds.
 
 ## Delivery and validation
 

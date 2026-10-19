@@ -202,11 +202,14 @@ def grover_block(name, secret):
         if name == "diffuser":
             qc.h(range(4))
         zeros = [q for q in range(4) if name == "diffuser" or not (secret >> q) & 1]
-        qc.x(zeros)
+        # A PIN of 1111 has no zero bits; Qiskit rejects X on an empty list.
+        if zeros:
+            qc.x(zeros)
         qc.h(3)
         qc.mcx([0, 1, 2], 3)
         qc.h(3)
-        qc.x(zeros)
+        if zeros:
+            qc.x(zeros)
         if name == "diffuser":
             qc.h(range(4))
             qc.global_phase += math.pi

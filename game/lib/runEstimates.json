@@ -1,0 +1,295 @@
+{
+  "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "python": "3.13.3",
+  "runs": 5,
+  "cases": {
+    "lab:q1:s16:ideal": {
+      "path": "/api/lab/run",
+      "simulator": "ideal",
+      "first_ms": 1535.0,
+      "median_ms": 37.4,
+      "p95_ms": 39.8,
+      "max_ms": 39.8
+    },
+    "lab:q4:s1024:ideal": {
+      "path": "/api/lab/run",
+      "simulator": "ideal",
+      "first_ms": 41.5,
+      "median_ms": 39.0,
+      "p95_ms": 40.8,
+      "max_ms": 40.8
+    },
+    "campus:q1:s256:ideal": {
+      "path": "/api/campus/run",
+      "simulator": "ideal",
+      "first_ms": 39.7,
+      "median_ms": 40.8,
+      "p95_ms": 41.8,
+      "max_ms": 41.8
+    },
+    "coin:circuit:ideal": {
+      "path": "/api/coin/circuit",
+      "simulator": "ideal",
+      "first_ms": 154.7,
+      "median_ms": 152.0,
+      "p95_ms": 157.0,
+      "max_ms": 157.0
+    },
+    "coin:simulate:ideal": {
+      "path": "/api/coin/simulate",
+      "simulator": "ideal",
+      "first_ms": 56.2,
+      "median_ms": 39.1,
+      "p95_ms": 50.8,
+      "max_ms": 50.8
+    },
+    "register:q2:ideal": {
+      "path": "/api/register/circuit",
+      "simulator": "ideal",
+      "first_ms": 39.0,
+      "median_ms": 37.8,
+      "p95_ms": 40.2,
+      "max_ms": 40.2
+    },
+    "register:q3:ideal": {
+      "path": "/api/register/circuit",
+      "simulator": "ideal",
+      "first_ms": 37.4,
+      "median_ms": 37.6,
+      "p95_ms": 42.9,
+      "max_ms": 42.9
+    },
+    "register:q4:ideal": {
+      "path": "/api/register/circuit",
+      "simulator": "ideal",
+      "first_ms": 40.9,
+      "median_ms": 40.3,
+      "p95_ms": 44.1,
+      "max_ms": 44.1
+    },
+    "grover:r0:ideal": {
+      "path": "/api/grover/run",
+      "simulator": "ideal",
+      "first_ms": 55.3,
+      "median_ms": 36.9,
+      "p95_ms": 52.2,
+      "max_ms": 52.2
+    },
+    "grover:r1:ideal": {
+      "path": "/api/grover/run",
+      "simulator": "ideal",
+      "first_ms": 43.3,
+      "median_ms": 45.1,
+      "p95_ms": 59.4,
+      "max_ms": 59.4
+    },
+    "grover:r3:ideal": {
+      "path": "/api/grover/run",
+      "simulator": "ideal",
+      "first_ms": 49.9,
+      "median_ms": 42.4,
+      "p95_ms": 56.9,
+      "max_ms": 56.9
+    },
+    "grover:r5:ideal": {
+      "path": "/api/grover/run",
+      "simulator": "ideal",
+      "first_ms": 44.2,
+      "median_ms": 48.4,
+      "p95_ms": 55.9,
+      "max_ms": 55.9
+    },
+    "vault:ideal": {
+      "path": "/api/vault/run",
+      "simulator": "ideal",
+      "first_ms": 237.1,
+      "median_ms": 235.1,
+      "p95_ms": 255.8,
+      "max_ms": 255.8
+    },
+    "shor:m3:ideal": {
+      "path": "/api/shor/simulate",
+      "simulator": "ideal",
+      "first_ms": 1645.8,
+      "median_ms": 129.7,
+      "p95_ms": 137.4,
+      "max_ms": 137.4
+    },
+    "shor:m4:ideal": {
+      "path": "/api/shor/simulate",
+      "simulator": "ideal",
+      "first_ms": 135.2,
+      "median_ms": 129.4,
+      "p95_ms": 182.7,
+      "max_ms": 182.7
+    },
+    "shor:m6:ideal": {
+      "path": "/api/shor/simulate",
+      "simulator": "ideal",
+      "first_ms": 146.2,
+      "median_ms": 133.5,
+      "p95_ms": 144.9,
+      "max_ms": 144.9
+    },
+    "shor:m8:ideal": {
+      "path": "/api/shor/simulate",
+      "simulator": "ideal",
+      "first_ms": 146.0,
+      "median_ms": 146.3,
+      "p95_ms": 189.6,
+      "max_ms": 189.6
+    },
+    "shor:m10:ideal": {
+      "path": "/api/shor/simulate",
+      "simulator": "ideal",
+      "first_ms": 185.1,
+      "median_ms": 191.0,
+      "p95_ms": 198.3,
+      "max_ms": 198.3
+    },
+    "lab:q1:s16:noise": {
+      "path": "/api/lab/run",
+      "simulator": "noise",
+      "first_ms": 18.9,
+      "median_ms": 16.0,
+      "p95_ms": 16.5,
+      "max_ms": 16.5
+    },
+    "lab:q4:s1024:noise": {
+      "path": "/api/lab/run",
+      "simulator": "noise",
+      "first_ms": 17.2,
+      "median_ms": 17.1,
+      "p95_ms": 17.8,
+      "max_ms": 17.8
+    },
+    "campus:q1:s256:noise": {
+      "path": "/api/campus/run",
+      "simulator": "noise",
+      "first_ms": 15.8,
+      "median_ms": 15.5,
+      "p95_ms": 15.9,
+      "max_ms": 15.9
+    },
+    "coin:circuit:noise": {
+      "path": "/api/coin/circuit",
+      "simulator": "noise",
+      "first_ms": 58.0,
+      "median_ms": 58.1,
+      "p95_ms": 59.5,
+      "max_ms": 59.5
+    },
+    "coin:simulate:noise": {
+      "path": "/api/coin/simulate",
+      "simulator": "noise",
+      "first_ms": 16.9,
+      "median_ms": 17.1,
+      "p95_ms": 45.7,
+      "max_ms": 45.7
+    },
+    "register:q2:noise": {
+      "path": "/api/register/circuit",
+      "simulator": "noise",
+      "first_ms": 17.6,
+      "median_ms": 16.9,
+      "p95_ms": 21.2,
+      "max_ms": 21.2
+    },
+    "register:q3:noise": {
+      "path": "/api/register/circuit",
+      "simulator": "noise",
+      "first_ms": 22.5,
+      "median_ms": 22.4,
+      "p95_ms": 24.8,
+      "max_ms": 24.8
+    },
+    "register:q4:noise": {
+      "path": "/api/register/circuit",
+      "simulator": "noise",
+      "first_ms": 27.2,
+      "median_ms": 22.3,
+      "p95_ms": 23.5,
+      "max_ms": 23.5
+    },
+    "grover:r0:noise": {
+      "path": "/api/grover/run",
+      "simulator": "noise",
+      "first_ms": 17.8,
+      "median_ms": 17.0,
+      "p95_ms": 20.5,
+      "max_ms": 20.5
+    },
+    "grover:r1:noise": {
+      "path": "/api/grover/run",
+      "simulator": "noise",
+      "first_ms": 21.5,
+      "median_ms": 20.8,
+      "p95_ms": 22.9,
+      "max_ms": 22.9
+    },
+    "grover:r3:noise": {
+      "path": "/api/grover/run",
+      "simulator": "noise",
+      "first_ms": 27.5,
+      "median_ms": 25.3,
+      "p95_ms": 27.9,
+      "max_ms": 27.9
+    },
+    "grover:r5:noise": {
+      "path": "/api/grover/run",
+      "simulator": "noise",
+      "first_ms": 32.8,
+      "median_ms": 27.8,
+      "p95_ms": 40.6,
+      "max_ms": 40.6
+    },
+    "vault:noise": {
+      "path": "/api/vault/run",
+      "simulator": "noise",
+      "first_ms": 15.6,
+      "median_ms": 13.0,
+      "p95_ms": 15.0,
+      "max_ms": 15.0
+    },
+    "shor:m3:noise": {
+      "path": "/api/shor/simulate",
+      "simulator": "noise",
+      "first_ms": 1372.7,
+      "median_ms": 1492.0,
+      "p95_ms": 1635.0,
+      "max_ms": 1635.0
+    },
+    "shor:m4:noise": {
+      "path": "/api/shor/simulate",
+      "simulator": "noise",
+      "first_ms": 836.9,
+      "median_ms": 776.1,
+      "p95_ms": 936.3,
+      "max_ms": 936.3
+    },
+    "shor:m6:noise": {
+      "path": "/api/shor/simulate",
+      "simulator": "noise",
+      "first_ms": 2146.6,
+      "median_ms": 2023.3,
+      "p95_ms": 2369.0,
+      "max_ms": 2369.0
+    },
+    "shor:m8:noise": {
+      "path": "/api/shor/simulate",
+      "simulator": "noise",
+      "first_ms": 4822.8,
+      "median_ms": 5973.1,
+      "p95_ms": 6629.8,
+      "max_ms": 6629.8
+    },
+    "shor:m10:noise": {
+      "path": "/api/shor/simulate",
+      "simulator": "noise",
+      "first_ms": 18413.3,
+      "median_ms": 18672.1,
+      "p95_ms": 22225.2,
+      "max_ms": 22225.2
+    }
+  }
+}

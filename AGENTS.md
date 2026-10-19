@@ -566,6 +566,22 @@ language. Duplicate submission, active-circuit edits, story progression, resets
 and travel that would unmount the owner remain guarded. The same UI works with
 HTTP and Qollab; hiding never cancels or resubmits work or refunds an allowance.
 
+The laptop stays the main place to wait. Its status panel (`QuantumJobProgress`)
+names the circuit, shows elapsed time, and for web simulations an estimate from
+`lib/runEstimates.ts` and its measured `runEstimates.json`
+(`backend/tools/measure_run_estimates.py`). Estimates round up to the next
+measured circuit size, use a documented safety multiplier, and say "taking longer
+than usual" past their bound. Never invent a countdown or phase. Every run owns
+its label, timer and estimate; a new circuit is a new wait. The first web run of a
+visit may say the server is waking up; a retry after Stop waiting or a timeout
+warns that the earlier run may still occupy the single worker. These flags are
+transient (`lib/execution.ts`). Remote Qollab jobs (`isRemoteRun` mirrors the
+adapter's policy) get a one-time, in-memory notice before the first submission:
+asynchronous, minutes, not cancellable, one per session. Declining submits nothing.
+The backend warms Qiskit/Aer and Shor at boot (`app/quantum/warmup.py`), and the
+game pings `/api/health` once when the first town mounts (`lib/warmup.ts`); neither
+runs a job. Keep Next's `experimental.proxyTimeout` above the longest server timeout.
+
 ## Validation
 
 For game changes, run appropriate checks from `game/`: `npm test` for Node behavior/translation tests and Vitest React regressions,
