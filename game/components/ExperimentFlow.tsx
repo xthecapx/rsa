@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { t } from "@/i18n";
+import { useExecution } from "@/lib/execution";
 import {
   ExperimentSteps,
   EXPERIMENT_STEPS,
@@ -39,7 +40,7 @@ export function ExperimentFlow({
   }, [measurement]);
   useEffect(() => {
     if (view === "results" && focusResults.current) {
-      panel.current?.focus();
+      if (!useExecution.getState().background) panel.current?.focus();
       focusResults.current = false;
     }
   }, [view, measurement]);

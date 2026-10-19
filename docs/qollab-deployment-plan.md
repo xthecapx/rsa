@@ -3,7 +3,9 @@
 The uploadable package is generated locally. Native Qiskit tests, game checks,
 production builds, and local browser checks have passed. The owner has reported
 successful Qollab runs; each newly uploaded release still needs a platform smoke
-test. Public publication status and the hackathon submission remain owner tasks.
+test. On October 11, 2026, the public qWard v1.3 page was accessible while signed
+out, and Rosa’s experiment returned 256 shots from `fake_pittsburgh`. See the
+[submission review](submission-review.md) for coverage and remaining owner tasks.
 
 ## Build and upload
 
@@ -15,7 +17,7 @@ npm run verify:qollab
 ```
 
 Upload the contents of `game/dist/qollab/` to
-[qWard: A Quantum Computing Adventure](https://qollab.xyz/u/xthecapx/quantum-playground#code):
+[qWard: A Quantum Computing Adventure](https://qollab.xyz/u/xthecapx/qward#code):
 
 1. Open **Edit Code**, then upload the generated folder's contents.
 2. Replace matching starter files and preserve all subdirectories.

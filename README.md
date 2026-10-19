@@ -115,6 +115,46 @@ and migrations. HTTP and Qollab still use the same domain services; the shared
 request helper never retries quantum jobs automatically. See `AGENTS.md` for
 ownership boundaries and the required real-browser checks.
 
+### Execution feedback and latency diagnostics
+
+Quantum runs show elapsed time and backend status on both targets. The web target
+shows a waiting state until the response arrives; Qollab reports its bridge queue
+and actual provider states. Web practice runs offer **Stop waiting**, which
+discards the response while the server may continue computing. Final story runs
+keep their lock. Qollab offers **Cancel queued run** only before Python starts;
+active provider jobs retain their lock and remote allowance. Retry always requires
+another explicit Run. Timed-out HTTP work still waiting in the server queue is
+cancelled before execution; already-running work stays on the reused quantum worker.
+
+Choose **Wait in background** in the laptop toolbar (or press Escape) to hide an
+executing experiment. Its request and result stay attached to the same laptop;
+a small status indicator remains visible while you walk in the current area,
+read objectives, or change language. **Return to experiment** opens that same
+run. Completion changes the indicator to **Experiment finished** without opening
+the laptop or stealing focus. Check its result or error when ready. Active
+circuit edits, duplicate submissions, progression, resets and travel out of the
+current area remain guarded until the run settles. This works with both backend
+targets and never submits a second job just to show status.
+
+For a repeatable HTTP baseline, start the backend, then run from `backend/`:
+
+```bash
+python tools/benchmark_quantum.py --runs 20
+python tools/benchmark_quantum.py --base-url http://localhost:7019 --runs 20 --simulator noise
+```
+
+The JSON report separates the first request from warm median/p95, preserves each
+sample and failure, and captures `Server-Timing`. Restart the backend to measure
+a cold start. Server logs and timing headers separate quantum queue time from
+worker time (circuit setup/build plus execution); these are measured durations,
+not simulated progress phases. Browser DevTools User Timing entries named
+`qward:/api/…` include response wait, JSON decoding, and time to the next painted
+frame. The paint interval also includes browser scheduling; it is not a pure
+React render profile. Entries retain the latest request per endpoint and contain
+no circuit, puzzle secret, token, or counts. Compare browser and server timings
+before deciding whether setup caching, worker policy, transport, or rendering
+needs optimization. A fresh Run always produces fresh measurements.
+
 ## Extend the game
 
 Start with `game/content/` for lessons, dialogue, and town definitions, and

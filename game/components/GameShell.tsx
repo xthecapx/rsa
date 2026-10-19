@@ -9,6 +9,7 @@ import { MuteButton } from "./MuteButton";
 import { BackendLabel } from "./BackendLabel";
 import { SimulatorPicker } from "./SimulatorPicker";
 import { SceneLoading } from "./SceneLoading";
+import { restoreExperiment, useExecution } from "@/lib/execution";
 
 /** Every scenario occupies the same game screen; only its world and tools change. */
 export function GameShell({ title, subtitle, backHref, backLabel, sidebar, objectives, children, laptopOpen, laptopReady, onOpenLaptop, sceneReady = true, sceneFailed = false, onBack, backDisabled = false, onObjectivesOpen, restartControl, missionProgress }: {
@@ -21,6 +22,8 @@ export function GameShell({ title, subtitle, backHref, backLabel, sidebar, objec
   onBack?: () => void; backDisabled?: boolean; onObjectivesOpen?: (open: boolean) => void;
 }) {
   useLocale((s) => s.locale);
+  const background = useExecution((s) => !!s.background);
+  const laptopVisible = laptopOpen && !background;
   const [objectivesOpen, setObjectivesOpen] = useState(false);
   function toggleObjectives(open: boolean) { setObjectivesOpen(open); onObjectivesOpen?.(open); }
   return <main className="game-shell viewport-overlay flex flex-col overflow-hidden bg-stage-bg">
@@ -41,12 +44,12 @@ export function GameShell({ title, subtitle, backHref, backLabel, sidebar, objec
       <div className="w-full min-w-0"><BackendLabel /></div>
     </header>
     <SimulatorPicker disabled={backDisabled} />
-    {sceneReady && !laptopOpen && missionProgress && <div className="shrink-0 border-b border-stage-border bg-stage-surface px-3 py-2 sm:px-4">{missionProgress}</div>}
+    {sceneReady && !laptopVisible && missionProgress && <div className="shrink-0 border-b border-stage-border bg-stage-surface px-3 py-2 sm:px-4">{missionProgress}</div>}
     <div className="flex min-h-0 flex-1">
       <section className="relative min-h-0 min-w-0 flex-1 overflow-hidden">
         <div className="absolute inset-0" inert={!sceneReady} aria-hidden={!sceneReady} style={{ visibility: sceneReady ? "visible" : "hidden" }}>{children}</div>
         {!sceneReady && <SceneLoading failed={sceneFailed} />}
-        {sceneReady && !laptopOpen && <button type="button" onClick={onOpenLaptop} className={clsx(
+        {sceneReady && !laptopVisible && <button type="button" onClick={background ? restoreExperiment : onOpenLaptop} className={clsx(
           "absolute left-3 top-3 z-10 border-2 px-3 py-2 text-[10px] uppercase tracking-widest",
           laptopReady ? "animate-pulse border-accent-amber bg-accent-amber/20 text-accent-amber" : "border-stage-border bg-stage-surface/90 text-accent-teal",
         )}>{t("Laptop")}</button>}

@@ -1,5 +1,6 @@
 "use client";
 import { t, tOptional, localize, useLocale } from "@/i18n";
+import { useExecution } from "@/lib/execution";
 
 import { useEffect, useState, type ReactNode } from "react";
 import clsx from "clsx";
@@ -39,16 +40,17 @@ export function LaptopScene({ act, restartControl }: { act: ActNumber; restartCo
   const suspicion = useGame((s) => s.suspicion);
   const armed = waitingFor === "workbench" && panel === "workbench";
 
-  // Freeze street controls while the laptop owns the screen.
+  const background = useExecution((state) => !!state.background);
+  // Freeze street controls only while the laptop owns the screen.
   useEffect(() => {
-    if (!laptopOpen) return;
+    if (!laptopOpen || background) return;
     void bus.send({ type: "lockInput", locked: true });
     return () => {
       if (useGame.getState().phase === "exploring") {
         void bus.send({ type: "lockInput", locked: false });
       }
     };
-  }, [laptopOpen]);
+  }, [laptopOpen, background]);
 
   function close() {
     if (useGame.getState().operations || useGame.getState().phase === "busy") return;

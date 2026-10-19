@@ -7,6 +7,7 @@ import { SplashScreen } from "@/components/SplashScreen";
 import "./globals.css";
 import { LanguageProvider } from "@/components/LanguageProvider";
 import { ViewportBootstrap } from "@/components/ViewportBootstrap";
+import { QuantumJobProgress } from "@/components/QuantumJobProgress";
 
 const pressStart = Press_Start_2P({
   subsets: ["latin"],
@@ -39,7 +40,13 @@ export const metadata: Metadata = {
       { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
       { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
     ],
-    apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+    apple: [
+      {
+        url: "/icons/apple-touch-icon.png",
+        sizes: "180x180",
+        type: "image/png",
+      },
+    ],
   },
   other: {
     "mobile-web-app-capable": "yes",
@@ -61,7 +68,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${pressStart.variable} ${dmSans.variable}`} data-boot="1">
+    <html
+      lang="en"
+      className={`${pressStart.variable} ${dmSans.variable}`}
+      data-boot="1"
+    >
       <body suppressHydrationWarning>
         <ViewportBootstrap />
         {/*
@@ -79,9 +90,12 @@ export default function RootLayout({
             background: "#0b1f26",
           }}
         />
-        <LanguageProvider><PwaBootstrap />
-        <SplashScreen />
-        {children}</LanguageProvider>
+        <LanguageProvider>
+          <PwaBootstrap />
+          <SplashScreen />
+          {children}
+          <QuantumJobProgress />
+        </LanguageProvider>
       </body>
     </html>
   );

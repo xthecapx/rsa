@@ -5,6 +5,7 @@ import { CampusVisual } from "./CampusVisual";
 import { useCampus, campusSession } from "@/game/campus";
 import { campusRequest, type CampusSettings } from "@/game/campusExperiment";
 import { useGame } from "@/game/state";
+import { useExecution } from "@/lib/execution";
 import { runCampus } from "@/lib/campus";
 import { t, useLocale } from "@/i18n";
 import { useAsyncOperation } from "./useAsyncOperation";
@@ -44,9 +45,11 @@ export function CampusLaptop({
   const focusResults = useRef(false);
   const contentTop = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    contentTop.current?.scrollIntoView({ block: "start" });
+    if (!useExecution.getState().background)
+      contentTop.current?.scrollIntoView({ block: "start" });
     if (view === "results" && focusResults.current) {
-      panel.current?.focus({ preventScroll: true });
+      if (!useExecution.getState().background)
+        panel.current?.focus({ preventScroll: true });
       focusResults.current = false;
     }
   }, [selected, view]);

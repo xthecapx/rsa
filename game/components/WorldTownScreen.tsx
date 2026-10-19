@@ -13,6 +13,7 @@ import { bus } from "@/engine/bus";
 import type { PetKind } from "@/engine/petting";
 import { exploreAround, useTown, type TownSlot } from "@/game/town";
 import { useGame } from "@/game/state";
+import { executionPending, useExecution } from "@/lib/execution";
 import { useMedals } from "@/game/medals";
 import { useKnowledge } from "@/game/knowledge";
 import { gameAudio } from "@/game/audio";
@@ -143,6 +144,7 @@ export function KnowledgeCardView({ card, teacher, learned = true }: { card: Kno
  */
 export function WorldTownScreen({ config, restartOptions, onEnterLab }: { config: TownConfig; restartOptions: RestartOption[]; onEnterLab: () => boolean }) {
   useLocale((state) => state.locale);
+  const background = useExecution((state) => !!state.background);
   const labRevealed = useTown((state) => !!state.labEntrances[config.slot]);
   const qwardFound = useTown((state) => state.qwardFound);
   const saved = useTown((state) => state[config.slot]);
@@ -159,7 +161,7 @@ export function WorldTownScreen({ config, restartOptions, onEnterLab }: { config
   const [activity, setActivity] = useState<Activity | null>(null);
   const [activityBusy, setActivityBusy] = useState(false);
   const [activityOpen, setActivityOpen] = useState(true);
-  const activityVisible = !!activity && activityOpen;
+  const activityVisible = !!activity && activityOpen && !background;
   const [journalOpen, setJournalOpen] = useState(false);
   const [restartOpen, setRestartOpen] = useState(false);
   const [panel, setPanel] = useState<string | null>(null);
@@ -190,7 +192,7 @@ export function WorldTownScreen({ config, restartOptions, onEnterLab }: { config
       const place = town[config.slot];
       town.patch({ [config.slot]: { ...place, position: event.at, facing: event.facing, explored: exploreAround(place.explored, event.at) } });
       const exit = events.current.exits.find((candidate) => candidate.test(event.at));
-      if (exit) { readyRef.current = false; gameAudio.playSynth("door"); exit.go(); }
+      if (exit && !executionPending()) { readyRef.current = false; gameAudio.playSynth("door"); exit.go(); }
     }
     if (event.type === "worldNear") setNear(event.near);
     if (event.type === "worldPetNear") setNearPet(event.kind);
@@ -215,7 +217,7 @@ export function WorldTownScreen({ config, restartOptions, onEnterLab }: { config
   const onError = useCallback(() => setSceneStatus("error"), []);
 
   const sceneReady = hydrated && sceneStatus === "ready";
-  const inputLocked = !!talk || activityVisible || journalOpen || restartOpen || !!panel || !!mission?.talk || !!mission?.locked || !!config.interaction?.locked;
+  const inputLocked = !!talk || activityVisible || journalOpen || restartOpen || !!panel || !!mission?.talk || (!background && !!mission?.locked) || !!config.interaction?.locked;
   useEffect(() => { if (sceneReady) void bus.send({ type: "lockInput", locked: inputLocked }); }, [sceneReady, inputLocked]);
   useEffect(() => { if (sceneReady) void bus.send({ type: "labEntrance", revealed: labRevealed }); }, [sceneReady, labRevealed]);
   useEffect(() => { if (sceneReady) void bus.send({ type: "qwardCompanion", enabled: qwardFound }); }, [sceneReady, qwardFound]);
@@ -280,7 +282,7 @@ export function WorldTownScreen({ config, restartOptions, onEnterLab }: { config
     return () => window.clearTimeout(timer);
   }, [petted]);
   events.current.interact = (id) => {
-    if (talk || activityVisible || panel || mission?.talk || config.interaction?.locked || executing) return;
+    if (talk || activityVisible || panel || mission?.talk || config.interaction?.locked || executing || activityBusy || executionPending()) return;
     if (mission?.handles(id)) { mission.interact(id); return; }
     gameAudio.playSfx("select");
     if (id === "labDoor") {

@@ -3,6 +3,7 @@ import { t, localize, useLocale } from "@/i18n";
 
 import { useLessonSession } from "./useLessonSession";
 import { useAsyncOperation } from "./useAsyncOperation";
+import { useExecution } from "@/lib/execution";
 import { useEffect, useRef, useState } from "react";
 import { COIN_SCENES, COIN_STEPS, type CoinStep, type RoomPlace } from "@/content/coin";
 import { coinApi, type CoinResult } from "@/lib/coin";
@@ -161,6 +162,7 @@ export function CoinScenario({ onExit, onRestartGame }: { onExit?: () => void; o
   const [laptopOpen, setLaptopOpen] = useState(false);
   const [activePlace, setActivePlace] = useState<RoomPlace | null>(null);
   const [roomKey, setRoomKey] = useState(0);
+  const background = useExecution((state) => !!state.background);
   const operation = useAsyncOperation();
   const { busy, running: inFlight } = operation;
   const [error, setError] = useState<string | null>(null);
@@ -274,8 +276,8 @@ export function CoinScenario({ onExit, onRestartGame }: { onExit?: () => void; o
     onOpenLaptop={() => { if (sceneReady) setLaptopOpen(true); }}>
     <div className="coin-world">
       {sceneReady && <CoinHouse key={roomKey} initialPlace={session.step === "welcome" ? null : session.place} target={scene.place} winner={session.step === "done" ? session.winner : null}
-        disabled={busy || laptopOpen || journalOpen || restartOpen} movementLocked={atPlace && !finishedDialog}
-        onNear={(place) => { setNearbyPlace(place); setActivePlace((active) => active === place ? active : null); }}
+        disabled={((busy || laptopOpen) && !background) || journalOpen || restartOpen} movementLocked={atPlace && !finishedDialog}
+        onNear={(place) => { setNearbyPlace(place); setActivePlace((active) => background || active === place ? active : null); }}
         onWalking={setWalking} onInteract={interact} onExit={leaveHouse} onNearExit={setNearExit} />}
     </div>
     {!laptopOpen && !journalOpen && !restartOpen && <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center p-3 sm:p-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]">

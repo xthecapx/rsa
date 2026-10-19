@@ -23,6 +23,9 @@ these at once would only make each slower.
 from __future__ import annotations
 
 import logging
+from contextlib import contextmanager
+from contextvars import ContextVar
+from time import perf_counter
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import TimeoutError as FutureTimeout
 from typing import Callable, TypeVar
@@ -32,6 +35,23 @@ logger = logging.getLogger(__name__)
 T = TypeVar("T")
 
 _executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="quantum")
+_timings: ContextVar[dict | None] = ContextVar("quantum_timings", default=None)
+
+
+@contextmanager
+def request_timings(path: str):
+    """Mutable per-request metrics shared with FastAPI's sync route thread.
+
+    ContextVar values are copied into that thread, but its writes to a new
+    ContextVar value would not reach middleware. Share only this request's dict.
+    No recipe, secret, player preference or result is stored here.
+    """
+    timings = {"path": path, "queue_ms": None, "execution_ms": None}
+    token = _timings.set(timings)
+    try:
+        yield timings
+    finally:
+        _timings.reset(token)
 
 
 class QuantumTimeout(Exception):
@@ -43,11 +63,36 @@ def run_on_worker(work: Callable[[], T], *, timeout: float | None = None) -> T:
 
     Exceptions raised inside `work` propagate to the caller unchanged.
     """
-    future = _executor.submit(work)
+    submitted = perf_counter()
+    timings = _timings.get()
+    path = timings["path"] if timings else "direct"
+
+    def measured():
+        started = perf_counter()
+        queue_ms = (started - submitted) * 1000
+        if timings is not None:
+            timings["queue_ms"] = queue_ms
+        try:
+            return work()
+        finally:
+            execution_ms = (perf_counter() - started) * 1000
+            if timings is not None:
+                timings["execution_ms"] = execution_ms
+            logger.info("quantum work path=%s queue_ms=%.1f execution_ms=%.1f", path, queue_ms, execution_ms)
+
+    future = _executor.submit(measured)
     try:
         return future.result(timeout=timeout)
     except FutureTimeout:
-        logger.warning("quantum work exceeded %.0fs", timeout or 0)
+        # A TimeoutError raised by work is not an executor wait timeout.
+        if future.done():
+            return future.result()
+        cancelled = future.cancel()
+        elapsed_ms = (perf_counter() - submitted) * 1000
+        if cancelled and timings is not None:
+            timings["queue_ms"] = elapsed_ms
+        logger.warning("quantum timeout path=%s elapsed_ms=%.1f queued_cancelled=%s", path, elapsed_ms, cancelled)
         raise QuantumTimeout(
-            f"circuit did not finish within {timeout:.0f}s"
+            "The queued circuit timed out and was cancelled before execution."
+            if cancelled else "The circuit timed out. It may still finish on the server; this request will not return its result."
         ) from None

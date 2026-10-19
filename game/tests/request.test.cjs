@@ -47,7 +47,7 @@ test("Qollab lab jobs receive no HTTP timeout or native simulator preference", a
 });
 test("practice and lab error policies remain distinct on HTTP and Qollab", async () => {
   setServiceTransport(async () =>
-    Response.json({ detail: "provider detail" }, { status: 503 }),
+    Response.json({ detail: "provider detail" }, { status: 502 }),
   );
   await assert.rejects(coinApi.simulate(true, 1), {
     message: EXPERIMENT_ERROR,
@@ -57,6 +57,34 @@ test("practice and lab error policies remain distinct on HTTP and Qollab", async
   await assert.rejects(coinApi.simulate(true, 1), {
     message: "provider detail",
   });
+});
+
+test("quantum HTTP timeouts and unavailable backends have actionable errors without retries", async () => {
+  const { TIMEOUT_ERROR, UNAVAILABLE_ERROR } = loadTs("lib/executionErrors.ts");
+  let calls = 0;
+  for (const [status, message] of [
+    [504, TIMEOUT_ERROR],
+    [503, UNAVAILABLE_ERROR],
+  ]) {
+    setServiceTransport(async () => {
+      calls++;
+      return Response.json({ detail: "internal diagnostic" }, { status });
+    });
+    await assert.rejects(coinApi.simulate(true, 16), { message });
+    await assert.rejects(runLab({}), { message });
+  }
+  assert.equal(calls, 4);
+});
+
+test("Qollab receives no HTTP deadline even for lessons with native timeouts", async () => {
+  runtimeInfo.target = "qollab";
+  setServiceTransport(async (_, init) => {
+    assert.equal(init.signal, undefined);
+    return Response.json({});
+  });
+  await coinApi.simulate(true, 1, true);
+  await groverApi.run("token", {});
+  await vaultApi.run("token", {});
 });
 test("lesson refusals remain typed and are never retried", async () => {
   let calls = 0;

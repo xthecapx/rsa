@@ -26,6 +26,7 @@ import { LabBuildGrid } from "./LabBuildGrid";
 import { LabSupplies } from "./LabSupplies";
 import { LabTransfer } from "./LabTransfer";
 import { LabLaptop } from "./LabLaptop";
+import { useExecution } from "@/lib/execution";
 import { LabRoomArt } from "./LabArt";
 
 export function LabScreen({
@@ -38,6 +39,7 @@ export function LabScreen({
   onRestartGame: () => void;
 }) {
   useLocale((s) => s.locale);
+  const background = useExecution((s) => !!s.background);
   const lab = useLab(),
     earned = useMedals((s) => s.earned),
     tier = labTier(earned),
@@ -285,7 +287,9 @@ export function LabScreen({
               initialPlace={null}
               target={near}
               disabled={overlay || transfer}
-              movementLocked={open || busy || (compact && suppliesOpen)}
+              movementLocked={
+                ((open || busy) && !background) || (compact && suppliesOpen)
+              }
               onWalking={() => {}}
               onNear={setNear}
               onInteract={interact}

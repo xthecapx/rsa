@@ -1,5 +1,3 @@
-# qWard: A Quantum Computing Adventure
-
 **Your next adventure starts with a coin toss.**
 
 Meet curious neighbors, explore hidden places, and build circuits to solve their
@@ -40,6 +38,7 @@ Experiment freely with gates, X/Y/Z rotations, Bloch spheres, and algorithm boxe
 - **Checkpoints:** Keep your Save progress code before restarting or changing backends. It restores milestones.
 
 On Qollab, choose your preferred backend, press **Run**, then enter the game.
+For the full adventure with repeated runs, choose an IBM noise-model simulator.
 No separate server or API keys are needed. **Ghost Key requires at least 26 qubits**
 (25 data qubits plus one helper); smaller backends cannot run that challenge.
 The Shor demonstration uses N=15, not production-size RSA.

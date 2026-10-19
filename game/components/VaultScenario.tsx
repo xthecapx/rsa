@@ -4,6 +4,7 @@ import { t, useLocale } from "@/i18n";
 
 import { useLessonSession } from "./useLessonSession";
 import { useAsyncOperation } from "./useAsyncOperation";
+import { useExecution } from "@/lib/execution";
 import { useEffect, useState } from "react";
 import { VAULT_SCENES, VAULT_STEPS, type VaultPlace, type VaultStep } from "@/content/vault";
 import { BITS, CANDLES, formatCount, KEYSPACE, knownBits, litCandles, vaultApi, VaultRefusal, type VaultRun } from "@/lib/vault";
@@ -120,6 +121,7 @@ export function VaultScenario({ onExit, onRestartGame }: { onExit?: () => void; 
   const [laptopOpen, setLaptopOpen] = useState(false);
   const [activePlace, setActivePlace] = useState<VaultPlace | null>(null);
   const [roomKey, setRoomKey] = useState(0);
+  const background = useExecution((state) => !!state.background);
   const operation = useAsyncOperation();
   const { busy, running: inFlight } = operation;
   const [error, setError] = useState<string | null>(null);
@@ -280,8 +282,8 @@ export function VaultScenario({ onExit, onRestartGame }: { onExit?: () => void; 
     <div className="coin-world">
       {sceneReady && <VaultHouse key={roomKey} initialPlace={session.step === "welcome" ? null : session.place} target={scene.place}
         mood={mood} candles={session.step === "done" ? 0 : candlesLeft}
-        disabled={busy || laptopOpen || journalOpen || restartOpen} movementLocked={atPlace && !finishedDialog}
-        onNear={(place) => { setNearbyPlace(place); setActivePlace((active) => active === place ? active : null); }}
+        disabled={((busy || laptopOpen) && !background) || journalOpen || restartOpen} movementLocked={atPlace && !finishedDialog}
+        onNear={(place) => { setNearbyPlace(place); setActivePlace((active) => background || active === place ? active : null); }}
         onWalking={setWalking} onInteract={interact} onExit={leaveHouse} onNearExit={setNearExit} />}
     </div>
     {!laptopOpen && !journalOpen && !restartOpen && <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center p-3 sm:p-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]">

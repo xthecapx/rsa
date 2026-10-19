@@ -8,6 +8,7 @@ import { useWallet } from "./wallet";
 import { useMedals } from "./medals";
 import { useGame } from "./state";
 import { invalidateMission } from "./runtime";
+import { executionPending } from "@/lib/execution";
 import { MEDALS } from "@/content/medals";
 import { COIN_TOWN_SPAWN, QUANTUM_SOUTH_GATE } from "@/content/coinTown";
 import { FOUNDRY_SPAWN } from "@/content/foundry";
@@ -18,7 +19,7 @@ import { CIPHER_SPAWN } from "@/content/cipher";
 export function restoreCheckpoint(code: string): boolean {
   const saved = checkpoint(code);
   const game = useGame.getState();
-  if (!saved || game.operations > 0 || game.phase === "busy" || game.busyLabel) return false;
+  if (!saved || executionPending() || game.operations > 0 || game.phase === "busy" || game.busyLabel) return false;
   if (saved.location === "campus") {
     invalidateMission();
     if (saved.stage >= 2) {

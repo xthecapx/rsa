@@ -1,6 +1,7 @@
 "use client";
 
 import { useAsyncOperation } from "./useAsyncOperation";
+import { useExecution } from "@/lib/execution";
 import { useEffect, useId, useRef, useState } from "react";
 import { PuzzleDragDrop, PuzzlePiece, PuzzleSlot } from "./PuzzleDragDrop";
 import { LaptopChoiceButton, LaptopQuestion } from "./LaptopControls";
@@ -140,7 +141,7 @@ export function QubitBench({
   const successful = !!result && solves(step.cases, gates);
   useEffect(() => {
     if (focusResults.current && view === "results") {
-      panel.current?.focus();
+      if (!useExecution.getState().background) panel.current?.focus();
       focusResults.current = false;
     }
   }, [view]);

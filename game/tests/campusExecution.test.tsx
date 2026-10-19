@@ -9,6 +9,9 @@ import {
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { CampusLaptop } from "@/components/CampusLaptop";
+import { QuantumJobProgress } from "@/components/QuantumJobProgress";
+import { useExecution } from "@/lib/execution";
+import { STOPPED_ERROR } from "@/lib/executionErrors";
 import { useCampusInteraction } from "@/components/useCampusInteraction";
 import { useCampus } from "@/game/campus";
 import { useGame } from "@/game/state";
@@ -107,6 +110,51 @@ afterEach(() => {
   cleanup();
   setServiceTransport(null);
   vi.unstubAllGlobals();
+  vi.useRealTimers();
+});
+it("stopping a practice wait preserves the recipe, releases its operation lock and ignores late evidence", async () => {
+  vi.useFakeTimers();
+  let finish!: (response: Response) => void;
+  const transport = vi
+    .fn()
+    .mockImplementationOnce(
+      () =>
+        new Promise<Response>((resolve) => {
+          finish = resolve;
+        }),
+    )
+    .mockResolvedValueOnce(Response.json(counts));
+  setServiceTransport(transport);
+  useCampus.getState().update("fountain", {});
+  render(
+    <>
+      <CampusLaptop initial="fountain" onClose={vi.fn()} />
+      <QuantumJobProgress />
+    </>,
+  );
+  const settings = { ...useCampus.getState().sessions.fountain!.settings };
+  await execute();
+  expect(useGame.getState().operations).toBe(1);
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(2000);
+  });
+  await act(async () => {
+    fireEvent.click(screen.getByRole("button", { name: "Stop waiting" }));
+  });
+  expect(screen.getByRole("alert").textContent).toBe(STOPPED_ERROR);
+  expect(useGame.getState().operations).toBe(0);
+  expect(useCampus.getState().sessions.fountain!.settings).toEqual(settings);
+  expect(useExecution.getState().active).toHaveLength(0);
+  await act(async () => {
+    finish(Response.json(counts));
+  });
+  expect(useCampus.getState().sessions.fountain!.result).toBeNull();
+  expect(transport).toHaveBeenCalledTimes(1);
+  await execute();
+  expect(transport).toHaveBeenCalledTimes(2);
+  expect(useCampus.getState().sessions.fountain!.result?.counts).toEqual(
+    counts.counts,
+  );
 });
 it("all eight exhibits open without submitting any operation", () => {
   const transport = vi.fn();

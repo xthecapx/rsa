@@ -12,6 +12,7 @@ import { useGame } from "@/game/state";
 import { townStorageUnavailable, useTown } from "@/game/town";
 import { invalidateMission, missionGeneration } from "@/game/runtime";
 import { CampusScreen } from "./CampusScreen";
+import { useExecution } from "@/lib/execution";
 import { CAMPUS_FACING, CAMPUS_SPAWN } from "@/content/campus";
 import { useCampus } from "@/game/campus";
 import { LabScreen } from "./LabScreen";
@@ -219,7 +220,8 @@ export function TownScreen({ initialAct, initialCoin = false, initialGrover = fa
   const onError = useCallback(() => setSceneStatus("error"), []);
 
   const sceneReady = hydrated && sceneStatus === "ready" && town.location === "town";
-  const inputLocked = !!conversation || journalOpen || restartOpen || (rsaActive && (mission.starting || game.phase !== "exploring" || game.laptopOpen));
+  const background = useExecution((state) => !!state.background);
+  const inputLocked = !!conversation || journalOpen || restartOpen || (rsaActive && (mission.starting || (!background && (game.phase !== "exploring" || game.laptopOpen))));
   useEffect(() => {
     if (!sceneReady) return;
     void bus.send({ type: "lockInput", locked: inputLocked });

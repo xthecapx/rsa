@@ -546,6 +546,26 @@ lesson wrappers retain their captions, backend metadata and ideal references.
 HTTP worker/error translation lives in `backend/app/api/quantum_execution.py`,
 outside the shared Python circuit services and the Qollab upload.
 
+`lib/execution.ts` tracks transient quantum request status; `QuantumJobProgress`
+renders it in both delivery targets. HTTP practice may stop waiting and discard
+late results, without claiming to cancel active server work. Final story runs
+retain their lock. Qollab's `requestQueue.ts` can cancel only before Python starts;
+once active, a run keeps the serial queue and provider allowance until settlement.
+There are no HTTP deadlines for Qollab calls. HTTP worker timeouts cancel queued
+futures before execution but cannot interrupt active native work. `Server-Timing`
+and per-path browser User Timing entries separate queue/worker, response, decoding
+and next-paint time without storing circuit data. See README for the benchmark.
+
+While a quantum request is active, the shared laptop offers **Wait in background**
+(also Escape). This hides the modal, releases its focus/input lock, and keeps its
+experiment owner mounted. A compact non-modal status indicator offers return,
+elapsed/provider feedback and optional run details; completion stays minimized
+until explicitly reopened. Background completion must not steal focus or scroll
+the world. Players may walk within the current area, read objectives and change
+language. Duplicate submission, active-circuit edits, story progression, resets
+and travel that would unmount the owner remain guarded. The same UI works with
+HTTP and Qollab; hiding never cancels or resubmits work or refunds an allowance.
+
 ## Validation
 
 For game changes, run appropriate checks from `game/`: `npm test` for Node behavior/translation tests and Vitest React regressions,

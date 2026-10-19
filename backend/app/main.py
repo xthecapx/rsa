@@ -2,11 +2,13 @@
 
 import logging
 import os
+from time import perf_counter
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes import classical, coin, grover, ibm, rsa, shor, vault, register, lab, campus
+from app.quantum.worker import request_timings
 
 # Without this the only record of anything is uvicorn's access log, which says
 # a request arrived and nothing about why it never finished.
@@ -33,7 +35,25 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["Server-Timing"],
 )
+
+
+@app.middleware("http")
+async def quantum_request_timing(request, call_next):
+    """Expose measured queue/work time, including handled timeout responses."""
+    started = perf_counter()
+    with request_timings(request.url.path) as timings:
+        response = await call_next(request)
+        metrics = []
+        for field, name in (("queue_ms", "quantum_queue"), ("execution_ms", "quantum_execution")):
+            duration = timings[field]
+            if duration is not None:
+                metrics.append(f"{name};dur={duration:.2f}")
+        if metrics:
+            metrics.append(f"app;dur={(perf_counter() - started) * 1000:.2f}")
+            response.headers["Server-Timing"] = ", ".join(metrics)
+        return response
 
 app.include_router(classical.router, prefix="/api", tags=["classical"])
 app.include_router(coin.router, prefix="/api/coin", tags=["coin"])

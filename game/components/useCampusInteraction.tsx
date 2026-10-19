@@ -9,6 +9,7 @@ import { useCampus, campusSession } from "@/game/campus";
 import { investigationFor, investigationReady } from "@/game/campusJourney";
 import { useTown } from "@/game/town";
 import { useGame } from "@/game/state";
+import { useExecution } from "@/lib/execution";
 import { useMedals } from "@/game/medals";
 import { gameAudio } from "@/game/audio";
 import { t, useLocale } from "@/i18n";
@@ -23,6 +24,7 @@ export function useCampusInteraction(): NonNullable<
   TownConfig["interaction"]
 > & { suggested: string | null } {
   useLocale((s) => s.locale);
+  const background = useExecution((s) => !!s.background);
   const [active, setActive] = useState<CampusActivityId | "guide" | null>(null);
   const [laptop, setLaptop] = useState<LaptopVisit | null>(null);
   const [suggested, setSuggested] = useState<string | null>(null);
@@ -120,7 +122,7 @@ export function useCampusInteraction(): NonNullable<
       id === "festival" ||
       CAMPUS_EXHIBITS.some((e) => e.id === id),
     interact,
-    locked: !!active || !!laptop,
+    locked: !!active || (!!laptop && !background),
     layer: (
       <>
         {laptop && (

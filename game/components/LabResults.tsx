@@ -5,6 +5,7 @@ import { operationLabel as label } from "@/game/labEditor";
 import type { LabResult } from "@/lib/lab";
 import { t, useLocale } from "@/i18n";
 import { CircuitHistogram } from "./CircuitHistogram";
+import { useExecution } from "@/lib/execution";
 
 export interface LabExperiment {
   recipe: LabRecipe;
@@ -36,7 +37,7 @@ export function LabResults({
     JSON.stringify(latest.recipe) === JSON.stringify(recipe) &&
     latest.result.backend === selectedBackend;
   useEffect(() => {
-    if (latest || period)
+    if ((latest || period) && !useExecution.getState().background)
       (period ? periodResults.current : results.current)?.scrollIntoView({
         block: "nearest",
         behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches

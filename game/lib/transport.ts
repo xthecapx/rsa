@@ -1,7 +1,12 @@
 import { useSimulator } from "@/game/simulator";
+import type { ServiceProgress } from "./execution";
 
 /** The HTTP game and the embedded Qollab game share the same service contracts. */
-export type ServiceTransport = (path: string, init?: RequestInit) => Promise<Response>;
+export type ServiceTransport = (
+  path: string,
+  init?: RequestInit,
+  progress?: (state: ServiceProgress) => void,
+) => Promise<Response>;
 
 let transport: ServiceTransport | null = null;
 
@@ -10,17 +15,29 @@ export function setServiceTransport(next: ServiceTransport | null): void {
   transport = next;
 }
 
-export function serviceFetch(path: string, init?: RequestInit): Promise<Response> {
-  if (runtimeInfo.target === "web" && /^(?:\/api\/(?:campus\/run|lab\/run|coin\/(?:simulate|circuit)|register\/circuit|grover\/run|vault\/run|shor\/simulate))$/.test(path)) {
+export function serviceFetch(
+  path: string,
+  init?: RequestInit,
+  progress?: (state: ServiceProgress) => void,
+): Promise<Response> {
+  if (
+    runtimeInfo.target === "web" &&
+    /^(?:\/api\/(?:campus\/run|lab\/run|coin\/(?:simulate|circuit)|register\/circuit|grover\/run|vault\/run|shor\/simulate))$/.test(
+      path,
+    )
+  ) {
     const headers = new Headers(init?.headers);
     headers.set("X-Quantum-Simulator", useSimulator.getState().choice);
     init = { ...init, headers };
   }
-  return transport ? transport(path, init) : fetch(path, init);
+  return transport ? transport(path, init, progress) : fetch(path, init);
 }
 
 /** Embedded capability diagnostics are actionable; keep HTTP's existing fallback. */
-export async function serviceError(response: Response, fallback: string): Promise<Error> {
+export async function serviceError(
+  response: Response,
+  fallback: string,
+): Promise<Error> {
   if (runtimeInfo.target === "qollab") {
     const data = await response.json().catch(() => null);
     if (typeof data?.detail === "string") return new Error(data.detail);

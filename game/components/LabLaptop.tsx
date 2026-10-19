@@ -6,6 +6,7 @@ import { LAB_ITEMS, itemAvailable } from "@/content/lab";
 import { type LabRecipe } from "@/game/labCircuit";
 import { copyRecipe, labEquipment } from "@/game/labEditor";
 import { useAsyncOperation } from "./useAsyncOperation";
+import { useExecution } from "@/lib/execution";
 import { useLabEditor } from "./useLabEditor";
 import { LabCircuitEditor } from "./LabCircuitEditor";
 import { LabStateExplorer } from "./LabStateExplorer";
@@ -45,7 +46,7 @@ export function LabLaptop({
     [period, setPeriod] = useState<Record<string, unknown> | null>(null);
   const feedback = useRef<HTMLParagraphElement>(null);
   useEffect(() => {
-    if (error)
+    if (error && !useExecution.getState().background)
       feedback.current?.scrollIntoView({
         block: "nearest",
         behavior: "instant",

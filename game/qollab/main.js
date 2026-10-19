@@ -2,14 +2,15 @@ import './assets.js';
 import * as services from 'quantum.services';
 import { mountGame } from './game.js';
 import { batches, recorded } from './recorded.js';
+import { createRequestQueue } from './requestQueue';
 
 // Keep one Python call active at a time. Qollab owns the provider and its network.
 // HTTP's AbortSignal.timeout does not cancel a Pyodide/provider job; do not race
 // it against a new submission. The game's generation guards still own results.
-let queue = Promise.resolve();
+const enqueue = createRequestQueue();
 let stopped = false;
 const info = JSON.parse(await services.describe_json.callPromising(backend));
-const request = (path, init) => {
+const request = (path, init, progress) => {
   const work = async () => {
     if (stopped) throw new Error('The game run has stopped.');
     if (path.startsWith('/api/ibm/')) {
@@ -21,7 +22,7 @@ const request = (path, init) => {
     let remoteReserved = false;
     const notify = (state, jobId = '') => {
       if (String(state) === 'remote_reserved') { remoteReserved = true; return; }
-      if (!stopped) window.dispatchEvent(new CustomEvent('quantum-job-progress', { detail: { state: String(state), jobId: String(jobId) } }));
+      if (!stopped && String(state) !== 'idle') progress?.({ state: String(state), jobId: String(jobId) });
     };
     notify('preparing');
     let result;
@@ -34,9 +35,7 @@ const request = (path, init) => {
     if (stopped) throw new Error('The game run has stopped.');
     return new Response(JSON.stringify(result.data), { status: result.status });
   };
-  const next = queue.then(work, work);
-  queue = next.then(() => undefined, () => undefined);
-  return next;
+  return enqueue(work, progress);
 };
 
 const status = document.getElementById('quantum-runtime-status');
