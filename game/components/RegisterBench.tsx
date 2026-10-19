@@ -230,11 +230,20 @@ export function RegisterBench({
       measurement={experiment.reading}
       busy={experiment.busy}
     >
-      {(view, changeView) => (
+      {(view) => (
         <>
           {view === "math" && reference}
-          {view === "assemble" && (
+          {view === "run" && (
             <fieldset disabled={experiment.busy} className="space-y-3 min-w-0">
+              <p className="text-sm text-stage-muted">
+                {t(
+                  hasHelper
+                    ? "This practice measures the data wires and the helper, in that order. The full Ghost Key circuit reads only the data wires. Run sends this circuit to the backend; editing does not execute it."
+                    : "M measures every wire after your boxes. Run sends this circuit to the backend; editing does not execute it.",
+                )}
+              </p>
+              <p className="text-accent-teal">256 {t("shots")}</p>
+
               <ExperimentControlCard icon="▦" title="Prepare">
                 <p className="qubit-ket">{formatReg(start)}</p>
                 <p className="text-sm">
@@ -274,6 +283,8 @@ export function RegisterBench({
                       busy={experiment.busy}
                       clearLabel="Clear line"
                       onClear={clear}
+                      runLabel="Run the register"
+                      onRun={() => void run()}
                     />
                   )}
                 </div>
@@ -285,39 +296,6 @@ export function RegisterBench({
                     : "X sits on one wire. The H box, the Oracle and the Diffuser cover every wire. Tap a placed piece with nothing selected to remove it.",
                 )}
               </p>
-            </fieldset>
-          )}
-          {view === "run" && (
-            <>
-              <p className="text-sm text-stage-muted">
-                {t(
-                  hasHelper
-                    ? "This practice measures the data wires and the helper, in that order. The full Ghost Key circuit reads only the data wires. Run sends this circuit to the backend; editing does not execute it."
-                    : "M measures every wire after your boxes. Run sends this circuit to the backend; editing does not execute it.",
-                )}
-              </p>
-              <p className="text-accent-teal">256 {t("shots")}</p>
-              <div
-                className={`circuit-workspace ${successful ? "" : "has-actions"}`}
-              >
-                <RegisterCircuit
-                  step={step}
-                  columns={columns}
-                  showMeasurement
-                />
-                {!successful && (
-                  <CircuitActions
-                    busy={experiment.busy}
-                    clearLabel="Clear line"
-                    runLabel="Run the register"
-                    onClear={() => {
-                      clear();
-                      changeView("assemble");
-                    }}
-                    onRun={() => void run()}
-                  />
-                )}
-              </div>
               {successful && (
                 <p className="text-sm text-accent-teal">
                   {t(
@@ -325,7 +303,7 @@ export function RegisterBench({
                   )}
                 </p>
               )}
-            </>
+            </fieldset>
           )}
           {view === "results" && experiment.reading && (
             <>

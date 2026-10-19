@@ -79,14 +79,14 @@ export function ExperimentFlow({
             {t("Previous step")}
           </button>
         )}
-        {index < 2 && (
+        {view === "math" && (
           <button
             type="button"
             className="btn-primary ml-auto"
             disabled={busy}
             onClick={() => setView(EXPERIMENT_STEPS[index + 1].id)}
           >
-            {t(view === "math" ? "Continue to assembly" : "Continue to run")}
+            {t("Continue to run")}
           </button>
         )}
         {view === "run" && measurement && (
@@ -104,7 +104,7 @@ export function ExperimentFlow({
             type="button"
             className="btn-ghost ml-auto"
             disabled={busy}
-            onClick={() => setView("assemble")}
+            onClick={() => setView("run")}
           >
             {t("Edit experiment")}
           </button>

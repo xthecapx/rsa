@@ -311,8 +311,18 @@ export function QubitBench({
               ))}
           </>
         )}
-        {view === "assemble" && (
+        {view === "run" && (
           <fieldset disabled={busy} className="space-y-3 min-w-0">
+            <p className="text-sm text-stage-muted">
+              {t(
+                "M measures after your gates. Run sends this circuit to the backend; nothing runs while you edit.",
+              )}
+            </p>
+            <p className="text-accent-teal">
+              256 {t("shots")}
+              {step.cases.length > 1 ? ` × ${step.cases.length}` : ""}
+            </p>
+
             <div className="qubit-preparations">
               {step.cases.map(({ start, target }) => (
                 <ExperimentControlCard
@@ -378,7 +388,13 @@ export function QubitBench({
                 className={`circuit-workspace ${successful ? "" : "has-actions"}`}
               >
                 <BenchCircuit step={step} slots={slots} onPlace={place} />
-                {!successful && <CircuitActions busy={busy} onClear={clear} />}
+                {!successful && (
+                  <CircuitActions
+                    busy={busy}
+                    onClear={clear}
+                    onRun={() => void run()}
+                  />
+                )}
               </div>
             </PuzzleDragDrop>
             <p className="text-xs text-stage-muted">
@@ -386,34 +402,6 @@ export function QubitBench({
                 "Tap a placed gate with nothing selected to remove it. Empty slots do nothing.",
               )}
             </p>
-          </fieldset>
-        )}
-        {view === "run" && (
-          <>
-            <p className="text-sm text-stage-muted">
-              {t(
-                "M measures after your gates. Run sends this circuit to the backend; nothing runs while you edit.",
-              )}
-            </p>
-            <p className="text-accent-teal">
-              256 {t("shots")}
-              {step.cases.length > 1 ? ` × ${step.cases.length}` : ""}
-            </p>
-            <div
-              className={`circuit-workspace ${successful ? "" : "has-actions"}`}
-            >
-              <BenchCircuit step={step} slots={slots} />
-              {!successful && (
-                <CircuitActions
-                  busy={busy}
-                  onClear={() => {
-                    clear();
-                    setView("assemble");
-                  }}
-                  onRun={() => void run()}
-                />
-              )}
-            </div>
             {successful && (
               <p className="text-sm text-accent-teal">
                 {t(
@@ -421,7 +409,7 @@ export function QubitBench({
                 )}
               </p>
             )}
-          </>
+          </fieldset>
         )}
         {view === "results" && result && (
           <>
@@ -434,7 +422,7 @@ export function QubitBench({
             <button
               type="button"
               className="btn-ghost"
-              onClick={() => setView("assemble")}
+              onClick={() => setView("run")}
             >
               {t("Edit experiment")}
             </button>
@@ -470,14 +458,14 @@ export function QubitBench({
             {t("Previous step")}
           </button>
         )}
-        {stageIndex < 2 && (
+        {view === "math" && (
           <button
             type="button"
             className="btn-primary ml-auto"
             disabled={busy}
             onClick={() => setView(EXPERIMENT_STEPS[stageIndex + 1].id)}
           >
-            {t(view === "math" ? "Continue to assembly" : "Continue to run")}
+            {t("Continue to run")}
           </button>
         )}
         {view === "run" && result && (

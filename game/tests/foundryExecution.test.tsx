@@ -97,13 +97,15 @@ it.each(benches)(
     expect(
       screen.queryByRole("button", { name: /Run the register/ }),
     ).toBeNull();
-    stage("Assemble");
+    stage("Run");
     const solution = solutions[step.title];
     expect(solution).toBeDefined();
     for (const item of solution) put(item.piece, item.column, item.wire);
     expect(request).not.toHaveBeenCalled();
     stage("Run");
-    expect(screen.queryByRole("button", { name: /Wire q/ })).toBeNull();
+    expect(
+      screen.getAllByRole("group", { name: "Circuit controls" }),
+    ).toHaveLength(1);
     await act(async () =>
       fireEvent.click(screen.getByRole("button", { name: /Run the register/ })),
     );
@@ -130,7 +132,7 @@ it.each(benches)(
     ).toContain("239");
     expect(request).toHaveBeenCalledTimes(1);
     act(() => useLocale.setState({ locale: "en" }));
-    stage("Assemble");
+    stage("Run");
     const first = solution[0];
     const cell =
       first.op === "H" || first.op.startsWith("oracle:")
@@ -166,15 +168,14 @@ it("validates filled columns before submission and blocks duplicate runs while b
   fireEvent.click(screen.getByRole("button", { name: /Run the register/ }));
   expect(request).not.toHaveBeenCalled();
   expect(screen.getByRole("status").textContent).toContain("Fill every slot");
-  stage("Assemble");
+  stage("Run");
   for (const item of solutions[step.title]) put(item.piece, item.column);
   stage("Run");
   fireEvent.click(screen.getByRole("button", { name: /Run the register/ }));
   fireEvent.click(screen.getByRole("button", { name: /Running circuit/ }));
   expect(request).toHaveBeenCalledTimes(1);
   expect(
-    (screen.getByRole("tab", { name: "Assemble" }) as HTMLButtonElement)
-      .disabled,
+    (screen.getByRole("tab", { name: "Run" }) as HTMLButtonElement).disabled,
   ).toBe(true);
   expect(
     (screen.getByRole("button", { name: "Clear line" }) as HTMLButtonElement)
@@ -197,7 +198,7 @@ it("Vera runs the chosen repeat count, retries errors explicitly, and clears bac
   const solved = vi.fn(),
     edited = vi.fn();
   render(<RoundsDial step={step} onSolved={solved} onEdited={edited} />);
-  stage("Assemble");
+  stage("Run");
   fireEvent.click(screen.getByRole("button", { name: "One round more" }));
   fireEvent.click(screen.getByRole("button", { name: "One round more" }));
   expect(request).not.toHaveBeenCalled();
@@ -225,7 +226,7 @@ it("Vera runs the chosen repeat count, retries errors explicitly, and clears bac
     screen.getByRole("region", { name: "Conteos observados" }).textContent,
   ).toContain("239");
   act(() => useLocale.setState({ locale: "en" }));
-  stage("Assemble");
+  stage("Run");
   fireEvent.click(screen.getByRole("button", { name: "One round more" }));
   expect(
     (screen.getByRole("tab", { name: "Results" }) as HTMLButtonElement)

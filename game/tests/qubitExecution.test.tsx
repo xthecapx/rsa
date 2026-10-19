@@ -55,14 +55,14 @@ const measured: BenchResult = {
 };
 beforeEach(() => useLocale.setState({ locale: "en" }));
 afterEach(cleanup);
-function assemble() {
-  fireEvent.click(screen.getByRole("tab", { name: "Assemble" }));
+function configure() {
+  fireEvent.click(screen.getByRole("tab", { name: "Run" }));
 }
 function runStage() {
   fireEvent.click(screen.getByRole("tab", { name: "Run" }));
 }
 function place() {
-  assemble();
+  configure();
   fireEvent.click(screen.getByRole("button", { name: "X gate · flip" }));
   fireEvent.click(screen.getByRole("button", { name: /Wire slot 1/ }));
 }
@@ -85,7 +85,10 @@ it("validates ideal correctness while displaying noisy returned counts; edits re
   act(() => useLocale.setState({ locale: "es" }));
   expect(screen.getByText("239 · 93.4%")).toBeTruthy();
   act(() => useLocale.setState({ locale: "en" }));
-  assemble();
+  fireEvent.click(screen.getByRole("button", { name: "Edit experiment" }));
+  expect(
+    screen.getByRole("tab", { name: "Run" }).getAttribute("aria-selected"),
+  ).toBe("true");
   fireEvent.click(screen.getByRole("button", { name: /Wire slot 1/ }));
   expect(screen.queryByText("239 · 93.4%")).toBeNull();
   expect(screen.getByRole("button", { name: "Clear circuit" })).toBeTruthy();
@@ -195,8 +198,10 @@ it.each(
       screen.getByRole("tab", { name: "Math" }).getAttribute("aria-selected"),
     ).toBe("true");
     expect(screen.queryByRole("button", { name: /Run circuit/ })).toBeNull();
-    assemble();
-    expect(screen.queryByRole("button", { name: /Run circuit/ })).toBeNull();
+    configure();
+    expect(screen.getAllByRole("button", { name: /Run circuit/ })).toHaveLength(
+      1,
+    );
     for (let i = 0; i < step.slots; i++) {
       fireEvent.click(
         screen.getByRole("button", {

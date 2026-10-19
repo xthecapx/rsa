@@ -138,9 +138,9 @@ completion awards a new discovery or festival repair; it requires successful
 relevant runs and a correct explanation. No completion rule requires exact noisy
 counts. No-run/failed-run closes offer resume. Notebook/free-play closes never
 start another host's discussion. Reset invalidates stale execution ownership.
-Every campus exhibit and festival repair shares Math → Assemble → Run → Results
-tabs. Only the active panel is displayed. Assemble integrates device controls,
-parameters and the editable circuit; Run owns shot count and explicit submission.
+Every campus exhibit and festival repair shares Math → Run → Results
+tabs. Only the active panel is displayed. Run combines device controls,
+parameters, the editable circuit, shot count and explicit submission.
 Successful execution opens Results with returned histograms and labeled ideal
 references. Single-qubit experiments share `BlochSphere` with the personal lab;
 the quiet room shows the mixed-state reference after its channel and lens.
@@ -291,10 +291,10 @@ Shor processing in `backend/app/core/shor_service.py`, and the circuit builder i
 Marisol's H→H during transpilation. Histograms display returned counts and backend
 identity; ideal state traces, probabilities, and waves are labeled references.
 Exercise correctness comes from the ideal designed state, never noisy counts.
-All five Coin neighbors use Math → Assemble → Run → Results, sharing
+All five Coin neighbors use Math → Run → Results, sharing
 `ExperimentSteps` and `ExperimentControlCard` with the campus (whose named exports
-remain compatibility aliases). Assembly shows each starting state and target;
-Run previews the circuit and submits 256 shots per case only on an explicit press.
+remain compatibility aliases). Run shows each starting state and target beside
+the editable circuit and submits 256 shots per case only on an explicit press.
 Results keep each case's counts separate and show a labeled ideal Bloch reference
 before measurement. Tabs, keyboard navigation, language changes and laptop reopen
 never submit a job. Gate blocks support whole-block drag, tap and keyboard input;
@@ -323,9 +323,9 @@ Every editable operation has a barrier. Histograms show 256 returned shots;
 amplitude bars, card requirements, and round targets remain ideal references.
 Busy controls, edit invalidation, and close/reopen retention match Coin Town.
 Foundry's six register exercises, Hollow's six register exercises and Vera's rounds dial share the guided
-Math → Assemble → Run → Results presentation through `ExperimentFlow`.
-Assembly owns the whole-block palette or rounds controls; Run shows a read-only
-circuit with explicit final measurements and 256-shot floating actions. A new
+Math → Run → Results presentation through `ExperimentFlow`.
+Run combines the whole-block palette or rounds controls with the editable
+circuit, explicit final measurements and 256-shot floating actions. A new
 reading opens Results, with backend counts first and optional ideal amplitudes.
 Editing clears the reading and solved state; tabs and language changes never run
 a circuit. `RegisterCircuit` draws both editable and read-only views;
@@ -414,9 +414,9 @@ quantum request or measurement histogram is implied. Math offers the relevant
 knowledge reference; checked answers open Results. Editing invalidates completion,
 including bounty collection. Tiles support whole-block drag, tap, keyboard,
 individual removal and a compact Clear action with reserved workspace space.
-Act 4's `ShorPipeline` uses Math → Assemble → Run → Results. Assemble owns only
-data-flow wiring; Run owns base, backend, counting qubits, shots and explicit
-submission. Results show actual counts with their original backend identity,
+Act 4's `ShorPipeline` uses Math → Run → Results. Run combines editable
+data-flow wiring, base, backend, counting qubits, shots and explicit submission.
+Results show actual counts with their original backend identity,
 then candidate-period checks and decryption. Recorded IBM counts are labeled
 hardware. Restoring a measured pipeline opens Results without submitting; successful
 recovery hides Run/Clear until a setting or wiring change invalidates the result.

@@ -257,20 +257,43 @@ export function CampusLaptop({
                   )}
                 </section>
               )}
-              {view === "assemble" && (
+              {view === "run" && (
                 <fieldset
                   disabled={operation.busy}
                   className="space-y-4 min-w-0"
                 >
-                  <h3 className="text-accent-teal">
-                    {t("Experiment assembly")}
-                  </h3>
+                  <h3 className="text-accent-teal">{t("Run circuit")}</h3>
                   <div className="circuit-workspace campus-workspace campus-assembly-workspace space-y-4">
                     <CampusExperimentControls
                       id={exhibitId}
                       settings={s}
                       update={update}
                     />
+                    {preparationReady && (
+                      <>
+                        <label className="block">
+                          {t("Shots")}
+                          <select
+                            className="ml-3 rounded border border-stage-border bg-stage-bg p-2 text-base"
+                            value={s.shots}
+                            onChange={(e) =>
+                              update({ shots: Number(e.target.value) })
+                            }
+                          >
+                            {[1, 16, 256, 1024].map((n) => (
+                              <option key={n} value={n}>
+                                {n}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <p className="text-sm text-stage-muted">
+                          {t(
+                            "Each shot starts from a fresh preparation. Increase shots to compare the measured frequencies.",
+                          )}
+                        </p>
+                      </>
+                    )}
                     <div
                       className={`campus-circuit-preview ${exhibitId === "delivery" ? "campus-editable-preview" : ""}`}
                     >
@@ -285,6 +308,8 @@ export function CampusLaptop({
                       {preparationReady && (
                         <CircuitActions
                           onClear={resetExperiment}
+                          onRun={run}
+                          shots={s.shots}
                           clearLabel={
                             exhibitId === "delivery"
                               ? "Clear circuit"
@@ -295,62 +320,11 @@ export function CampusLaptop({
                       )}
                     </div>
                   </div>
-                </fieldset>
-              )}
-              {view === "run" && (
-                <fieldset disabled={operation.busy} className="space-y-4">
-                  <h3 className="text-accent-teal">{t("Run circuit")}</h3>
-                  {preparationReady ? (
-                    <>
-                      <label className="block">
-                        {t("Shots")}
-                        <select
-                          className="ml-3 rounded border border-stage-border bg-stage-bg p-2 text-base"
-                          value={s.shots}
-                          onChange={(e) =>
-                            update({ shots: Number(e.target.value) })
-                          }
-                        >
-                          {[1, 16, 256, 1024].map((n) => (
-                            <option key={n} value={n}>
-                              {n}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                      <p className="text-sm text-stage-muted">
-                        {t(
-                          "Each shot starts from a fresh preparation. Increase shots to compare the measured frequencies.",
-                        )}
-                      </p>
-                      <div className="circuit-workspace campus-workspace">
-                        <CampusCircuit request={request} />
-                        <CircuitActions
-                          busy={operation.busy}
-                          shots={s.shots}
-                          onRun={run}
-                          clearLabel={
-                            exhibitId === "delivery"
-                              ? "Clear circuit"
-                              : "Reset experiment"
-                          }
-                          onClear={() => {
-                            resetExperiment();
-                            setView("assemble");
-                          }}
-                        />
-                      </div>
-                      <p className="text-sm text-stage-muted">
-                        {t(
-                          "Run executes this circuit. Editing updates only the ideal reference and clears the current result.",
-                        )}
-                      </p>
-                    </>
-                  ) : (
-                    <p className="text-accent-amber" role="status">
-                      {t("Arrange Prepare → Control → Measure before running.")}
-                    </p>
-                  )}
+                  <p className="text-sm text-stage-muted">
+                    {t(
+                      "Run executes this circuit. Editing updates only the ideal reference and clears the current result.",
+                    )}
+                  </p>
                   {error && (
                     <p className="text-accent-amber" role="alert">
                       {t(error)}
@@ -390,12 +364,11 @@ export function CampusLaptop({
                   <button
                     type="button"
                     className="btn-primary"
-                    onClick={() => setView("assemble")}
+                    onClick={() => setView("run")}
                   >
                     {t("Edit experiment")}
                   </button>
                 ) : (
-                  (view !== "assemble" || preparationReady) &&
                   (view !== "run" || hasMeasurements) && (
                     <button
                       type="button"
@@ -403,7 +376,11 @@ export function CampusLaptop({
                       disabled={operation.busy}
                       onClick={() => setView(CAMPUS_STEPS[stageIndex + 1].id)}
                     >
-                      {t("Next step")}
+                      {t(
+                        view === "math"
+                          ? "Continue to run"
+                          : "View measurements",
+                      )}
                     </button>
                   )
                 )}

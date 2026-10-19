@@ -13,7 +13,7 @@ afterEach(() => {
   useLocale.setState({ locale: "en" });
 });
 
-function LaptopSteps() {
+function LaptopSteps({ hasMeasurements = false, busy = false } = {}) {
   const [step, setStep] = useState<CampusExperimentStep>("math");
   return (
     <LaptopShell open title="Campus" onClose={() => {}} foundations={false}>
@@ -21,8 +21,8 @@ function LaptopSteps() {
         id="campus-test"
         value={step}
         onChange={setStep}
-        busy={false}
-        hasMeasurements={false}
+        busy={busy}
+        hasMeasurements={hasMeasurements}
       />
       <div
         role="tabpanel"
@@ -35,13 +35,20 @@ function LaptopSteps() {
 
 it("supports arrow, Home and End tab keys inside the real laptop keyboard boundary", () => {
   render(<LaptopSteps />);
+  expect(screen.getAllByRole("tab").map((tab) => tab.textContent)).toEqual([
+    "1Math",
+    "2Run",
+    "3Results",
+  ]);
+  expect(
+    screen.getByRole("tab", { name: "Results" }).hasAttribute("disabled"),
+  ).toBe(true);
   const math = screen.getByRole("tab", { name: "Math" });
-  const assemble = screen.getByRole("tab", { name: "Assemble" });
   const run = screen.getByRole("tab", { name: "Run" });
   fireEvent.keyDown(math, { key: "ArrowRight" });
-  expect(assemble.getAttribute("aria-selected")).toBe("true");
-  expect(document.activeElement).toBe(assemble);
-  fireEvent.keyDown(assemble, { key: "End" });
+  expect(run.getAttribute("aria-selected")).toBe("true");
+  expect(document.activeElement).toBe(run);
+  fireEvent.keyDown(run, { key: "End" });
   expect(document.activeElement).toBe(run);
   fireEvent.keyDown(run, { key: "ArrowRight" });
   expect(document.activeElement).toBe(math);
@@ -52,4 +59,30 @@ it("supports arrow, Home and End tab keys inside the real laptop keyboard bounda
   expect(screen.getByRole("tabpanel").getAttribute("aria-labelledby")).toBe(
     math.id,
   );
+});
+
+it("includes Results in keyboard navigation after a measurement and translates all three labels", () => {
+  render(<LaptopSteps hasMeasurements />);
+  const math = screen.getByRole("tab", { name: "Math" });
+  const results = screen.getByRole("tab", { name: "Results" });
+  fireEvent.keyDown(math, { key: "End" });
+  expect(document.activeElement).toBe(results);
+  expect(results.getAttribute("aria-selected")).toBe("true");
+  fireEvent.keyDown(results, { key: "ArrowLeft" });
+  expect(document.activeElement).toBe(screen.getByRole("tab", { name: "Run" }));
+  cleanup();
+  useLocale.setState({ locale: "es" });
+  render(<LaptopSteps hasMeasurements />);
+  expect(screen.getAllByRole("tab").map((tab) => tab.textContent)).toEqual([
+    "1Matemáticas",
+    "2Ejecutar",
+    "3Resultados",
+  ]);
+});
+
+it("disables all three steps while a job runs", () => {
+  render(<LaptopSteps hasMeasurements busy />);
+  expect(screen.getAllByRole("tab")).toHaveLength(3);
+  for (const tab of screen.getAllByRole("tab"))
+    expect(tab.hasAttribute("disabled")).toBe(true);
 });

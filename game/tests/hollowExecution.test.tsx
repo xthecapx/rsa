@@ -112,7 +112,7 @@ it.each(registers)(
         name: "Ideal wire states before measurement",
       }),
     ).toBeTruthy();
-    stage("Assemble");
+    stage("Run");
     const solution = solutions[step.title];
     expect(solution).toBeDefined();
     solution.forEach(put);
@@ -133,7 +133,9 @@ it.each(registers)(
     if (step.title === "One swing")
       expect(wires.textContent).toContain("q₁ |1⟩q₂ |0⟩helper |1⟩");
     stage("Run");
-    expect(screen.queryByRole("button", { name: /Wire q/ })).toBeNull();
+    expect(
+      screen.getAllByRole("group", { name: "Circuit controls" }),
+    ).toHaveLength(1);
     expect(
       screen.getByText(/This practice measures the data wires and the helper/),
     ).toBeTruthy();
@@ -162,7 +164,7 @@ it.each(registers)(
     ).toContain("Selected noise device");
     expect(screen.getByText(/el último dígito es el auxiliar/)).toBeTruthy();
     act(() => useLocale.setState({ locale: "en" }));
-    stage("Assemble");
+    stage("Run");
     const first = solution[0];
     fireEvent.click(
       screen.getByRole("button", {
@@ -187,7 +189,7 @@ it.each(registers)(
 it("a CNOT refuses a helper control, removes its linked target, and never invents a pure state for entangled wires", () => {
   const step = registers.find((step) => step.title === "Push the spirit")!;
   render(<RegisterBench step={step} onSolved={vi.fn()} />);
-  stage("Assemble");
+  stage("Run");
   fireEvent.click(
     screen.getByRole("button", { name: "CNOT · flips the helper" }),
   );
@@ -209,7 +211,7 @@ it("a CNOT refuses a helper control, removes its linked target, and never invent
       "The wires are tangled together: no single state per wire.",
     ),
   ).toBeTruthy();
-  stage("Assemble");
+  stage("Run");
   fireEvent.click(
     screen.getByRole("button", {
       name: "Wire helper · slot 2: CNOT target · flips the helper",
@@ -239,7 +241,7 @@ it.each(candles)(
     });
     const solved = vi.fn();
     render(<QubitBench step={step} onSolved={solved} />);
-    stage("Assemble");
+    stage("Run");
     const gates = step.slots === 2 ? ["X", "H"] : ["X"];
     gates.forEach((gate, i) => {
       fireEvent.click(

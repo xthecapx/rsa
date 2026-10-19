@@ -173,9 +173,7 @@ it("wires only matching outputs, clears connections, and blocks an unwired or no
     "not fed raw numbers",
   );
   RAIL.slice(0, -1).forEach((box, i) => {
-    fireEvent.click(
-      screen.getByRole("button", { name: box.emits!.label }),
-    );
+    fireEvent.click(screen.getByRole("button", { name: box.emits!.label }));
     // Two classical PCs share a title; only the final one has an input.
     fireEvent.click(
       screen.getByRole("button", {
@@ -247,7 +245,7 @@ it("a successful noisy run opens counts and verified factors, then restores with
   const view = render(<ShorPipeline armed />);
   fireEvent.click(screen.getByRole("button", { name: /Run the pipeline ·/ }));
   expect(
-    screen.getByRole("tab", { name: "Assemble" }).hasAttribute("disabled"),
+    screen.getByRole("tab", { name: "Run" }).hasAttribute("disabled"),
   ).toBe(true);
   await act(async () => vi.advanceTimersByTimeAsync(2600));
   expect(useGame.getState().vars.recovered).toBe("B");

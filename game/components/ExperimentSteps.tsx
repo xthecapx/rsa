@@ -4,7 +4,6 @@ import { t } from "@/i18n";
 
 export const EXPERIMENT_STEPS = [
   { id: "math", label: "Math" },
-  { id: "assemble", label: "Assemble" },
   { id: "run", label: "Run" },
   { id: "results", label: "Results" },
 ] as const;
@@ -74,7 +73,7 @@ export function StepTabs<Id extends string>({
   );
 }
 
-/** Quantum experiments keep the same four stages across towns. */
+/** Quantum experiments keep the same three stages across towns. */
 export function ExperimentSteps({
   hasMeasurements,
   ...props

@@ -165,11 +165,18 @@ export function RoundsDial({
       measurement={experiment.reading}
       busy={experiment.busy}
     >
-      {(view, changeView) => (
+      {(view) => (
         <>
           {view === "math" && reference}
-          {view === "assemble" && (
+          {view === "run" && (
             <fieldset disabled={experiment.busy} className="space-y-3 min-w-0">
+              <p className="text-sm text-stage-muted">
+                {t(
+                  "M measures every wire after your boxes. Run sends this circuit to the backend; editing does not execute it.",
+                )}
+              </p>
+              <p className="text-accent-teal">256 {t("shots")}</p>
+
               <ExperimentControlCard icon="↻" title="Grover rounds">
                 <div
                   className="flex flex-wrap items-center gap-3"
@@ -216,31 +223,7 @@ export function RoundsDial({
                   <CircuitActions
                     busy={experiment.busy}
                     onClear={() => set(0)}
-                  />
-                )}
-              </div>
-            </fieldset>
-          )}
-          {view === "run" && (
-            <>
-              <p className="text-sm text-stage-muted">
-                {t(
-                  "M measures every wire after your boxes. Run sends this circuit to the backend; editing does not execute it.",
-                )}
-              </p>
-              <p className="text-accent-teal">256 {t("shots")}</p>
-              <div
-                className={`circuit-workspace ${successful ? "" : "has-actions"}`}
-              >
-                <RoundsCircuit step={step} rounds={rounds} />
-                {!successful && (
-                  <CircuitActions
-                    busy={experiment.busy}
                     runLabel="Run these rounds"
-                    onClear={() => {
-                      set(0);
-                      changeView("assemble");
-                    }}
                     onRun={() => void run()}
                   />
                 )}
@@ -252,7 +235,7 @@ export function RoundsDial({
                   )}
                 </p>
               )}
-            </>
+            </fieldset>
           )}
           {view === "results" && experiment.reading && (
             <>

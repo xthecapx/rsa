@@ -81,8 +81,8 @@ const counts = {
   depth: 2,
   circuit_text: "H → M",
 };
-function assemble() {
-  fireEvent.click(screen.getByRole("tab", { name: "Assemble" }));
+function configure() {
+  fireEvent.click(screen.getByRole("tab", { name: "Run" }));
 }
 const run = () => screen.getByRole("button", { name: /^Run circuit ·/ });
 async function execute() {
@@ -90,7 +90,7 @@ async function execute() {
   await act(async () => fireEvent.click(run()));
 }
 function place(gate: string, slot: number) {
-  assemble();
+  configure();
   fireEvent.click(screen.getByRole("button", { name: gate }));
   fireEvent.click(screen.getByRole("button", { name: `Circuit slot ${slot}` }));
 }
@@ -196,12 +196,10 @@ it.each(CAMPUS_EXHIBITS)(
     const math = screen.getByRole("tab", { name: "Math" });
     fireEvent.keyDown(math, { key: "ArrowRight" });
     expect(
-      screen
-        .getByRole("tab", { name: "Assemble" })
-        .getAttribute("aria-selected"),
+      screen.getByRole("tab", { name: "Run" }).getAttribute("aria-selected"),
     ).toBe("true");
-    expect(screen.queryByRole("combobox", { name: "Shots" })).toBeNull();
-    expect(screen.queryByRole("button", { name: /^Run circuit/ })).toBeNull();
+    expect(screen.getAllByRole("tab")).toHaveLength(3);
+    expect(transport).not.toHaveBeenCalled();
     if (exhibit.id === "qubit") {
       fireEvent.click(
         screen.getByRole("button", { name: "Move Prepare earlier" }),
@@ -210,16 +208,15 @@ it.each(CAMPUS_EXHIBITS)(
         screen.getByRole("button", { name: "Move Control earlier" }),
       );
     }
-    fireEvent.click(screen.getByRole("button", { name: "Next step" }));
     expect(
-      screen.getByRole("tab", { name: "Run" }).getAttribute("aria-selected"),
-    ).toBe("true");
+      screen.getAllByRole("button", { name: /^Run circuit/ }),
+    ).toHaveLength(1);
     fireEvent.change(screen.getByRole("combobox", { name: "Shots" }), {
       target: { value: "1024" },
     });
     expect(transport).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole("button", { name: "Previous step" }));
-    fireEvent.click(screen.getByRole("button", { name: "Next step" }));
+    fireEvent.click(screen.getByRole("button", { name: "Continue to run" }));
     await act(async () =>
       fireEvent.click(
         screen.getByRole("button", { name: "Run circuit · 1024 shots" }),
@@ -284,7 +281,7 @@ it.each(["web", "qollab"] as const)(
     );
     setServiceTransport(transport);
     let view = render(<CampusLaptop initial="qubit" onClose={vi.fn()} />);
-    assemble();
+    configure();
     expect(
       screen.queryByRole("group", { name: "Circuit controls" }),
     ).toBeNull();
@@ -348,7 +345,7 @@ it.each(["web", "qollab"] as const)(
       },
     });
     expect(screen.getByText("120 · 46.9%")).toBeTruthy();
-    assemble();
+    configure();
     fireEvent.click(screen.getByRole("button", { name: "Classical flip · X" }));
     await execute();
     expect(useCampus.getState().sessions.qubit?.evidence).toEqual([
@@ -366,7 +363,7 @@ it.each(["web", "qollab"] as const)(
     expect(screen.getAllByText("120 · 46.9%")).toHaveLength(2);
     expect(transport).toHaveBeenCalledTimes(2);
     // Making the assembly invalid again hides execution and clears stale counts.
-    assemble();
+    configure();
     fireEvent.click(
       screen.getByRole("button", { name: "Move Measure earlier" }),
     );
@@ -408,7 +405,10 @@ it("Run honors the per-player backend; language, help, refresh and reopen never 
   fireEvent.click(screen.getByRole("button", { name: "Close" }));
   expect(close).toHaveBeenCalledTimes(1);
   expect(transport).toHaveBeenCalledTimes(1);
-  assemble();
+  fireEvent.click(screen.getByRole("button", { name: "Edit experiment" }));
+  expect(
+    screen.getByRole("tab", { name: "Run" }).getAttribute("aria-selected"),
+  ).toBe("true");
   fireEvent.click(screen.getByLabelText("Paint a relative minus with Z"));
   expect(useCampus.getState().sessions.fountain?.result).toBeNull();
   fireEvent.click(screen.getByRole("tab", { name: "Results" }));
@@ -421,7 +421,7 @@ it("clearing an empty tape and deleting individual gates leaves every slot usabl
   );
   setServiceTransport(transport);
   render(<CampusLaptop initial="delivery" onClose={vi.fn()} />);
-  assemble();
+  configure();
   fireEvent.click(screen.getByRole("button", { name: "Clear circuit" }));
   place("X", 1);
   place("H", 2);
@@ -495,7 +495,7 @@ function CampusVisit({ host = "festival" }: { host?: string }) {
 }
 function choose(name: string) {
   fireEvent.click(screen.getByRole("button", { name }));
-  if (name === "Open the experiment") assemble();
+  if (name === "Open the experiment") configure();
 }
 function beginVisit() {
   choose("Talk");
@@ -527,7 +527,7 @@ it("the direct festival requires three explicit experiments, visitor discussions
   choose("Finish this repair");
   choose("Open the experiment");
   choose("0%");
-  assemble();
+  configure();
   fireEvent.click(screen.getByLabelText("Add the H measurement lens"));
   await execute();
   choose("Return to host");
@@ -552,7 +552,10 @@ it("Marisol remembers a wrong prediction, discusses real evidence and resumes an
   choose("I expect different probabilities");
   choose("Open the experiment");
   await execute();
-  assemble();
+  fireEvent.click(screen.getByRole("button", { name: "Edit experiment" }));
+  expect(
+    screen.getByRole("tab", { name: "Run" }).getAttribute("aria-selected"),
+  ).toBe("true");
   fireEvent.click(screen.getByLabelText("Paint a relative minus with Z"));
   await execute();
   choose("Return to host");
@@ -565,10 +568,13 @@ it("Marisol remembers a wrong prediction, discusses real evidence and resumes an
   expect(transport).toHaveBeenCalledTimes(2);
   choose("Use the H measurement lens");
   choose("Open the experiment");
-  assemble();
+  configure();
   fireEvent.click(screen.getByLabelText("Add the H measurement lens"));
   await execute();
-  assemble();
+  fireEvent.click(screen.getByRole("button", { name: "Edit experiment" }));
+  expect(
+    screen.getByRole("tab", { name: "Run" }).getAttribute("aria-selected"),
+  ).toBe("true");
   fireEvent.click(screen.getByLabelText("Paint a relative minus with Z"));
   await execute();
   choose("Return to host");
@@ -700,7 +706,7 @@ it.each([
     const transport = vi.fn(async () => Response.json(counts));
     setServiceTransport(transport);
     let view = render(<CampusLaptop initial={id} onClose={vi.fn()} />);
-    assemble();
+    configure();
     edit();
     expect(useCampus.getState().sessions[id]?.settings).toMatchObject(settings);
     act(() => useLocale.setState({ locale: "es" }));
@@ -709,7 +715,7 @@ it.each([
     await act(async () => useCampus.persist.rehydrate());
     act(() => useLocale.setState({ locale: "en" }));
     view = render(<CampusLaptop initial={id} onClose={vi.fn()} />);
-    assemble();
+    configure();
     expect(useCampus.getState().sessions[id]?.settings).toMatchObject(settings);
     expect(transport).not.toHaveBeenCalled();
     await execute();

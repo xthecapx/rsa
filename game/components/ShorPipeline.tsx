@@ -770,7 +770,7 @@ export function ShorPipeline({ armed }: { armed: boolean }) {
     clearRun({ wired: [] });
   }
 
-  /** The rail is an assembly preview; settings and results each have their own stage. */
+  /** Editable data-flow wiring shares Run with the pipeline settings and actions. */
   function rail(editable: boolean) {
     return (
       <div className="pipe-rail" role="group" aria-label={t("Shor pipeline")}>
@@ -893,8 +893,20 @@ export function ShorPipeline({ armed }: { armed: boolean }) {
                 </p>
               </section>
             )}
-            {view === "assemble" && (
+            {view === "run" && (
               <>
+                <section
+                  className="campus-control-card space-y-3"
+                  aria-label={t("Classical input")}
+                >
+                  {body("classical-in")}
+                </section>
+                <section
+                  className="campus-control-card space-y-3"
+                  aria-label={t("QPU setup")}
+                >
+                  {body("qpu-setup")}
+                </section>
                 <p className="laptop-note">
                   {t(
                     "A quantum computer is one stage in an ordinary program. Drag each box's output into the input of the box that needs it.",
@@ -912,54 +924,25 @@ export function ShorPipeline({ armed }: { armed: boolean }) {
                     </span>
                   )}
                 >
-                  <div className="circuit-workspace cipher-pipeline-workspace has-actions">
+                  <div
+                    className={`circuit-workspace cipher-pipeline-workspace ${run && recovered ? "" : "has-actions"}`}
+                  >
                     {rail(true)}
-                    <CircuitActions
-                      clearLabel="Disconnect pipeline"
-                      onClear={resetWiring}
-                      busy={busy || !armed}
-                    />
+                    {!(run && recovered) && (
+                      <CircuitActions
+                        clearLabel="Disconnect pipeline"
+                        onClear={resetWiring}
+                        onRun={() => void runPipeline()}
+                        runLabel={
+                          run ? "Run the pipeline again" : "Run the pipeline"
+                        }
+                        shots={scratch.shots}
+                        busy={busy || loadingManifest || !armed}
+                        runDisabled={!allWired || badBase}
+                      />
+                    )}
                   </div>
                 </PuzzleDragDrop>
-                {!allWired && (
-                  <p className="laptop-note">
-                    {t("Wire every output into the next box before running.")}
-                  </p>
-                )}
-              </>
-            )}
-            {view === "run" && (
-              <>
-                <section
-                  className="campus-control-card space-y-3"
-                  aria-label={t("Classical input")}
-                >
-                  {body("classical-in")}
-                </section>
-                <section
-                  className="campus-control-card space-y-3"
-                  aria-label={t("QPU setup")}
-                >
-                  {body("qpu-setup")}
-                </section>
-                <div
-                  className={`circuit-workspace cipher-pipeline-workspace ${run && recovered ? "" : "has-actions"}`}
-                >
-                  {rail(false)}
-                  {!(run && recovered) && (
-                    <CircuitActions
-                      clearLabel="Disconnect pipeline"
-                      onClear={resetWiring}
-                      onRun={() => void runPipeline()}
-                      runLabel={
-                        run ? "Run the pipeline again" : "Run the pipeline"
-                      }
-                      shots={scratch.shots}
-                      busy={busy || loadingManifest || !armed}
-                      runDisabled={!allWired || badBase}
-                    />
-                  )}
-                </div>
                 {!allWired && (
                   <p className="laptop-note">
                     {t("Wire every output into the next box before running.")}
