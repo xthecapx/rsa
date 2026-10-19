@@ -190,8 +190,7 @@ export function QuantumEqualizer({ run, runKey, animate }: { run: GroverRun | nu
       gameAudio.playSynth("tick");
     }, 520);
     return () => { window.clearInterval(timer); played.current = -1; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [runKey]);
+  }, [run, runKey, animate]);
   if (!run) return <p className="coin-placeholder">{t("Run the circuit to see the quantum core’s inner view.")}</p>;
   const step = run.steps[Math.min(frame, last)];
   const amps = step.amplitudes;

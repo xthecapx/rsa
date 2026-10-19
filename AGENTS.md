@@ -347,7 +347,11 @@ Bloch sphere. Unfinished neighbor work remains in memory for the current visit.
   circuit and round count before the final measurement.
   Workshop boxes support whole-block drag and tap removal, with floating Clear.
   Editing a box or round count clears the current preview without rerunning it;
-  collected round peaks remain. Busy execution and a final measurement lock
+  collected round peaks remain. Story transitions that reset rounds also clear the
+  current preview. Restoring a session discards unmeasured previews whose frames
+  differ from the saved preparation, loop order or effective round count; saved
+  final measurements retain their PIN, counts and explorer. Preview invalidation
+  stops its amplitude animation. Busy execution and a final measurement lock
   circuit edits, while the final M still opens its saved measurement explorer.
 - **Operation Ghost Key**: recover a 25-bit secret using a parity oracle and a
   helper qubit in |−⟩. Classical questions consume three candles; checking a whole

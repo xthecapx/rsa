@@ -57,13 +57,30 @@ const INITIAL: Session = {
 };
 const fresh = (): Session => ({ ...INITIAL, slots: { ...EMPTY_SLOTS }, formula: { ...EMPTY_FORMULA }, variants: { pieces: shuffle(ALL_PIECES), chips: shuffle(CHIPS) } });
 
+/** Old saves may contain a preview from before the round count or boxes changed. */
+function previewMatches(run: GroverRun, step: GroverStep, slots: CircuitSlots, repeat: number): boolean {
+  const expected: { round: number; block: GroverRun["steps"][number]["block"] }[] = [{ round: 0, block: "start" }];
+  if (blockOf(slots.init) === "h") expected.push({ round: 0, block: "h" });
+  const loop = step === "init" ? [] : loopOf(slots);
+  const rounds = step === "loop" ? 1 : repeat;
+  for (let round = 1; round <= rounds; round++) {
+    for (const block of loop) expected.push({ round, block });
+  }
+  return run.steps?.length === expected.length && expected.every((frame, i) =>
+    run.steps[i].round === frame.round && run.steps[i].block === frame.block);
+}
+
 function restoreSession(saved: Partial<Session>): Session {
   const base = fresh();
+  const slots = { ...EMPTY_SLOTS, ...saved.slots };
+  const repeat = Number.isInteger(saved.repeat) && saved.repeat! >= 0 && saved.repeat! <= 5 ? saved.repeat! : 1;
+  const lastRun = saved.lastRun ?? null;
   return {
     ...base, ...saved,
-    slots: { ...EMPTY_SLOTS, ...saved.slots }, formula: { ...EMPTY_FORMULA, ...saved.formula },
+    slots, formula: { ...EMPTY_FORMULA, ...saved.formula },
     tried: Array.isArray(saved.tried) ? saved.tried.filter((pin) => /^[01]{4}$/.test(pin)).slice(0, TRIES) : [],
-    repeat: Number.isInteger(saved.repeat) && saved.repeat! >= 0 && saved.repeat! <= 5 ? saved.repeat! : 1,
+    repeat,
+    lastRun: lastRun && (lastRun.measured || previewMatches(lastRun, saved.step ?? base.step, slots, repeat)) ? lastRun : null,
     peaks: saved.peaks && typeof saved.peaks === "object" ? saved.peaks : {},
     variants: {
       pieces: sameItems(saved.variants?.pieces, ALL_PIECES) ? saved.variants!.pieces : base.variants.pieces,
@@ -370,7 +387,7 @@ export function GroverScenario({ onExit, onRestartGame }: { onExit?: () => void;
                 </button>}
                 {session.step === "init" && session.lastRun?.steps.at(-1)!.block === "h" && action("Continue →", () => next("loop", { lastRun: null }))}
                 {session.step === "loop" && session.lastRun && isSearch(session.slots) && action("How many rounds? To the whiteboard →", () => next("tune"))}
-                {session.step === "tuneRun" && session.peaks[3] !== undefined && action("Measure at ×3 →", () => next("measure", { repeat: 3 }))}
+                {session.step === "tuneRun" && session.peaks[3] !== undefined && action("Measure at ×3 →", () => next("measure", { repeat: 3, lastRun: null }))}
                 {session.step === "measure" && session.measured && action("Take the PIN to the core →", () => next("disarm"))}
               </div>
             </>}
@@ -381,7 +398,7 @@ export function GroverScenario({ onExit, onRestartGame }: { onExit?: () => void;
                 onSolved={() => { patch({ boardSolved: true }); gameAudio.playSfx("confirm"); }} />
                 : <><p className="grover-formula solved">R ≈ π/4 · √16 = π/4 · 4 ≈ {localize("3.14")} → 3 {t("rounds")}</p>
                   <p className="coin-callout">{t("Three rounds means three questions to the lock — the same budget you just burned by hand.")}</p>
-                  {action("Back to the laptop →", () => next("tuneRun", { repeat: 1 }))}</>}
+                  {action("Back to the laptop →", () => next("tuneRun", { repeat: 1, lastRun: null }))}</>}
             </>}
             {session.step === "disarm" && session.measured && <>
               <p>{t("Drag the measured PIN into the keypad, or tap Send PIN. This check is free: no battery cell is used.")}</p>

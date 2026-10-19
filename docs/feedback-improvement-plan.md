@@ -35,7 +35,7 @@ lifecycle. These are planning estimates, not delivery dates.
 | --- | --- | --- | --- | --- | --- |
 | F01 | P1 | Done | Diagnose slow runs and implement safe timeout/recovery feedback | L | Failures and long waits interrupt every experiment surface. |
 | F01b | P1 | Done | Close F01 gaps: cold start, proxy ceiling, per-circuit estimates, remote notice | S–M | F01 added feedback but not the likely cause of the 20 s+ waits (see review below). |
-| F02 | P1 | Open | Invalidate Grover results on every configuration change | S | Cause located (see F02); a one-line state fix plus a regression test. |
+| F02 | P1 | Done | Invalidate Grover results on every configuration change | S | Round transitions and restored previews now keep results tied to their circuit. |
 | F03 | P1 | Open | Scope RSA notes to their act and label mathematical values | M | Unrelated or mislabeled values undermine puzzle reasoning. |
 | F04 | P1 | Open | Make movement focus explicit and recoverable | M | Keyboard users must be able to resume exploration. |
 | F05 | P1 | Open | Summarize large Shor histograms accessibly | M | Hundreds of entries obstruct access to the useful result. |
@@ -77,11 +77,16 @@ A Done item is reopened only by a new, reproduced defect, which becomes a new ID
   changing `--min-instances`, CPU or memory.
 - Side fix: Echo Chamber 500 for PIN 1111 (with tests).
 
+**Done — F02 (October 19, 2026).** Changing Grover rounds or boxes clears the
+current preview, including the transition from a ×4 run to “Measure at ×3” and
+the whiteboard return. Restore discards mismatched unmeasured previews; collected
+round peaks and the saved final PIN/explorer remain intact. See F02 for validation.
+
 **Done but not yet verified (verification, not new work):** deployed cold/warm
 latency on Cloud Run; a >30 s response through the Next proxy; a browser and
 screen-reader pass over the new panel and notice; a real physical-QPU wait.
 
-**Open:** F02–F11, F12 (small clarification only), F13 (only if deployed
+**Open:** F03–F11, F12 (small clarification only), F13 (only if deployed
 measurement shows a cause other than cold start and noisy Shor), F14, F15, F17.
 
 **Deferred:** F16 (post-quantum epilogue) and the authentication/man-in-the-middle
@@ -312,11 +317,11 @@ timeout message; the warm-up request submits no job and touches no allowance.
   waits; queue position from a provider; a browser or screen-reader smoke test of
   the new panel and notice.
 
-### F02 — Grover result ownership
+### F02 — Grover result ownership (Done)
 
 **Feedback covered:** changing four rounds to three leaves the old graph visible.
 
-**Source evidence (verified):** `game/components/GroverScenario.tsx` clears
+**Source evidence (verified before the fix):** `game/components/GroverScenario.tsx` clears
 `lastRun` in the round-control callback (line ~340, `onRepeat`) and on slot
 changes. The measure-step button `next("measure", { repeat: 3 })` (line ~373)
 changes `repeat` to 3 without clearing `lastRun`, so after a ×4 run the circuit
@@ -337,6 +342,24 @@ the new rounds. Preserve the saved final measurement and its explorer.
 measurement stage after comparing several rounds. In every path, current counts
 and ideal animation match their own configuration or disappear until Run.
 Closing/reopening, changing language, and refresh do not submit another job.
+
+**Implementation status — October 19, 2026:** both story transitions that
+reset the repeat count now clear `lastRun`, matching the existing round-control
+and circuit-edit behavior. On restore, unmeasured preview frames must match the
+saved preparation, ordered loop blocks and effective round count. Mismatched
+previews are discarded without running a circuit or changing collected peaks.
+Final measured runs and the M-block explorer retain their original counts,
+backend metadata and PIN. Clearing a preview also stops its amplitude animation.
+
+Validation: eight new React regressions cover the ×4 → measure-at-×3 transition,
+whiteboard return, round/box/Clear edits, matching and mismatched saved previews,
+reopen/language/refresh without resubmission, final measurement retention and
+animation cleanup. The full game checks and both production builds passed.
+Chrome using the real Echo Chamber component and Python simulator confirmed
+×3/×4 counts, immediate preview removal on the final-stage transition, preserved
+EN/ES results on reopen, tap/keyboard controls, portrait/short-landscape layouts,
+and the same one-shot PIN/explorer after refresh. The temporary browser fixture
+was removed and its prior Grover save restored.
 
 ### F03 — RSA notes and mathematical labels
 
