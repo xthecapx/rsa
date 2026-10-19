@@ -3313,5 +3313,19 @@
   "Grover search ×{rounds}": "Búsqueda de Grover ×{rounds}",
   "Ghost Key circuit": "Circuito de Llave Fantasma",
   "Shor period finding · {m} counting qubits": "Búsqueda del período de Shor · {m} cúbits de conteo",
-  "Quantum circuit": "Circuito cuántico"
+  "Quantum circuit": "Circuito cuántico",
+  "Alphabet encoding": "Codificación alfabética",
+  "Caesar shift k": "Desplazamiento César k",
+  "Modulus N": "Módulo N",
+  "Public exponent e": "Exponente público e",
+  "Prime factors p, q": "Factores primos p, q",
+  "Totient φ(N)": "Totiente de Euler φ(N)",
+  "Private exponent d": "Exponente privado d",
+  "Period r": "Período r",
+  "Reference period r": "Período de referencia r",
+  "Shift": "Desplazamiento",
+  "Caesar shift k = {shift} gives \"{word}\".": "El desplazamiento César k = {shift} da \"{word}\".",
+  "Shift k = {shift}  ->  {candidate}   <-- plaintext": "Desplazamiento k = {shift}  ->  {candidate}   <-- texto claro",
+  "Shift k = {shift}  ->  {candidate}": "Desplazamiento k = {shift}  ->  {candidate}",
+  "Recovered Caesar shift k = {shift} after {trials} trials in {ms} ms.": "Se recuperó el desplazamiento César k = {shift} tras {trials} pruebas en {ms} ms."
 }

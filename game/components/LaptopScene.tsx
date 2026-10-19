@@ -20,6 +20,7 @@ import { PlaintextWorkbench } from "./PlaintextWorkbench";
 import { RsaWorkbench } from "./RsaWorkbench";
 import { ShorPipeline } from "./ShorPipeline";
 import { RsaProgress } from "./RsaProgress";
+import { RsaMemoryRail } from "./RsaMemoryRail";
 
 /**
  * Full-screen laptop: bezel + CRT screen. Decode work happens here one step
@@ -68,7 +69,7 @@ export function LaptopScene({ act, restartControl }: { act: ActNumber; restartCo
   return (
     <LaptopShell restartControl={restartControl} open={laptopOpen} calculator={act >= 3} title={tOptional(`RSA · Act ${act}`)} onClose={close}
       status={busyLabel || (operations ? "Finishing the current operation…" : `Suspicion: ${suspicion}%`)} closeDisabled={operations > 0 || phase === "busy"}
-      memory={<div className="space-y-3"><RsaProgress act={act} showObjective /><MemoryRail /></div>}
+      memory={<div className="space-y-3"><RsaProgress act={act} showObjective /><RsaMemoryRail act={act} /></div>}
       footer={<>
         <p>{localize(armed ? recovered ? "Plaintext ready. Hand it to the client on the street." : "Work the steps. Results land in memory."
           : capture ? "Lid open for notes — tools unlock when the story needs the workbench." : "No capture yet. Listen on the street first.")}</p>
@@ -78,68 +79,6 @@ export function LaptopScene({ act, restartControl }: { act: ActNumber; restartCo
       <Wizard act={act} armed={armed} />
       {terminal.length > 0 && <p className="mt-4 text-xs text-stage-muted">{localize(terminal[terminal.length - 1]?.text)}</p>}
     </LaptopShell>
-  );
-}
-
-function MemoryRail() {
-  useLocale((state) => state.locale);
-  const capture = useGame((s) => s.capture);
-  const recovered = useGame((s) => s.vars.recovered);
-  const vars = useGame((s) => s.vars);
-  const noteBits: string[] = [];
-  if (vars.factors) noteBits.push(`N = ${vars.factors}`);
-  if (vars.d != null) noteBits.push(`d = ${vars.d}`);
-  if (vars.recovered && vars.shift) noteBits.push(`k = ${vars.shift}`);
-
-  return (
-    <div className="grid shrink-0 gap-2 sm:grid-cols-3">
-      <MemorySlot label={t("Wire")} empty={t("No capture")}>
-        {capture ? (
-          <>
-            <p className="text-xs text-stage-muted">{localize(capture.scheme)}</p>
-            <p className="break-all font-mono text-sm text-accent-amber">
-              {capture.payload}
-            </p>
-          </>
-        ) : null}
-      </MemorySlot>
-      <MemorySlot label={t("Notes")} empty={t("Run a tool")}>
-        {noteBits.length ? (
-          <p className="font-mono text-xs leading-relaxed text-[#9fc4d0]">
-            {localize(noteBits.join(" · "))}
-          </p>
-        ) : null}
-      </MemorySlot>
-      <MemorySlot label={t("Plaintext")} empty={t("Not recovered")}>
-        {recovered ? (
-          <p className="break-all font-mono text-sm text-actor-brayan">
-            {recovered}
-          </p>
-        ) : null}
-      </MemorySlot>
-    </div>
-  );
-}
-
-function MemorySlot({
-  label,
-  empty,
-  children,
-}: {
-  label: string;
-  empty: string;
-  children?: ReactNode;
-}) {
-  useLocale((state) => state.locale);
-  return (
-    <div className="border border-[#1e4450] bg-black/25 px-2 py-1.5">
-      <p className="mb-1 text-xs uppercase tracking-widest text-accent-teal">
-        {localize(label)}
-      </p>
-      {localize(children ?? (
-        <p className="text-xs text-stage-muted">{localize(empty)}</p>
-      ))}
-    </div>
   );
 }
 
@@ -220,7 +159,7 @@ function CaesarWizard({ armed }: { armed: boolean }) {
   function pick(row: { shift: number; word: string }) {
     if (!armed) return;
     setVars({ recovered: row.word, shift: row.shift });
-    pushTerminal({ tone: "good", text: `k=${row.shift} gives "${row.word}".` });
+    pushTerminal({ tone: "good", text: `Caesar shift k = ${row.shift} gives "${row.word}".` });
     gameAudio.playSfx("select");
   }
 
@@ -250,7 +189,7 @@ function CaesarWizard({ armed }: { armed: boolean }) {
                   onClick={() => pick(row)}
                   className="flex w-full gap-3 font-mono"
                 >
-                  <span className="text-stage-muted">{t("k=")}{localize(String(row.shift).padStart(2, " "))}
+                  <span className="text-stage-muted">{t("Shift")} k = {localize(String(row.shift).padStart(2, " "))}
                   </span>
                   <span>{row.word}</span>
                 </LaptopChoiceButton>

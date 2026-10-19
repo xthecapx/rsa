@@ -161,7 +161,11 @@ export function ShorPipeline({ armed }: { armed: boolean }) {
   // shots. Reaching IBM can take seconds; only the newest request may land.
   const { backend, batchId } = scratch;
   useEffect(() => {
-    if (backend !== "ibm") return;
+    if (backend !== "ibm") {
+      setLoadingManifest(false);
+      setManifest(null);
+      return;
+    }
     const token = missionGeneration();
     const mine = ++ticket.current;
     setLoadingManifest(true);
@@ -173,7 +177,11 @@ export function ShorPipeline({ armed }: { armed: boolean }) {
       .then(async (detail) => {
         if (mine !== ticket.current || token !== missionGeneration()) return;
         const n = detail.N === 15 || detail.N === 21 ? detail.N : null;
-        if (n && n !== useGame.getState().vars.modulus) await rekey(n);
+        if (n && n !== useGame.getState().vars.modulus)
+          await rekey(
+            n,
+            () => mine === ticket.current && token === missionGeneration(),
+          );
         if (mine !== ticket.current || token !== missionGeneration()) return;
         setManifest(detail);
         if (detail.a) useGame.getState().setVars({ base: detail.a });
@@ -198,6 +206,9 @@ export function ShorPipeline({ armed }: { armed: boolean }) {
         if (mine === ticket.current && token === missionGeneration())
           setLoadingManifest(false);
       });
+    return () => {
+      ticket.current += 1;
+    };
   }, [backend, batchId, setError]);
 
   const wired = new Set(scratch.wired);
@@ -1009,11 +1020,13 @@ export function ShorPipeline({ armed }: { armed: boolean }) {
 }
 
 /** The captured session only decrypts under the modulus it was keyed with, so a batch at another N re-keys the capture. */
-async function rekey(n: number) {
-  const { setVars, pushTerminal } = useGame.getState();
+async function rekey(n: number, isCurrent: () => boolean) {
+  const { setVars, setCapture, pushTerminal } = useGame.getState();
   const keys = await api.rsa.keygen(n);
+  if (!isCurrent()) return;
   const value = pickRsaPlaintext(keys.N, keys.e);
   const cipher = await api.rsa.encrypt(value, keys.e, n);
+  if (!isCurrent()) return;
   setVars({
     modulus: n,
     e: keys.e,
@@ -1029,6 +1042,7 @@ async function rekey(n: number) {
     order: null,
     recovered: null,
   });
+  setCapture({ payload: `c = ${cipher.c}`, scheme: `RSA, e=${keys.e} N=${n}` });
   pushTerminal({
     tone: "note",
     text: `Re-keyed against N = ${n}: public exponent e = ${keys.e}, new capture c = ${cipher.c}.`,

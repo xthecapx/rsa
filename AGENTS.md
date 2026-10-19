@@ -425,6 +425,17 @@ then candidate-period checks and decryption. Recorded IBM counts are labeled
 hardware. Restoring a measured pipeline opens Results without submitting; successful
 recovery hides Run/Clear until a setting or wiring change invalidates the result.
 The four RSA acts keep their existing puzzles, story rules and save schema.
+`RsaMemoryRail` renders act-specific notes from `game/rsaNotes.ts`, without
+mutating checkpoint data. Act 1 shows the fetched alphabet reference; Act 2 shows
+only the selected, capture-matching Caesar shift. RSA public inputs require the
+current capture's key and ciphertext. Act 3's factors, φ(N) and d follow validated
+`rsa3` workshop milestones; global secret/default values do not grant notes.
+Act 4 requires a matching returned `shor4` run and checked period/factors, with
+reference-derived periods labeled separately. Editing invalidates those private
+notes along with the run. Missing legacy evidence stays hidden. Recorded-batch
+re-keying updates the displayed capture with the new public key and ciphertext;
+mission/request ownership guards prevent late replacements. Labels and candidate
+shift rows remain bilingual.
 
 RSA scripts use `defineAct` to validate node IDs, reachable exits, choices, and
 checklist effects. Interpolation variables are defined in `content/index.ts`.

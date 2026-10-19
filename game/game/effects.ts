@@ -150,13 +150,13 @@ async function runApi(call: string): Promise<void> {
       for (const trial of res.trials) {
         say({
           tone: trial.match ? "good" : "info",
-          text: `k=${String(trial.shift).padStart(2, " ")}  ->  ${trial.candidate}${trial.match ? "   <-- plaintext" : ""}`,
+          text: `Shift k = ${String(trial.shift).padStart(2, " ")}  ->  ${trial.candidate}${trial.match ? "   <-- plaintext" : ""}`,
         });
       }
       say({
         tone: res.cracked ? "good" : "bad",
         text: res.cracked
-          ? `Recovered k=${res.found_shift} after ${res.num_trials} trials in ${res.elapsed_ms.toFixed(2)} ms.`
+          ? `Recovered Caesar shift k = ${res.found_shift} after ${res.num_trials} trials in ${res.elapsed_ms.toFixed(2)} ms.`
           : "No shift produced the expected plaintext.",
       });
       return;

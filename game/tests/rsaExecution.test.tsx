@@ -317,3 +317,170 @@ it("restores recorded hardware counts with a hardware label without submitting a
   expect(cached).toHaveBeenCalledTimes(1);
   expect(submit).not.toHaveBeenCalled();
 });
+
+it("changing the recorded batch modulus updates the captured public key and ciphertext without submitting a quantum job", async () => {
+  useGame.getState().resetRun(4);
+  useGame.getState().setVars({ modulus: 15, e: 3, cipherNumber: 8 });
+  useGame.getState().setCapture({ scheme: "RSA, e=3 N=15", payload: "c = 8" });
+  useGame.getState().setLabMemory({
+    shor4: {
+      backend: "ibm",
+      batchId: "",
+      wired: [],
+      m: 4,
+      shots: 128,
+      run: null,
+    },
+  });
+  vi.spyOn(api.ibm, "cached").mockResolvedValue({
+    batch_id: "",
+    N: 21,
+    a: 2,
+    jobs: [],
+  });
+  vi.spyOn(api.rsa, "keygen").mockResolvedValue({ N: 21, e: 5 } as Awaited<
+    ReturnType<typeof api.rsa.keygen>
+  >);
+  vi.spyOn(api.rsa, "encrypt").mockResolvedValue({ c: 11 } as Awaited<
+    ReturnType<typeof api.rsa.encrypt>
+  >);
+  const submit = vi.spyOn(api.shor, "simulate");
+  await act(async () => {
+    render(<ShorPipeline armed />);
+  });
+  expect(useGame.getState().capture).toEqual({
+    scheme: "RSA, e=5 N=21",
+    payload: "c = 11",
+  });
+  expect(useGame.getState().vars).toMatchObject({
+    modulus: 21,
+    e: 5,
+    cipherNumber: 11,
+    p: null,
+    q: null,
+    d: null,
+  });
+  expect(submit).not.toHaveBeenCalled();
+});
+
+it.each(["key generation", "encryption"])(
+  "a stale batch re-key during %s cannot replace the next act's capture",
+  async (stage) => {
+    useGame.getState().resetRun(4);
+    useGame.getState().setVars({ modulus: 15, e: 3, cipherNumber: 8 });
+    useGame.getState().setLabMemory({
+      shor4: {
+        backend: "ibm",
+        batchId: "",
+        wired: [],
+        m: 4,
+        shots: 128,
+        run: null,
+      },
+    });
+    vi.spyOn(api.ibm, "cached").mockResolvedValue({
+      batch_id: "",
+      N: 21,
+      a: 2,
+      jobs: [],
+    });
+    let finishKey!: (value: Awaited<ReturnType<typeof api.rsa.keygen>>) => void;
+    let finishEncrypt!: (
+      value: Awaited<ReturnType<typeof api.rsa.encrypt>>,
+    ) => void;
+    const key = { N: 21, e: 5 } as Awaited<ReturnType<typeof api.rsa.keygen>>;
+    const generated = vi.spyOn(api.rsa, "keygen");
+    if (stage === "key generation")
+      generated.mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            finishKey = resolve;
+          }),
+      );
+    else generated.mockResolvedValue(key);
+    const encrypt = vi.spyOn(api.rsa, "encrypt").mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          finishEncrypt = resolve;
+        }),
+    );
+    const view = render(<ShorPipeline armed />);
+    await act(async () => {});
+    invalidateMission();
+    useGame.getState().resetRun(1);
+    useGame
+      .getState()
+      .setCapture({ scheme: "raw numbers", payload: "3 1 6 5" });
+    if (stage === "key generation") await act(async () => finishKey(key));
+    else
+      await act(async () =>
+        finishEncrypt({ c: 11 } as Awaited<ReturnType<typeof api.rsa.encrypt>>),
+      );
+    expect(useGame.getState().capture).toEqual({
+      scheme: "raw numbers",
+      payload: "3 1 6 5",
+    });
+    expect(useGame.getState().vars.e).toBeNull();
+    if (stage === "key generation") expect(encrypt).not.toHaveBeenCalled();
+    view.unmount();
+  },
+);
+
+it("switching away from a pending recorded-batch re-key releases Run and preserves the current capture", async () => {
+  useGame.getState().resetRun(4);
+  useGame.getState().setVars({ modulus: 15, e: 3, cipherNumber: 8 });
+  const capture = { scheme: "RSA, e=3 N=15", payload: "c = 8" };
+  useGame.getState().setCapture(capture);
+  useGame
+    .getState()
+    .setLabMemory({
+      shor4: {
+        backend: "ibm",
+        batchId: "",
+        wired: RAIL.slice(0, -1).map((box) => box.id),
+        m: 4,
+        shots: 128,
+        run: null,
+      },
+    });
+  vi.spyOn(api.ibm, "cached").mockResolvedValue({
+    batch_id: "",
+    N: 21,
+    a: 2,
+    jobs: [],
+  });
+  let finishKey!: (value: Awaited<ReturnType<typeof api.rsa.keygen>>) => void;
+  vi.spyOn(api.rsa, "keygen").mockImplementation(
+    () =>
+      new Promise((resolve) => {
+        finishKey = resolve;
+      }),
+  );
+  const encrypt = vi.spyOn(api.rsa, "encrypt");
+  await act(async () => {
+    render(<ShorPipeline armed />);
+  });
+  expect(
+    (screen.getByRole("tab", { name: "Run" }) as HTMLButtonElement).disabled,
+  ).toBe(true);
+  fireEvent.click(
+    screen.getByRole("button", {
+      name: /^(Ideal simulator|Noise-model simulator)$/,
+    }),
+  );
+  expect(
+    (screen.getByRole("tab", { name: "Run" }) as HTMLButtonElement).disabled,
+  ).toBe(false);
+  expect(
+    (
+      screen.getByRole("button", {
+        name: "Run the pipeline · 128 shots",
+      }) as HTMLButtonElement
+    ).disabled,
+  ).toBe(false);
+  await act(async () =>
+    finishKey({ N: 21, e: 5 } as Awaited<ReturnType<typeof api.rsa.keygen>>),
+  );
+  expect(encrypt).not.toHaveBeenCalled();
+  expect(useGame.getState().capture).toEqual(capture);
+});

@@ -36,7 +36,7 @@ lifecycle. These are planning estimates, not delivery dates.
 | F01 | P1 | Done | Diagnose slow runs and implement safe timeout/recovery feedback | L | Failures and long waits interrupt every experiment surface. |
 | F01b | P1 | Done | Close F01 gaps: cold start, proxy ceiling, per-circuit estimates, remote notice | S–M | F01 added feedback but not the likely cause of the 20 s+ waits (see review below). |
 | F02 | P1 | Done | Invalidate Grover results on every configuration change | S | Round transitions and restored previews now keep results tied to their circuit. |
-| F03 | P1 | Open | Scope RSA notes to their act and label mathematical values | M | Unrelated or mislabeled values undermine puzzle reasoning. |
+| F03 | P1 | Done | Scope RSA notes to their act and label mathematical values | M | Unrelated or mislabeled values undermine puzzle reasoning. |
 | F04 | P1 | Open | Make movement focus explicit and recoverable | M | Keyboard users must be able to resume exploration. |
 | F05 | P1 | Open | Summarize large Shor histograms accessibly | M | Hundreds of entries obstruct access to the useful result. |
 | F06 | P2 | Open | Add a small, discreet signpost to the campus in Quantum Town | S | The professor's recommendation lacks a findable pointer; no teleport. |
@@ -82,11 +82,17 @@ current preview, including the transition from a ×4 run to “Measure at ×3”
 the whiteboard return. Restore discards mismatched unmeasured previews; collected
 round peaks and the saved final PIN/explorer remain intact. See F02 for validation.
 
+**Done — F03 (October 19, 2026).** Laptop notes now follow the active act and
+validated workbench evidence, with descriptive EN/ES labels. Caesar shifts never
+appear as plaintext/RSA notes, private RSA values appear only when earned, and
+missing legacy context is not invented. Recorded-batch re-keying keeps the
+capture synchronized. Existing checkpoint data and save keys are preserved.
+
 **Done but not yet verified (verification, not new work):** deployed cold/warm
 latency on Cloud Run; a >30 s response through the Next proxy; a browser and
 screen-reader pass over the new panel and notice; a real physical-QPU wait.
 
-**Open:** F03–F11, F12 (small clarification only), F13 (only if deployed
+**Open:** F04–F11, F12 (small clarification only), F13 (only if deployed
 measurement shows a cause other than cold start and noisy Shor), F14, F15, F17.
 
 **Deferred:** F16 (post-quantum epilogue) and the authentication/man-in-the-middle
@@ -361,20 +367,19 @@ EN/ES results on reopen, tap/keyboard controls, portrait/short-landscape layouts
 and the same one-shot PIN/explorer after refresh. The temporary browser fixture
 was removed and its prior Grover save restored.
 
-### F03 — RSA notes and mathematical labels
+### F03 — RSA notes and mathematical labels (Done)
 
 **Feedback covered:** unexplained `k=20` in plaintext, `k=12` in RSA, and notes
 persisting across acts.
 
-**Source evidence (verified):** `MemoryRail` in `game/components/LaptopScene.tsx`
-(line ~92) renders `k = vars.shift` whenever `vars.recovered && vars.shift`, with
-no act check. `vars` is a single global store (`game/state.ts`), `setVars` merges,
-`pick()` writes `{recovered, shift}`, and `vars` resets only on a full reset
-(line ~255). So an act-2 Caesar shift (default `shift: 3`, or the picked one)
-stays on the act-3/4 rail as `k = 12`, which explains the reviewer's "k=12 where
-φ(N)=12 was expected". The `k=20` in the plaintext act is probably the unlabeled
-`k=` candidate rows of the shift list (line ~253); label them "shift". Note the
-default of 3 is truthy, so `vars.recovered` is the only guard.
+**Source evidence (verified before the fix):** `MemoryRail` in
+`game/components/LaptopScene.tsx` displayed `k = vars.shift` whenever plaintext
+was recovered, without checking the active act. `startAct()` already resets the
+run, then generates a random shift for every act. An unrelated shift therefore
+appeared after recovering plaintext in Acts 1, 3 or 4; cross-act persistence is
+not needed to explain either reported number. The earlier claim that state only
+resets on a full-game reset was incorrect. Caesar candidate rows also used bare
+`k=` labels, and the Notes panel omitted earned φ(N) and public-key labels.
 
 **Plan:** derive displayed notes from the current act and validated evidence.
 Label Caesar shift, modulus N, totient φ(N), public exponent e, and private
@@ -386,6 +391,34 @@ Do not reveal future puzzle values or treat a default variable as a discovery.
 **Acceptance:** play acts 1–4 consecutively, restart one act, and restore older
 checkpoints. No Caesar shift appears as RSA evidence; each displayed value has
 the correct meaning and provenance. Missing legacy context is not invented.
+
+**Implementation status — October 19, 2026:** extracted `RsaMemoryRail` and the
+pure `game/rsaNotes.ts` evidence selector. Act 1 displays the fetched A1Z26
+reference. Act 2 requires a selected candidate that decodes the current capture.
+Acts 3–4 identify the captured modulus N and public exponent e; Act 3 adds
+validated factor, totient and private-exponent milestones individually. Act 4
+requires a matching returned run and checked period/factors before showing its
+private results, and distinguishes a recorded reference period from a measured
+candidate. Configuration edits remove current private notes. Notes are compact,
+accessible name/value rows. Caesar candidates and result messages say “Shift”
+or “Caesar shift” in both languages; legacy translation aliases remain.
+
+Changing a recorded Shor batch to another modulus also updates the displayed
+capture's public key and ciphertext. Async ownership checks protect that update
+after mission changes, backend switches or unmount; switching back to the
+simulator also releases the loading controls. Deriving and displaying notes
+never runs a tool or submits a job. Save keys, checkpoint
+structure and valid stored values are unchanged; absent legacy evidence simply
+leaves private notes hidden.
+
+Validation: 152 Node tests and 139 React tests passed with lint/types and both
+production builds. New regressions cover act progression, earned-answer timing,
+mathematical/context validation, legacy checkpoints, restart/restore, bilingual
+labels, Shor edits, and stale batch re-keying. Chrome with the real workbenches
+and local Python backend confirmed recovery in Acts 1–3, the correctly named
+φ(N)=12, Act 3 refresh/resume, failed and successful Shor runs, private-note
+invalidation after editing, keyboard/tap controls and portrait/short-landscape
+layouts in EN/ES. The disposable browser fixture and checkpoint were removed.
 
 ### F04 — Keyboard focus and movement
 
