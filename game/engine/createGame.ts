@@ -2,6 +2,7 @@ import { Color, DisplayMode, Engine, PointerScope } from "excalibur";
 
 import { CityScene } from "./scenes/CityScene";
 import { CampusScene, CipherScene, CoinTownScene, FoundryScene, HollowScene } from "./scenes/WorldScene";
+import { bindExplorationKeyboard } from "./explorationKeyboard";
 import { bus } from "./bus";
 import { createLoader } from "./resources";
 
@@ -17,6 +18,7 @@ let current: LiveGame | null = null;
 interface LiveGame {
   engine: Engine;
   canvas: HTMLCanvasElement;
+  releaseKeyboard: () => void;
 }
 
 function serial<T>(work: () => Promise<T>): Promise<T> {
@@ -31,6 +33,7 @@ function serial<T>(work: () => Promise<T>): Promise<T> {
 async function teardown(live: LiveGame): Promise<void> {
   bus.setCommandHandler(null);
   bus.drain();
+  live.releaseKeyboard();
   live.engine.stop();
   live.engine.input?.pointers?.detach();
   live.engine.input?.toggleEnabled(false);
@@ -73,10 +76,14 @@ export function createGame(container: HTMLElement, world: WorldName = "city"): P
     if (current) await teardown(current);
 
     const canvas = document.createElement("canvas");
+    canvas.tabIndex = -1;
+    canvas.setAttribute("aria-hidden", "true");
     container.appendChild(canvas);
 
     const engine = new Engine({
       canvasElement: canvas,
+      global: container,
+      grabWindowFocus: false,
       // HUD buttons, dialogs, and the minimap never issue movement commands.
       pointerScope: PointerScope.Canvas,
       // A readable 30 x 16 tile viewport into the larger, scrolling town.
@@ -88,7 +95,7 @@ export function createGame(container: HTMLElement, world: WorldName = "city"): P
       scenes: { campus: CampusScene, city: CityScene, coinTown: CoinTownScene, foundry: FoundryScene, hollow: HollowScene, cipher: CipherScene },
     });
 
-    const live = { engine, canvas };
+    const live = { engine, canvas, releaseKeyboard: bindExplorationKeyboard(container, engine.input.keyboard) };
     current = live;
     try {
       await engine.start(world, { loader: createLoader() });

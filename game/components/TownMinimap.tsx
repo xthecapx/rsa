@@ -1,5 +1,8 @@
 "use client";
 
+import { QUANTUM_SOUTH_ROW } from "@/content/coinTown";
+import { ExplorationNavigation } from "./ExplorationNavigation";
+import { LANDMARKS } from "@/engine/maps/street";
 import { useId, useMemo, useState } from "react";
 import { CLIENT_POSITION, TOWN_LOCATIONS, TOWN_TREES } from "@/content/town";
 import { townMap } from "@/engine/maps/townMap";
@@ -26,7 +29,7 @@ const basePlaces = [
   { id: "sign", at: TOWN_LOCATIONS.sign.at, label: "Signpost", symbol: "S", scenario: null },
   { id: "groverDoor", at: TOWN_LOCATIONS.groverDoor.at, label: "Thecap’s workshop", symbol: "3", scenario: "grover" },
   { id: "vaultDoor", at: TOWN_LOCATIONS.vaultDoor.at, label: "Casa Ofelia", symbol: "4", scenario: "vault" },
-  { id: "southPath", at: TOWN_LOCATIONS.southPath.at, label: "South road to Coin Town", symbol: "↓", scenario: null },
+  { id: "southPath", at: TOWN_LOCATIONS.southPath.at, label: "South road to Cipher Town", symbol: "↓", scenario: null },
 ] as const;
 
 /** The map stays legible without loading another game engine or canvas. */
@@ -97,5 +100,10 @@ export function TownMinimap() {
       <p className="mt-1 text-[10px] text-stage-muted">1 · {t("Coin house")}　2 · {t("RSA client")}　3 · {t("Workshop")}</p>
       <p className="mt-1 text-[10px] text-stage-muted">P · {t("Professor Thecap")}　S · {t("Signpost")}</p>
     </div>
+    <ExplorationNavigation destinations={places.map((place) => ({
+      id: place.id, label: place.id === "southPath" ? "South road to Cipher Town" : place.label,
+      at: place.id === "rsa" ? LANDMARKS.car.stand : place.id === "southPath" ? { x: TOWN_LOCATIONS.southPath.stand.x, y: QUANTUM_SOUTH_ROW } : TOWN_LOCATIONS[place.id as keyof typeof TOWN_LOCATIONS].stand,
+      exit: place.id === "southPath",
+    }))} />
   </aside>;
 }

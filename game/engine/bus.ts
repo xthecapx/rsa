@@ -13,6 +13,8 @@ export type { Landmark };
 export type PacketStyle = "plain" | "caesar" | "rsa" | "key" | "quantum";
 
 export type EngineCommand =
+  | { type: "navigate"; at: { x: number; y: number }; label: string }
+  | { type: "stopNavigation" }
   | { type: "walkTo"; target: Landmark }
   | { type: "face"; target: Landmark }
   | { type: "packet"; style: PacketStyle; from: Landmark; to: Landmark; intercept: boolean }
@@ -33,6 +35,7 @@ export type EngineCommand =
 export type BubbleKind = "none" | "question" | "alert" | "success";
 
 export type EngineEvent =
+  | { type: "navigation"; state: "walking" | "arrived" | "stopped" | "unreachable"; label: string }
   | { type: "ready" }
   | { type: "townMoved"; near: TownTarget | null }
   | { type: "townInteract"; target: TownTarget }

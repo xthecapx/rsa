@@ -496,9 +496,9 @@ export function TownScreen({ initialAct, initialCoin = false, initialGrover = fa
     sceneReady={sceneReady} sceneFailed={sceneStatus === "error"}
     laptopOpen={rsaActive && game.laptopOpen} laptopReady={rsaActive && game.waitingFor === "workbench"}
     onOpenLaptop={() => { if (rsaActive && !conversation) useGame.getState().setLaptopOpen(true); else if (!rsaActive) setConversation({ title: "Your laptop", text: "Your laptop tools unlock during a mission. Visit the coin house or talk to the RSA client to begin.", choices: [{ label: "Keep exploring", action: closeConversation }] }); }}>
-    <GameCanvas onReady={onReady} onError={onError} />
+    <GameCanvas active={sceneReady && !inputLocked} onReady={onReady} onError={onError} />
     {sceneReady && <>
-      {!inputLocked && <div className="absolute right-3 top-3 z-10 flex max-w-[calc(100%-1.5rem)] flex-col items-end gap-2">
+      {!inputLocked && <div className="absolute right-3 top-3 z-10 flex max-h-[calc(100%-1.5rem)] max-w-[calc(100%-1.5rem)] flex-col items-end gap-2">
         <TownMinimap />
         {rsaActive && <div className="pointer-events-none"><SuspicionMeter /></div>}
       </div>}

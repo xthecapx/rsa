@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useMemo, useState } from "react";
+import { ExplorationNavigation } from "./ExplorationNavigation";
 import { LAB_ENTRANCES } from "@/content/labEntrances";
 import type { MinimapProps } from "./WorldTownScreen";
 import { terrainPaths } from "./TownMinimap";
@@ -8,7 +9,7 @@ import { t, useLocale } from "@/i18n";
 
 export interface MinimapPlace { id: string; at: { x: number; y: number }; label: string; symbol: string }
 /** A road off the edge of the map: an arrow drawn just outside the wall. */
-export interface MinimapRoad { at: { x: number; y: number }; glyph: string; title: string; locked?: boolean }
+export interface MinimapRoad { at: { x: number; y: number }; glyph: string; title: string; locked?: boolean; walkTo: { x: number; y: number } }
 
 /** The town as far as the player has walked: unseen tiles stay dark, and places appear once seen. */
 export function WorldMinimap({ map, places, roads, ariaLabel, legend, position, facing, done, pending, tracked, explored, labTown, labRevealed }: MinimapProps & {
@@ -71,5 +72,9 @@ export function WorldMinimap({ map, places, roads, ariaLabel, legend, position, 
       </div>
       {legend.map((line) => <p key={line} className="mt-1 text-[10px] text-stage-muted">{line}</p>)}
     </div>
+    <ExplorationNavigation destinations={[
+      ...mapPlaces.map((place) => ({ id: place.id, label: place.label, at: place.at })),
+      ...roads.map((road) => ({ id: `road:${road.title}`, label: road.title, at: road.walkTo, locked: road.locked, exit: true })),
+    ]} />
   </aside>;
 }

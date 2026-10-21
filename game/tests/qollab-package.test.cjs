@@ -50,3 +50,18 @@ test('upload verifier rejects unnecessary files and escaping runtime imports', a
     await assert.rejects(verifyQollab(fixture), /Unresolved import/);
   } finally { await rm(temporary, { recursive: true, force: true }); }
 });
+
+test('packaged assets retain their lookup and export complete Unicode translations as ESM', async () => {
+  const { assetModule } = await helpers;
+  const assets = { '/assets/duck.svg': 'data:image/svg+xml;base64,PHN2Zz4=' };
+  const spanish = { 'Town exploration': 'Exploración del pueblo', 'Quotes': '"¿Qué?"' };
+  const previous = globalThis.quantumPlaygroundAssets;
+  try {
+    const module = await import(`data:text/javascript;base64,${Buffer.from(assetModule(assets, spanish)).toString('base64')}`);
+    assert.deepEqual(module.spanish, spanish);
+    assert.deepEqual(globalThis.quantumPlaygroundAssets, assets);
+  } finally {
+    if (previous === undefined) delete globalThis.quantumPlaygroundAssets;
+    else globalThis.quantumPlaygroundAssets = previous;
+  }
+});

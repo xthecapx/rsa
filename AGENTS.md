@@ -26,7 +26,8 @@ Markdown files. See [README.md](README.md) for setup, deployment, and IBM data.
   simulator or physical QPU; service calls use a queued Pyodide bridge instead of HTTP. Assets
   and recorded IBM data are embedded, with their licenses retained. Fonts use
   pinned HTTPS Fontsource URLs with system fallbacks because Qollab blocks data fonts.
-  Ghost Key keeps 25 data qubits plus its helper; IBM fake backends use MPS for
+  Spanish translations share the existing assets module to keep the game bundle below
+Qollab’s per-file cap without adding files. Ghost Key keeps 25 data qubits plus its helper; IBM fake backends use MPS for
   this circuit. Physical QPU jobs run only after a player presses Run; startup,
   language changes, and restoring a checkpoint never submit one. See README for delivery.
 
@@ -404,6 +405,16 @@ button when nearby, or click/tap an animal to walk over and pet it. They pause
 near players and respond with a floating heart and a translated status message.
 Petting does not open a dialog or change lesson progress. Other animals still
 wander normally.
+
+Outdoor exploration exposes a named, focusable play area with a visible keyboard
+outline and translated WASD/arrow, Space and Tab instructions. Excalibur listens
+on that host rather than the window. Focus loss, overlays and window blur clear
+held keys; old key repeats cannot act after focus returns. Minimap controls offer
+Return to exploration and destination walking, including open town exits. Routes
+reuse collision-aware paths, announce arrival/cancellation, and require explicit
+interaction at doors and neighbors. Locked roads remain unavailable; lab destinations
+appear only after explicit entrance discovery. Background jobs still block travel.
+Focus recovery, destination choices and announcements never submit backend work.
 
 Excalibur owns outdoor pixels and animation; React owns text and tools. They
 coordinate through the Zustand game store and typed command bus. Preserve one

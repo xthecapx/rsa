@@ -1,6 +1,6 @@
 import { build, transform } from 'esbuild';
 import { createHash } from 'node:crypto';
-import { assetPattern, referencedAssets, dependencyNotices } from './qollab-package.mjs';
+import { assetPattern, referencedAssets, dependencyNotices, assetModule } from './qollab-package.mjs';
 import ts from 'typescript';
 import postcss from 'postcss';
 import tailwind from 'tailwindcss';
@@ -36,6 +36,9 @@ const assetPlugin = {
   setup(builder) {
     const replacements = { 'next/dynamic': 'next-dynamic.tsx', 'next/navigation': 'next-navigation.ts', 'next/link': 'next-link.tsx' };
     builder.onResolve({ filter: /^next\/(dynamic|navigation|link)$/ }, ({ path: name }) => ({ path: path.join(qollab, replacements[name]) }));
+    // Keep static translations with assets, leaving room for game features
+    // within Qollab's per-file cap without changing the 20-file contract.
+    builder.onLoad({ filter: /i18n\/es\.json$/ }, () => ({ contents: 'export { spanish as default } from "./assets.js";', loader: 'js' }));
     builder.onLoad({ filter: /excalibur\/build\/esm\/excalibur\.js$/ }, async ({ path: file }) => {
       let contents = await readFile(file, 'utf8');
       const probe = /arrayBufferSupport: function\(\) \{[\s\S]*?return xhr\.responseType === "arraybuffer";\s*\}/;
@@ -83,6 +86,7 @@ const gameBuild = await build({
   bundle: true, platform: 'browser', treeShaking: true, format: 'esm', splitting: false, minify: true, target: 'es2022', jsx: 'automatic',
   conditions: ['production', 'module'], plugins: [assetPlugin], tsconfig: path.join(root, 'tsconfig.json'),
   define: { 'process.env.NODE_ENV': '"production"', 'setTimeout': 'window.setTimeout', 'clearTimeout': 'window.clearTimeout', 'setInterval': 'window.setInterval', 'clearInterval': 'window.clearInterval' },
+  external: ['./assets.js'],
   chunkNames: 'chunks/[name]-[hash]', legalComments: 'linked', metafile: true,
 });
 notices.push(...await dependencyNotices(root, gameBuild.metafile.inputs));
@@ -112,7 +116,7 @@ css += '\n:root{--font-press-start:"Press Start 2P",ui-monospace,monospace;--fon
 const styled = await postcss([tailwind({ config: path.join(root, 'tailwind.config.ts') }), autoprefixer()]).process(css, { from: path.join(root, 'app/globals.css'), to: path.join(outputDir, 'main.css') });
 await writeFile(path.join(outputDir, 'main.css'), (await transform(styled.css, { loader: 'css', minify: true, target: 'es2022' })).code);
 const assets = referencedAssets(inventory, assetPatterns);
-await writeFile(path.join(outputDir, 'assets.js'), `globalThis.quantumPlaygroundAssets = ${JSON.stringify(assets)};\n`);
+await writeFile(path.join(outputDir, 'assets.js'), assetModule(assets, JSON.parse(await readFile(path.join(root, 'i18n/es.json'), 'utf8'))));
 for (const name of ['index.html', 'requirements.txt']) await cp(path.join(qollab, name), path.join(outputDir, name));
 await cp(path.join(repo, 'LICENSE'), path.join(outputDir, 'LICENSE'));
 await cp(path.join(qollab, 'python'), outputDir, { recursive: true, filter: (file) => !file.includes('__pycache__') && !file.endsWith('.pyc') && !file.endsWith('.txt') });

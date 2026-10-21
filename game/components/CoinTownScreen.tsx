@@ -88,10 +88,10 @@ export function CoinTownScreen({ onLeave, onEast, onWest, onEnterCoin, onEnterLa
     restart: { label: "Restart Coin Town", description: "Forget the five knowledge cards and meet Mayor Cap again. Your medals and the coin lesson stay.", restart: () => {} },
     minimap: (props) => <WorldMinimap {...props} map={coinTownMap} places={PLACES}
       roads={[
-        { at: { x: 20, y: coinTownMap.height + 0.5 }, glyph: "↓", title: "Quantum Campus · always open", locked: false },
-        { at: { x: COIN_TOWN_NORTH_ROAD[0] + 1, y: -0.4 }, glyph: "↑", title: "North road to Cipher Town", locked: !northOpen },
-        { at: { x: coinTownMap.width + 0.8, y: SIDE_ROW }, glyph: "→", title: "East road to Foundry Town", locked: !eastOpen },
-        { at: { x: -0.8, y: SIDE_ROW }, glyph: "←", title: "West road to Hollow Town", locked: !westOpen },
+        { at: { x: 20, y: coinTownMap.height + 0.5 }, glyph: "↓", title: "Quantum Campus · always open", walkTo: { x: 20, y: coinTownMap.height - 1 }, locked: false },
+        { at: { x: COIN_TOWN_NORTH_ROAD[0] + 1, y: -0.4 }, glyph: "↑", title: "North road to Cipher Town", walkTo: { x: COIN_TOWN_NORTH_ROAD[1], y: 0 }, locked: !northOpen },
+        { at: { x: coinTownMap.width + 0.8, y: SIDE_ROW }, glyph: "→", title: "East road to Foundry Town", walkTo: { x: coinTownMap.width - 1, y: COIN_TOWN_SIDE_ROAD[1] }, locked: !eastOpen },
+        { at: { x: -0.8, y: SIDE_ROW }, glyph: "←", title: "West road to Hollow Town", walkTo: { x: 0, y: COIN_TOWN_SIDE_ROAD[1] }, locked: !westOpen },
       ]}
       ariaLabel="Coin Town map: C is the coin house, M is Mayor Cap, 1 to 5 are the neighbors with knowledge cards, and the arrows are the roads north to Cipher Town, east to Foundry Town and west to Hollow Town, with the open south road to Quantum Campus."
       legend={[`C · ${t("Coin house")}　M · ${t("Mayor Cap")}　B · ${t("Beto")}`, TEACHERS.map((npc, i) => `${i + 1} · ${t(npc.title)}`).join("　")]} />,

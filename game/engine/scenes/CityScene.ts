@@ -18,6 +18,7 @@ import { QwardCompanion } from "../actors/QwardCompanion";
 import { RsaStreet, isStreetCommand } from "../actors/RsaStreet";
 import { LabEntrance } from "../actors/LabEntrance";
 import { TownSign } from "../actors/TownSign";
+import { DestinationNavigation } from "../destinationNavigation";
 import { bus } from "../bus";
 import type { EngineCommand, Landmark } from "../bus";
 import {
@@ -63,6 +64,7 @@ export class CityScene extends Scene {
   private rsaStreet!: RsaStreet;
   // Stay locked through asset loading and the opening story setup.
   private inputLocked = true;
+  private navigation = new DestinationNavigation();
   private lastNear: Landmark | null = null;
   private lastWalking = false;
   private walkIdleMs = 0;
@@ -131,6 +133,7 @@ export class CityScene extends Scene {
   }
 
   override onDeactivate(): void {
+    this.navigation.cancel();
     this.pointerSub?.close();
     this.pointerSub = null;
     this.player.stop();
@@ -230,7 +233,7 @@ export class CityScene extends Scene {
     // Keyboard or pad input takes over after the current tile, without snapping the
     // character or waiting for the entire clicked route to finish.
     const direction = touchDirection();
-    if (direction || MOVE_KEYS.some(({ keys }) => keys.some((key) => engine.input.keyboard.isHeld(key)))) this.player.clearRoute();
+    if (direction || MOVE_KEYS.some(({ keys }) => keys.some((key) => engine.input.keyboard.isHeld(key)))) { this.navigation.cancel(); this.player.clearRoute(); }
     if (this.player.isMoving) return;
 
     for (const { keys, direction: moveDirection, delta } of MOVE_KEYS) {
@@ -281,6 +284,7 @@ export class CityScene extends Scene {
       if (touches.length > 1) return;
     }
 
+    this.navigation.cancel();
     const { x: wx, y: wy } = event.coordinates.worldPos;
     const goal = this.reachableTile({
       x: Math.floor(wx / TILE_SIZE),
@@ -323,9 +327,20 @@ export class CityScene extends Scene {
   private async handle(command: EngineCommand): Promise<void> {
     if (isStreetCommand(command)) return this.rsaStreet.handle(command, (goal) => findPath(this.solid, this.player.grid, goal));
     switch (command.type) {
+      case "navigate":
+        if (this.inputLocked) return;
+        return this.navigation.walk(this.player, this.reachableTile(command.at), command.label,
+          (goal) => findPath(this.solid, this.player.grid, goal));
+      case "stopNavigation":
+        if (this.inputLocked) return;
+        this.navigation.cancel();
+        this.player.clearRoute();
+        return;
+
       case "qwardCompanion": this.qward.setEnabled(command.enabled); return;
       case "labEntrance": this.lab.setRevealed(command.revealed); return;
       case "lockInput":
+        if (command.locked) this.navigation.cancel();
         this.inputLocked = command.locked;
         if (command.locked) this.player.stop();
         else this.needsSpaceRelease = true;
@@ -333,6 +348,7 @@ export class CityScene extends Scene {
         return;
 
       case "placePlayer": {
+        this.navigation.cancel();
         const requested = Number.isFinite(command.at?.x) && Number.isFinite(command.at?.y) ? { x: Math.round(command.at.x), y: Math.round(command.at.y) } : PLAYER_SPAWN;
         const at = isWalkable(this.solid, requested) ? requested : PLAYER_SPAWN;
         this.player.stop(); this.player.grid = { ...at };
@@ -357,6 +373,7 @@ export class CityScene extends Scene {
         this.beacon.graphics.visible = command.target !== null;
         return;
       case "reset":
+        this.navigation.cancel();
         this.player.stop();
         this.rsaStreet.reset();
         this.needsSpaceRelease = false;

@@ -33,3 +33,8 @@ export async function dependencyNotices(root, inputs) {
   }
   return notices;
 }
+
+/** Static browser data shares one ESM file, outside the game's size budget. */
+export function assetModule(assets, spanish) {
+  return `globalThis.quantumPlaygroundAssets = ${JSON.stringify(assets)};\nexport const spanish = ${JSON.stringify(spanish)};\n`;
+}

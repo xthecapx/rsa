@@ -55,7 +55,7 @@ export function FoundryScreen({ onWest, onEnterWorkshop, restartOptions, onEnter
     },
     restart: { label: "Restart Foundry Town", description: "Forget the five Foundry cards and meet VP Cap again. Your medals and the workshop lesson stay.", restart: () => {} },
     minimap: (props) => <WorldMinimap {...props} map={foundryMap} places={PLACES}
-      roads={[{ at: { x: -0.8, y: FOUNDRY_WEST_ROAD[1] + 0.9 }, glyph: "←", title: "West road to Coin Town" }]}
+      roads={[{ at: { x: -0.8, y: FOUNDRY_WEST_ROAD[1] + 0.9 }, glyph: "←", title: "West road to Coin Town", walkTo: { x: 0, y: FOUNDRY_WEST_ROAD[1] } }]}
       ariaLabel="Foundry Town map: W is Thecap’s workshop, V is VP Cap, 1 to 5 are the crew with knowledge cards, and the arrow on the left is the west road to Coin Town."
       legend={[`W · ${t("Thecap’s workshop")}　V · ${t("VP Cap")}`, TEACHERS.map((npc, i) => `${i + 1} · ${t(npc.title)}`).join("　")]} />,
   };

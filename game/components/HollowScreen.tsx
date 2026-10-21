@@ -55,7 +55,7 @@ export function HollowScreen({ onEast, onEnterVault, restartOptions, onEnterLab 
     },
     restart: { label: "Restart Hollow Town", description: "Forget the five Hollow cards and meet Keeper Cap again. Your medals and the vault lesson stay.", restart: () => {} },
     minimap: (props) => <WorldMinimap {...props} map={hollowMap} places={PLACES}
-      roads={[{ at: { x: hollowMap.width + 0.8, y: HOLLOW_EAST_ROAD[1] + 0.9 }, glyph: "→", title: "East road to Coin Town" }]}
+      roads={[{ at: { x: hollowMap.width + 0.8, y: HOLLOW_EAST_ROAD[1] + 0.9 }, glyph: "→", title: "East road to Coin Town", walkTo: { x: hollowMap.width - 1, y: HOLLOW_EAST_ROAD[1] } }]}
       ariaLabel="Hollow Town map: O is Casa Ofelia, K is Keeper Cap, 1 to 5 are the neighbors with knowledge cards, and the arrow on the right is the east road to Coin Town."
       legend={[`O · ${t("Casa Ofelia")}　K · ${t("Keeper Cap")}`, TEACHERS.map((npc, i) => `${i + 1} · ${t(npc.title)}`).join("　")]} />,
   };

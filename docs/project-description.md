@@ -12,9 +12,10 @@ cryptography. What changes when we try quantum circuits?
 The name connects the adventure to [qWard](https://pypi.org/project/qiskit-qward/),
 the quantum-circuit analysis library I’m developing as part of my PhD research.
 
-For this hackathon, I adapted the existing game to Qollab with shared Python
-services, selected-backend measurements, and checkpoint codes, and added an
-interactive campus and customizable quantum lab.
+For this hackathon, I added the interactive Quantum Campus, guided Math, Run and
+Results flows in every challenge, hidden lab entrances in every town, the rebrand
+to qWard, and the duck companion. The Qollab adaptation, checkpoint codes and the
+first version of the lab came before the hackathon.
 
 ## A world to discover
 

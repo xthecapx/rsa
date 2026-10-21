@@ -190,6 +190,7 @@ export function CampusScreen({
             at: { x: 18, y: -0.6 },
             glyph: "↑",
             title: "Coin Town · always open",
+            walkTo: { x: 18, y: 0 },
           },
         ]}
         ariaLabel="Quantum Campus map: eight exhibits, festival, notebook and the open north road to Coin Town."

@@ -37,7 +37,7 @@ lifecycle. These are planning estimates, not delivery dates.
 | F01b | P1 | Done | Close F01 gaps: cold start, proxy ceiling, per-circuit estimates, remote notice | S–M | F01 added feedback but not the likely cause of the 20 s+ waits (see review below). |
 | F02 | P1 | Done | Invalidate Grover results on every configuration change | S | Round transitions and restored previews now keep results tied to their circuit. |
 | F03 | P1 | Done | Scope RSA notes to their act and label mathematical values | M | Unrelated or mislabeled values undermine puzzle reasoning. |
-| F04 | P1 | Open | Make movement focus explicit and recoverable | M | Keyboard users must be able to resume exploration. |
+| F04 | P1 | Done | Make movement focus explicit and recoverable | M | Keyboard users must be able to resume exploration. |
 | F05 | P1 | Open | Summarize large Shor histograms accessibly | M | Hundreds of entries obstruct access to the useful result. |
 | F06 | P2 | Open | Add a small, discreet signpost to the campus in Quantum Town | S | The professor's recommendation lacks a findable pointer; no teleport. |
 | F07 | P2 | Open | Correct translations, grammar, and misleading directions | M | Fixes comprehension across the existing game. |
@@ -88,11 +88,17 @@ appear as plaintext/RSA notes, private RSA values appear only when earned, and
 missing legacy context is not invented. Recorded-batch re-keying keeps the
 capture synchronized. Existing checkpoint data and save keys are preserved.
 
+**Done — F04 (October 21, 2026).** Outdoor keyboard control now belongs to a
+named play area, with visible focus, translated instructions and a Return to
+exploration control. Destination walking uses existing paths and road locks,
+announces arrival/cancellation, and respects concealed lab discoveries and busy
+travel guards. See F04 for validation.
+
 **Done but not yet verified (verification, not new work):** deployed cold/warm
 latency on Cloud Run; a >30 s response through the Next proxy; a browser and
 screen-reader pass over the new panel and notice; a real physical-QPU wait.
 
-**Open:** F04–F11, F12 (small clarification only), F13 (only if deployed
+**Open:** F05–F11, F12 (small clarification only), F13 (only if deployed
 measurement shows a cause other than cold start and noisy Shor), F14, F15, F17.
 
 **Deferred:** F16 (post-quantum epilogue) and the authentication/man-in-the-middle
@@ -425,13 +431,11 @@ layouts in EN/ES. The disposable browser fixture and checkpoint were removed.
 **Feedback covered:** W fails after focusing the minimap; no obvious canvas focus;
 typing must not move the player; request for keyboard destination navigation.
 
-**Source evidence (verified):** `game/components/GameCanvas.tsx` returns a plain
-`div` host with no `tabIndex`, role, or label. Movement is bound through
-Excalibur `Keys.W/Arrow*` in `engine/scenes/WorldScene.ts` (and `CityScene.ts`),
-i.e. engine keyboard input rather than a React handler, which explains why focus
-on the minimap button does not move the player. Confirm in-browser whether
-Excalibur listens on `window` (then the cause is the button consuming/ignoring
-keys or the engine pausing) or on the canvas (then focus is required).
+**Source evidence (verified):** the original `GameCanvas.tsx` host had no
+focus target, label or visible outline. Excalibur 0.32's `Keyboard.init` defaulted
+to `window`; React dialogs could stop propagation, but keyboard ownership was
+otherwise implicit. The fix binds Excalibur input to the named host and protects
+focus transitions rather than depending on whichever control last received a key.
 
 **Plan:** provide a named, focusable play area with a visible focus indicator and
 concise movement instructions. Give players an obvious keyboard route back from
@@ -448,6 +452,39 @@ town exits and key destinations; respect locks and concealed lab discoveries.
 the minimap, and resume movement without a mouse. Typing WASD in a field never
 moves the character. Tab remains usable, overlays pause movement, and touch
 controls continue to work. Verify with a screen reader, not only DOM assertions.
+
+**Implemented:** all five teaching towns/campus and Quantum Town share the
+focusable application area and minimap navigation. WASD/arrows/Space act only in
+that area. Tab, native controls and modifier shortcuts retain their behavior.
+Blur, overlays and window changes clear held keys; old repeats/releases cannot
+trigger interactions or cancel a newly held movement key. Startup waits for the
+explicit Enter action before focusing exploration. Closing an overlay restores
+focus without reopening its conversation.
+
+The destination selector includes neighbors, lesson doors and town roads. Walk
+reuses collision-aware routes; Stop walking, manual movement and overlays cancel
+navigation without false arrival announcements. Doors/hosts still need explicit
+interaction. Locked roads and exits during a background operation are disabled;
+concealed labs appear only after discovery. Navigation and focus state remain
+transient and never execute a backend request or change checkpoint schemas.
+
+**Validation:** `npm run check` passes (157 Node tests and 150 React tests), plus
+web and Qollab production builds. The Qollab package retains its 20-file contract;
+Spanish translations now share the existing assets module to keep each file below
+2 MB. Browser checks cover keyboard movement, minimap toggle/return, destination
+arrival, explicit conversation/close, typing WASD in a checkpoint field without
+moving, EN/ES, 390 × 760 portrait and 760 × 390 landscape layouts, refresh/resume,
+and walking through Quantum Town's south exit into Cipher Town. Coin, Foundry,
+Quantum Town and Campus exercised the shared controls and both engine classes.
+A native Chrome keyboard pass with macOS VoiceOver enabled verified Tab to the
+minimap, toggling it, returning to exploration and movement; the system setting
+was confirmed off afterward. Browser preview also checks the packaged Qollab
+module and Spanish labels; no physical-QPU execution is part of this UI change.
+
+**Test note:** Chrome reported one WebGL context loss during repeated development
+scene transitions and hot reloads. A full refresh recovered the campus and the
+remaining checks passed; the packaged browser preview reported no JavaScript
+errors. This pass does not establish a cause or change WebGL recovery behavior.
 
 ### F05 — Large Shor result accessibility
 

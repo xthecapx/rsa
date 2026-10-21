@@ -222,8 +222,8 @@ export function CipherScreen({ onSouth, onNorth, restartOptions, onEnterLab }: {
     },
     restart: { label: "Restart Cipher Town", description: "Forget the five Cipher cards and meet Root Cap again. Your medals, credits, gear and the client’s jobs stay.", restart: () => {} },
     minimap: (props) => <WorldMinimap {...props} map={cipherMap} places={PLACES}
-      roads={[{ at: { x: CIPHER_SOUTH_ROAD[1] + 0.5, y: cipherMap.height + 1 }, glyph: "↓", title: "South road to Coin Town" },
-        { at: { x: CIPHER_NORTH_ROAD[0] + 1, y: -0.6 }, glyph: "↑", title: "North road to Quantum Town", locked: !northOpen }]}
+      roads={[{ at: { x: CIPHER_SOUTH_ROAD[1] + 0.5, y: cipherMap.height + 1 }, glyph: "↓", title: "South road to Coin Town", walkTo: { x: CIPHER_SOUTH_ROAD[1], y: cipherMap.height - 1 } },
+        { at: { x: CIPHER_NORTH_ROAD[0] + 1, y: -0.6 }, glyph: "↑", title: "North road to Quantum Town", walkTo: { x: CIPHER_NORTH_ROAD[1], y: 0 }, locked: !northOpen }]}
       ariaLabel="Cipher Town map: C is the client’s car, R is Root Cap, $ is Chispa’s gear stall, B is the bounty board, 1 to 5 are the neighbors with knowledge cards, and the arrows are the south road to Coin Town and the north road to Quantum Town."
       legend={[`C · ${t("The client")}　R · ${t("Root Cap")}　$ · ${t("Chispa")}　B · ${t("Bounty board")}`, TEACHERS.map((npc, i) => `${i + 1} · ${t(npc.title)}`).join("　")]} />,
   };

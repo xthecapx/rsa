@@ -33,7 +33,9 @@ it("ordinary exploration never reveals an entrance; explicit discovery displays 
   const view = render(<WorldMinimap {...props} labRevealed={false} />);
   expect(screen.queryByText("Personal quantum lab")).toBeNull();
   view.rerender(<WorldMinimap {...props} explored={[]} labRevealed />);
-  expect(screen.getByText("Personal quantum lab")).toBeTruthy();
+  expect(view.container.querySelector("svg")?.textContent).toContain(
+    "Personal quantum lab",
+  );
 });
 it("Quantum Town uses explicit entrance discovery, independently of nearby target visits and fog", () => {
   useTown.getState().reset();

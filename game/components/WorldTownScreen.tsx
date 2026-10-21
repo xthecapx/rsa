@@ -363,9 +363,9 @@ export function WorldTownScreen({ config, restartOptions, onEnterLab }: { config
     sceneReady={sceneReady} sceneFailed={sceneStatus === "error"} laptopOpen={activityVisible || !!missionShell?.laptopOpen || !!config.interaction?.locked} laptopReady={!!activity || !!missionShell?.laptopReady}
     onOpenLaptop={() => config.interaction?.handles("notebook") ? config.interaction.interact("notebook") : config.exploration ? setPanel("notebook") : missionShell?.onOpenLaptop ? missionShell.onOpenLaptop() : activity ? setActivityOpen(true)
       : say("Your laptop", [{ speaker: "system", text: "Neighbors lend you their benches here. Talk to anyone whose name board starts with !." }], [{ label: "Keep exploring", action: close }])}>
-    {hydrated && <GameCanvas world={config.world} onReady={onReady} onError={onError} />}
+    {hydrated && <GameCanvas active={sceneReady && !inputLocked} world={config.world} onReady={onReady} onError={onError} />}
     {sceneReady && <>
-      {!inputLocked && <div className="absolute right-3 top-3 z-10 flex max-w-[calc(100%-1.5rem)] flex-col items-end gap-2">
+      {!inputLocked && <div className="absolute right-3 top-3 z-10 flex max-h-[calc(100%-1.5rem)] max-w-[calc(100%-1.5rem)] flex-col items-end gap-2">
         {config.minimap({ position: saved.position, facing: saved.facing, explored: saved.explored, labTown: config.slot, labRevealed, done, pending: [...alerts, ...(challenge.complete ? [] : [challenge.door])], tracked })}
         {config.hud}
       </div>}

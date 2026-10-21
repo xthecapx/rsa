@@ -24,6 +24,7 @@ import { Character } from "../actors/Character";
 import { QwardCompanion } from "../actors/QwardCompanion";
 import { RsaStreet, isStreetCommand } from "../actors/RsaStreet";
 import { TownSign } from "../actors/TownSign";
+import { DestinationNavigation } from "../destinationNavigation";
 import { bus } from "../bus";
 import type { EngineCommand } from "../bus";
 import { LANDMARKS, tileCenter, type GridPos } from "../maps/street";
@@ -112,6 +113,7 @@ export class WorldScene extends Scene {
   private beacon!: Actor;
   private tracked: GridPos | null = null;
   private inputLocked = true;
+  private navigation = new DestinationNavigation();
   private needsSpaceRelease = false;
   private lastNear: string | null = null;
   private lastPosition = "";
@@ -262,6 +264,7 @@ export class WorldScene extends Scene {
   }
 
   override onDeactivate(): void {
+    this.navigation.cancel();
     this.pointerSub?.close(); this.pointerSub = null;
     this.player.stop(); clearTouchInput();
     this.street?.deactivate();
@@ -322,6 +325,7 @@ export class WorldScene extends Scene {
     const direction = touchDirection();
     if (direction || MOVE_KEYS.some(({ keys }) => keys.some((key) => engine.input.keyboard.isHeld(key)))) {
       this.petApproach = null;
+      this.navigation.cancel();
       this.player.clearRoute();
     }
     if (this.player.isMoving) return;
@@ -386,6 +390,7 @@ export class WorldScene extends Scene {
     if ("button" in event.nativeEvent && event.nativeEvent.button !== 0) return;
     if ("isPrimary" in event.nativeEvent && event.nativeEvent.isPrimary === false) return;
     if ("touches" in event.nativeEvent && (event.nativeEvent as TouchEvent).touches.length > 1) return;
+    this.navigation.cancel();
     this.petApproach = null;
     const clicked = this.animals.find((animal) => canPet(animal.kind)
       && Math.abs(animal.pos.x - event.coordinates.worldPos.x) <= TILE_SIZE / 2
@@ -461,15 +466,28 @@ export class WorldScene extends Scene {
   private async handle(command: EngineCommand): Promise<void> {
     if (this.street && isStreetCommand(command)) return this.street.handle(command, (goal) => findRoute(this.grid, this.player.grid, goal));
     switch (command.type) {
+      case "navigate":
+        if (this.inputLocked) return;
+        this.petApproach = null;
+        return this.navigation.walk(this.player, this.reachable(command.at), command.label,
+          (goal) => findRoute(this.grid, this.player.grid, goal));
+      case "stopNavigation":
+        if (this.inputLocked) return;
+        this.navigation.cancel();
+        this.player.clearRoute();
+        return;
+
       case "qwardCompanion": this.qward.setEnabled(command.enabled); return;
       case "labEntrance": this.lab.setRevealed(command.revealed); return;
       case "lockInput":
+        if (command.locked) this.navigation.cancel();
         this.inputLocked = command.locked;
         this.petApproach = null;
         if (command.locked) this.player.stop(); else this.needsSpaceRelease = true;
         clearTouchInput();
         return;
       case "placePlayer": {
+        this.navigation.cancel();
         this.petApproach = null;
         const requested = { x: Math.round(command.at.x), y: Math.round(command.at.y) };
         const at = Number.isFinite(requested.x) && walkable(this.grid, requested) ? requested : this.def.spawn;
@@ -481,6 +499,7 @@ export class WorldScene extends Scene {
         return;
       }
       case "reset":
+        this.navigation.cancel();
         this.petApproach = null;
         this.player.stop(); this.street?.reset();
         this.needsSpaceRelease = false; this.lastWalking = false; this.walkIdleMs = 0;

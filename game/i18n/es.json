@@ -3327,5 +3327,18 @@
   "Caesar shift k = {shift} gives \"{word}\".": "El desplazamiento César k = {shift} da \"{word}\".",
   "Shift k = {shift}  ->  {candidate}   <-- plaintext": "Desplazamiento k = {shift}  ->  {candidate}   <-- texto claro",
   "Shift k = {shift}  ->  {candidate}": "Desplazamiento k = {shift}  ->  {candidate}",
-  "Recovered Caesar shift k = {shift} after {trials} trials in {ms} ms.": "Se recuperó el desplazamiento César k = {shift} tras {trials} pruebas en {ms} ms."
+  "Recovered Caesar shift k = {shift} after {trials} trials in {ms} ms.": "Se recuperó el desplazamiento César k = {shift} tras {trials} pruebas en {ms} ms.",
+  "Town exploration": "Exploración del pueblo",
+  "Move with WASD or arrows. Space interacts. Tab leaves the play area; Return to exploration brings you back.": "Muévete con WASD o las flechas. Espacio interactúa. Tab sale del área de juego; Volver a explorar te permite regresar.",
+  "Return to exploration": "Volver a explorar",
+  "Walk to a destination": "Caminar a un destino",
+  "Destination": "Destino",
+  "Walk": "Caminar",
+  "Stop walking": "Dejar de caminar",
+  "Walking follows the paths. Use Space or Talk on arrival. WASD or arrows cancel the route. Roads leave town.": "Caminar sigue los caminos. Usa Espacio o Hablar al llegar. WASD o las flechas cancelan la ruta. Los caminos de salida llevan a otro pueblo.",
+  "Walking to": "Caminando hacia",
+  "Arrived at": "Llegaste a",
+  "Walking stopped": "Caminata detenida",
+  "No open path to": "No hay un camino abierto hacia",
+  "South road to Cipher Town": "Camino del sur a Pueblo Cifrado"
 }

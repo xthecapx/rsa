@@ -720,6 +720,8 @@ html[data-compact-viewport="true"] .laptop-footer { padding: 4px 8px; font-size:
 /* Excalibur positions its zoomed canvas; flex centering would double the crop. */
 @media (pointer: coarse) { .game-canvas-host { display: block; } }
 
+.town-minimap { max-height: min(calc(var(--game-viewport-height) - 160px), calc(var(--game-viewport-height) * .72)); overflow-y: auto; overscroll-behavior: contain; }
+
 /* The map starts folded on touch devices; an opened map stays scrollable. */
 @media (pointer: coarse) {
   .town-minimap { max-height: min(calc(var(--game-viewport-height) - 110px), calc(var(--game-viewport-height) * .7)); overflow-y: auto; overscroll-behavior: contain; }
@@ -997,3 +999,10 @@ button.campus-evidence-card { min-height:44px; }
   .game-splash-content > * { margin-top: 0.5rem; }
   .game-splash-content > h1 { font-size: 1.25rem; }
 }
+
+/* Keyboard focus belongs to the bounded play area, with an escape via Tab. */
+.game-canvas-host:focus-visible { outline: 3px solid #efbe67; outline-offset: -4px; }
+.exploration-help { visibility: hidden; }
+.game-canvas-host:focus-visible + .exploration-help { visibility: visible; }
+.exploration-navigation button, .exploration-navigation select, .exploration-navigation summary { min-height: 44px; }
+.exploration-navigation :focus-visible { outline: 3px solid #efbe67; outline-offset: 2px; }
