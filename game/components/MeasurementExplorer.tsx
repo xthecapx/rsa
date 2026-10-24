@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { groupBits, summarize, type Measurement } from "@/game/histogram";
 import { gameAudio } from "@/game/audio";
-import { t, useLocale } from "@/i18n";
+import { t, tCount, useLocale } from "@/i18n";
 
 const percent = (share: number) => `${share >= 0.995 || share === 0 ? Math.round(share * 100) : share >= 0.1 ? (share * 100).toFixed(0) : (share * 100).toFixed(1)}%`;
 type Tab = "outcomes" | "qubits" | "raw";
@@ -42,7 +42,7 @@ export function MeasurementExplorer({ measurement, title, qubitName = "Qubit", o
         <div>
           <h3>🔍 {t(title)}</h3>
           <p className="text-xs text-stage-muted">
-            {measurement.bits} {t("qubits")} · {summary.possible.toLocaleString("en-US")} {t("possible outcomes")} · {shots} {t(shots === 1 ? "shot" : "shots")} · {summary.distinct} {t("seen")}
+            {tCount(measurement.bits, "{count} qubit", "{count} qubits")} · {summary.possible.toLocaleString("en-US")} {t("possible outcomes")} · {tCount(shots, "{count} shot", "{count} shots")} · {tCount(summary.distinct, "{count} observed outcome", "{count} observed outcomes")}
           </p>
           <p className="text-xs text-accent-teal">{t(measurement.source === "hardware" ? "Real hardware" : measurement.kind === "noise" ? "Noise-model simulator" : measurement.kind === "ideal" ? "Ideal simulator" : "Simulator")}{measurement.backend ? ` · ${measurement.backend}` : ""}</p>
         </div>

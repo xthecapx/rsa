@@ -383,6 +383,15 @@ Bloch sphere. Unfinished neighbor work remains in memory for the current visit.
   or recorded hardware results. The web server does not submit IBM jobs; Qollab
   can submit a fresh run to its selected physical QPU as a separate option.
 
+RSA/Caesar message answers stay in the same English A–Z form in both UI
+languages, without accents (CAFE names a café/meeting place). Explain this
+convention without treating candidate selection as proof of correctness. Keep
+source text in terminal logs and transient feedback; translate only when rendered,
+so language switches preserve work and update prose. Use `tCount` with complete
+`{count}` singular/plural templates for measurement units. Preserve legacy log
+translation aliases, backend method IDs and mathematical payloads. Grover’s exit
+hint uses the saved `groverFrom` origin, matching the actual return action.
+
 ## Where to change behavior
 
 Paths below are relative to the repository root.

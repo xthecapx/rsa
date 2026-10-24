@@ -4,7 +4,7 @@ import { useSimulator } from "@/game/simulator";
 import { runtimeInfo } from "@/lib/transport";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import clsx from "clsx";
-import { t, localize, useLocale } from "@/i18n";
+import { t, tCount, localize, useLocale } from "@/i18n";
 import { gameAudio } from "@/game/audio";
 import {
   applyShorResult,
@@ -128,7 +128,7 @@ export function ShorPipeline({ armed }: { armed: boolean }) {
   const [selected, setSelected] = useState<BoxId | null>(null);
   const [note, setNote] = useState<{
     tone: "bad" | "good" | "note";
-    text: ReactNode;
+    text: string;
   } | null>(null);
   const ticket = useRef(0);
   const puzzle = useRef<PuzzleControls>(null);
@@ -259,7 +259,7 @@ export function ShorPipeline({ armed }: { armed: boolean }) {
     setSelected(null);
     if (expectedTarget(from) !== to) {
       gameAudio.playSfx("error");
-      setNote({ tone: "bad", text: t(wireFeedback(from, to)) });
+      setNote({ tone: "bad", text: wireFeedback(from, to) });
       return;
     }
     gameAudio.playSynth("wire");
@@ -274,13 +274,11 @@ export function ShorPipeline({ armed }: { armed: boolean }) {
       next.length >= WIRES
         ? {
             tone: "good",
-            text: t(
-              "Every box is connected. Set up the QPU, then run the pipeline.",
-            ),
+            text: "Every box is connected. Set up the QPU, then run the pipeline.",
           }
         : {
             tone: "note",
-            text: `${t(boxOf(from).emits!.label)} → ${t(boxOf(to).title)}`,
+            text: `${boxOf(from).emits!.label} → ${boxOf(to).title}`,
           },
     );
   }
@@ -396,7 +394,7 @@ export function ShorPipeline({ armed }: { armed: boolean }) {
           gameAudio.playSfx("computer");
           pushTerminal({
             tone: "info",
-            text: `${next.qpu}: ${Object.keys(next.counts).length} distinct outcomes over ${next.shots} shots.`,
+            text: `${next.qpu}: observed outcomes = ${Object.keys(next.counts).length}; shots = ${next.shots}.`,
           });
           await hop("classical-out", 500);
 
@@ -688,9 +686,13 @@ export function ShorPipeline({ armed }: { armed: boolean }) {
                 <MeasurementIcon />
               </MeasureInspect>
               <p className="pipe-fact">
-                {t(
-                  `${run.shots} shots, ${Object.keys(run.counts).length} distinct bitstrings.`,
+                {tCount(run.shots, "{count} shot", "{count} shots")},{" "}
+                {tCount(
+                  Object.keys(run.counts).length,
+                  "{count} distinct bitstring",
+                  "{count} distinct bitstrings",
                 )}
+                .
               </p>
             </div>
             <MeasureHint />
@@ -1009,7 +1011,7 @@ export function ShorPipeline({ armed }: { armed: boolean }) {
                       : "text-[#cfe6ee]",
                 )}
               >
-                {note.text}
+                {t(note.text)}
               </p>
             )}
           </>

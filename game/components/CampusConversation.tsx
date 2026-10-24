@@ -12,7 +12,7 @@ import {
   rotationPair,
   type CampusRun,
 } from "@/game/campusJourney";
-import { t, useLocale } from "@/i18n";
+import { t, tCount, useLocale } from "@/i18n";
 import { DialogueFrame, DialogueLine } from "./DialoguePresentation";
 import { AngleDial } from "./AngleDial";
 import { MedalReveal } from "./MedalCase";
@@ -45,7 +45,7 @@ export function CampusEvidenceCard({
                 ? "Ideal simulator"
                 : "Simulator",
         )}{" "}
-        · {result.shots} {t("shots")}
+        · {tCount(result.shots, "{count} shot", "{count} shots")}
       </span>
       <span className="mt-2 block font-mono text-sm">
         {Object.entries(result.counts)

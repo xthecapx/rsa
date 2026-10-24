@@ -7,6 +7,7 @@ import {
   within,
 } from "@testing-library/react";
 import { afterEach, expect, it } from "vitest";
+import { MeasurementExplorer } from "@/components/MeasurementExplorer";
 import { CircuitHistogram } from "@/components/CircuitHistogram";
 import { useLocale } from "@/i18n";
 
@@ -161,4 +162,50 @@ it("keeps all sixteen anonymous Grover bars visible and numerically ordered", ()
       (el) => el.textContent,
     ),
   ).toEqual(Array.from({ length: 16 }, (_, i) => `Bar ${i + 1}`));
+});
+
+it("uses a singular shot for one returned count and keeps the reading when changing language", () => {
+  const reading = Object.freeze({ "0": 1 });
+  render(
+    <CircuitHistogram
+      counts={reading}
+      backend="Saved Aer"
+      source="simulator"
+    />,
+  );
+  expect(screen.getByText(/Observed counts · 1 shot · Saved Aer/)).toBeTruthy();
+  act(() => useLocale.getState().setLocale("es"));
+  expect(
+    screen.getByText(/Conteos observados · 1 ejecución · Saved Aer/),
+  ).toBeTruthy();
+  expect(screen.queryByText(/1 ejecuciones/)).toBeNull();
+  expect(reading).toEqual({ "0": 1 });
+});
+
+it("reads one qubit and one observed outcome in either language without changing its measurement", () => {
+  const measurement = {
+    bits: 1,
+    counts: { "1": 1 },
+    backend: "Saved Aer",
+    source: "simulator" as const,
+  };
+  render(
+    <MeasurementExplorer
+      measurement={measurement}
+      title="Measurement"
+      onClose={() => {}}
+    />,
+  );
+  expect(
+    screen.getByText(
+      /1 qubit · 2 possible outcomes · 1 shot · 1 observed outcome/,
+    ),
+  ).toBeTruthy();
+  act(() => useLocale.getState().setLocale("es"));
+  expect(
+    screen.getByText(
+      /1 cúbit · 2 resultados posibles · 1 ejecución · 1 resultado observado/,
+    ),
+  ).toBeTruthy();
+  expect(measurement.counts).toEqual({ "1": 1 });
 });

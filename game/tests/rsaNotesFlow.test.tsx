@@ -225,3 +225,28 @@ it("legacy RSA checkpoints with no workshop evidence retain their data but canno
   expect(useGame.getState().vars.d).toBe(5);
   expect(useGame.getState().vars.recovered).toBe("B");
 });
+
+it("keeps a selected CAFE candidate and its shift through language changes and laptop reopen", () => {
+  enter(2);
+  useGame.getState().setVars({ cipherText: "FDIH", recovered: null });
+  useGame
+    .getState()
+    .setCapture({ scheme: "Caesar, shift unknown", payload: "FDIH" });
+  useGame.getState().setLabMemory({ candidates: [{ shift: 3, word: "CAFE" }] });
+  const crack = vi.spyOn(api.caesar, "crack");
+  const view = render(<LaptopScene act={2} />);
+  expect(screen.getByText(/CAFE means café/)).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: /Shift k = 3.*CAFE/ }));
+  expect(screen.getByText(/You selected a candidate message/)).toBeTruthy();
+  const saved = JSON.stringify(captureRsa());
+  act(() => useLocale.getState().setLocale("es"));
+  expect(screen.getByText(/CAFE significa café/)).toBeTruthy();
+  expect(screen.getByText(/Seleccionaste un posible mensaje/)).toBeTruthy();
+  expect(JSON.stringify(captureRsa())).toBe(saved);
+  view.unmount();
+  render(<LaptopScene act={2} />);
+  expect(screen.getByText(/Seleccionaste un posible mensaje/)).toBeTruthy();
+  expect(useGame.getState().vars.recovered).toBe("CAFE");
+  expect(useGame.getState().vars.shift).toBe(3);
+  expect(crack).not.toHaveBeenCalled();
+});

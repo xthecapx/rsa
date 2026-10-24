@@ -149,7 +149,7 @@ function CaesarWizard({ armed }: { armed: boolean }) {
         });
         setCandidates(rows);
         useGame.getState().setLabMemory({ candidates: rows });
-        pushTerminal({ tone: "info", text: `Tried all 25 shifts against "${cipherText}". One of them is English.` });
+        pushTerminal({ tone: "info", text: `Tried all 25 shifts against "${cipherText}". Compare the candidate messages.` });
         gameAudio.playSfx("computer");
       },
       error(cause) { useGame.getState().setError(cause instanceof Error ? cause.message : String(cause)); },
@@ -165,6 +165,7 @@ function CaesarWizard({ armed }: { armed: boolean }) {
 
   return (
     <div className="laptop-challenge space-y-3">
+      <p className="laptop-note">{t("Their messages stay in English in both game languages, using A–Z without accents: CAFE means café, a meeting place.")}</p>
       {step === 1 && (
         <>
           <StepHeader step={1} total={3} title={t("Brute-force the shift")} />
@@ -179,8 +180,8 @@ function CaesarWizard({ armed }: { armed: boolean }) {
       )}
       {step === 2 && (
         <>
-          <StepHeader step={2} total={3} title={t("Pick the English word")} />
-          <LaptopQuestion prompt={t("Which line reads like a real word? Tap it to lock plaintext.")} className="space-y-3">
+          <StepHeader step={2} total={3} title={t("Choose the readable message")} />
+          <LaptopQuestion prompt={t("Which candidate is a readable message? Select it, then report it to the client.")} className="space-y-3">
           <ul className="max-h-[40dvh] space-y-2 overflow-y-auto sm:max-h-64">
             {candidates.map((row) => (
               <li key={row.shift}>
@@ -202,7 +203,7 @@ function CaesarWizard({ armed }: { armed: boolean }) {
       {step === 3 && (
         <>
           <StepHeader step={3} total={3} title={t("Plaintext locked")} />
-          <p className="laptop-note">{t("You chose the English candidate. Close when ready, or hit “I have it”.")}</p>
+          <p className="laptop-note">{t("You selected a candidate message. Close when ready, or hit “I have it”.")}</p>
         </>
       )}
     </div>

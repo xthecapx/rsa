@@ -28,3 +28,16 @@ export function translate(text: string, catalog: Record<string, string>): string
   }
   return text;
 }
+
+/** Choose the grammatical form before translating, then insert the count. */
+export function translateCount(
+  count: number,
+  singular: string,
+  plural: string,
+  catalog: Record<string, string>,
+): string {
+  return translate(count === 1 ? singular : plural, catalog).replaceAll(
+    "{count}",
+    String(count),
+  );
+}

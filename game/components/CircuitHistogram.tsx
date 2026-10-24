@@ -3,7 +3,7 @@
 import { HistogramBars } from "./HistogramBars";
 import { useId, useRef, useState } from "react";
 import { countsPresentation } from "@/game/countsPresentation";
-import { t, useLocale } from "@/i18n";
+import { t, tCount, useLocale } from "@/i18n";
 import type { Measurement } from "@/game/histogram";
 
 /** Only returned measurements make bars; ideal probabilities stay a reference. */
@@ -37,7 +37,8 @@ export function CircuitHistogram({
       aria-label={t("Observed counts")}
     >
       <p className="text-xs text-accent-teal">
-        {t("Observed counts")} · {shots} {t("shots")} · {backend} ·{" "}
+        {t("Observed counts")} ·{" "}
+        {tCount(shots, "{count} shot", "{count} shots")} · {backend} ·{" "}
         {t(
           source === "hardware"
             ? "Real hardware"
@@ -71,8 +72,9 @@ export function CircuitHistogram({
       />
       {large && (
         <p className="text-xs">
-          {t("Other observed outcomes")}: {other.outcomes} · {other.count}{" "}
-          {t("shots")} · {share(other.count)}%
+          {t("Other observed outcomes")}: {other.outcomes} ·{" "}
+          {tCount(other.count, "{count} shot", "{count} shots")} ·{" "}
+          {share(other.count)}%
         </p>
       )}
       <p className="text-xs text-stage-muted">

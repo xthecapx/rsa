@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { GROVER_SCENES, GROVER_STEPS, type GroverPlace, type GroverStep } from "@/content/grover";
 import { CircuitHistogram } from "./CircuitHistogram";
 import { groverApi, GroverRefusal, tallest, type GroverRun } from "@/lib/grover";
+import { useTown } from "@/game/town";
 import { useProgress } from "@/game/progress";
 import { useMedals } from "@/game/medals";
 import { MedalReveal } from "./MedalCase";
@@ -121,6 +122,7 @@ function restoreSaved(value: unknown): Session {
 
 export function GroverScenario({ onExit, onRestartGame }: { onExit?: () => void; onRestartGame?: () => void }) {
   useLocale((state) => state.locale);
+  const returnFrom = useTown((state) => state.groverFrom);
   const assetStatus = useGroverSceneAssets();
   const { session, setSession, hydrated, storageNote, save } = useLessonSession({
     key: GROVER_SAVE_KEY, initial: INITIAL, restore: restoreSaved, unreadable: () => fresh(),
@@ -274,6 +276,11 @@ export function GroverScenario({ onExit, onRestartGame }: { onExit?: () => void;
   const deskStep = DESK_STEPS.includes(session.step);
   const panelTitle = scene.place === "desk" ? "Quantum core" : scene.place === "board" ? "Whiteboard" : "Drone core";
 
+  const exitHint = !onExit
+    ? "Leave the workshop and return to town. Your lesson is saved."
+    : returnFrom === "foundry"
+      ? "Leave the workshop and return to Foundry Town. Your lesson is saved."
+      : "Leave the workshop and return to Quantum Town. Your lesson is saved.";
   return <GameShell restartControl={restartControl} title={t("Echo Chamber")} subtitle={t(scene.title)} backHref="/" backLabel={t("Return to town")} onBack={leaveHouse} backDisabled={busy || !sceneReady} onObjectivesOpen={setJournalOpen}
     sceneReady={sceneReady} sceneFailed={assetStatus === "error"}
     sidebar={sidebar} objectives={objectives} laptopOpen={laptopOpen} laptopReady={atPlace && finishedDialog}
@@ -288,7 +295,7 @@ export function GroverScenario({ onExit, onRestartGame }: { onExit?: () => void;
       {!atPlace ? <div className={`textbox max-w-lg px-4 py-3 text-center transition-opacity ${walking ? "opacity-20" : ""}`}>
         {session.notice && <p className="mb-2 text-sm text-accent-amber">{t(session.notice)}</p>}
         <p className="text-sm leading-relaxed">{t(scene.objective)}</p>
-        <p className="mt-2 text-xs text-accent-amber">{nearExit ? t("Leave the workshop and return to Quantum Town. Your lesson is saved.") : nearbyPlace === scene.place ? t("Use Talk to interact.") : t("Walk to the glowing marker.")}</p>
+        <p className="mt-2 text-xs text-accent-amber">{nearExit ? t(exitHint) : nearbyPlace === scene.place ? t("Use Talk to interact.") : t("Walk to the glowing marker.")}</p>
         {(nearExit || nearbyPlace === scene.place) && <>
           <p className="coin-keyboard-hint mt-2 text-xs text-stage-muted">{t(nearExit ? "Press Space to return to town." : "Press Space to talk.")}</p>
           <TalkControl inline label={nearExit ? "Return to town" : "Talk"} canInteract={sceneReady && !busy}

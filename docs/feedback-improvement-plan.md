@@ -40,7 +40,7 @@ lifecycle. These are planning estimates, not delivery dates.
 | F04 | P1 | Done | Make movement focus explicit and recoverable | M | Keyboard users must be able to resume exploration. |
 | F05 | P1 | Done | Summarize large Shor histograms accessibly | M | Hundreds of entries obstruct access to the useful result. |
 | F06 | P2 | Done | Add a small, discreet signpost to the campus in Quantum Town | S | The professor's recommendation lacks a findable pointer; no teleport. |
-| F07 | P2 | Open | Correct translations, grammar, and misleading directions | M | Fixes comprehension across the existing game. |
+| F07 | P2 | Done | Correct translations, grammar, and misleading directions | M | Fixes comprehension across the existing game. |
 | F08 | P2 | Open | Clarify festival markers and synchronize completion displays | S–M | Players should know when their work is finished. |
 | F09 | P2 | Open | Give repeated controls contextual accessible names | M | Makes circuit editing understandable without visual position. |
 | F10 | P2 | Open | Reduce minimap obstruction and clarify pointer behavior | M | Restores usable exploration space, especially on mobile. |
@@ -105,11 +105,17 @@ The professor points to it in both completion greetings. EN/ES inspection uses
 Space or Inspect and changes no saved state; there is no teleport or new marker.
 See F06 for validation.
 
+**Done — F07 (October 24, 2026).** RSA confirmations and Shor wiring logs
+translate at display time, count labels use singular/plural templates, and the
+reported Spanish typos are corrected. Caesar explains its unchanged English
+A–Z message convention; Grover’s exit hint follows its saved entry town. See F07
+for validation and the reported “hand” context.
+
 **Done but not yet verified (verification, not new work):** deployed cold/warm
 latency on Cloud Run; a >30 s response through the Next proxy; a browser and
 screen-reader pass over the new panel and notice; a real physical-QPU wait.
 
-**Open:** F07–F11, F12 (small clarification only), F13 (only if deployed
+**Open:** F08–F11, F12 (small clarification only), F13 (only if deployed
 measurement shows a cause other than cold start and noisy Shor), F14, F15, F17.
 
 **Deferred:** F16 (post-quantum epilogue) and the authentication/man-in-the-middle
@@ -602,28 +608,59 @@ does not move the player.
 portátil”, “1 cúbits”, “1 ejecuciones”, “Escáner de el portátil”, “Cierral portátil”,
 and a Foundry instruction pointing to Quantum Town.
 
-**Source evidence (verified):** `game/i18n/es.json` line ~276 “Cierral portátil”,
-~1273 “Escáner de el portátil”, ~2211 “paral portátil”.
-`RsaWorkbench.tsx:143` builds `Backend agrees/disagrees: ${res.equation}` with no
-catalog template, so it stays English. There is no plural helper in
-`i18n/translate.ts`; counts come from templates such as `{n} qubits` /
-`{shots} shots` (es.json ~517, 526, 951, 955; `ShorPipeline.tsx` ~645, 681), so
-“1 cúbits / 1 ejecuciones” needs a singular template or a small plural helper,
-not only a string fix. “Measure -> Classical PC”, “reconstruida mediante hand”,
-and the Foundry wrong-town line were not found by grep and need contextual
-reproduction (the Grover exit hint at `GroverScenario.tsx:274` says “return to
-Quantum Town”, which is correct only for replay entry, so it is the likely
-source of the Foundry report). The “palabra en inglés” strings are faithful
-translations; the issue is the prompt design, as the plan says.
+**Implemented (October 24, 2026):**
 
-**Plan:** audit source text and runtime interpolation in `game/i18n/translate.ts`,
-`es.json`, RSA tools, Shor wiring labels, and lesson content. Translate complete
-templates; preserve mathematical placeholders and persisted-message aliases.
-Use proper singular/plural forms. Correct “Cierra el portátil”, “Escáner del
-portátil”, and “Un complemento para el portátil”. Explain the game's fixed
-English plaintext convention without presenting CAFE as a uniquely recognizable
-English word; use a more precise prompt where needed. Check return instructions
-against the actual lesson entry town, including replay entry from Quantum Town.
+- Added complete EN/ES templates for both RSA backend confirmations and all four
+  Shor connection logs. Wiring feedback keeps source text until rendering, so a
+  language switch updates it without changing connections or submitting a job.
+- Shared measurement explorers, histograms, execution buttons and campus evidence
+  use explicit singular/plural count templates. One returned shot now reads
+  “1 shot” / “1 ejecución”; one measured wire reads “1 qubit” / “1 cúbit”.
+  The explorer also uses “1 observed outcome” / “1 resultado observado”.
+- Corrected “Cierra el portátil”, “Escáner del portátil” and “Un complemento para
+  el portátil”.
+- Caesar now asks for the readable message and describes selection as a candidate,
+  rather than claiming any selection is the English answer. Its story and laptop
+  explain that both game languages retain short English messages in A–Z without
+  accents, including CAFE for café, a meeting place. Answers, shifts and validation
+  remain unchanged. Legacy source-message aliases remain supported.
+- The workshop exit hint reads the same saved `groverFrom` origin as the return
+  action: Foundry Town for its main lesson, Quantum Town for replay entry. The
+  standalone fallback uses neutral “return to town” wording. Coin’s existing
+  Coin Town return and Hollow’s neutral wording already match their exit behavior.
+
+**Reported “hand” context:** the exact phrase “reconstruida mediante hand” is
+not present in current source. Act 3’s private-key narrative already says
+“reconstruida a mano”. The nearby generic factorization log `N = … by {method}.`
+could leave an English method untranslated. Current backend `trial_division`
+now has readable source wording and Spanish translation; explicit legacy aliases
+for `trial_division` and `hand` prevent that mixing in restored logs, without
+changing API method IDs or inventing execution history.
+
+**Validation:** translation regressions cover dynamic equations, all Shor wires,
+legacy factorization methods, unchanged mathematical placeholders, and zero/one/
+many counts in both languages. UI regressions cover wiring and feedback across
+language changes without a job, single-shot measurements, and a selected CAFE
+answer/shift across language changes and laptop reopen. Browser smoke checks
+used temporary previews of the real laptop, explorer and workshop components:
+EN/ES text, keyboard placement/selection/close, mobile 390 × 760 layout, Shor
+connection logs, restored RSA method logs, and both workshop return towns. Seeded
+results were used for display checks; no quantum execution was required. The
+temporary preview route was removed afterward. `npm run check` passed (162 Node
+tests and 160 UI tests), as did the production web and Qollab builds. Qollab
+retains its 20-file package and per-file size cap.
+
+**Review follow-up (October 24, 2026):** found and corrected missing Spanish
+templates for Shor's classical-input, job-setup, connected-batch and counts logs,
+including the older counts-log format. The measurement summary now handles one
+distinct bitstring and one shot independently. Also corrected the remaining
+Ghost Key “Usal portátil” typo in current and legacy copy. Regression coverage
+checks logs emitted by an actual component run with a mocked response, language
+switching without a second submission, provider names and mathematical payloads,
+and the hardware/reference log branches. Browser checks with seeded counts
+confirmed EN/ES summaries and retained results after component reopen.
+`npm run check` passed with 163 Node tests and 160 UI tests. Production web and
+Qollab builds passed; the Qollab package still contains 20 files within its size cap.
 
 **Acceptance:** every reported phrase is corrected or documented with its actual
 context; EN/ES walkthroughs show no unexplained language mixing. Puzzle answers,

@@ -149,7 +149,7 @@ export const act2 = defineAct({
         },
         {
           speaker: "system",
-          text: "On the laptop: ask for every shift, then tap the one English word in the list. That is your plaintext.",
+          text: "On the laptop: try every shift, then choose the readable message. Ale and Brayan use short English messages, written A–Z without accents, in either game language.",
         },
       ],
       waitsFor: "workbench",
@@ -186,7 +186,7 @@ export const act2 = defineAct({
       waitsFor: "report",
       report: {
         wrong:
-          "\"That is not a word.\" He is right. Go back and pick the candidate that reads like English, not the one next to it.",
+          "\"That is not their message.\" Return to the laptop and compare the candidates again. The game keeps their English messages in A–Z without accents.",
       },
       next: "win",
     },

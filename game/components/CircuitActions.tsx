@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { t, useLocale } from "@/i18n";
+import { t, tCount, useLocale } from "@/i18n";
 
 /** Compact actions anchored to the circuit; labels remain available on hover. */
 export function CircuitActions({
@@ -29,7 +29,7 @@ export function CircuitActions({
   const clear = t(clearLabel);
   const run = busy
     ? t("Running circuit…")
-    : `${t(runLabel)} · ${shots} ${t("shots")}`;
+    : `${t(runLabel)} · ${tCount(shots, "{count} shot", "{count} shots")}`;
   return (
     <div className="circuit-actions" role="group" aria-label={t(controlsLabel)}>
       {children}

@@ -218,7 +218,7 @@ async function runApi(call: string): Promise<void> {
         projectedYears: humanYears(res.rsa2048_projection.projected_years),
       });
       for (const step of res.toy.trace) say({ tone: "info", text: step.detail });
-      say({ tone: "good", text: `N = ${factors} by ${res.toy.method}.` });
+      say({ tone: "good", text: `N = ${factors} by ${res.toy.method === "trial_division" ? "trial division" : res.toy.method}.` });
       say({
         tone: "bad",
         text: `Same attack on RSA-2048 (${res.rsa2048_projection.algorithm}): about ${res.rsa2048_projection.projected_years_scientific} years.`,

@@ -14,7 +14,7 @@ import { invalidateMission } from "@/game/runtime";
 import { api } from "@/lib/api";
 import type { PuzzlePiece, PuzzleSlot } from "@/components/PuzzleDragDrop";
 import { RAIL } from "@/game/pipeline";
-import { useLocale } from "@/i18n";
+import { t, useLocale } from "@/i18n";
 import type { ComponentProps, ReactNode } from "react";
 vi.mock("@/components/PuzzleDragDrop", () => ({
   PuzzleDragDrop: ({ children }: { children: ReactNode }) => <>{children}</>,
@@ -153,6 +153,22 @@ it("submits a wired pipeline once and saves counts with their original backend m
     screen.getByRole("region", { name: "Observed counts" }).textContent,
   ).toContain("Noisy device");
   expect(screen.queryByRole("button", { name: /Run the pipeline/ })).toBeNull();
+  expect(screen.getByText("512 shots, 1 distinct bitstring.")).toBeTruthy();
+  const originalLogs = useGame.getState().terminal;
+  act(() => useLocale.setState({ locale: "es" }));
+  expect(
+    screen.getByText("512 ejecuciones, 1 cadena de bits distinta."),
+  ).toBeTruthy();
+  expect(originalLogs.map((line) => t(line.text))).toEqual([
+    "PC clásico: N = 15, a = 7, gcd(a, N) = 1. Este caso necesita la QPU.",
+    "Trabajo: N = 15, a = 7, m = 4, ejecuciones = 512 -> AerSimulator.",
+    "Noisy device: resultados observados = 1; ejecuciones = 512.",
+    "Noisy device: ninguna medición produjo un período útil. Shor es probabilístico; inténtalo de nuevo.",
+  ]);
+  expect(useGame.getState().terminal).toBe(originalLogs);
+  expect(saved.run.counts).toEqual({ "0000": 512 });
+  expect(submit).toHaveBeenCalledTimes(1);
+  act(() => useLocale.setState({ locale: "en" }));
   fireEvent.click(screen.getByRole("tab", { name: "Run" }));
   expect(
     screen.getByRole("button", { name: "Run the pipeline again · 512 shots" }),
@@ -529,5 +545,30 @@ it("restores a 256-outcome Shor reading and exposes full counts without changing
   expect((useGame.getState().labMemory.shor4 as { run: unknown }).run).toEqual(
     run,
   );
+  expect(submit).not.toHaveBeenCalled();
+});
+
+it("translates wiring feedback after a language change without rewiring or submitting a job", () => {
+  const submit = vi.spyOn(api.shor, "simulate");
+  render(<ShorPipeline armed />);
+  fireEvent.click(screen.getByRole("tab", { name: "Run" }));
+  fireEvent.click(screen.getByRole("button", { name: "job" }));
+  fireEvent.click(
+    screen.getByRole("button", { name: "input of Shor circuit" }),
+  );
+  expect(screen.getByRole("status").textContent).toBe("job → Shor circuit");
+  const saved = JSON.stringify(useGame.getState().labMemory.shor4);
+  const terminal = JSON.stringify(useGame.getState().terminal);
+  act(() => useLocale.getState().setLocale("es"));
+  expect(screen.getByRole("status").textContent).toBe(
+    "trabajo → Circuito de Shor",
+  );
+  expect(JSON.stringify(useGame.getState().labMemory.shor4)).toBe(saved);
+  expect(JSON.stringify(useGame.getState().terminal)).toBe(terminal);
+  expect(useGame.getState().terminal.at(-1)?.text).toBe(
+    "QPU setup -> Shor circuit: job",
+  );
+  act(() => useLocale.getState().setLocale("en"));
+  expect(screen.getByRole("status").textContent).toBe("job → Shor circuit");
   expect(submit).not.toHaveBeenCalled();
 });

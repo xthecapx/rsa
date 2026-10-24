@@ -3,7 +3,7 @@
 import { create } from "zustand";
 import type { ReactNode } from "react";
 import spanish from "./es.json";
-import { translate } from "./translate";
+import { translate, translateCount } from "./translate";
 
 export type Locale = "en" | "es";
 export const useLocale = create<{ locale: Locale; setLocale: (locale: Locale) => void }>((set) => ({
@@ -25,4 +25,18 @@ export function tOptional(text: string): string;
 export function tOptional(text: string | undefined): string | undefined;
 export function tOptional(text: string | undefined): string | undefined {
   return text === undefined ? undefined : t(text);
+}
+
+/** Full singular/plural templates, such as “{count} shot” / “{count} shots”. */
+export function tCount(
+  count: number,
+  singular: string,
+  plural: string,
+): string {
+  return translateCount(
+    count,
+    singular,
+    plural,
+    useLocale.getState().locale === "es" ? spanish : {},
+  );
 }
