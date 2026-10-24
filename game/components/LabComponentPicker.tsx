@@ -3,6 +3,7 @@ import { t } from "@/i18n";
 import { isRotation, type LabGate } from "@/game/labCircuit";
 import { LAB_GATES } from "@/game/labEditor";
 import { PuzzlePiece } from "./PuzzleDragDrop";
+import { addComponentLabel, gateLabel } from "@/game/circuitLabels";
 import type { useLabEditor } from "./useLabEditor";
 const componentLabel = (gate: LabGate) => t(LAB_GATES[gate].title);
 /** Keep the hidden palette mounted: dnd-kit must retain its registered sources. */
@@ -89,7 +90,7 @@ export function LabComponentPicker({
               <PuzzlePiece
                 key={gate}
                 id={gate}
-                label={componentLabel(gate)}
+                label={addComponentLabel(gateLabel(LAB_GATES[gate].title))}
                 selected={piece === gate}
                 onSelect={() => {
                   if (pendingSlot) {

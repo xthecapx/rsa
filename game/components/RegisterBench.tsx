@@ -1,4 +1,5 @@
 "use client";
+import { addComponentLabel } from "@/game/circuitLabels";
 
 import { AmplitudeBars } from "./AmplitudeBars";
 import { CircuitActions } from "./CircuitActions";
@@ -207,7 +208,7 @@ export function RegisterBench({
         <PuzzlePiece
           key={piece}
           id={piece}
-          label={t(pieceLabel(piece))}
+          label={addComponentLabel(t(pieceLabel(piece)))}
           className="coin-operation-tool"
           selected={selected === piece}
           onSelect={() => setSelected(selected === piece ? null : piece)}
@@ -253,7 +254,10 @@ export function RegisterBench({
               <PuzzleDragDrop
                 wholeBlockDrag
                 labels={Object.fromEntries(
-                  step.tray.map((piece) => [piece, t(pieceLabel(piece))]),
+                  step.tray.map((piece) => [
+                    piece,
+                    addComponentLabel(t(pieceLabel(piece))),
+                  ]),
                 )}
                 targets={targets}
                 onPlace={(target, piece) => {

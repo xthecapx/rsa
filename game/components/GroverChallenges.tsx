@@ -1,4 +1,5 @@
 "use client";
+import { addComponentLabel, componentCopyLabel } from "@/game/circuitLabels";
 
 import { useEffect, useRef, useState } from "react";
 import { PuzzleDragDrop, PuzzlePiece, PuzzleSlot } from "./PuzzleDragDrop";
@@ -109,7 +110,7 @@ export function GroverCircuitBuilder({ slots, onChange, tray, showLoop, showMeas
     onChange(next); setSelected(null); setMessage(null);
   }
   const slotsShown: CircuitSlot[] = ["init", ...(showLoop ? ["loop0", "loop1"] as const : []), ...(showMeasure ? ["measure"] as const : [])];
-  const labels = Object.fromEntries(tray.map((id) => [id, t(PIECE_HELP[id])]));
+  const labels = Object.fromEntries(tray.map((id) => [id, addComponentLabel(id === "h" || id === "h2" ? componentCopyLabel(t(PIECE_HELP[id]), id === "h" ? 1 : 2) : t(PIECE_HELP[id]))]));
   const targets = Object.fromEntries(slotsShown.map((slot) => [slot, t(SLOT_NAMES[slot])]));
   const inspect = (id: CircuitSlot) => id === "measure" && !!measurement && slots.measure === "m";
   const slot = (id: CircuitSlot, index: number) => <PuzzleSlot id={id} className={`grover-slot ${slots[id] ? "filled" : ""} ${inspect(id) ? "measure-inspect" : ""}`}
@@ -122,7 +123,7 @@ export function GroverCircuitBuilder({ slots, onChange, tray, showLoop, showMeas
     renderPreview={(id) => <Piece id={id as PieceId} />}>
     <div className="coin-challenge space-y-3">
       <div className="coin-block-tray" aria-label={t("Circuit boxes")}>
-        {tray.map((id) => <PuzzlePiece key={id} id={id} label={t(PIECE_HELP[id])} selected={selected === id}
+        {tray.map((id) => <PuzzlePiece key={id} id={id} label={addComponentLabel(id === "h" || id === "h2" ? componentCopyLabel(t(PIECE_HELP[id]), id === "h" ? 1 : 2) : t(PIECE_HELP[id]))} selected={selected === id}
           className="grover-piece" onSelect={() => { if (!busy && !measurement) setSelected(selected === id ? null : id); }}><Piece id={id} /></PuzzlePiece>)}
       </div>
       <div className={`circuit-workspace grover-circuit-workspace ${measurement ? "" : "has-actions"}`}>

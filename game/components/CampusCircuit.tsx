@@ -3,6 +3,12 @@ import { useEffect, useState } from "react";
 import { campusRequest, type CampusGate } from "@/game/campusExperiment";
 import { PuzzleDragDrop, PuzzlePiece, PuzzleSlot } from "./PuzzleDragDrop";
 import { t } from "@/i18n";
+import {
+  addComponentLabel,
+  circuitPositionLabel,
+  circuitActionLabel,
+  gateLabel,
+} from "@/game/circuitLabels";
 /** One circuit tape with the same drag/tap/keyboard interaction as story benches. */
 export function CampusTape({
   gates,
@@ -15,11 +21,20 @@ export function CampusTape({
   useEffect(() => {
     if (!gates.length) setSelected(null);
   }, [gates]);
-  const labels = { X: "X", H: "H", Z: "Z" };
+  const labels = Object.fromEntries(
+    ["X", "H", "Z"].map((g) => [g, addComponentLabel(gateLabel(g))]),
+  );
   const targets = Object.fromEntries(
     Array.from(
       { length: Math.min(6, Math.max(2, gates.length + 1)) },
-      (_, i) => [String(i), `${t("Circuit slot")} ${i + 1}`],
+      (_, i) => [
+        String(i),
+        circuitPositionLabel(
+          gates[i] ? gateLabel(gates[i]) : t("Empty slot"),
+          1,
+          i + 1,
+        ),
+      ],
     ),
   );
   function place(slot: string, gate: string) {
@@ -44,7 +59,7 @@ export function CampusTape({
           <PuzzlePiece
             key={g}
             id={g}
-            label={g}
+            label={labels[g]}
             selected={selected === g}
             onSelect={() => setSelected(selected === g ? null : g)}
           >
@@ -64,6 +79,13 @@ export function CampusTape({
             key={i}
             id={i}
             label={targets[i]}
+            description={
+              gates[Number(i)]
+                ? t(
+                    "Place the selected component here, or activate with nothing selected to remove this component.",
+                  )
+                : undefined
+            }
             className="campus-gate-slot"
             onSelect={() =>
               selected
@@ -95,11 +117,10 @@ export function CampusTape({
                 <span className="font-mono">{gate}</span>
                 <div>
                   {([-1, 1] as const).map((offset) => {
-                    const label = t(
-                      offset === -1
-                        ? "Move gate {number} left"
-                        : "Move gate {number} right",
-                    ).replace("{number}", String(index + 1));
+                    const label = circuitActionLabel(
+                      offset === -1 ? "left" : "right",
+                      circuitPositionLabel(gateLabel(gate), 1, index + 1),
+                    );
                     return (
                       <button
                         type="button"

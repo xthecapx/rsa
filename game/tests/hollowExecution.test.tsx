@@ -79,7 +79,7 @@ function stage(name: string) {
   fireEvent.click(screen.getByRole("tab", { name }));
 }
 function put(item: { piece: string; column: number; wire: string }) {
-  fireEvent.click(screen.getByRole("button", { name: item.piece }));
+  fireEvent.click(screen.getByRole("button", { name: `Add ${item.piece}` }));
   fireEvent.click(
     screen.getByRole("button", {
       name: `Wire ${item.wire} · slot ${item.column}: Empty`,
@@ -191,7 +191,7 @@ it("a CNOT refuses a helper control, removes its linked target, and never invent
   render(<RegisterBench step={step} onSolved={vi.fn()} />);
   stage("Run");
   fireEvent.click(
-    screen.getByRole("button", { name: "CNOT · flips the helper" }),
+    screen.getByRole("button", { name: "Add CNOT · flips the helper" }),
   );
   fireEvent.click(
     screen.getByRole("button", { name: "Wire helper · slot 1: Empty" }),
@@ -201,7 +201,7 @@ it("a CNOT refuses a helper control, removes its linked target, and never invent
   );
   // Deselect the invalid piece before assembling H on the data wire only.
   fireEvent.click(
-    screen.getByRole("button", { name: "CNOT · flips the helper" }),
+    screen.getByRole("button", { name: "Add CNOT · flips the helper" }),
   );
   put({ piece: "H gate · one wire", column: 1, wire: "q₁" });
   put({ piece: "CNOT · flips the helper", column: 2, wire: "q₁" });
@@ -246,7 +246,7 @@ it.each(candles)(
     gates.forEach((gate, i) => {
       fireEvent.click(
         screen.getByRole("button", {
-          name: gate === "X" ? "X gate · flip" : "Hadamard · H",
+          name: gate === "X" ? "Add X gate · flip" : "Add Hadamard · H",
         }),
       );
       fireEvent.click(
@@ -297,7 +297,7 @@ it("Ghost Key's builder removes one box, clears/rebuilds, and locks edits while 
   }
   const view = render(<Builder />);
   const add = (piece: string, slot: string) => {
-    const choices = screen.getAllByRole("button", { name: piece });
+    const choices = screen.getAllByRole("button", { name: piece.startsWith("H on") ? `Add ${piece}, copy 1` : `Add ${piece}` });
     fireEvent.click(choices[0]);
     fireEvent.click(screen.getByRole("button", { name: `${slot}: Empty` }));
   };
@@ -315,7 +315,7 @@ it("Ghost Key's builder removes one box, clears/rebuilds, and locks edits while 
   // The two distinct H pieces can be placed independently.
   // The first H was moved by the preceding selection; use the other tray piece.
   fireEvent.click(
-    screen.getAllByRole("button", { name: "H on all 25 data qubits" })[1],
+    screen.getByRole("button", { name: "Add H on all 25 data qubits, copy 2" }),
   );
   fireEvent.click(
     screen.getByRole("button", { name: "Data bus · before the ghost: Empty" }),
@@ -372,7 +372,7 @@ it("the Grover comparison supports removal and clear, but its locked preview nev
   }
   const view = render(<Builder />);
   const addH = () => {
-    fireEvent.click(screen.getByRole("button", { name: "H on all 25 qubits" }));
+    fireEvent.click(screen.getByRole("button", { name: "Add H on all 25 qubits" }));
     fireEvent.click(
       screen.getByRole("button", { name: "Prepare the register: Empty" }),
     );

@@ -8,6 +8,7 @@ import {
 } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
+import { gateLabel, addComponentLabel } from "@/game/circuitLabels";
 import { CampusLaptop } from "@/components/CampusLaptop";
 import { QuantumJobProgress } from "@/components/QuantumJobProgress";
 import { useExecution } from "@/lib/execution";
@@ -91,8 +92,8 @@ async function execute() {
 }
 function place(gate: string, slot: number) {
   configure();
-  fireEvent.click(screen.getByRole("button", { name: gate }));
-  fireEvent.click(screen.getByRole("button", { name: `Circuit slot ${slot}` }));
+  fireEvent.click(screen.getByRole("button", { name: addComponentLabel(gateLabel(gate)) }));
+  fireEvent.click(screen.getByRole("button", { name: new RegExp(`, wire 1, position ${slot}$`) }));
 }
 beforeEach(async () => {
   Element.prototype.scrollIntoView = vi.fn();
@@ -429,18 +430,18 @@ it("clearing an empty tape and deleting individual gates leaves every slot usabl
     "X",
     "H",
   ]);
-  fireEvent.click(screen.getByRole("button", { name: "Move gate 1 right" }));
+  fireEvent.click(screen.getByRole("button", { name: "Move X gate, wire 1, position 1 right" }));
   expect(useCampus.getState().sessions.delivery?.settings.sequence).toEqual([
     "H",
     "X",
   ]);
-  fireEvent.click(screen.getByRole("button", { name: "Move gate 2 left" }));
+  fireEvent.click(screen.getByRole("button", { name: "Move X gate, wire 1, position 2 left" }));
   expect(useCampus.getState().sessions.delivery?.settings.sequence).toEqual([
     "X",
     "H",
   ]);
   expect(transport).not.toHaveBeenCalled();
-  fireEvent.click(screen.getByRole("button", { name: "Circuit slot 1" }));
+  fireEvent.click(screen.getByRole("button", { name: "X gate, wire 1, position 1" }));
   expect(useCampus.getState().sessions.delivery?.settings.sequence).toEqual([
     "H",
   ]);

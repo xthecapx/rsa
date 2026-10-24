@@ -720,6 +720,15 @@ editing invalidates the result and restores them. Measured histogram panels
 share a teal border/shadow and a brief arrival highlight, respecting reduced
 motion. Rounds exercises also hide Run after a successful answer.
 
+Circuit palettes announce an Add action; installed gates retain their wire and
+position or named story slot. Repeated Grover and Ghost Key H palette blocks
+have distinct copy numbers. Campus and lab reorder actions, plus lab removal
+and settings controls, include the affected component and location. Shared
+`game/circuitLabels.ts` supplies translated display-only names; never use these
+labels as drag IDs or saved values. Occupied editable bench slots describe their
+select-to-place and no-selection-to-remove behavior. Keep compact visible glyphs
+and the existing keyboard, drag, busy and measurement-inspection behavior.
+
 Keep the generated Qollab distribution (`game/dist/qollab/` and sibling
 `build-report.json`) ignored by Git; regenerate it with `npm run build:qollab`.
 Commit the source, requirements and build tools. Tests must run without a generated

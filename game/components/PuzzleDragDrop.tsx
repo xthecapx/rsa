@@ -241,30 +241,41 @@ export function PuzzlePiece({
 export function PuzzleSlot({
   id,
   label,
+  description,
   className,
   onSelect,
   children,
 }: {
   id: string;
   label: string;
+  description?: string;
   className: string;
   onSelect: () => void;
   children: ReactNode;
 }) {
   const { ref, isDropTarget } = useDroppable({ id, accept: "puzzle-piece" });
   const { canClick } = useContext(PuzzleContext);
+  const descriptionId = useId();
   return (
-    <button
-      ref={ref}
-      type="button"
-      aria-label={label}
-      className={`${className} puzzle-drop-slot ${isDropTarget ? "is-over" : ""}`}
-      onClick={(event) => {
-        if (!event.defaultPrevented && canClick()) onSelect();
-      }}
-    >
-      {children}
-    </button>
+    <>
+      <button
+        ref={ref}
+        type="button"
+        aria-label={label}
+        aria-describedby={description ? descriptionId : undefined}
+        className={`${className} puzzle-drop-slot ${isDropTarget ? "is-over" : ""}`}
+        onClick={(event) => {
+          if (!event.defaultPrevented && canClick()) onSelect();
+        }}
+      >
+        {children}
+      </button>
+      {description && (
+        <span id={descriptionId} className="sr-only">
+          {description}
+        </span>
+      )}
+    </>
   );
 }
 
@@ -294,7 +305,8 @@ export function PuzzleCircuitPiece({
   const target = useDroppable({ id: slotId, accept: "puzzle-piece" });
   const { instructionsId, canClick, wholeBlockDrag } =
     useContext(PuzzleContext);
-  const sourceRef = source.ref, targetRef = target.ref;
+  const sourceRef = source.ref,
+    targetRef = target.ref;
   const ref = useCallback(
     (element: HTMLButtonElement | null) => {
       sourceRef(element);

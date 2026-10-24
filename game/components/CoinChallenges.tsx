@@ -1,4 +1,5 @@
 "use client";
+import { addComponentLabel } from "@/game/circuitLabels";
 
 import { useState } from "react";
 import { PuzzleDragDrop, PuzzlePiece, PuzzleSlot } from "./PuzzleDragDrop";
@@ -162,7 +163,7 @@ export function CircuitPuzzle({
   return (
     <PuzzleDragDrop
       wholeBlockDrag
-      labels={{ H: t("Hadamard · H"), M: t("Measurement · M") }}
+      labels={{ H: addComponentLabel(t("Hadamard · H")), M: addComponentLabel(t("Measurement · M")) }}
       targets={{ first: t("First operation"), second: t("Second operation") }}
       onPlace={(position, operation) =>
         place(position as CircuitPosition, operation as CircuitOperation)
@@ -191,7 +192,7 @@ export function CircuitPuzzle({
             <PuzzlePiece
               key={operation}
               id={operation}
-              label={t(operation === "H" ? "Hadamard · H" : "Measurement · M")}
+              label={addComponentLabel(t(operation === "H" ? "Hadamard · H" : "Measurement · M"))}
               className="coin-operation-tool"
               onSelect={() => setSelected(operation)}
               selected={selected === operation}

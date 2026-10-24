@@ -42,7 +42,7 @@ lifecycle. These are planning estimates, not delivery dates.
 | F06 | P2 | Done | Add a small, discreet signpost to the campus in Quantum Town | S | The professor's recommendation lacks a findable pointer; no teleport. |
 | F07 | P2 | Done | Correct translations, grammar, and misleading directions | M | Fixes comprehension across the existing game. |
 | F08 | P2 | Done | Clarify festival markers and synchronize completion displays | S–M | Players should know when their work is finished. |
-| F09 | P2 | Open | Give repeated controls contextual accessible names | M | Makes circuit editing understandable without visual position. |
+| F09 | P2 | Done | Give repeated controls contextual accessible names | M | Makes circuit editing understandable without visual position. |
 | F10 | P2 | Open | Reduce minimap obstruction and clarify pointer behavior | M | Restores usable exploration space, especially on mobile. |
 | F11 | P2 | Open | Improve typewriter text and reveal controls | S–M | Makes dialogue readable without discovering a hidden workaround. |
 | F12 | P2 | Open | Clarify that the game breaks a simplified protocol, not real RSA (authentication content deferred) | S | Prevents a false impression; larger lessons wait. |
@@ -120,7 +120,13 @@ share status derivation across map, scene, journal and host completion. The
 notebook has a distinct ▤ symbol and its own legend row; completion wins over
 retained evidence. See F08 for validation.
 
-**Open:** F09–F11, F12 (small clarification only), F13 (only if deployed
+**Done — F09 (October 24, 2026).** Circuit palettes announce Add actions;
+installed components and their actions identify the affected wire/position or
+story slot. Repeated H palette copies have distinct names. EN/ES labels preserve
+visible symbols and interaction IDs. Real VoiceOver verification remains for the
+owner, following the preference to leave it off; see F09 for validation.
+
+**Open:** F10–F11, F12 (small clarification only), F13 (only if deployed
 measurement shows a cause other than cold start and noisy Shor), F14, F15, F17.
 
 **Deferred:** F16 (post-quantum epilogue) and the authentication/man-in-the-middle
@@ -710,10 +716,24 @@ mistaken for an unfinished festival. Do not alter completion requirements.
 
 **Feedback covered:** multiple controls announced only as H.
 
-**Plan:** audit shared gate palettes and circuit builders. Distinguish “Add H
-gate” from an installed “H gate, wire 1, position 2”, and contextualize remove,
-reorder, and settings actions. Preserve compact visible symbols and translate
-accessible labels. Use native control semantics and existing keyboard behavior.
+**Implemented:** shared translated names distinguish “Add H gate (Hadamard)”
+from “H gate (Hadamard), wire 1, position 2”. Campus and lab move actions include
+their component and location; lab removal, settings panels and close controls
+carry the same context. Drag announcements use those names while IDs remain
+unchanged. Coin and register palettes announce Add actions and retain existing
+installed-slot context. Editable occupied slots explain removal without a
+selected piece. Grover and Ghost Key retain named story slots and distinguish
+their two H palette copies. Visible symbols, saved recipes and execution rules
+are unchanged.
+
+**Validation:** lint, TypeScript, 325 automated tests, production build and Qollab
+20-file validation pass. Regression coverage checks repeated H gates, current
+positions after reordering/removal, Spanish names, unchanged drag target IDs,
+settings focus, and existing Coin/register/Grover/Ghost Key editing flows. A
+temporary preview using real campus/lab components verified browser accessibility
+names, keyboard add/reorder/removal, settings dismissal and language switching;
+it was removed afterward. No quantum job was submitted. VoiceOver was left off
+as requested; a real screen-reader pass remains owner verification.
 
 **Acceptance:** a screen-reader user can identify, add, move, configure, and remove
 the intended gate when several identical gates exist. Check Coin, register,

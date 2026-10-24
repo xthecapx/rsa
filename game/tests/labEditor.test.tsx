@@ -18,10 +18,22 @@ import type {
 import { useLocale } from "@/i18n";
 
 // Exercise the editor's tap/keyboard contract; dnd-kit owns pointer geometry.
+let dragLabels: Record<string, string>;
+let dragTargets: Record<string, string>;
 vi.mock("@/components/PuzzleDragDrop", () => ({
-  PuzzleDragDrop: ({ children }: { children: React.ReactNode }) => (
-    <>{children}</>
-  ),
+  PuzzleDragDrop: ({
+    children,
+    labels,
+    targets,
+  }: {
+    children: React.ReactNode;
+    labels: Record<string, string>;
+    targets: Record<string, string>;
+  }) => {
+    dragLabels = labels;
+    dragTargets = targets;
+    return <>{children}</>;
+  },
   PuzzlePiece: ({
     children,
     label,
@@ -66,8 +78,8 @@ const initial: LabRecipe = {
   shots: 256,
   operations: [],
 };
-function Editor({ busy = false, run = vi.fn() }) {
-  const [recipe, setRecipe] = useState(initial);
+function Editor({ busy = false, run = vi.fn(), seed = initial }) {
+  const [recipe, setRecipe] = useState(seed);
   const running = useRef(busy);
   running.current = busy;
   const editor = useLabEditor({
@@ -114,9 +126,54 @@ function addRotation() {
   fireEvent.click(
     screen.getByRole("button", { name: "Add component on wire 1" }),
   );
-  fireEvent.click(screen.getByRole("button", { name: "Rotation" }));
+  fireEvent.click(screen.getByRole("button", { name: "Add Rotation" }));
 }
 describe("lab circuit editing", () => {
+  it("identifies repeated gates by wire and position and keeps action names current after edits and language changes", () => {
+    const run = vi.fn();
+    render(
+      <Editor
+        run={run}
+        seed={{
+          ...initial,
+          qubits: 2,
+          start: "00",
+          operations: [
+            { gate: "H", wire: 0 },
+            { gate: "H", wire: 1 },
+          ],
+        }}
+      />,
+    );
+    const first = "H gate (Hadamard), wire 1, position 1";
+    const second = "H gate (Hadamard), wire 2, position 2";
+    expect(screen.getByRole("button", { name: first })).toBeTruthy();
+    expect(screen.getByRole("button", { name: second })).toBeTruthy();
+    expect(dragLabels["op-0-0"]).toBe(first);
+    expect(dragLabels["op-1-1"]).toBe(second);
+    expect(dragTargets["1:2"]).toBe("Circuit slot, wire 2, position 3");
+    expect(screen.queryByRole("button", { name: "H" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: first }));
+    fireEvent.click(
+      screen.getByRole("button", { name: `Move ${first} right` }),
+    );
+    expect(recipe().operations.map((op: { wire: number }) => op.wire)).toEqual([
+      1, 0,
+    ]);
+    act(() => useLocale.setState({ locale: "es" }));
+    expect(
+      screen.getByRole("button", {
+        name: "Compuerta H (Hadamard), línea 2, posición 1",
+      }),
+    ).toBeTruthy();
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "Quitar Compuerta H (Hadamard), línea 1, posición 2",
+      }),
+    );
+    expect(recipe().operations).toEqual([{ gate: "H", wire: 1 }]);
+    expect(run).not.toHaveBeenCalled();
+  });
   it("adds from empty, removes one, clears all and adds again without running", () => {
     const run = vi.fn();
     render(<Editor run={run} />);
@@ -124,7 +181,7 @@ describe("lab circuit editing", () => {
     addRotation();
     expect(recipe().operations).toHaveLength(2);
     fireEvent.click(
-      screen.getByRole("button", { name: /Remove .* at step 1/ }),
+      screen.getByRole("button", { name: /Remove .* wire 1, position 1/ }),
     );
     expect(recipe().operations).toHaveLength(1);
     fireEvent.click(screen.getByRole("button", { name: "Clear circuit" }));

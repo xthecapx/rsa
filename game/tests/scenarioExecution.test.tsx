@@ -452,7 +452,7 @@ it("round controls, box edits and Clear discard current Grover counts while keep
   );
   emptyGroverPreview();
   fireEvent.click(
-    screen.getByRole("button", { name: "Oracle · sealed black box" }),
+    screen.getByRole("button", { name: "Add Oracle · sealed black box" }),
   );
   fireEvent.click(
     screen.getByRole("button", { name: "Repeat box · first: Empty" }),

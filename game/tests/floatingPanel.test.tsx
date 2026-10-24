@@ -134,6 +134,7 @@ it("keeps the settings portal within the laptop and preserves rotation parameter
     <div className="shared-laptop">
       <div className="laptop-screen">
         <LabComponentSettings
+          componentLabel="Rotation, wire 1, position 1"
           op={{ gate: "ROTATION", axis: "Z", angle: Math.PI / 2, wire: 0 }}
           qubits={1}
           onChange={change}
@@ -141,7 +142,11 @@ it("keeps the settings portal within the laptop and preserves rotation parameter
       </div>
     </div>,
   );
-  fireEvent.click(screen.getByRole("button", { name: "Component settings" }));
+  fireEvent.click(
+    screen.getByRole("button", {
+      name: "Settings for Rotation, wire 1, position 1",
+    }),
+  );
   const panel = screen.getByRole("region");
   expect(panel.style.left).toBe("22px");
   expect(panel.style.top).toBe("52px");

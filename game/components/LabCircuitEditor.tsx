@@ -1,5 +1,11 @@
 "use client";
 import { t } from "@/i18n";
+import {
+  addComponentLabel,
+  circuitPositionLabel,
+  circuitActionLabel,
+  gateLabel,
+} from "@/game/circuitLabels";
 import { type LabRecipe, type LabGate } from "@/game/labCircuit";
 import { LAB_GATES, operationLabel as label } from "@/game/labEditor";
 import { LabComponentPicker } from "./LabComponentPicker";
@@ -130,13 +136,16 @@ export function LabCircuitEditor({
         controlsRef={puzzleControls}
         labels={{
           ...Object.fromEntries(
-            available.map((gate) => [gate, componentLabel(gate)]),
+            available.map((gate) => [
+              gate,
+              addComponentLabel(gateLabel(LAB_GATES[gate].title)),
+            ]),
           ),
           ...Object.fromEntries(
             recipe.operations.flatMap((o, i) =>
               Array.from({ length: recipe.qubits }, (_, wire) => [
                 `op-${i}-${wire}`,
-                label(o),
+                circuitPositionLabel(gateLabel(label(o)), wire + 1, i + 1),
               ]),
             ),
           ),
@@ -146,7 +155,11 @@ export function LabCircuitEditor({
             { length: recipe.qubits * (recipe.operations.length + 1) },
             (_, i) => [
               `${Math.floor(i / (recipe.operations.length + 1))}:${i % (recipe.operations.length + 1)}`,
-              `${Math.floor(i / (recipe.operations.length + 1))}:${i % (recipe.operations.length + 1)}`,
+              circuitPositionLabel(
+                t("Circuit slot"),
+                Math.floor(i / (recipe.operations.length + 1)) + 1,
+                (i % (recipe.operations.length + 1)) + 1,
+              ),
             ],
           ),
         )}
@@ -176,20 +189,24 @@ export function LabCircuitEditor({
                               o.gate,
                             ),
                             on = global || o.wire === wire;
+                          const context = circuitPositionLabel(
+                            gateLabel(label(o)),
+                            wire + 1,
+                            i + 1,
+                          );
                           return (
                             <td key={i}>
                               {on ? (
                                 <PuzzleCircuitPiece
                                   id={`op-${i}-${wire}`}
                                   slotId={`${wire}:${i}`}
-                                  label={`${t("Circuit slot")} ${wire + 1}, ${i + 1}: ${label(o)}`}
+                                  label={context}
                                   selected={selected === i}
                                   onRemove={() => removeComponent(i)}
-                                  removeLabel={t(
-                                    "Remove {component} at step {step}",
-                                  )
-                                    .replace("{component}", label(o))
-                                    .replace("{step}", String(i + 1))}
+                                  removeLabel={circuitActionLabel(
+                                    "remove",
+                                    context,
+                                  )}
                                   onSelect={() =>
                                     piece
                                       ? place(`${wire}:${i}`, piece)
@@ -204,8 +221,14 @@ export function LabCircuitEditor({
                                       >
                                         <button
                                           type="button"
-                                          aria-label={t("Move left")}
-                                          title={t("Move left")}
+                                          aria-label={circuitActionLabel(
+                                            "left",
+                                            context,
+                                          )}
+                                          title={circuitActionLabel(
+                                            "left",
+                                            context,
+                                          )}
                                           disabled={i === 0}
                                           onClick={() => moveComponent(i, -1)}
                                         >
@@ -223,8 +246,14 @@ export function LabCircuitEditor({
                                         </button>
                                         <button
                                           type="button"
-                                          aria-label={t("Move right")}
-                                          title={t("Move right")}
+                                          aria-label={circuitActionLabel(
+                                            "right",
+                                            context,
+                                          )}
+                                          title={circuitActionLabel(
+                                            "right",
+                                            context,
+                                          )}
                                           disabled={
                                             i === recipe.operations.length - 1
                                           }
@@ -243,6 +272,7 @@ export function LabCircuitEditor({
                                           </svg>
                                         </button>
                                         <LabComponentSettings
+                                          componentLabel={context}
                                           op={o}
                                           qubits={recipe.qubits}
                                           onChange={editOp}
@@ -257,7 +287,13 @@ export function LabCircuitEditor({
                                 <PuzzleSlot
                                   className="lab-wire-slot"
                                   id={`${wire}:${i}`}
-                                  label={`${t("Circuit slot")} ${wire + 1}, ${i + 1}`}
+                                  label={circuitPositionLabel(
+                                    o.gate === "CX" && o.control === wire
+                                      ? t("CNOT control")
+                                      : t("Empty slot"),
+                                    wire + 1,
+                                    i + 1,
+                                  )}
                                   onSelect={() => chooseSlot(`${wire}:${i}`)}
                                 >
                                   {o.gate === "CX" && o.control === wire

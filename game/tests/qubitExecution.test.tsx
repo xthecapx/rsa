@@ -63,7 +63,7 @@ function runStage() {
 }
 function place() {
   configure();
-  fireEvent.click(screen.getByRole("button", { name: "X gate · flip" }));
+  fireEvent.click(screen.getByRole("button", { name: "Add X gate · flip" }));
   fireEvent.click(screen.getByRole("button", { name: /Wire slot 1/ }));
 }
 it("validates ideal correctness while displaying noisy returned counts; edits restore Run and Clear", async () => {
@@ -144,7 +144,7 @@ it("clears and rebuilds the house circuit; Check validates without submitting a 
   function put(gate: "H" | "M", position: "First" | "Second") {
     fireEvent.click(
       screen.getByRole("button", {
-        name: gate === "H" ? "Hadamard · H" : "Measurement · M",
+        name: gate === "H" ? "Add Hadamard · H" : "Add Measurement · M",
       }),
     );
     fireEvent.click(
@@ -207,10 +207,10 @@ it.each(
         screen.getByRole("button", {
           name:
             step.gates[0] === "X"
-              ? "X gate · flip"
+              ? "Add X gate · flip"
               : step.gates[0] === "H"
-                ? "Hadamard · H"
-                : "Z gate · sign",
+                ? "Add Hadamard · H"
+                : "Add Z gate · sign",
         }),
       );
       fireEvent.click(

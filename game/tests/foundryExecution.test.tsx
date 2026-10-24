@@ -73,7 +73,7 @@ function stage(name: string) {
   fireEvent.click(screen.getByRole("tab", { name }));
 }
 function put(piece: string, column: number, wire = 1) {
-  fireEvent.click(screen.getByRole("button", { name: piece }));
+  fireEvent.click(screen.getByRole("button", { name: `Add ${piece}` }));
   fireEvent.click(
     screen.getByRole("button", {
       name: `Wire q${subscript[wire]} · slot ${column}: Empty`,
@@ -275,7 +275,7 @@ it("the workshop removes one box, clears and rebuilds without executing a job; b
   const view = render(<Workshop />);
   const addH = () => {
     fireEvent.click(
-      screen.getByRole("button", { name: "H on all four qubits" }),
+      screen.getByRole("button", { name: "Add H on all four qubits, copy 1" }),
     );
     fireEvent.click(
       screen.getByRole("button", { name: "Prepare the register: Empty" }),
@@ -305,7 +305,7 @@ it("the workshop removes one box, clears and rebuilds without executing a job; b
   expect(changes).toHaveBeenCalledTimes(count);
   view.rerender(<Workshop />);
   fireEvent.click(
-    screen.getByRole("button", { name: "M · measure all four qubits" }),
+    screen.getByRole("button", { name: "Add M · measure all four qubits" }),
   );
   fireEvent.click(screen.getByRole("button", { name: "Measure: Empty" }));
   const measuredCount = changes.mock.calls.length;

@@ -1,4 +1,5 @@
 "use client";
+import { addComponentLabel, componentCopyLabel } from "@/game/circuitLabels";
 
 import { useEffect, useRef, useState } from "react";
 import { PuzzleDragDrop, PuzzlePiece, PuzzleSlot } from "./PuzzleDragDrop";
@@ -298,12 +299,12 @@ export function GroverTrapBuilder({ slots, onChange, repeatLabel, locked, busy =
     label={`${t(TRAP_SLOTS[id])}: ${slots[id] ? t(TRAP_HELP[slots[id]!]) : t("Empty")}`}>
     {slots[id] ? box(slots[id]!) : <span className="grover-empty">{index}</span>}
   </PuzzleSlot>;
-  return <PuzzleDragDrop wholeBlockDrag labels={Object.fromEntries(TRAP_PIECES.map((id) => [id, t(TRAP_HELP[id])]))}
+  return <PuzzleDragDrop wholeBlockDrag labels={Object.fromEntries(TRAP_PIECES.map((id) => [id, addComponentLabel(t(TRAP_HELP[id]))]))}
     targets={Object.fromEntries((Object.keys(TRAP_SLOTS) as TrapSlot[]).map((id) => [id, t(TRAP_SLOTS[id])]))}
     onPlace={(target, source) => place(target as TrapSlot, source as TrapPiece)} renderPreview={(id) => box(id as TrapPiece)}>
     <div className="coin-challenge space-y-3">
       {!locked && <div className="coin-block-tray" aria-label={t("Circuit boxes")}>
-        {TRAP_PIECES.map((id) => <PuzzlePiece key={id} id={id} label={t(TRAP_HELP[id])} selected={selected === id} className="grover-piece"
+        {TRAP_PIECES.map((id) => <PuzzlePiece key={id} id={id} label={addComponentLabel(t(TRAP_HELP[id]))} selected={selected === id} className="grover-piece"
           onSelect={() => { if (!busy) setSelected(selected === id ? null : id); }}>{box(id)}</PuzzlePiece>)}
       </div>}
       <div className={`circuit-workspace grover-circuit-workspace ${locked ? "" : "has-actions"}`}>
@@ -475,12 +476,12 @@ export function BvCircuitBuilder({ slots, onChange, locked, measurement, busy = 
     {slots[id] ? box(slots[id]!) : <span className="grover-empty">{id === "repeat" ? t("no loop needed") : "□"}</span>}
     {inspect(id) && <MeasureInspectBadge />}
   </PuzzleSlot>;
-  return <PuzzleDragDrop wholeBlockDrag labels={Object.fromEntries(BV_PIECES.map((id) => [id, t(BV_HELP[id])]))}
+  return <PuzzleDragDrop wholeBlockDrag labels={Object.fromEntries(BV_PIECES.map((id) => [id, addComponentLabel(id === "h" || id === "h2" ? componentCopyLabel(t(BV_HELP[id]), id === "h" ? 1 : 2) : t(BV_HELP[id]))]))}
     targets={Object.fromEntries((Object.keys(BV_SLOTS) as BvSlot[]).map((id) => [id, t(BV_SLOTS[id])]))}
     onPlace={(target, source) => place(target as BvSlot, source as BvPiece)} renderPreview={(id) => box(id as BvPiece)}>
     <div className="coin-challenge space-y-3">
       {!locked && !measurement && <div className="coin-block-tray" aria-label={t("Circuit boxes")}>
-        {BV_PIECES.map((id) => <PuzzlePiece key={id} id={id} label={t(BV_HELP[id])} selected={selected === id} className="grover-piece"
+        {BV_PIECES.map((id) => <PuzzlePiece key={id} id={id} label={addComponentLabel(id === "h" || id === "h2" ? componentCopyLabel(t(BV_HELP[id]), id === "h" ? 1 : 2) : t(BV_HELP[id]))} selected={selected === id} className="grover-piece"
           onSelect={() => { if (!busy) setSelected(selected === id ? null : id); }}>{box(id)}</PuzzlePiece>)}
       </div>}
       <div className={`circuit-workspace vault-bv-workspace ${locked || measurement ? "" : "has-actions"}`}>

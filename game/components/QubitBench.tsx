@@ -1,4 +1,5 @@
 "use client";
+import { addComponentLabel } from "@/game/circuitLabels";
 
 import { useAsyncOperation } from "./useAsyncOperation";
 import { useExecution } from "@/lib/execution";
@@ -87,6 +88,13 @@ function BenchCircuit({
                 className={`qiskit-wire-slot ${gate ? "filled" : ""}`}
                 onSelect={() => onPlace(index)}
                 label={`${t("Wire slot")} ${index + 1}: ${gate ? t(GATE_LABELS[gate]) : t("Empty")}`}
+                description={
+                  gate
+                    ? t(
+                        "Place the selected component here, or activate with nothing selected to remove this component.",
+                      )
+                    : undefined
+                }
               >
                 {contents}
               </PuzzleSlot>
@@ -348,7 +356,10 @@ export function QubitBench({
             <PuzzleDragDrop
               wholeBlockDrag
               labels={Object.fromEntries(
-                step.gates.map((gate) => [gate, t(GATE_LABELS[gate])]),
+                step.gates.map((gate) => [
+                  gate,
+                  addComponentLabel(t(GATE_LABELS[gate])),
+                ]),
               )}
               targets={Object.fromEntries(
                 slots.map((_, i) => [
@@ -370,7 +381,7 @@ export function QubitBench({
                   <PuzzlePiece
                     key={gate}
                     id={gate}
-                    label={t(GATE_LABELS[gate])}
+                    label={addComponentLabel(t(GATE_LABELS[gate]))}
                     className="coin-operation-tool"
                     selected={selected === gate}
                     onSelect={() =>

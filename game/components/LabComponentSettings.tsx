@@ -12,16 +12,19 @@ import {
 import { t, useLocale } from "@/i18n";
 import { useFloatingPanel } from "./useFloatingPanel";
 import { AngleDial } from "./AngleDial";
+import { circuitActionLabel } from "@/game/circuitLabels";
 
 /** A selected block's optional parameters, kept outside the scrolling circuit. */
 export function LabComponentSettings({
   op,
   qubits,
   onChange,
+  componentLabel,
 }: {
   op: LabOp;
   qubits: number;
   onChange: (change: LabOpChange) => void;
+  componentLabel: string;
 }) {
   useLocale((s) => s.locale);
   const [open, setOpen] = useState(false);
@@ -81,8 +84,8 @@ export function LabComponentSettings({
       <button
         ref={trigger}
         type="button"
-        aria-label={t("Component settings")}
-        title={t("Component settings")}
+        aria-label={circuitActionLabel("settings", componentLabel)}
+        title={circuitActionLabel("settings", componentLabel)}
         aria-expanded={open}
         aria-controls={open ? id : undefined}
         onClick={() => setOpen(!open)}
@@ -105,7 +108,7 @@ export function LabComponentSettings({
             ref={panel}
             id={id}
             role="region"
-            aria-label={t("Component settings")}
+            aria-label={circuitActionLabel("settings", componentLabel)}
             tabIndex={-1}
             className="lab-component-settings space-y-3"
             style={{
@@ -124,8 +127,8 @@ export function LabComponentSettings({
               </h4>
               <button
                 type="button"
-                aria-label={t("Close settings")}
-                title={t("Close settings")}
+                aria-label={circuitActionLabel("close", componentLabel)}
+                title={circuitActionLabel("close", componentLabel)}
                 onClick={floatingPanel.close}
               >
                 ×

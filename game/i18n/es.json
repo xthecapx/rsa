@@ -3399,5 +3399,20 @@
   "Investigation in progress": "Investigación en curso",
   "1–8 · Exhibits": "1–8 · Experimentos",
   "F · Festival": "F · Festival",
-  "▤ · Notebook": "▤ · Cuaderno"
+  "▤ · Notebook": "▤ · Cuaderno",
+  "H gate (Hadamard)": "Compuerta H (Hadamard)",
+  "X gate": "Compuerta X",
+  "Z gate": "Compuerta Z",
+  "CX gate (CNOT)": "Compuerta CX (CNOT)",
+  "Add {component}": "Añadir {component}",
+  "{component}, wire {wire}, position {position}": "{component}, línea {wire}, posición {position}",
+  "Remove {component}": "Quitar {component}",
+  "Move {component} left": "Mover {component} a la izquierda",
+  "Move {component} right": "Mover {component} a la derecha",
+  "Settings for {component}": "Ajustes de {component}",
+  "Close settings for {component}": "Cerrar ajustes de {component}",
+  "{component}, copy {copy}": "{component}, copia {copy}",
+  "Empty slot": "Espacio vacío",
+  "CNOT control": "Control de CNOT",
+  "Place the selected component here, or activate with nothing selected to remove this component.": "Coloca aquí el componente seleccionado, o activa sin nada seleccionado para quitar este componente."
 }

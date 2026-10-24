@@ -117,6 +117,9 @@ export function RegisterCircuit({
                   className="reg-cell filled"
                   onSelect={() => onPlace?.(c, 0)}
                   label={`${t("slot")} ${c + 1}: ${t(opLabel(column.span))}`}
+                  description={t(
+                    "Place the selected component here, or activate with nothing selected to remove this component.",
+                  )}
                 >
                   <span
                     className={`qiskit-gate reg-span ${opClass(column.span)}`}
@@ -172,6 +175,13 @@ export function RegisterCircuit({
                     className={`reg-cell ${piece || target ? "filled" : ""}`}
                     onSelect={() => onPlace?.(c, q)}
                     label={`${cellLabel(c, q)}: ${target ? t("CNOT target · flips the helper") : piece ? t(WIRE_LABEL[piece]) : t("Empty")}`}
+                    description={
+                      piece || target
+                        ? t(
+                            "Place the selected component here, or activate with nothing selected to remove this component.",
+                          )
+                        : undefined
+                    }
                   >
                     {target ? (
                       <span className="reg-target" aria-hidden="true">
