@@ -431,18 +431,16 @@ it("switching away from a pending recorded-batch re-key releases Run and preserv
   useGame.getState().setVars({ modulus: 15, e: 3, cipherNumber: 8 });
   const capture = { scheme: "RSA, e=3 N=15", payload: "c = 8" };
   useGame.getState().setCapture(capture);
-  useGame
-    .getState()
-    .setLabMemory({
-      shor4: {
-        backend: "ibm",
-        batchId: "",
-        wired: RAIL.slice(0, -1).map((box) => box.id),
-        m: 4,
-        shots: 128,
-        run: null,
-      },
-    });
+  useGame.getState().setLabMemory({
+    shor4: {
+      backend: "ibm",
+      batchId: "",
+      wired: RAIL.slice(0, -1).map((box) => box.id),
+      m: 4,
+      shots: 128,
+      run: null,
+    },
+  });
   vi.spyOn(api.ibm, "cached").mockResolvedValue({
     batch_id: "",
     N: 21,
@@ -483,4 +481,53 @@ it("switching away from a pending recorded-batch re-key releases Run and preserv
   );
   expect(encrypt).not.toHaveBeenCalled();
   expect(useGame.getState().capture).toEqual(capture);
+});
+
+it("restores a 256-outcome Shor reading and exposes full counts without changing evidence or submitting another job", async () => {
+  const counts = Object.fromEntries(
+    Array.from({ length: 256 }, (_, i) => [i.toString(2).padStart(8, "0"), 4]),
+  );
+  const run = {
+    N: 15,
+    a: 7,
+    m: 8,
+    backend: "aer",
+    qpu: "Saved noisy device",
+    source: "simulator",
+    kind: "noise",
+    counts,
+    shots: 1024,
+    picked: null,
+    fromReference: false,
+  };
+  useGame.getState().setLabMemory({
+    shor4: { wired: [], backend: "aer", m: 8, shots: 1024, run },
+  });
+  const submit = vi.spyOn(api.shor, "simulate");
+  const view = render(<ShorPipeline armed />);
+  await act(async () => {});
+  expect(
+    screen.queryByRole("table", { name: "All outcome counts" }),
+  ).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Show all counts" }));
+  expect(
+    screen.getByRole("table", { name: "All outcome counts" }),
+  ).toBeTruthy();
+  act(() => useLocale.setState({ locale: "es" }));
+  expect(
+    screen.getByRole("table", { name: "Conteos de todos los resultados" }),
+  ).toBeTruthy();
+  expect((useGame.getState().labMemory.shor4 as { run: unknown }).run).toEqual(
+    run,
+  );
+  view.unmount();
+  render(<ShorPipeline armed />);
+  await act(async () => {});
+  expect(
+    screen.getByRole("button", { name: "Mostrar todos los conteos" }),
+  ).toBeTruthy();
+  expect((useGame.getState().labMemory.shor4 as { run: unknown }).run).toEqual(
+    run,
+  );
+  expect(submit).not.toHaveBeenCalled();
 });

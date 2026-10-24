@@ -3340,5 +3340,20 @@
   "Arrived at": "Llegaste a",
   "Walking stopped": "Caminata detenida",
   "No open path to": "No hay un camino abierto hacia",
-  "South road to Cipher Town": "Camino del sur a Pueblo Cifrado"
+  "South road to Cipher Town": "Camino del sur a Pueblo Cifrado",
+  "Distinct measured outcomes": "Resultados distintos medidos",
+  "Leading observed outcomes": "Resultados observados más frecuentes",
+  "Other observed outcomes": "Otros resultados observados",
+  "Ideal predictions are listed separately in the complete table.": "Las predicciones ideales se muestran por separado en la tabla completa.",
+  "Show all counts": "Mostrar todos los conteos",
+  "Hide all counts": "Ocultar todos los conteos",
+  "Complete measurement counts": "Conteos completos de las mediciones",
+  "Escape closes the counts table and returns to its button.": "Escape cierra la tabla de conteos y devuelve el foco a su botón.",
+  "Scrollable counts table": "Tabla de conteos desplazable",
+  "All outcome counts": "Conteos de todos los resultados",
+  "Outcome": "Resultado",
+  "Count": "Conteo",
+  "Share of shots": "Porcentaje de ejecuciones",
+  "Ideal probability": "Probabilidad ideal",
+  "Total": "Total"
 }

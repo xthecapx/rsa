@@ -38,7 +38,7 @@ lifecycle. These are planning estimates, not delivery dates.
 | F02 | P1 | Done | Invalidate Grover results on every configuration change | S | Round transitions and restored previews now keep results tied to their circuit. |
 | F03 | P1 | Done | Scope RSA notes to their act and label mathematical values | M | Unrelated or mislabeled values undermine puzzle reasoning. |
 | F04 | P1 | Done | Make movement focus explicit and recoverable | M | Keyboard users must be able to resume exploration. |
-| F05 | P1 | Open | Summarize large Shor histograms accessibly | M | Hundreds of entries obstruct access to the useful result. |
+| F05 | P1 | Done | Summarize large Shor histograms accessibly | M | Hundreds of entries obstruct access to the useful result. |
 | F06 | P2 | Open | Add a small, discreet signpost to the campus in Quantum Town | S | The professor's recommendation lacks a findable pointer; no teleport. |
 | F07 | P2 | Open | Correct translations, grammar, and misleading directions | M | Fixes comprehension across the existing game. |
 | F08 | P2 | Open | Clarify festival markers and synchronize completion displays | S–M | Players should know when their work is finished. |
@@ -94,11 +94,16 @@ exploration control. Destination walking uses existing paths and road locks,
 announces arrival/cancellation, and respects concealed lab discoveries and busy
 travel guards. See F04 for validation.
 
+**Done — F05 (October 24, 2026).** Large returned histograms now show up to
+eight leading observed outcomes, exact shot/distinct totals, original backend
+metadata and the remaining count aggregate. All counts remain in an optional
+semantic table. The owner will perform the VoiceOver check; see F05 for validation.
+
 **Done but not yet verified (verification, not new work):** deployed cold/warm
 latency on Cloud Run; a >30 s response through the Next proxy; a browser and
 screen-reader pass over the new panel and notice; a real physical-QPU wait.
 
-**Open:** F05–F11, F12 (small clarification only), F13 (only if deployed
+**Open:** F06–F11, F12 (small clarification only), F13 (only if deployed
 measurement shows a cause other than cold start and noisy Shor), F14, F15, F17.
 
 **Deferred:** F16 (post-quantum epilogue) and the authentication/man-in-the-middle
@@ -505,6 +510,39 @@ Keep every count in the data used for period analysis and preserve bit ordering.
 action without reading 256 entries. All outcomes remain available on demand;
 summary totals reconcile with the complete distribution. Collapsing the table
 returns focus predictably. Smaller lesson histograms remain clear.
+
+**Implemented:** `CircuitHistogram` uses the pure presentation helper in
+`game/countsPresentation.ts`. More than 16 listed outcomes switches to the compact
+eight-peak view; ties use bitstring order, independent of insertion order and ideal
+probabilities. Remaining observed outcomes have an exact aggregate count and share.
+The complete table retains every original key, leading zeros, returned count and
+shot share, with ideal predictions in a separate column when supplied. Counts
+with zero shots do not inflate the distinct-observed total or become peaks.
+Histograms of up to 16 outcomes keep their existing full layout, including the
+anonymous numeric ordering used by Echo Chamber.
+
+Show all counts starts collapsed. The keyboard-scrollable table has a caption,
+column/row headers, totals and a viewport-bounded scroll area. Either collapse
+button or Escape returns focus to the disclosure. Escape is handled in capture
+so the laptop's native listener does not close the laptop first. Language changes
+and laptop reopen preserve the reading; a new counts object starts collapsed.
+Saved counts, backend metadata, period analysis and execution behavior are unchanged.
+
+**Validation:** `npm run check` passes (160 Node tests and 156 React tests), including
+256-outcome totals, deterministic ties, zero-count/reference-only entries, all
+complete-table values, keyboard collapse/focus, translations and restored Shor
+readings without resubmission. Web and Qollab production builds pass; Qollab still
+has exactly 20 files, each under 2 MB. Browser checks used a temporary, explicitly
+labeled fixture with fabricated counts in the actual Shor pipeline and laptop:
+EN/ES, keyboard disclosure/Tab/Escape, complete 256-row data, close/reopen,
+refresh/restore, 390 × 760 portrait and 760 × 390 landscape. The native browser
+accessibility tree exposes only the compact summary before disclosure and the
+full semantic table afterward. The fixture recorded zero quantum submissions and
+was removed before the production builds.
+
+**Pending owner verification:** the owner requested leaving VoiceOver off and
+will test the screen-reader traversal. Native accessibility-tree inspection and
+keyboard checks above are not a substitute for that remaining VoiceOver pass.
 
 ### F06 — Campus discovery from Quantum Town
 

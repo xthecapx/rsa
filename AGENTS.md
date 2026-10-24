@@ -569,6 +569,15 @@ writing and reports unavailable storage; each lesson keeps its save validation,
 migrations, completion and explicit flush points. Neither hook starts execution
 on mount. `HistogramBars` and `AmplitudeBars` are shared display primitives;
 lesson wrappers retain their captions, backend metadata and ideal references.
+`CircuitHistogram` summarizes distributions larger than 16 listed outcomes with
+up to eight observed peaks (count descending, bitstring order for ties), the shot
+total, distinct measured outcomes, original backend and the remaining aggregate.
+Its collapsed Show all counts disclosure exposes a semantic table on demand;
+ideal probabilities, when present, have a separate column. Escape or collapse
+returns focus to the disclosure without closing the laptop. Language changes keep
+the disclosure state; new count objects start collapsed. Small/anonymous lesson
+histograms retain their full display and numeric bar order. Presentation helpers
+in `game/countsPresentation.ts` never truncate saved counts or period analysis.
 HTTP worker/error translation lives in `backend/app/api/quantum_execution.py`,
 outside the shared Python circuit services and the Qollab upload.
 
