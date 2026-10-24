@@ -39,7 +39,7 @@ lifecycle. These are planning estimates, not delivery dates.
 | F03 | P1 | Done | Scope RSA notes to their act and label mathematical values | M | Unrelated or mislabeled values undermine puzzle reasoning. |
 | F04 | P1 | Done | Make movement focus explicit and recoverable | M | Keyboard users must be able to resume exploration. |
 | F05 | P1 | Done | Summarize large Shor histograms accessibly | M | Hundreds of entries obstruct access to the useful result. |
-| F06 | P2 | Open | Add a small, discreet signpost to the campus in Quantum Town | S | The professor's recommendation lacks a findable pointer; no teleport. |
+| F06 | P2 | Done | Add a small, discreet signpost to the campus in Quantum Town | S | The professor's recommendation lacks a findable pointer; no teleport. |
 | F07 | P2 | Open | Correct translations, grammar, and misleading directions | M | Fixes comprehension across the existing game. |
 | F08 | P2 | Open | Clarify festival markers and synchronize completion displays | S–M | Players should know when their work is finished. |
 | F09 | P2 | Open | Give repeated controls contextual accessible names | M | Makes circuit editing understandable without visual position. |
@@ -99,11 +99,17 @@ eight leading observed outcomes, exact shot/distinct totals, original backend
 metadata and the remaining count aggregate. All counts remain in an optional
 semantic table. The owner will perform the VoiceOver check; see F05 for validation.
 
+**Done — F06 (October 24, 2026).** A small signpost beside Quantum Town’s
+south path explains the ordinary campus route through Cipher Town and Coin Town.
+The professor points to it in both completion greetings. EN/ES inspection uses
+Space or Inspect and changes no saved state; there is no teleport or new marker.
+See F06 for validation.
+
 **Done but not yet verified (verification, not new work):** deployed cold/warm
 latency on Cloud Run; a >30 s response through the Next proxy; a browser and
 screen-reader pass over the new panel and notice; a real physical-QPU wait.
 
-**Open:** F06–F11, F12 (small clarification only), F13 (only if deployed
+**Open:** F07–F11, F12 (small clarification only), F13 (only if deployed
 measurement shows a cause other than cold start and noisy Shor), F14, F15, F17.
 
 **Deferred:** F16 (post-quantum epilogue) and the authentication/man-in-the-middle
@@ -560,19 +566,29 @@ menu. Add a small, understated in-world sign, in the spirit of the concealed lab
 entrances, that points toward the campus. It rewards noticing and keeps the
 journey through Coin Town's south road.
 
-**Plan:** place a small signpost in Quantum Town (candidate: the south exit toward
-Cipher/Coin, or beside the plaza) using existing Kenney sign art. Inspecting it
-shows a short bilingual line: the Quantum Campus is an optional science fair,
-reached by the south roads through Coin Town. It does not travel, grant anything,
-or change progress. Keep the professor's existing prose mention, and tweak it to
-hint at the sign (for example “look for a signpost”). Use the standard inspect/talk
-interaction so it works with keyboard, mouse and touch, and show a marker only if
-it does not break the “secret” intent (decide at implementation; the minimap
-should not label it). No new save field: the sign is always inspectable.
+**Implemented (October 24, 2026):** the small sign at (25, 31), beside the
+main south path, reuses existing Kenney timber art with a compact arrow board.
+It has no floating caption, beacon, quest marker, minimap label or destination.
+Space and the contextual Inspect control open short EN/ES directions: Quantum
+Town → south through Cipher Town → Coin Town → Coin’s south road → campus.
+Only Keep exploring is offered. The professor hints at the sign both when offering
+qWard and in the repeat completion greeting. There is no teleport action.
 
-**Open point:** a sign that is too hidden recreates the reported problem. Keep it
-on the main path and mention it in the professor's line so a player who asks can
-find it. Re-test with the original reviewer's path.
+The sign is nonblocking so older saved positions remain valid. It is excluded
+from automatic landmark discovery, needs no new save field, and is always
+inspectable. Inspection only opens local dialogue; it never changes position,
+progress, equipment, circuits, rewards or the remote allowance.
+
+**Validation:** EN/ES browser smoke checks covered the completion greetings,
+Space inspection, the Inspect button at a 390 × 760 mobile viewport, and refresh
+at the saved position. A temporary browser audit compared the town, progress,
+medals, knowledge, wallet, lab, campus and RSA variables before/after inspection;
+both language checks were identical. The minimap destination list excludes the
+new sign. After checkpoint setup, the ordinary walking route was followed from
+Quantum Town through Cipher Town and Coin Town to the campus without reopening
+Save progress. The temporary audit route was removed afterward.
+`npm run check` passed (160 Node tests and 156 UI tests); production web and
+Qollab builds passed. Qollab retains its 20-file package and per-file size cap.
 
 **Acceptance:** a player finishing the four challenges can learn where the campus
 is from the professor's line plus the sign, without opening Save progress. No

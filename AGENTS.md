@@ -86,6 +86,13 @@ jobs. Cero offers repeatable generated bounties. The Quantum replay street share
 the Cipher checkpoint and skips the gear check. Older RSA completions retain
 their earned gear.
 
+Professor Thecap’s completion greeting points to a small campus signpost beside
+Quantum Town’s south path. Inspecting it explains the optional science fair and
+the existing southbound route through Cipher Town and Coin Town. The sign reuses
+Kenney timber art, has no floating caption, quest marker or minimap destination,
+and stays nonblocking for older saved positions. It is always readable without
+a discovery/save flag; inspection never travels, awards progress or submits work.
+
 ## Quantum Campus
 
 The optional campus is a science fair in a park, joined to Coin Town by a

@@ -3355,5 +3355,9 @@
   "Count": "Conteo",
   "Share of shots": "Porcentaje de ejecuciones",
   "Ideal probability": "Probabilidad ideal",
-  "Total": "Total"
+  "Total": "Total",
+  "Small signpost": "Pequeño letrero",
+  "Inspect the small signpost": "Inspecciona el pequeño letrero",
+  "Look for the small signpost beside the south path if you’d like to visit Quantum Campus.": "Si quieres visitar Campus Cuántico, busca el pequeño letrero junto al camino del sur.",
+  "Quantum Campus is an optional science fair. Head south through Cipher Town to Coin Town, then take Coin Town’s south road to the campus.": "Campus Cuántico es una feria de ciencias opcional. Ve hacia el sur por Pueblo Cifrado hasta Pueblo Moneda y luego toma el camino del sur de Pueblo Moneda hacia el campus."
 }

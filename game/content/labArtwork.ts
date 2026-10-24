@@ -5,6 +5,7 @@ export const LAB_SHEETS = {
 } as const;
 
 export const LAB_TILES = {
+  signpost: { col: 12, row: 16 },
   desk: [
     { col: 0, row: 1 },
     { col: 1, row: 1 },

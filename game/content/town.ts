@@ -8,8 +8,13 @@ export const TOWN_LOCATIONS = {
   vaultDoor: { at: { x: 21, y: 5 }, stand: { x: 21, y: 6 }, title: "Operation Ghost Key", prompt: "Knock on Doña Ofelia’s door", kind: "vault" },
   guide: { at: { x: 24, y: 28 }, stand: { x: 24, y: 29 }, title: "Professor Thecap", prompt: "Talk to Professor Thecap", kind: "guide" },
   sign: { at: { x: 24, y: 23 }, stand: { x: 24, y: 24 }, title: "Quantum Town", prompt: "Read the signpost", kind: "sign" },
+  campusSign: { at: { x: 25, y: 31 }, stand: { x: 24, y: 31 }, title: "Small signpost", prompt: "Inspect the small signpost", kind: "campus-sign" },
   southPath: { at: { x: 24, y: 34 }, stand: { x: 24, y: 34 }, title: "South road", prompt: "Walk south to Cipher Town", kind: "path" },
 } as const;
+/** An always-readable hint, with no discovery flag, reward or travel action. */
+export const CAMPUS_SIGN_HINT = "Look for the small signpost beside the south path if you’d like to visit Quantum Campus.";
+export const CAMPUS_SIGN_DIRECTIONS = "Quantum Campus is an optional science fair. Head south through Cipher Town to Coin Town, then take Coin Town’s south road to the campus.";
+
 export type TownTarget = keyof typeof TOWN_LOCATIONS;
 export type WorldFacing = "up" | "down" | "left" | "right";
 export const TOWN_SPAWN = { x: 24, y: 32 };

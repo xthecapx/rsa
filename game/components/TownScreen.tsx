@@ -6,7 +6,13 @@ import { useRouter } from "next/navigation";
 import { SCENARIOS } from "@/content/scenarios";
 import { ACT_NUMBERS, getAct } from "@/content";
 import type { ActNumber } from "@/content/types";
-import { CLIENT_POSITION, TOWN_LOCATIONS, type TownTarget } from "@/content/town";
+import {
+  CAMPUS_SIGN_DIRECTIONS,
+  CAMPUS_SIGN_HINT,
+  CLIENT_POSITION,
+  TOWN_LOCATIONS,
+  type TownTarget,
+} from "@/content/town";
 import { bus, type Landmark } from "@/engine/bus";
 import { useGame } from "@/game/state";
 import { warmBackend } from "@/lib/warmup";
@@ -139,7 +145,7 @@ export function TownScreen({ initialAct, initialCoin = false, initialGrover = fa
   function greetingParts(done: Record<Challenge, boolean>): string[] {
     const count = CHALLENGES.filter((id) => done[id]).length;
     const next = CHALLENGES.find((id) => !done[id]);
-    if (!next) return [GREETING_ALL];
+    if (!next) return [GREETING_ALL, CAMPUS_SIGN_HINT];
     if (!useTown.getState().welcomed || count === 0) return [GREETING_FIRST];
     const skipped = CHALLENGES.slice(CHALLENGES.indexOf(next) + 1).some((id) => done[id]);
     if (done.vault && !done.grover && next === "grover") return [GREETING_COUNT[count], GREETING_SKIPPED, GREETING_NEXT.grover];
@@ -147,7 +153,7 @@ export function TownScreen({ initialAct, initialCoin = false, initialGrover = fa
   }
   function greet() {
     if (!useTown.getState().qwardFound && canFindQward(useProgress.getState().completed, useMedals.getState().earned)) {
-      setConversation({ title: "Professor Thecap", text: QWARD_DISCOVERY,
+      setConversation({ title: "Professor Thecap", text: QWARD_DISCOVERY, parts: [QWARD_DISCOVERY, CAMPUS_SIGN_HINT],
         choices: [{ label: "Come along, qWard!", action: () => { if (findQward()) closeConversation(); } }] });
       return;
     }
@@ -200,7 +206,7 @@ export function TownScreen({ initialAct, initialCoin = false, initialGrover = fa
       // The only tiles on the bottom row are the southern entrance.
       if (event.at.y === QUANTUM_SOUTH_ROW) events.current.travelSouth();
     }
-    if (event.type === "townMoved") { setTownNear(event.near); if (event.near && event.near !== "labDoor") useTown.getState().discover(event.near); }
+    if (event.type === "townMoved") { setTownNear(event.near); if (event.near && event.near !== "labDoor" && event.near !== "campusSign") useTown.getState().discover(event.near); }
     if (event.type === "moved") { useGame.getState().setNear(event.near); if (event.near === "car") useTown.getState().discover("rsa"); }
     if (event.type === "walking") useGame.getState().setWalking(event.walking);
     if (event.type === "townInteract") events.current.interactTown(event.target);
@@ -435,6 +441,12 @@ export function TownScreen({ initialAct, initialCoin = false, initialGrover = fa
         const reveal = inspectLab("town", () => { visitLab("town"); }, closeConversation);
         if (reveal) setConversation(reveal);
       }
+      else if (location.kind === "campus-sign") setConversation({
+        title: location.title,
+        speaker: "system",
+        text: CAMPUS_SIGN_DIRECTIONS,
+        choices: [{ label: "Keep exploring", action: closeConversation }],
+      });
       else if (location.kind === "coin") setConversation({ title: "Who Goes First?", text: "Nobody’s home. A note on the door: “Game night moved to Coin Town. Take the south road. — Ale & Brayan”", choices: [{ label: "Walk south to Coin Town", action: enterCoinTown }, { label: "Later", action: closeConversation }] });
       else if (location.kind === "path") enterCipherFromNorth();
       else if (location.kind === "grover") setConversation({ title: "Echo Chamber", text: "Emergency · Intermediate. An old drone core has locked itself with a 4-bit PIN and three tries. Build Grover’s search on the quantum core and disarm it.", choices: [{ label: groverSaved || groverComplete ? "Resume in the workshop" : "Enter the workshop", action: () => enterGrover("town") }, { label: "Later", action: closeConversation }] });
@@ -472,6 +484,7 @@ export function TownScreen({ initialAct, initialCoin = false, initialGrover = fa
   if (town.location === "vault") return <VaultScenario onExit={leaveVault} onRestartGame={restartGame} />;
 
   const canInteract = !!townNear || !!game.near;
+  const inspecting = townNear === "campusSign" || (townNear === "labDoor" && !town.labEntrances.town);
   const journal = <div className="space-y-4 text-sm">
     <h2 className="text-accent-amber">{t("Quantum Town journal")}</h2>
     {rsaActive && <ObjectiveList />}
@@ -505,7 +518,7 @@ export function TownScreen({ initialAct, initialCoin = false, initialGrover = fa
       {!conversation && !journalOpen && !restartOpen && !(rsaActive && game.laptopOpen) && <div className={`pointer-events-none absolute inset-x-0 bottom-0 flex justify-center p-3 ${rsaActive && game.phase !== "exploring" ? "z-20 pb-3" : "pb-24 lg:pb-4"}`}>
         {rsaActive && game.phase !== "exploring" ? <DialogBox /> : <div className={`map-hint textbox max-w-lg space-y-2 px-4 py-3 text-center transition-opacity ${game.walking ? "opacity-30" : ""}`}>
           <p className="text-sm">{t(rsaActive && game.pendingTravel ? game.pendingTravel.objective : town.tracked ? town.tracked === "coin" ? "First challenge: Who Goes First?" : town.tracked === "rsa" ? "RSA client" : town.tracked === "grover" ? "Thecap’s workshop" : "Casa Ofelia" : "Explore Quantum Town")}</p>
-          {canInteract && <p className="text-xs text-accent-amber">{t(townNear === "labDoor" ? (town.labEntrances.town ? "Enter the lab" : "Inspect the disturbed sand") : townNear ? TOWN_LOCATIONS[townNear].prompt : game.near === "car" ? "Talk to the RSA client" : game.near === "tap" ? "Inspect the junction box" : "Talk")}{" · "}{t(townNear === "labDoor" && !town.labEntrances.town ? "Press Space or tap Inspect" : "Press Space or tap Talk")}</p>}
+          {canInteract && <p className="text-xs text-accent-amber">{t(townNear === "labDoor" ? (town.labEntrances.town ? "Enter the lab" : "Inspect the disturbed sand") : townNear ? TOWN_LOCATIONS[townNear].prompt : game.near === "car" ? "Talk to the RSA client" : game.near === "tap" ? "Inspect the junction box" : "Talk")}{" · "}{t(inspecting ? "Press Space or tap Inspect" : "Press Space or tap Talk")}</p>}
         </div>}
       </div>}
       {conversation && <div className="absolute inset-0 z-20 flex items-end justify-center bg-black/30 p-3 sm:p-5" role="dialog" aria-modal="true" aria-label={t(conversation.title)} ref={conversationRef} onKeyDown={(event) => { event.stopPropagation(); if (event.key === "Escape" && town.welcomed) { event.preventDefault(); closeConversation(); }
@@ -532,7 +545,7 @@ export function TownScreen({ initialAct, initialCoin = false, initialGrover = fa
           </DialogueLine>
         </DialogueFrame>
       </div>}
-      <TouchControls canInteract={canInteract} label={townNear === "labDoor" && !town.labEntrances.town ? "Inspect" : "Talk"} visible={!inputLocked} />
+      <TouchControls canInteract={canInteract} label={inspecting ? "Inspect" : "Talk"} visible={!inputLocked} />
       {mission.layer(restartControl)}
     </>}
   </GameShell>;

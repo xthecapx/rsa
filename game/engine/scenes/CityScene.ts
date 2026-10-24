@@ -3,6 +3,12 @@ import {
   Circle,
   Color,
   Engine,
+  Font,
+  FontUnit,
+  GraphicsGroup,
+  Rectangle,
+  Sprite,
+  Text,
   Keys,
   Scene,
   TileMap,
@@ -10,6 +16,7 @@ import {
 } from "excalibur";
 import type { PointerEvent, Subscription } from "excalibur";
 
+import { LAB_TILES } from "@/content/labArtwork";
 import { TOWN_LOCATIONS, townTargetAt, type TownTarget } from "@/content/town";
 import { t, useLocale } from "@/i18n";
 
@@ -109,6 +116,52 @@ export class CityScene extends Scene {
       if (location.kind === "path") continue;
       if (location.kind === "lab") {
         this.lab = new LabEntrance("town"); this.add(this.lab); this.add(this.lab.sign);
+        continue;
+      }
+      if (location.kind === "campus-sign") {
+        const at = tileCenter(location.at);
+        const { col, row } = LAB_TILES.signpost;
+        const sign = new Actor({
+          name: "campus-signpost",
+          pos: vec(at.x + 4, at.y),
+          width: TILE_SIZE,
+          height: TILE_SIZE,
+          z: 7,
+        });
+        sign.graphics.use(
+          new GraphicsGroup({
+            members: [
+              {
+                graphic: new Sprite({
+                  image: images.caves,
+                  sourceView: { x: col * 17, y: row * 17, width: 16, height: 16 },
+                }),
+                offset: vec(0, 0),
+              },
+              {
+                graphic: new Rectangle({
+                  width: 14,
+                  height: 8,
+                  color: Color.fromHex("#634431"),
+                  strokeColor: Color.fromHex("#bf9664"),
+                  lineWidth: 1,
+                }),
+                offset: vec(1, 0),
+              },
+              {
+                graphic: new Text({
+                  text: "↓",
+                  color: Color.fromHex("#ffedbf"),
+                  font: new Font({ family: "monospace", size: 8, unit: FontUnit.Px }),
+                }),
+                offset: vec(5, 0),
+              },
+            ],
+          }),
+        );
+        // Decoration stays nonblocking, including when an older save stands here.
+        // No floating caption, quest marker, beacon or minimap entry.
+        this.add(sign);
         continue;
       }
       const at = tileCenter(location.at);
