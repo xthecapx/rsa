@@ -5,6 +5,7 @@ import {
   CAMPUS_GUIDE,
   CAMPUS_NOTEBOOK,
   CAMPUS_WELCOME,
+  type CampusActivityId,
 } from "@/content/campus";
 import { useCampus } from "@/game/campus";
 import { useProgress } from "@/game/progress";
@@ -13,7 +14,8 @@ import { campusMap } from "@/engine/maps/campusMap";
 import { WorldTownScreen, type TownConfig } from "./WorldTownScreen";
 import { WorldMinimap } from "./WorldMinimap";
 import { useCampusInteraction } from "./useCampusInteraction";
-import { investigationReady } from "@/game/campusJourney";
+import { campusActivityStatus } from "@/game/campusJourney";
+import { EXPLORATION_STATUS } from "@/game/explorationStatus";
 import type { RestartOption } from "./StartOverControl";
 import { t } from "@/i18n";
 export function CampusScreen({
@@ -28,18 +30,18 @@ export function CampusScreen({
   const { completed, sessions } = useCampus();
   const interaction = useCampusInteraction();
   const badge = useMedals((s) => !!s.earned["quantum-explorer"]);
+  const activityIds: CampusActivityId[] = [
+    ...CAMPUS_EXHIBITS.map((e) => e.id),
+    "festival",
+  ];
+  const status = (id: CampusActivityId) =>
+    campusActivityStatus(id, { completed, sessions }, badge);
+  const festivalComplete = status("festival") === "complete";
   const line = (text: string) => ({ speaker: "vpcap" as const, text });
   const pending = CAMPUS_EXHIBITS.filter(
-    (e) =>
-      !completed.includes(e.id) &&
-      sessions[e.id] &&
-      sessions[e.id]!.journey.phase !== "intro",
+    (e) => status(e.id) === "working" || status(e.id) === "ready",
   );
-  const discussions = pending.filter(
-    (e) =>
-      investigationReady(e.id, sessions[e.id]!) ||
-      sessions[e.id]!.journey.phase === "apply",
-  );
+  const discussions = pending.filter((e) => status(e.id) === "ready");
   const next =
     CAMPUS_EXHIBITS.find((e) => e.id === interaction.suggested) ??
     discussions[0] ??
@@ -63,9 +65,9 @@ export function CampusScreen({
     subtitle: "Open day · experiment, ask, discover",
     interaction,
     exploration: {
-      done: [...completed, ...(badge ? ["festival"] : [])],
-      working: pending.map((e) => e.id),
-      ready: discussions.map((e) => e.id),
+      done: activityIds.filter((id) => status(id) === "complete"),
+      working: activityIds.filter((id) => status(id) === "working"),
+      ready: activityIds.filter((id) => status(id) === "ready"),
       next:
         interaction.suggested === "festival"
           ? "festival"
@@ -104,7 +106,7 @@ export function CampusScreen({
     challenge: {
       door: "festival",
       title: "Open the Festival",
-      complete: badge,
+      complete: festivalComplete,
       blurb:
         "Repair three exhibits and answer the visitors. You can try directly; the badge never blocks your adventure.",
       enter: "Open the Festival",
@@ -139,16 +141,19 @@ export function CampusScreen({
         <ul className="space-y-2">
           {CAMPUS_EXHIBITS.map((e) => (
             <li key={e.id}>
-              {completed.includes(e.id)
-                ? "✓"
-                : discussions.some((d) => d.id === e.id)
-                  ? "?"
-                  : pending.some((p) => p.id === e.id)
-                    ? "…"
-                    : "◇"}{" "}
-              {t(e.title)}
+              <span aria-hidden="true">
+                {EXPLORATION_STATUS[status(e.id)].symbol}
+              </span>{" "}
+              {t(e.title)} · {t(EXPLORATION_STATUS[status(e.id)].label)}
             </li>
           ))}
+          <li>
+            <span aria-hidden="true">
+              {EXPLORATION_STATUS[status("festival")].symbol}
+            </span>{" "}
+            {t("Open the Festival")} ·{" "}
+            {t(EXPLORATION_STATUS[status("festival")].label)}
+          </li>
         </ul>
       ),
     },
@@ -171,18 +176,20 @@ export function CampusScreen({
             at: e.at,
             label: e.title,
             symbol: String(i + 1),
+            status: status(e.id),
           })),
           {
             id: "festival",
             at: CAMPUS_FESTIVAL.at,
             label: "Open the Festival",
             symbol: "F",
+            status: status("festival"),
           },
           {
             id: "notebook",
             at: CAMPUS_NOTEBOOK.at,
             label: "Campus field notebook",
-            symbol: "?",
+            symbol: "▤",
           },
         ]}
         roads={[
@@ -194,7 +201,7 @@ export function CampusScreen({
           },
         ]}
         ariaLabel="Quantum Campus map: eight exhibits, festival, notebook and the open north road to Coin Town."
-        legend={[t("1–8 · Exhibits　F · Festival　? · Notebook")]}
+        legend={[t("1–8 · Exhibits"), t("F · Festival"), t("▤ · Notebook")]}
       />
     ),
   };

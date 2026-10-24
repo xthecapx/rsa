@@ -6,7 +6,7 @@ const load = name => loadTs(path.join(root, name));
 const { useCampus, campusSession } = load('game/campus');
 const { campusDefaults } = load('game/campusExperiment');
 const { CAMPUS_STORIES } = load('content/campusStories');
-const { investigationFor, investigationReady, rotationPair, applicationReady } = load('game/campusJourney');
+const { investigationFor, investigationReady, rotationPair, applicationReady, campusActivityStatus } = load('game/campusJourney');
 const { useGame } = load('game/state');
 const { useMedals } = load('game/medals');
 const { useProgress } = load('game/progress');
@@ -81,9 +81,15 @@ test('every discovery requires execution, explanation and an applied response, e
 });
 
 test('festival remains directly available, with three guarded repairs and exactly one optional badge', async () => {
-  reset(); await useMedals.persist.rehydrate(); begin('festival');
+  const status = () => campusActivityStatus('festival', useCampus.getState(), !!useMedals.getState().earned['quantum-explorer']);
+  reset(); await useMedals.persist.rehydrate();
+  assert.equal(status(), 'new');
+  begin('festival');
   for (let stage = 0; stage < 3; stage++) {
-    interpret('festival'); apply('festival');
+    assert.equal(status(), 'working');
+    interpret('festival');
+    assert.equal(status(), 'ready');
+    apply('festival');
     assert.equal(session('festival').stage, stage + 1);
     assert.equal(useCampus.getState().completed.length, 0);
   }
@@ -92,6 +98,17 @@ test('festival remains directly available, with three guarded repairs and exactl
   assert.ok(awarded);
   assert.equal(event('festival', { type: 'finish' }), false);
   assert.equal(useMedals.getState().earned['quantum-explorer'], awarded);
+  assert.equal(status(), 'complete');
+  await useCampus.persist.rehydrate();
+  await useMedals.persist.rehydrate();
+  assert.equal(status(), 'complete');
+  // Reopening or restarting experiments retains the earned festival badge.
+  event('festival', { type: 'return' });
+  assert.equal(status(), 'complete');
+  useCampus.getState().reset();
+  assert.equal(status(), 'complete');
+  useMedals.getState().reset();
+  assert.equal(status(), 'new');
 });
 
 test('pinned comparisons survive free experimentation and hydration with their recipes and original backends', async () => {

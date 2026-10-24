@@ -6,7 +6,11 @@ import {
   type CampusActivityId,
 } from "@/content/campus";
 import { useCampus, campusSession } from "@/game/campus";
-import { investigationFor, investigationReady } from "@/game/campusJourney";
+import {
+  campusActivityStatus,
+  investigationFor,
+  investigationReady,
+} from "@/game/campusJourney";
 import { useTown } from "@/game/town";
 import { useGame } from "@/game/state";
 import { useExecution } from "@/lib/execution";
@@ -44,7 +48,7 @@ export function useCampusInteraction(): NonNullable<
     focus.current?.querySelector<HTMLButtonElement>("button")?.focus();
   }, [active, laptop]);
   const completed = (id: CampusActivityId) =>
-    id === "festival" ? badge : store.completed.includes(id);
+    campusActivityStatus(id, store, badge) === "complete";
   const canInteract = () => {
     const game = useGame.getState();
     return game.operations === 0 && game.phase !== "busy" && !game.busyLabel;

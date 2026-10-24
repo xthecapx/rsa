@@ -1,6 +1,7 @@
 import { CAMPUS_STORIES } from "@/content/campusStories";
-import type { CampusActivityId } from "@/content/campus";
+import type { CampusActivityId, CampusExhibitId } from "@/content/campus";
 import type { CampusSession } from "./campus";
+import type { ExplorationStatus } from "./explorationStatus";
 import { campusEvidence, type CampusSettings } from "./campusExperiment";
 import type { CampusResult } from "@/lib/campus";
 
@@ -113,6 +114,29 @@ export function investigationReady(
   return investigationFor(id, session).keys.every(
     (key) => !!evidenceFor(id, session, key),
   );
+}
+
+/** Map, host and journal share the earned completion and current evidence state. */
+export function campusActivityStatus(
+  id: CampusActivityId,
+  progress: {
+    completed: readonly CampusExhibitId[];
+    sessions: Partial<Record<CampusActivityId, CampusSession>>;
+  },
+  festivalEarned: boolean,
+): ExplorationStatus {
+  if (id === "festival" ? festivalEarned : progress.completed.includes(id))
+    return "complete";
+  const session = progress.sessions[id];
+  if (
+    !session ||
+    session.journey.phase === "intro" ||
+    session.journey.phase === "complete"
+  )
+    return "new";
+  if (session.journey.phase === "apply" || investigationReady(id, session))
+    return "ready";
+  return "working";
 }
 export function applicationReady(
   id: CampusActivityId,

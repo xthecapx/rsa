@@ -3394,5 +3394,10 @@
   "Job: N = {N}, a = {a}, m = {m}, {shots} shots -> {backend}.": "Trabajo: N = {N}, a = {a}, m = {m}, ejecuciones = {shots} -> {backend}.",
   "Connected to {backend}. Batch {batch}, {jobs} completed job(s).": "Conectado a {backend}. Lote {batch}, trabajos completados: {jobs}.",
   "{backend}: observed outcomes = {outcomes}; shots = {shots}.": "{backend}: resultados observados = {outcomes}; ejecuciones = {shots}.",
-  "{backend}: {outcomes} distinct outcomes over {shots} shots.": "{backend}: resultados observados = {outcomes}; ejecuciones = {shots}."
+  "{backend}: {outcomes} distinct outcomes over {shots} shots.": "{backend}: resultados observados = {outcomes}; ejecuciones = {shots}.",
+  "New problem": "Problema nuevo",
+  "Investigation in progress": "Investigación en curso",
+  "1–8 · Exhibits": "1–8 · Experimentos",
+  "F · Festival": "F · Festival",
+  "▤ · Notebook": "▤ · Cuaderno"
 }

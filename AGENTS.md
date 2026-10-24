@@ -115,6 +115,11 @@ quiz answers or a Collect discovery action. Finished hosts offer free experiment
 and deeper explanations. The guide suggests topics and points to unfinished work.
 Markers distinguish a new problem (!), an investigation (…), a ready discussion
 (?), and completion (★); completed stands reveal existing Kenney display props.
+`campusActivityStatus` supplies the same state to scene markers, map labels,
+journal and host completion, including all festival repairs. An earned festival
+badge takes precedence over retained investigation evidence and survives a campus
+restart. The minimap uses ✓ for completion and separate legend entries for exhibit
+numbers, F (festival) and ▤ (notebook); ? means ready to discuss, never the notebook.
 The stands reuse the cave's Kenney tables, plants, lamps and stools, with distinct
 colored rugs, bunting and apparatus for each experiment. `content/campusStands.ts`
 owns fixed furniture footprints; `engine/actors/CampusStand.ts` caches the art once.

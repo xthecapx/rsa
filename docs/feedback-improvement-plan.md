@@ -41,7 +41,7 @@ lifecycle. These are planning estimates, not delivery dates.
 | F05 | P1 | Done | Summarize large Shor histograms accessibly | M | Hundreds of entries obstruct access to the useful result. |
 | F06 | P2 | Done | Add a small, discreet signpost to the campus in Quantum Town | S | The professor's recommendation lacks a findable pointer; no teleport. |
 | F07 | P2 | Done | Correct translations, grammar, and misleading directions | M | Fixes comprehension across the existing game. |
-| F08 | P2 | Open | Clarify festival markers and synchronize completion displays | S–M | Players should know when their work is finished. |
+| F08 | P2 | Done | Clarify festival markers and synchronize completion displays | S–M | Players should know when their work is finished. |
 | F09 | P2 | Open | Give repeated controls contextual accessible names | M | Makes circuit editing understandable without visual position. |
 | F10 | P2 | Open | Reduce minimap obstruction and clarify pointer behavior | M | Restores usable exploration space, especially on mobile. |
 | F11 | P2 | Open | Improve typewriter text and reveal controls | S–M | Makes dialogue readable without discovering a hidden workaround. |
@@ -115,7 +115,12 @@ for validation and the reported “hand” context.
 latency on Cloud Run; a >30 s response through the Next proxy; a browser and
 screen-reader pass over the new panel and notice; a real physical-QPU wait.
 
-**Open:** F08–F11, F12 (small clarification only), F13 (only if deployed
+**Done — F08 (October 24, 2026).** Campus activities, including the festival,
+share status derivation across map, scene, journal and host completion. The
+notebook has a distinct ▤ symbol and its own legend row; completion wins over
+retained evidence. See F08 for validation.
+
+**Open:** F09–F11, F12 (small clarification only), F13 (only if deployed
 measurement shows a cause other than cold start and noisy Shor), F14, F15, F17.
 
 **Deferred:** F16 (post-quantum epilogue) and the authentication/man-in-the-middle
@@ -672,14 +677,30 @@ work. Cover dynamic templates and singular counts in translation regressions.
 **Feedback covered:** a visual “F · Festival ?” appeared after completion while
 accessible text said completed.
 
-**Source evidence:** `game/components/CampusScreen.tsx` already includes the
-festival in completed map targets when the badge exists. Its static legend also
-contains a separate `? · Notebook` key. Verify whether the reviewer saw a stale
-status marker or ambiguous spacing between legend entries.
+**Finding:** the completed festival already used its earned badge for the map's
+checkmark and the scene's star. The static legend placed `F · Festival` beside
+`? · Notebook` on the same line, making the notebook key look like a festival
+status. Festival sessions were also missing from the investigation/discussion
+marker lists, although exhibit sessions were included.
 
-**Plan:** make legend entries visually distinct and derive visual markers,
-accessible names, and completion props from the same semantic state. Inspect
-`game/components/WorldMinimap.tsx`, campus interaction state, and scene updates.
+**Implemented (October 24, 2026):** `campusActivityStatus` derives new,
+investigating, ready-to-discuss and completed states from the existing earned
+progress and session evidence. Campus map symbols/accessibility labels, scene
+marker lists, journal and host completion use it. The earned festival badge
+overrides retained evidence, including after a campus restart. Completion
+requirements and saves are unchanged. The minimap identifies the notebook with
+▤ and puts exhibit, festival and notebook keys on separate rows. It separately
+explains … / ? / ✓, with translated status text in the map's accessible name.
+
+**Validation:** the guarded three-repair regression checks each status transition,
+completion, hydration, revisit and restart. UI coverage checks map/scene-config/
+host agreement, separate legend entries, EN/ES switching and hydration without
+a service request. Real-browser checks use the completed `qc3` checkpoint, walk
+to the festival, revisit its host, switch EN/ES, refresh and inspect the outdoor
+star, map checkmark and notebook legend. No quantum job was submitted during
+browser validation. The temporary server and browser tab were closed afterward.
+`npm run check` passed (163 Node tests and 161 UI tests), along with the production
+web and Qollab builds. Qollab retains 20 files, each within its 2 MB limit.
 
 **Acceptance:** complete the festival, revisit it, change language, and reload.
 Map, host, legend, and accessible status agree; the notebook symbol cannot be
