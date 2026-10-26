@@ -1,6 +1,7 @@
 "use client";
 
-import { useId, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { MinimapPanel } from "./MinimapPanel";
 import { ExplorationNavigation } from "./ExplorationNavigation";
 import { LAB_ENTRANCES } from "@/content/labEntrances";
 import type { MinimapProps } from "./WorldTownScreen";
@@ -51,11 +52,6 @@ export function WorldMinimap({
   legend: string[];
 }) {
   useLocale((state) => state.locale);
-  const [collapsed, setCollapsed] = useState(
-    () =>
-      typeof window !== "undefined" &&
-      window.matchMedia("(pointer: coarse)").matches,
-  );
   const lab = labTown ? LAB_ENTRANCES[labTown] : null;
   const mapPlaces: MinimapPlace[] = [
     ...places.filter((place) => place.id !== "labDoor"),
@@ -77,7 +73,6 @@ export function WorldMinimap({
     return `${t(place.label)}${status ? ` · ${t(EXPLORATION_STATUS[status].label)}` : ""}${tracked === place.id ? ` · ${t("Tracked destination")}` : ""}`;
   };
   const activityMarkers = places.some((place) => place.status !== undefined);
-  const mapId = useId();
   const [terrain] = useState(() => terrainPaths(map.rows));
   const { width, height } = map;
   const seen = useMemo(() => new Set(explored), [explored]);
@@ -107,22 +102,8 @@ export function WorldMinimap({
       statusOf(place) === "complete",
   );
   return (
-    <aside
-      className={`town-minimap panel bg-stage-bg/95 p-2 ${collapsed ? "w-36" : "w-44 sm:w-56"}`}
-      aria-label={t("Town minimap")}
-    >
-      <button
-        type="button"
-        className="minimap-toggle flex w-full items-center justify-between gap-2 text-xs text-accent-teal"
-        aria-expanded={!collapsed}
-        aria-controls={mapId}
-        title={t(collapsed ? "Show minimap" : "Hide minimap")}
-        onClick={() => setCollapsed((value) => !value)}
-      >
-        <span>{t("Town minimap")}</span>
-        <span aria-hidden="true">{collapsed ? "+" : "−"}</span>
-      </button>
-      <div id={mapId} hidden={collapsed}>
+    <MinimapPanel>
+      <div>
         <svg
           viewBox={`-2 -2 ${width + 4} ${height + 4}`}
           className="mt-2 block w-full border border-stage-border bg-stage-bg"
@@ -269,6 +250,6 @@ export function WorldMinimap({
           })),
         ]}
       />
-    </aside>
+    </MinimapPanel>
   );
 }

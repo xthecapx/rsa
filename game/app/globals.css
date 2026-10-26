@@ -720,16 +720,14 @@ html[data-compact-viewport="true"] .laptop-footer { padding: 4px 8px; font-size:
 /* Excalibur positions its zoomed canvas; flex centering would double the crop. */
 @media (pointer: coarse) { .game-canvas-host { display: block; } }
 
-.town-minimap { max-height: min(calc(var(--game-viewport-height) - 160px), calc(var(--game-viewport-height) * .72)); overflow-y: auto; overscroll-behavior: contain; }
-
-/* The map starts folded on touch devices; an opened map stays scrollable. */
-@media (pointer: coarse) {
-  .town-minimap { max-height: min(calc(var(--game-viewport-height) - 110px), calc(var(--game-viewport-height) * .7)); overflow-y: auto; overscroll-behavior: contain; }
-  .minimap-toggle { min-height: 44px; }
-}
-@media (pointer: coarse) and (max-width: 600px) and (orientation: portrait) {
-  .town-minimap { max-height: max(100px, calc(var(--game-viewport-height) - 300px)); }
-}
+/* Only the visible map panel intercepts pointers, never its overlay's empty gaps. */
+.town-minimap { pointer-events: auto; display: flex; flex-direction: column; min-height: 0; flex-shrink: 1; width: min(208px, calc(var(--game-viewport-width) * .46)); max-height: min(360px, calc(var(--game-viewport-height) * .48)); overflow: hidden; }
+.town-minimap.is-collapsed { width: 144px; flex-shrink: 0; }
+.minimap-toggle { flex: none; min-height: 44px; padding: 8px; }
+.minimap-content { min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 0 8px 8px; }
+.minimap-content[hidden] { display: none; }
+.minimap-content > div > svg { max-height: calc(var(--game-viewport-height) * .26); }
+.minimap-content .exploration-navigation summary { min-height: 44px; }
 
 /* Circuit actions belong to their wire editor; measured results stand apart. */
 .circuit-workspace { position: relative; min-width: 0; }

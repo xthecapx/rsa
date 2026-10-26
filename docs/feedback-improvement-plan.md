@@ -43,7 +43,7 @@ lifecycle. These are planning estimates, not delivery dates.
 | F07 | P2 | Done | Correct translations, grammar, and misleading directions | M | Fixes comprehension across the existing game. |
 | F08 | P2 | Done | Clarify festival markers and synchronize completion displays | S–M | Players should know when their work is finished. |
 | F09 | P2 | Done | Give repeated controls contextual accessible names | M | Makes circuit editing understandable without visual position. |
-| F10 | P2 | Open | Reduce minimap obstruction and clarify pointer behavior | M | Restores usable exploration space, especially on mobile. |
+| F10 | P2 | Done | Reduce minimap obstruction and clarify pointer behavior | M | Restores usable exploration space, especially on mobile. |
 | F11 | P2 | Open | Improve typewriter text and reveal controls | S–M | Makes dialogue readable without discovering a hidden workaround. |
 | F12 | P2 | Open | Clarify that the game breaks a simplified protocol, not real RSA (authentication content deferred) | S | Prevents a false impression; larger lessons wait. |
 | F13 | P2 | Open (mostly absorbed by F01b) | Optimize measured simulation/setup bottlenecks | M–L | Requires F01 measurements; avoid speculative caching. |
@@ -126,7 +126,13 @@ story slot. Repeated H palette copies have distinct names. EN/ES labels preserve
 visible symbols and interaction IDs. Real VoiceOver verification remains for the
 owner, following the preference to leave it off; see F09 for validation.
 
-**Open:** F10–F11, F12 (small clarification only), F13 (only if deployed
+**Done — F10 (October 24, 2026).** Both outdoor minimaps share a compact,
+viewport-bounded panel with a fixed collapse toggle and scrollable content.
+Collapsed maps hide navigation too; rotation retains the player's choice. Empty
+HUD space passes pointers through, while the visible map consumes them. See F10
+for validation.
+
+**Open:** F11, F12 (small clarification only), F13 (only if deployed
 measurement shows a cause other than cold start and noisy Shor), F14, F15, F17.
 
 **Deferred:** F16 (post-quantum epilogue) and the authentication/man-in-the-middle
@@ -743,12 +749,26 @@ campus, lab, Grover, and Ghost Key surfaces.
 
 **Feedback covered:** expanded minimaps cover substantial terrain and intercept clicks.
 
-**Plan:** review `game/components/WorldMinimap.tsx`,
-`game/components/TownMinimap.tsx`, and `game/app/globals.css`. Keep touch defaults
-collapsed, constrain expanded size using the shared visible viewport, and retain
-the user's toggle on rotation. Provide a reachable collapse control. Confine
-pointer interception to visible interactive map content; do not make actual map
-clicks pass through and move the character underneath.
+**Implemented:** `MinimapPanel` is shared by `WorldMinimap` and `TownMinimap`.
+Touch, narrow (600 px or less), and short (550 px or less) viewports start
+collapsed. The initial server markup stays collapsed until hydration chooses the
+viewport default; later resizing or rotation never overrides the player's choice.
+Collapse hides the map, legend and navigation together. Expanded panels use at
+most 208 px / 46% of viewport width and 360 px / 48% of viewport height, while
+respecting the containing scene. The 44 px toggle stays above a separately
+scrollable body. Escape collapses and restores toggle focus; keyboard navigation
+still reaches Return to exploration and the guarded destination controls.
+HUD containers pass pointers through empty space; the visible panel handles its
+own clicks without forwarding them to the world.
+
+**Validation:** lint, TypeScript, 329 automated tests, production build and the
+Qollab 20-file/size checks pass. Regression tests cover hidden collapsed controls,
+rotation/language retention, Escape focus, pointer event containment and clean
+hydration. Browser checks in a temporary real-component preview at 390×700 and
+740×360 confirmed bounded scrolling, an always-reachable toggle, keyboard return
+to exploration, retained state across resize, and terrain clicks through empty
+HUD space without map clicks reaching terrain. The preview was removed and its
+server/tab closed; no simulation or save changes were needed.
 
 **Acceptance:** portrait and short landscape layouts leave usable play space;
 uncovered terrain accepts clicks; map interactions never trigger unintended world

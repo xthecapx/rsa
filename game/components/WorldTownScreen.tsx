@@ -365,7 +365,7 @@ export function WorldTownScreen({ config, restartOptions, onEnterLab }: { config
       : say("Your laptop", [{ speaker: "system", text: "Neighbors lend you their benches here. Talk to anyone whose name board starts with !." }], [{ label: "Keep exploring", action: close }])}>
     {hydrated && <GameCanvas active={sceneReady && !inputLocked} world={config.world} onReady={onReady} onError={onError} />}
     {sceneReady && <>
-      {!inputLocked && <div className="absolute right-3 top-3 z-10 flex max-h-[calc(100%-1.5rem)] max-w-[calc(100%-1.5rem)] flex-col items-end gap-2">
+      {!inputLocked && <div className="town-map-overlay pointer-events-none absolute right-3 top-3 z-10 flex max-h-[calc(100%-1.5rem)] max-w-[calc(100%-1.5rem)] flex-col items-end gap-2">
         {config.minimap({ position: saved.position, facing: saved.facing, explored: saved.explored, labTown: config.slot, labRevealed, done, pending: [...alerts, ...(challenge.complete ? [] : [challenge.door])], tracked })}
         {config.hud}
       </div>}

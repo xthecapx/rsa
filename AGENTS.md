@@ -669,8 +669,13 @@ and keyboard input in puzzle builders. Check short landscape screens with browse
 bars visible and report fields with the keyboard open. Mobile dialog portraits stay visible at 40px in both orientations. Mobile prose
 is two pixels
 smaller. Existing small labels and code keep their sizes; form inputs stay 16px
-to avoid focus zoom. Minimap panels start collapsed on touch devices, remain
-scrollable when expanded, and preserve the player’s toggle when rotating. Wide
+to avoid focus zoom. Both outdoor maps use `MinimapPanel`: touch, narrow and short
+viewports start collapsed after hydration; rotation retains the player's toggle.
+Collapse hides map and navigation together. Expanded panels are limited by the
+shared visible viewport, with a fixed 44px toggle above a scrollable body. Escape
+collapses the panel and focuses its toggle; Return to exploration remains in the
+expanded navigation. Empty HUD overlay space passes pointers to terrain, while
+the visible map consumes them. Wide
 laptop circuits scroll horizontally and also support tapping a piece then its slot.
 
 Qollab remote runs display provider job states, elapsed time, and the job ID in a

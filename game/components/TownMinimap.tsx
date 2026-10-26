@@ -1,9 +1,10 @@
 "use client";
 
 import { QUANTUM_SOUTH_ROW } from "@/content/coinTown";
+import { MinimapPanel } from "./MinimapPanel";
 import { ExplorationNavigation } from "./ExplorationNavigation";
 import { LANDMARKS } from "@/engine/maps/street";
-import { useId, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { CLIENT_POSITION, TOWN_LOCATIONS, TOWN_TREES } from "@/content/town";
 import { townMap } from "@/engine/maps/townMap";
 import { useTown } from "@/game/town";
@@ -38,10 +39,6 @@ export function TownMinimap() {
   const { position, facing, tracked, discovered, explored, labEntrances } = useTown();
   const places = [...basePlaces, ...(labEntrances.town ? [{ id: "labDoor", at: TOWN_LOCATIONS.labDoor.at, label: "Personal quantum lab", symbol: "L", scenario: null }] : [])];
   const completed = useProgress((state) => state.completed);
-  const [collapsed, setCollapsed] = useState(() =>
-    typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches,
-  );
-  const mapId = useId();
   const fog = useMemo(() => {
     const visible = new Set(explored);
     let path = "";
@@ -62,12 +59,8 @@ export function TownMinimap() {
   const vaultDone = !!completed.vault?.includes("vault");
   const visitedCount = places.filter((place) => place.id === "labDoor" || discovered.includes(place.id) || (place.scenario === "coin" && coinDone) || (place.scenario === "rsa" && rsaDone) || (place.scenario === "grover" && groverDone) || (place.scenario === "vault" && vaultDone)).length;
 
-  return <aside className={`town-minimap panel bg-stage-bg/95 p-2 ${collapsed ? "w-36" : "w-44 sm:w-56"}`} aria-label={t("Town minimap")}>
-    <button type="button" className="minimap-toggle flex w-full items-center justify-between gap-2 text-xs text-accent-teal" aria-expanded={!collapsed} aria-controls={mapId}
-      title={t(collapsed ? "Show minimap" : "Hide minimap")} onClick={() => setCollapsed((value) => !value)}>
-      <span>{t("Town minimap")}</span><span aria-hidden="true">{collapsed ? "+" : "−"}</span>
-    </button>
-    <div id={mapId} hidden={collapsed}>
+  return <MinimapPanel>
+    <div>
       <svg viewBox={`-2 -2 ${width + 4} ${height + 4}`} className="mt-2 block w-full border border-stage-border bg-stage-bg" role="img" aria-label={t("Your position and explored terrain. Number 1 is the coin house; number 2 is the RSA client; number 3 is Thecap’s workshop.")}>
         {Array.from(terrain, ([color, path]) => <path key={color} d={path} fill={color} />)}
         {TOWN_TREES.map(({ x, y }) => <circle key={`${x}:${y}`} cx={x + 0.5} cy={y + 0.5} r={0.7} fill="#214636" />)}
@@ -105,5 +98,5 @@ export function TownMinimap() {
       at: place.id === "rsa" ? LANDMARKS.car.stand : place.id === "southPath" ? { x: TOWN_LOCATIONS.southPath.stand.x, y: QUANTUM_SOUTH_ROW } : TOWN_LOCATIONS[place.id as keyof typeof TOWN_LOCATIONS].stand,
       exit: place.id === "southPath",
     }))} />
-  </aside>;
+  </MinimapPanel>;
 }
