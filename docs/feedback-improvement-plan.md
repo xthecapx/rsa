@@ -44,8 +44,8 @@ lifecycle. These are planning estimates, not delivery dates.
 | F08 | P2 | Done | Clarify festival markers and synchronize completion displays | S–M | Players should know when their work is finished. |
 | F09 | P2 | Done | Give repeated controls contextual accessible names | M | Makes circuit editing understandable without visual position. |
 | F10 | P2 | Done | Reduce minimap obstruction and clarify pointer behavior | M | Restores usable exploration space, especially on mobile. |
-| F11 | P2 | Open | Improve typewriter text and reveal controls | S–M | Makes dialogue readable without discovering a hidden workaround. |
-| F12 | P2 | Open | Clarify that the game breaks a simplified protocol, not real RSA (authentication content deferred) | S | Prevents a false impression; larger lessons wait. |
+| F11 | P2 | Done | Improve typewriter text and reveal controls | S–M | Makes dialogue readable without discovering a hidden workaround. |
+| F12 | P2 | Done | Clarify that the game breaks a simplified protocol, not real RSA (authentication content deferred) | S | Prevents a false impression; larger lessons wait. |
 | F13 | P2 | Open (mostly absorbed by F01b) | Optimize measured simulation/setup bottlenecks | M–L | Requires F01 measurements; avoid speculative caching. |
 | F14 | P2 | Open | Distinguish sound preference from successful audio activation | M | The interface should accurately describe audible behavior. |
 | F15 | P2 | Open | Investigate engine initialization warnings | M | Repair lifecycle problems if reproduced, rather than hiding warnings. |
@@ -132,7 +132,17 @@ Collapsed maps hide navigation too; rotation retains the player's choice. Empty
 HUD space passes pointers through, while the visible map consumes them. See F10
 for validation.
 
-**Open:** F11, F12 (small clarification only), F13 (only if deployed
+**Done — F11 (October 26, 2026).** Animated dialogue provides a stable full-text
+reading path, honors reduced motion and offers an explicit Show full text action.
+RSA shortcuts cannot select hidden choices while a new translation is revealing.
+See F11 for validation and viewport-check limits.
+
+**Done — F12 (October 26, 2026).** The small-RSA workbench and visible Act 4 win
+screen share a brief EN/ES textbook-arithmetic note distinguishing the toy protocol,
+real RSA encoding and key sizes, and the much larger scale needed for Shor's threat.
+Authentication/certificate/padding lessons remain deferred.
+
+**Open:** F13 (only if deployed
 measurement shows a cause other than cold start and noisy Shor), F14, F15, F17.
 
 **Deferred:** F16 (post-quantum epilogue) and the authentication/man-in-the-middle
@@ -779,11 +789,25 @@ movement. Keyboard access follows F04.
 **Feedback covered:** typewriter text appears temporarily truncated; “Show text”
 exists but is not sufficiently discoverable.
 
-**Plan:** distinguish intentional partial reveal from layout clipping. Keep a
-clearly labeled reveal action visible during typing, preserve the full-text
-reading path for assistive technology, and respect reduced motion. Check shared
-`game/components/DialoguePresentation.tsx`, `game/components/DialogBox.tsx`, and
-lesson dialogue wrappers. Keep actions visible while long prose scrolls.
+**Implemented:** shared dialogue presents Show full text / Mostrar texto completo
+while the visual line types. RSA, Coin, Grover and Ghost Key expose the complete
+translated line to assistive technology separately from the hidden animated prefix
+and cursor; no character-by-character live region is added. Reduced motion reveals
+immediately without ticking audio, and enabling it mid-line stops the animation.
+Changing the line/language invalidates the old frame; timers and preference listeners
+are cleaned up. RSA ignores number shortcuts until choices are actually visible;
+Space/Enter reveal first and never choose a hidden answer. Report inputs retain
+their own native keyboard/form behavior. Existing separate prose/action scrolling
+keeps reveal, Continue and report controls reachable.
+
+**Validation:** lint, TypeScript and 336 tests pass, including seven new dialogue
+regressions for accessible text, reduced motion, cleanup, line/language changes,
+reveal-versus-advance, hidden shortcuts and report input. Production and Qollab
+builds pass. Browser checks used real shared dialogue and RSA report components
+with long EN/ES text at portrait and short-landscape sizes and a 240 px visible
+height. Prose scrolled without hiding the actions, and report typing/Tab focus
+worked. The reduced height simulates keyboard obstruction; no physical mobile
+keyboard or VoiceOver session was used. Temporary preview files were removed.
 
 **Acceptance:** long EN/ES dialogue works on short landscape screens and with an
 open mobile keyboard. Reveal does not accidentally advance a choice, and screen
@@ -797,16 +821,23 @@ letter-to-number RSA lacks an explanation of real encoding and padding.
 **Scope decision (owner, October 19, 2026):** for now, only clarify the
 simplification. Do not add authentication, certificate, or padding lessons yet.
 
-**Plan:** add one brief bilingual note, at the small-RSA workbench and again where
-Act 4 concludes, saying plainly that: (1) the game breaks a toy protocol with tiny
-numbers and a letter-by-letter encoding, not real RSA; (2) real RSA keys are far
-larger and real systems do not encrypt single letters, they use an encoding scheme
-(RSAES-OAEP in RFC 8017) usually to protect key material; (3) a quantum computer
-running Shor's algorithm is a threat to real RSA only at a scale far beyond the
-game's demonstration. Keep these three claims separate and do not imply that the
-game's small Shor run endangers production RSA. Label the letter/number exercise
-“textbook arithmetic”. Spanish and English kept in sync.
-See [RFC 8017, section 7](https://www.rfc-editor.org/rfc/rfc8017.html#section-7).
+**Implemented:** `RsaContextNote` adds the same brief, three-paragraph EN/ES note
+to `RsaWorkbench` and the successful Act 4 `GameOver` panel. The heading labels
+the exercise “Textbook arithmetic”. It separates the tiny letter-by-letter toy
+protocol, real RSA's much larger keys and encoding schemes such as RSAES-OAEP
+typically used to protect key material, and Shor's threat on a sufficiently large,
+reliable quantum computer beyond this demo. The note is in the visible win UI,
+not only in the act script's ending lines. Tall completion panels remain scrollable
+from heading to actions. No answers, arithmetic, rewards, required puzzles or save
+schemas changed.
+
+**Validation:** checked the encoding/key-material wording against
+[RFC 8017, section 7](https://www.rfc-editor.org/rfc/rfc8017.html#section-7) and the
+quantum-scale distinction against
+[NIST's quantum-risk explanation](https://www.nist.gov/blogs/taking-measure/quantum-computers-may-put-internet-traffic-risk-nist-safeguarding-computers-new).
+The shared checks/builds reported under F11 pass. Browser inspection verified both
+languages in the actual Act 4 completion component and scrolling to its bottom
+actions. Preview persistence was disabled; no backend run was submitted.
 
 **Deferred (revisit after the core fixes):** the key-substitution and
 authentication teaching moment (certificates, signatures, authenticated channels,

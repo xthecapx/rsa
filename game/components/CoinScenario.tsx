@@ -299,7 +299,7 @@ export function CoinScenario({ onExit, onRestartGame }: { onExit?: () => void; o
               {t(session.step === "welcome" ? "Let’s write the function →" : "Open laptop")}
             </button>}>
           {!finishedDialog && line ? <>
-            <DialogueLine speaker={line.speaker}>{dialogue.typed}{!dialogue.settled && <span className="animate-pulse">|</span>}</DialogueLine>
+            <DialogueLine speaker={line.speaker} fullText={t(line.text)}>{dialogue.typed}{!dialogue.settled && <span className="animate-pulse">|</span>}</DialogueLine>
           </> : <>
             <DialogueLine speaker="hacker">{t(session.step === "done" ? "Achievement unlocked: Quantum Coin. Your first circuit is ready." : "Your turn. Open the laptop to complete this step.")}</DialogueLine>
           </>}

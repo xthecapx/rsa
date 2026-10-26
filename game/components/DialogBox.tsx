@@ -94,6 +94,15 @@ export function DialogBox() {
       // The report field wants its own spaces and digits.
       if (isTyping(event.target)) return;
 
+      // While the translated line is revealing, shortcuts cannot choose hidden answers.
+      if (!settled) {
+        if (event.code === "Space" || event.code === "Enter") {
+          event.preventDefault();
+          reveal();
+        }
+        return;
+      }
+
       if (choices.length) {
         const digit = Number(event.key);
         if (digit >= 1 && digit <= choices.length) {
@@ -105,10 +114,6 @@ export function DialogBox() {
 
       if (event.code === "Space" || event.code === "Enter") {
         event.preventDefault();
-        if (!settled) {
-          reveal();
-          return;
-        }
         if (blocked) return;
         void advance();
       }
@@ -204,7 +209,7 @@ export function DialogBox() {
         ) : waitingOnWorkbench ? (
           <button type="button" className="btn-primary dialogue-continue" onClick={() => setLaptopOpen(true)}>{t("Open laptop")}</button>
         ) : <DialogueContinue settled={settled} onContinue={continueLine} />}>
-        <DialogueLine speaker={speaker} label={feedback ? t("Think again") : undefined}>
+        <DialogueLine speaker={speaker} fullText={fullText} label={feedback ? t("Think again") : undefined}>
           {typed}{!settled && <span className="animate-pulse">|</span>}
         </DialogueLine>
         {waitingOnReport && recovered && <p className="text-xs text-stage-muted">{t("Your notes read")} <span className="font-mono text-actor-brayan">{recovered}</span>.</p>}

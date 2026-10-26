@@ -9,6 +9,7 @@ import { valueOf } from "@/game/secret";
 import { useGame } from "@/game/state";
 import { missionGeneration } from "@/game/runtime";
 import { api } from "@/lib/api";
+import { RsaContextNote } from "./RsaContextNote";
 import { StepHeader } from "./LaptopControls";
 import { PuzzleDragDrop, PuzzlePiece, PuzzleSlot } from "./PuzzleDragDrop";
 
@@ -213,6 +214,7 @@ export function RsaWorkbench({ armed }: { armed: boolean }) {
         <Fact label="φ(N)" value={phi ?? "?"} />
         <Fact label={t("private d")} value={d ?? "?"} tone={d !== null ? "good" : undefined} />
       </dl>
+      <RsaContextNote />
       {step === 1 && <p className="laptop-note">{t("Ale locked her letter m with Brayan's public key: c = m^e mod N. Only the private number d unlocks it. Brayan built d from the two primes hidden inside N, so once you find them you can build d too.")}</p>}
 
       {step <= 5 && <PuzzleDragDrop labels={labels} targets={slots} onPlace={place} renderPreview={(source) => <span className="font-mono">{labels[source]}</span>}>

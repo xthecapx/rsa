@@ -387,7 +387,7 @@ function saveGrover(values: Record<string, unknown> = {}) {
 }
 const savedGrover = () => JSON.parse(localStorage.getItem(GROVER_SAVE_KEY)!);
 function finishGroverConversation() {
-  const reveal = screen.queryByRole("button", { name: /^Show text/ });
+  const reveal = screen.queryByRole("button", { name: /^Show full text/ });
   if (reveal) fireEvent.click(reveal);
   fireEvent.click(screen.getByRole("button", { name: /^Continue/ }));
 }

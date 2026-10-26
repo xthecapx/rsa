@@ -10,6 +10,7 @@ import { gameAudio } from "@/game/audio";
 import { useGame } from "@/game/state";
 import { useProgress } from "@/game/progress";
 import { ACT_NUMBERS } from "@/content";
+import { RsaContextNote } from "./RsaContextNote";
 import { RsaProgress } from "./RsaProgress";
 import { MedalReveal } from "./MedalCase";
 import { medalFor } from "@/content/medals";
@@ -48,8 +49,8 @@ export function GameOver({ act, onReturn, onRetry, onNext }: {
   const medal = medalFor("rsa", String(act));
 
   return (
-    <div className="pointer-events-auto absolute inset-0 z-20 grid place-items-center overflow-y-auto bg-stage-bg/85 p-3 sm:p-6">
-      <div className="textbox w-full max-w-lg p-4 text-center sm:p-6">
+    <div className="pointer-events-auto absolute inset-0 z-20 grid justify-items-center overflow-y-auto bg-stage-bg/85 p-3 sm:p-6">
+      <div className="textbox my-auto w-full max-w-lg p-4 text-center sm:p-6">
         <h2
           className={`text-sm ${caught ? "text-actor-hacker" : "text-actor-brayan"}`}
         >
@@ -62,6 +63,7 @@ export function GameOver({ act, onReturn, onRetry, onNext }: {
             : `${t(script.title)} - ${t(script.subtitle)}. You finished on ${suspicion}% suspicion.`)}
         </p>
 
+        {!caught && act === 4 && <div className="mt-4"><RsaContextNote /></div>}
         <div className="mt-4"><RsaProgress act={act} /></div>
         {!caught && medal && <div className="mt-4"><MedalReveal id={medal.id} /></div>}
         <div className="mt-6 flex flex-col gap-2">

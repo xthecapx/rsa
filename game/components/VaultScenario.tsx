@@ -305,7 +305,7 @@ export function VaultScenario({ onExit, onRestartGame }: { onExit?: () => void; 
               {t(session.step === "welcome" ? "Show me →" : "Open panel")}
             </button>}>
           {!finishedDialog && line ? <>
-            <DialogueLine speaker={line.speaker}>{dialogue.typed}{!dialogue.settled && <span className="animate-pulse">|</span>}</DialogueLine>
+            <DialogueLine speaker={line.speaker} fullText={t(line.text)}>{dialogue.typed}{!dialogue.settled && <span className="animate-pulse">|</span>}</DialogueLine>
           </> : <>
             <DialogueLine speaker="ofelia">{t(session.step === "done" ? "Take your medal. You opened it the quantum way." : session.step === "welcome" ? "Come to the vault. I’ll show you how he answers." : "Your turn. Open the panel to complete this step.")}</DialogueLine>
           </>}

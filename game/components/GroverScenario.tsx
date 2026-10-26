@@ -311,7 +311,7 @@ export function GroverScenario({ onExit, onRestartGame }: { onExit?: () => void;
               {t(session.step === "welcome" ? "Try the keypad →" : "Open panel")}
             </button>}>
           {!finishedDialog && line ? <>
-            <DialogueLine speaker={line.speaker}>{dialogue.typed}{!dialogue.settled && <span className="animate-pulse">|</span>}</DialogueLine>
+            <DialogueLine speaker={line.speaker} fullText={t(line.text)}>{dialogue.typed}{!dialogue.settled && <span className="animate-pulse">|</span>}</DialogueLine>
           </> : <>
             <DialogueLine speaker="guide">{t(session.step === "done" ? "The core is safe. Take your medal — you earned it the quantum way." : session.step === "welcome" ? "The keypad is yours. Three tries." : "Your turn. Open the panel to complete this step.")}</DialogueLine>
           </>}

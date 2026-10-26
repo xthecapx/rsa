@@ -457,6 +457,12 @@ then candidate-period checks and decryption. Recorded IBM counts are labeled
 hardware. Restoring a measured pipeline opens Results without submitting; successful
 recovery hides Run/Clear until a setting or wiring change invalidates the result.
 The four RSA acts keep their existing puzzles, story rules and save schema.
+`RsaContextNote` labels the small-RSA workbench as textbook arithmetic and repeats
+the same bilingual note in the visible Act 4 win panel. It distinguishes the toy
+letter-by-letter protocol from real RSA encryption with larger keys and encoding
+schemes such as RSAES-OAEP, and puts Shor's real-RSA threat beyond this demonstration's
+scale. Authentication and padding lessons remain deferred. The ending panel stays
+scrollable from its heading through its actions even on short screens.
 `RsaMemoryRail` renders act-specific notes from `game/rsaNotes.ts`, without
 mutating checkpoint data. Act 1 shows the fetched alphabet reference; Act 2 shows
 only the selected, capture-matching Caesar shift. RSA public inputs require the
@@ -664,7 +670,14 @@ FitContainerAndZoom; keep its host out of flex centering to avoid doubling the
 crop offset. The shared camera in `game/engine/camera.ts` clamps to the visible
 content area so players remain visible near map edges in either orientation.
 Dialog text scrolls separately from its action row; every story step needs a
-visible button. Preserve tap-to-place as well as drag
+visible button. Animated RSA, Coin, Grover and Ghost Key lines expose the complete
+translated text to assistive technology once, with the visual prefix/cursor hidden
+from it and no per-character live region. Show full text reveals without advancing;
+reduced motion shows the full line immediately without typewriter ticks, including
+when enabled mid-line. New lines/languages invalidate old animation frames, and
+unmount clears timers/listeners. RSA number shortcuts only select visible, settled
+choices; Space/Enter reveal first while typing. Report fields retain native typing
+and form behavior. Preserve tap-to-place as well as drag
 and keyboard input in puzzle builders. Check short landscape screens with browser
 bars visible and report fields with the keyboard open. Mobile dialog portraits stay visible at 40px in both orientations. Mobile prose
 is two pixels
